@@ -1,0 +1,96 @@
+import { createServer } from 'http';
+import app from './app.js';
+import { env } from './config/env.js';
+import { connectDatabase, registerDatabaseShutdownHandlers } from './config/db.js';
+import { initRealtimeServer } from './realtime/index.js';
+import { startJobScheduler } from './jobs/index.js';
+import { initSentry, installProcessErrorHandlers } from './observability/sentry.js';
+import { connectRedis, disconnectRedis } from './lib/redis.js';
+import { processConfig } from './config/processConfig.js';
+
+initSentry();
+installProcessErrorHandlers();
+
+if (!processConfig.runsHttp) {
+  console.error(
+    `PROCESS_ROLE=${processConfig.role} does not serve HTTP. Start src/worker.js for job workers.`,
+  );
+  process.exit(1);
+}
+
+function listen(httpServer, port) {
+  return new Promise((resolve, reject) => {
+    const onError = (err) => {
+      httpServer.off('listening', onListening);
+      reject(err);
+    };
+    const onListening = () => {
+      httpServer.off('error', onError);
+      resolve();
+    };
+    httpServer.once('error', onError);
+    httpServer.once('listening', onListening);
+    httpServer.listen(port);
+  });
+}
+
+async function listenWithRetry(httpServer, port, { retries = 5, delayMs = 1000 } = {}) {
+  for (let attempt = 1; attempt <= retries; attempt += 1) {
+    try {
+      await listen(httpServer, port);
+      return;
+    } catch (err) {
+      const isPortInUse = err?.code === 'EADDRINUSE';
+      const canRetry = env.nodeEnv === 'development' && isPortInUse && attempt < retries;
+
+      if (canRetry) {
+        console.warn(
+          `[server] port ${port} still in use — retrying in ${delayMs}ms (${attempt}/${retries})`,
+        );
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+        continue;
+      }
+
+      if (isPortInUse) {
+        throw new Error(
+          `Port ${port} is already in use. Stop the other process (lsof -i :${port}) or set PORT in .env.`,
+        );
+      }
+
+      throw err;
+    }
+  }
+}
+
+async function start() {
+  await connectDatabase();
+
+  if (env.nodeEnv !== 'test') {
+    await connectRedis().catch((err) => {
+      console.warn('[redis] connection failed — using in-memory fallbacks:', err.message);
+    });
+    startJobScheduler();
+  }
+
+  const httpServer = createServer(app);
+
+  if (env.nodeEnv !== 'test') {
+    initRealtimeServer(httpServer);
+  }
+
+  await listenWithRetry(httpServer, env.port);
+  console.log(`Sopaan API listening on http://localhost:${env.port} [${env.nodeEnv}]`);
+
+  registerDatabaseShutdownHandlers(async () => {
+    await disconnectRedis().catch(() => {});
+    await new Promise((resolve, reject) => {
+      httpServer.close((err) => (err ? reject(err) : resolve()));
+    });
+    console.log('HTTP server closed');
+  });
+}
+
+start().catch((err) => {
+  console.error('Failed to start server:', err.message);
+  process.exit(1);
+});

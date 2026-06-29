@@ -1,0 +1,26 @@
+# Docker build context for server/Dockerfile (monorepo root)
+.git
+.gitignore
+**/.DS_Store
+
+node_modules
+**/node_modules
+
+mobile
+
+server/.env
+server/.env.*
+!server/.env.example
+!server/.env.docker.example
+!server/.env.staging.example
+
+server/tests
+server/coverage
+**/*.test.js
+**/__tests__
+
+server/backups
+**/*.log
+
+.maestro
+.github

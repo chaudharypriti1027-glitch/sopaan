@@ -1,0 +1,95 @@
+# Sopaan API — local stack (API + MongoDB + Redis + BullMQ worker)
+#
+# Quick start:
+#   cp server/.env.docker.example server/.env.docker   # optional overrides
+#   docker compose up --build
+#   curl http://localhost:4000/api/health
+#
+# Seed data (first run):
+#   docker compose run --rm api node src/seed/index.js
+
+name: sopaan
+
+services:
+  mongodb:
+    image: mongo:7
+    restart: unless-stopped
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ['CMD', 'mongosh', '--quiet', '--eval', "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 8
+      start_period: 20s
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    command: ['redis-server', '--save', '', '--appendonly', 'no']
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 3s
+      retries: 8
+
+  api:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    restart: unless-stopped
+    ports:
+      - '4000:4000'
+    env_file:
+      - path: server/.env.docker
+        required: false
+    environment:
+      MONGODB_URI: mongodb://mongodb:27017/sopaan
+      REDIS_URL: redis://redis:6379
+      REDIS_ENABLED: 'true'
+      PROCESS_ROLE: api
+      NODE_ENV: development
+      DEV_STUB_AI: 'true'
+      JWT_SECRET: local-docker-jwt-secret-min-32-chars!!
+      JWT_REFRESH_SECRET: local-docker-refresh-secret-min-32-ch!
+      CLIENT_URL: http://localhost:8081
+      JOBS_ENABLED: 'true'
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    restart: unless-stopped
+    command: ['node', 'src/worker.js']
+    env_file:
+      - path: server/.env.docker
+        required: false
+    environment:
+      MONGODB_URI: mongodb://mongodb:27017/sopaan
+      REDIS_URL: redis://redis:6379
+      REDIS_ENABLED: 'true'
+      PROCESS_ROLE: worker
+      NODE_ENV: development
+      DEV_STUB_AI: 'true'
+      JWT_SECRET: local-docker-jwt-secret-min-32-chars!!
+      JWT_REFRESH_SECRET: local-docker-refresh-secret-min-32-ch!
+      JOBS_ENABLED: 'true'
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      api:
+        condition: service_started
+
+volumes:
+  mongo_data:

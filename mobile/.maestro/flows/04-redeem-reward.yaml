@@ -1,0 +1,17 @@
+appId: com.sopaan.app
+---
+- runFlow: _login.yaml
+- tapOn: 'Profile'
+- tapOn:
+    id: profile-link-rewards
+- extendedWaitUntil:
+    visible:
+      id: rewards-screen
+    timeout: 15000
+- assertVisible: 'Coin balance'
+- tapOn: 'Dark Theme'
+- tapOn: 'Redeem'
+- extendedWaitUntil:
+    visible: 'Redeemed!'
+    timeout: 15000
+- tapOn: 'OK'

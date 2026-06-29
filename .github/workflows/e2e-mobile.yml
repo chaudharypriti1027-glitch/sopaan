@@ -1,0 +1,179 @@
+name: E2E Mobile
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: e2e-mobile-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e-android:
+    name: Android API ${{ matrix.api-level }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        api-level: [30, 34]
+
+    services:
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
+
+    env:
+      E2E_STUB_AI: 'true'
+      E2E_MODE: 'true'
+      E2E_SANDBOX_PAYMENTS: 'true'
+      REDIS_ENABLED: 'false'
+      NODE_ENV: development
+      DEPLOY_ENV: e2e
+      MONGODB_URI: mongodb://127.0.0.1:27017/sopaan_e2e_${{ matrix.api-level }}
+      JWT_SECRET: e2e-jwt-secret-minimum-32-characters-long
+      JWT_REFRESH_SECRET: e2e-jwt-refresh-secret-min-32-chars
+      ANTHROPIC_API_KEY: e2e-stub-key
+      CLIENT_URL: http://localhost:8081
+      E2E_SIGNUP_EMAIL: e2e-${{ github.run_id }}-${{ matrix.api-level }}@sopaan.dev
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Seed E2E database
+        run: npm run seed -w @sopaan/server
+
+      - name: Start API server
+        run: |
+          npm start -w @sopaan/server &
+          for i in $(seq 1 60); do
+            if curl -sf http://127.0.0.1:4000/api/health; then
+              echo "API ready"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "API failed to start" >&2
+          exit 1
+
+      - name: Build Android debug APK
+        working-directory: mobile
+        env:
+          EXPO_PUBLIC_API_URL: http://10.0.2.2:4000
+          EXPO_PUBLIC_E2E_SANDBOX: 'true'
+        run: npm run e2e:build:android
+
+      - name: Install Maestro
+        run: curl -Ls "https://get.maestro.mobile.dev" | bash
+
+      - name: Run Maestro on emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          arch: x86_64
+          profile: pixel_6
+          script: |
+            adb install -r mobile/android/app/build/outputs/apk/debug/app-debug.apk
+            export PATH="$PATH:$HOME/.maestro/bin"
+            cd mobile
+            maestro test .maestro/flows/smoke-logged-in.yaml \
+              .maestro/flows/05-premium-paywall-sandbox.yaml \
+              --env E2E_SIGNUP_EMAIL=${{ env.E2E_SIGNUP_EMAIL }}
+            maestro test .maestro/flows/01-onboarding-to-home.yaml \
+              --env E2E_SIGNUP_EMAIL=${{ env.E2E_SIGNUP_EMAIL }}
+
+  e2e-ios:
+    name: iOS Simulator
+    runs-on: macos-14
+    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    timeout-minutes: 90
+
+    services:
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
+
+    env:
+      E2E_STUB_AI: 'true'
+      E2E_MODE: 'true'
+      E2E_SANDBOX_PAYMENTS: 'true'
+      REDIS_ENABLED: 'false'
+      NODE_ENV: development
+      DEPLOY_ENV: e2e
+      MONGODB_URI: mongodb://127.0.0.1:27017/sopaan_e2e_ios
+      JWT_SECRET: e2e-jwt-secret-minimum-32-characters-long
+      JWT_REFRESH_SECRET: e2e-jwt-refresh-secret-min-32-chars
+      ANTHROPIC_API_KEY: e2e-stub-key
+      CLIENT_URL: http://localhost:8081
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Seed E2E database
+        run: npm run seed -w @sopaan/server
+
+      - name: Start API server
+        run: |
+          npm start -w @sopaan/server &
+          for i in $(seq 1 60); do
+            if curl -sf http://127.0.0.1:4000/api/health; then exit 0; fi
+            sleep 2
+          done
+          exit 1
+
+      - name: Prebuild iOS
+        working-directory: mobile
+        env:
+          EXPO_PUBLIC_API_URL: http://127.0.0.1:4000
+          EXPO_PUBLIC_E2E_SANDBOX: 'true'
+        run: npx expo prebuild --platform ios --no-install
+
+      - name: Build iOS simulator app
+        working-directory: mobile/ios
+        run: |
+          xcodebuild -workspace Sopaan.xcworkspace -scheme Sopaan \
+            -configuration Debug -sdk iphonesimulator \
+            -derivedDataPath build CODE_SIGNING_ALLOWED=NO
+
+      - name: Install Maestro
+        run: curl -Ls "https://get.maestro.mobile.dev" | bash
+
+      - name: Boot simulator and run Maestro
+        run: |
+          export PATH="$PATH:$HOME/.maestro/bin"
+          xcrun simctl boot "iPhone 15" 2>/dev/null || true
+          open -a Simulator
+          xcrun simctl install booted mobile/ios/build/Build/Products/Debug-iphonesimulator/Sopaan.app
+          cd mobile
+          maestro test .maestro/flows/smoke-logged-in.yaml \
+            .maestro/flows/05-premium-paywall-sandbox.yaml

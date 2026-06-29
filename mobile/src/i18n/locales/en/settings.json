@@ -1,0 +1,97 @@
+{
+  "title": "Settings",
+  "subtitle": "Account, study preferences, and support",
+  "language": "App language",
+  "languageHint": "UI and AI responses follow this preference.",
+  "account": "Account",
+  "notifications": "Notifications",
+  "privacy": "Privacy",
+  "goal": "Exam goal",
+  "goalUpdated": "Goal updated",
+  "goalUpdatedBody": "Now preparing for {{track}}.",
+  "goalSaveFailed": "Could not update goal",
+  "logout": "Log out",
+  "logoutTitle": "Log out?",
+  "logoutBody": "You will need to sign in again.",
+  "logoutConfirm": "Log out of Sopaan?",
+  "version": "App version",
+  "study": "Study",
+  "focusSounds": "Focus timer sounds",
+  "pushNotifications": "Push notifications",
+  "pushCap": "Up to {{count}} alerts per day",
+  "pushDevBuild": "Requires dev build (not Expo Go)",
+  "quietHours": "Quiet hours",
+  "quietHoursDefault": "22:00–07:00",
+  "privacyData": "Privacy & data",
+  "privacyPolicy": "Privacy policy",
+  "privacyPolicyDesc": "How we collect, use, and protect your data",
+  "downloadData": "Download my data",
+  "downloadDataDesc": "JSON export of your account and activity",
+  "exportTitle": "My Sopaan data",
+  "exportMessage": "Sopaan data export",
+  "exportFailed": "Export failed",
+  "marketingEmails": "Marketing emails",
+  "marketingDesc": "Product updates and offers",
+  "deleteAccount": "Delete account",
+  "deleteAccountDesc": "Permanently erase your data",
+  "support": "Support",
+  "helpCentre": "Help centre",
+  "whatsappCommunity": "Join WhatsApp community",
+  "whatsappCommunityDesc": "Get latest updates, tips, and announcements for students",
+  "contactSupport": "Contact support",
+  "privacyPolicyWeb": "Privacy policy (web)",
+  "name": "Name",
+  "emailPhone": "Email / phone",
+  "notSet": "Not set",
+  "careerGoal": "Career goal",
+  "targetYear": "Target year",
+  "saveGoal": "Save goal",
+  "devBuildRequired": "Development build required",
+  "notificationsBlocked": "Notifications blocked",
+  "notificationsBlockedBody": "Enable notifications in system settings to receive rank updates, streak reminders, and more.",
+  "notificationPrefFailed": "Could not update notification preference",
+  "quietHoursFailed": "Could not update quiet hours",
+  "marketingFailed": "Could not update marketing preference",
+  "notificationTypes": {
+    "plan_ready": {
+      "label": "Daily study plan",
+      "description": "When your adaptive plan is generated"
+    },
+    "streak_reminder": {
+      "label": "Streak reminders",
+      "description": "Evening nudge if you have not studied today"
+    },
+    "rank_up": {
+      "label": "Rank improvements",
+      "description": "When you climb the mock leaderboard"
+    },
+    "mock_live": {
+      "label": "Live mock alerts",
+      "description": "When a test-series mock goes live"
+    },
+    "new_current_affairs": {
+      "label": "Current affairs digest",
+      "description": "Daily CA headlines and quizzes"
+    },
+    "progress_recap": {
+      "label": "Weekly progress recap",
+      "description": "Summary of mocks and study hours"
+    },
+    "badge": {
+      "label": "Badges earned",
+      "description": "Achievement unlocks"
+    },
+    "reward": {
+      "label": "Reward redemptions",
+      "description": "Coins and reward updates"
+    },
+    "mentor": {
+      "label": "Mentor bookings",
+      "description": "Session confirmations and updates"
+    },
+    "premium_activated": {
+      "label": "Premium updates",
+      "description": "Subscription and trial confirmations"
+    }
+  }
+}

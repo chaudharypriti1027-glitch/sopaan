@@ -1,0 +1,25 @@
+{
+  "name": "sopaan",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Sopaan — AI-powered government exam prep for Indian students",
+  "workspaces": [
+    "server",
+    "mobile",
+    "shared"
+  ],
+  "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "npm run lint -w @sopaan/server && npm run lint -w @sopaan/mobile",
+    "test": "npm run test -w @sopaan/server && npm run test -w @sopaan/mobile",
+    "typecheck": "npm run typecheck -w @sopaan/mobile"
+  },
+  "devDependencies": {
+    "prettier": "^3.5.3",
+    "react": "19.0.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

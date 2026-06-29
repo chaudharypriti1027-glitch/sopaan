@@ -1,0 +1,41 @@
+appId: com.sopaan.app
+---
+- runFlow: _login.yaml
+- tapOn: 'Practice'
+- extendedWaitUntil:
+    visible:
+      id: practice-ai-generate-card
+    timeout: 15000
+- tapOn:
+    id: practice-ai-generate-card
+- tapOn:
+    id: chip-5
+- tapOn:
+    id: practice-generate-start
+- extendedWaitUntil:
+    visible:
+      id: quiz-option-a
+    timeout: 60000
+- repeat:
+    times: 5
+    commands:
+      - tapOn:
+          id: quiz-option-a
+      - runFlow:
+          when:
+            visible:
+              id: quiz-next
+          commands:
+            - tapOn:
+                id: quiz-next
+- tapOn:
+    id: quiz-submit
+- runFlow:
+    when:
+      visible: 'Submit test?'
+    commands:
+      - tapOn: 'Submit'
+- extendedWaitUntil:
+    visible: 'AI coach'
+    timeout: 45000
+- assertVisible: 'Test result'

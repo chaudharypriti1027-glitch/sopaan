@@ -1,0 +1,38 @@
+appId: com.sopaan.app
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: splash-get-started
+    timeout: 30000
+- tapOn:
+    id: splash-login-link
+- tapOn:
+    id: field-email
+- inputText: ${E2E_PAYWALL_EMAIL}
+- tapOn:
+    id: field-password
+- inputText: ${E2E_PAYWALL_PASSWORD}
+- hideKeyboard
+- tapOn:
+    id: button-log-in
+- extendedWaitUntil:
+    visible: 'Home'
+    timeout: 30000
+- tapOn: 'Profile'
+- tapOn:
+    id: profile-link-premium
+- extendedWaitUntil:
+    visible:
+      id: premium-start-trial
+    timeout: 15000
+- assertVisible: 'Choose a plan'
+- tapOn:
+    id: premium-subscribe
+- extendedWaitUntil:
+    visible: 'Welcome to Sopaan Pro'
+    timeout: 20000
+- tapOn: 'OK'
+- tapOn: 'Profile'
+- assertVisible: 'Sopaan Pro'

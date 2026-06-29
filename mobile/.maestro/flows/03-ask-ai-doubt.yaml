@@ -1,0 +1,17 @@
+appId: com.sopaan.app
+---
+- runFlow: _login.yaml
+- tapOn: 'Ask AI'
+- extendedWaitUntil:
+    visible:
+      id: ask-ai-input
+    timeout: 15000
+- tapOn:
+    id: ask-ai-input
+- inputText: 'What is Article 14?'
+- hideKeyboard
+- tapOn:
+    id: ask-ai-send
+- extendedWaitUntil:
+    visible: 'E2E stub answer'
+    timeout: 45000

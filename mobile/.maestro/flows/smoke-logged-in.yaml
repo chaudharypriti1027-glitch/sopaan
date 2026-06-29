@@ -1,0 +1,5 @@
+appId: com.sopaan.app
+---
+- runFlow: 02-ai-quiz-result-coach.yaml
+- runFlow: 03-ask-ai-doubt.yaml
+- runFlow: 04-redeem-reward.yaml

@@ -1,0 +1,21 @@
+/** Tokens from current-affairs.html */
+export const CA_UI = {
+  bg: '#F8F9FC',
+  surface: '#FFFFFF',
+  border: '#F1F5F9',
+  borderStrong: '#E2E8F0',
+  text: '#0F172A',
+  text2: '#1E293B',
+  muted: '#64748B',
+  faint: '#94A3B8',
+  accent: '#4F46E5',
+  accentSoft: '#EEF2FF',
+  aiGradient: ['#7C3AED', '#4F46E5'] as const,
+  hot: '#F97316',
+  examHigh: '#E11D48',
+  examHighBg: '#FFF1F2',
+  examHighBorder: '#FECDD3',
+  examMed: '#D97706',
+  examMedBg: '#FFFBEB',
+  examMedBorder: '#FDE68A',
+} as const;

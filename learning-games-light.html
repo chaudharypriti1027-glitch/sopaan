@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Learning Games — Premium Light UI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:       #F2F3FF;
+  --surface:  #FFFFFF;
+  --card:     #FFFFFF;
+  --card2:    #F7F8FF;
+  --border:   rgba(90,80,180,0.10);
+  --shadow:   0 2px 16px rgba(80,60,200,0.08);
+  --shadow-lg:0 8px 40px rgba(80,60,200,0.12);
+  --text:     #1A1838;
+  --text2:    #3D3B72;
+  --muted:    #8E8CB0;
+  --accent:   #6B4EFF;
+  --accent2:  #C840F5;
+  --gold:     #F59E0B;
+  --green:    #10B981;
+  --red:      #EF4444;
+  --radius:   22px;
+  --radius-sm:13px;
+
+  --g-memory:  linear-gradient(140deg,#5B52E5 0%,#3D33C4 100%);
+  --g-scramble:linear-gradient(140deg,#F59E0B 0%,#D97706 100%);
+  --g-bingo:   linear-gradient(140deg,#10B981 0%,#047857 100%);
+  --g-rapid:   linear-gradient(140deg,#EF4444 0%,#B91C1C 100%);
+  --g-cross:   linear-gradient(140deg,#818CF8 0%,#4338CA 100%);
+  --g-map:     linear-gradient(140deg,#14B8A6 0%,#0D9488 100%);
+  --g-math:    linear-gradient(140deg,#F97316 0%,#C2410C 100%);
+  --g-grammar: linear-gradient(140deg,#EC4899 0%,#BE185D 100%);
+  --g-science: linear-gradient(140deg,#06B6D4 0%,#0E7490 100%);
+  --g-history: linear-gradient(140deg,#A855F7 0%,#7E22CE 100%);
+  --g-code:    linear-gradient(140deg,#22C55E 0%,#15803D 100%);
+  --g-spell:   linear-gradient(140deg,#F43F5E 0%,#BE123C 100%);
+  --g-number:  linear-gradient(140deg,#3B82F6 0%,#1D4ED8 100%);
+  --g-flag:    linear-gradient(140deg,#8B5CF6 0%,#6D28D9 100%);
+  --g-logic:   linear-gradient(140deg,#F59E0B 0%,#92400E 100%);
+  --g-chain:   linear-gradient(140deg,#10B981 0%,#065F46 100%);
+  --g-world:   linear-gradient(140deg,#BE185D 0%,#9D174D 100%);
+  --g-word:    linear-gradient(140deg,#6366F1 0%,#4338CA 100%);
+  --g-trivia:  linear-gradient(140deg,#0EA5E9 0%,#0369A1 100%);
+}
+
+html { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); scroll-behavior: smooth; }
+body { min-height: 100vh; overflow-x: hidden; }
+
+/* ── CANVAS ── */
+.canvas {
+  background: linear-gradient(160deg, #EEF0FF 0%, #F5F0FF 50%, #EEF4FF 100%);
+  min-height: 100vh;
+  padding: 60px 32px 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 72px;
+  align-items: center;
+}
+
+.frames-row {
+  display: flex;
+  gap: 36px;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 1440px;
+  width: 100%;
+}
+
+.section-label {
+  width: 100%; max-width: 1440px;
+  font-size: 10px; font-weight: 800;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: -56px; padding-left: 4px;
+}
+
+/* ── PHONE FRAME ── */
+.phone-wrap { display: flex; flex-direction: column; align-items: center; }
+.phone {
+  width: 390px;
+  flex-shrink: 0;
+  background: #FFFFFF;
+  border-radius: 54px;
+  box-shadow:
+    0 0 0 1px rgba(100,80,220,0.12),
+    0 40px 80px rgba(80,60,200,0.18),
+    0 0 0 10px #E8E6FF,
+    0 0 0 11px rgba(100,80,220,0.10);
+  overflow: hidden;
+  position: relative;
+}
+.phone::before {
+  content:'';
+  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 126px; height: 36px;
+  background: #E8E6FF;
+  border-radius: 0 0 24px 24px;
+  z-index: 100;
+}
+.phone-inner {
+  height: 844px; overflow-y: auto; overflow-x: hidden;
+  scrollbar-width: none; background: var(--bg); padding-top: 50px;
+}
+.phone-inner::-webkit-scrollbar { display: none; }
+.phone-label {
+  margin-top: 16px; font-size: 11px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); text-align: center;
+}
+
+/* ── STATUS BAR ── */
+.status-bar {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0 24px; height: 40px;
+  position: sticky; top: 0; z-index: 50;
+  background: var(--bg);
+}
+.status-time { font-size: 15px; font-weight: 800; color: var(--text); }
+
+/* ── TOP BAR ── */
+.top-bar { display: flex; align-items: center; gap: 12px; padding: 4px 20px 12px; }
+.btn-back {
+  width: 40px; height: 40px;
+  background: var(--card); border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+.top-bar-title { font-size: 18px; font-weight: 800; flex: 1; color: var(--text); }
+.btn-icon {
+  width: 40px; height: 40px;
+  background: var(--card); border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border); box-shadow: var(--shadow);
+  position: relative;
+}
+.notif-dot { position: absolute; top: 9px; right: 9px; width: 8px; height: 8px; background: var(--red); border-radius: 50%; border: 2px solid var(--bg); }
+
+/* ── HERO BANNER ── */
+.hero {
+  margin: 0 16px; border-radius: 28px;
+  background: linear-gradient(135deg, var(--accent) 0%, #8B5CF6 50%, var(--accent2) 100%);
+  padding: 24px 22px; position: relative; overflow: hidden; min-height: 155px;
+}
+.hero::before { content:''; position:absolute; width:220px;height:220px; background:rgba(255,255,255,0.08); border-radius:50%; right:-60px;top:-70px; }
+.hero::after  { content:''; position:absolute; width:140px;height:140px; background:rgba(255,255,255,0.05); border-radius:50%; right:30px;bottom:-50px; }
+.hero-badge {
+  display:flex;align-items:center;gap:6px;
+  background:rgba(0,0,0,0.2);backdrop-filter:blur(10px);
+  border-radius:20px;padding:6px 14px;font-size:14px;font-weight:800;
+  border:1px solid rgba(255,255,255,0.2);color:#fff;width:fit-content;margin-bottom:14px;
+  position:relative;z-index:1;
+}
+.hero-title { font-size:28px;font-weight:900;color:#fff;line-height:1.15;position:relative;z-index:1; }
+.hero-sub   { font-size:13px;color:rgba(255,255,255,0.75);margin-top:6px;position:relative;z-index:1; }
+.hero-stats { display:flex;gap:10px;margin-top:16px;position:relative;z-index:1; }
+.hero-stat {
+  background:rgba(255,255,255,0.15);backdrop-filter:blur(8px);
+  border-radius:14px;padding:9px 14px;border:1px solid rgba(255,255,255,0.2);flex:1;
+}
+.hero-stat-val { font-size:15px;font-weight:900;color:#fff; }
+.hero-stat-lbl { font-size:9px;color:rgba(255,255,255,0.65);margin-top:2px;text-transform:uppercase;letter-spacing:0.05em; }
+
+/* ── STREAK CARD ── */
+.streak-card {
+  margin:12px 16px;
+  background:linear-gradient(135deg,#FF6B35,#F7C948);
+  border-radius:20px;padding:14px 18px;
+  display:flex;align-items:center;gap:14px;position:relative;overflow:hidden;
+}
+.streak-card::before { content:'🔥';font-size:80px;position:absolute;right:-12px;top:-12px;opacity:0.12; }
+
+/* ── SEARCH ── */
+.search-wrap { padding:14px 16px 6px; }
+.search {
+  background:var(--card);border:1.5px solid var(--border);border-radius:16px;
+  display:flex;align-items:center;gap:10px;padding:12px 16px;
+  box-shadow:var(--shadow);
+}
+.search input { background:none;border:none;outline:none;color:var(--text);font-family:inherit;font-size:14px;flex:1; }
+.search input::placeholder { color:var(--muted); }
+
+/* ── CHIPS ── */
+.chips-wrap { padding:12px 16px;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none; }
+.chips-wrap::-webkit-scrollbar { display:none; }
+.chip {
+  flex-shrink:0;padding:7px 16px;border-radius:20px;font-size:12px;font-weight:700;
+  border:1.5px solid var(--border);background:var(--card);color:var(--muted);cursor:pointer;white-space:nowrap;
+  box-shadow:var(--shadow);
+}
+.chip.active { background:var(--accent);color:#fff;border-color:transparent;box-shadow:0 4px 12px rgba(107,78,255,0.35); }
+
+/* ── SECTION TITLE ── */
+.sec-title { display:flex;justify-content:space-between;align-items:center;padding:8px 16px 10px; }
+.sec-title h2 { font-size:16px;font-weight:800;color:var(--text); }
+.sec-title span { font-size:12px;color:var(--accent);font-weight:700; }
+
+/* ── GAME GRID ── */
+.game-grid { display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:0 16px 16px; }
+.game-card {
+  border-radius:22px;padding:18px 16px;position:relative;overflow:hidden;cursor:pointer;
+  min-height:142px;display:flex;flex-direction:column;justify-content:space-between;
+  box-shadow:0 4px 20px rgba(0,0,0,0.12);
+}
+.game-card::before { content:'';position:absolute;width:130px;height:130px;background:rgba(255,255,255,0.1);border-radius:50%;right:-35px;top:-35px; }
+.game-card::after  { content:'';position:absolute;width:80px;height:80px;background:rgba(255,255,255,0.06);border-radius:50%;right:20px;bottom:-30px; }
+
+.card-icon {
+  width:44px;height:44px;background:rgba(255,255,255,0.2);border-radius:14px;
+  display:flex;align-items:center;justify-content:center;position:relative;z-index:1;
+  backdrop-filter:blur(4px);
+}
+.card-icon svg { width:22px;height:22px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round; }
+.card-body { position:relative;z-index:1; }
+.card-name { font-size:15px;font-weight:800;color:#fff;margin-top:10px; }
+.card-desc { font-size:11px;color:rgba(255,255,255,0.7);margin-top:3px; }
+.card-footer { display:flex;justify-content:space-between;align-items:center;position:relative;z-index:1;margin-top:12px; }
+.card-coins { display:flex;align-items:center;gap:4px;background:rgba(0,0,0,0.18);border-radius:12px;padding:4px 10px;font-size:12px;font-weight:800;color:#fff; }
+.card-badge { font-size:9px;font-weight:800;letter-spacing:0.06em;background:rgba(255,255,255,0.22);border-radius:8px;padding:3px 8px;text-transform:uppercase;color:#fff; }
+
+.game-card.featured {
+  grid-column:1/-1;flex-direction:row;align-items:center;min-height:88px;gap:16px;
+}
+.game-card.featured .card-body { flex:1; }
+.game-card.featured .card-icon { width:54px;height:54px;flex-shrink:0; }
+.game-card.featured .card-icon svg { width:28px;height:28px; }
+
+/* ── PROGRESS BAR ── */
+.pbar-track { height:5px;background:rgba(107,78,255,0.12);border-radius:5px;overflow:hidden;margin-top:8px; }
+.pbar-fill  { height:100%;border-radius:5px;background:linear-gradient(90deg,var(--accent),var(--accent2)); }
+.progress-steps { display:flex;gap:4px; }
+.step { flex:1;height:5px;border-radius:5px;background:rgba(107,78,255,0.12); }
+.step.done  { background:var(--accent); }
+.step.active{ background:linear-gradient(90deg,var(--accent),var(--accent2)); }
+
+/* ── GAME HEADER ── */
+.game-header { display:flex;align-items:center;gap:12px;padding:4px 20px 14px; }
+.game-header-info { flex:1; }
+.game-header-info h1 { font-size:18px;font-weight:900;color:var(--text); }
+.game-header-info p  { font-size:12px;color:var(--muted);margin-top:2px; }
+.timer-chip {
+  display:flex;align-items:center;gap:6px;
+  background:rgba(239,68,68,0.08);border:1.5px solid rgba(239,68,68,0.25);
+  border-radius:20px;padding:7px 14px;font-size:14px;font-weight:900;color:var(--red);
+}
+.timer-chip.green { background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.25);color:var(--green); }
+.timer-chip.orange{ background:rgba(249,115,22,0.08);border-color:rgba(249,115,22,0.25);color:#F97316; }
+
+/* ── PROGRESS STRIP ── */
+.progress-strip { padding:0 20px 14px; }
+.progress-strip .meta { display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:8px;font-weight:600; }
+
+/* ── Q-CARD ── */
+.q-card {
+  margin:0 20px 14px;background:var(--card);border:1.5px solid var(--border);
+  border-radius:22px;padding:20px;box-shadow:var(--shadow);
+}
+.q-label { font-size:10px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:var(--accent); }
+.q-text  { font-size:17px;font-weight:800;margin-top:10px;line-height:1.4;color:var(--text); }
+.q-img-placeholder {
+  width:100%;height:90px;background:var(--card2);border-radius:14px;
+  margin-top:12px;display:flex;align-items:center;justify-content:center;font-size:32px;
+  border:1.5px solid var(--border);
+}
+
+/* ── OPTIONS ── */
+.options { display:flex;flex-direction:column;gap:10px;padding:0 20px 14px; }
+.option {
+  background:var(--card);border:1.5px solid var(--border);border-radius:16px;
+  padding:14px 16px;display:flex;align-items:center;gap:14px;cursor:pointer;
+  box-shadow:var(--shadow);
+}
+.option.correct { border-color:var(--green);background:rgba(16,185,129,0.07); }
+.option.wrong   { border-color:var(--red);background:rgba(239,68,68,0.06); }
+.option.selected{ border-color:var(--accent);background:rgba(107,78,255,0.07); }
+.opt-letter {
+  width:34px;height:34px;border-radius:11px;background:var(--card2);
+  display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;
+  flex-shrink:0;color:var(--text2);border:1.5px solid var(--border);
+}
+.opt-text { font-size:14px;font-weight:600;color:var(--text); }
+
+/* ── BUTTON ── */
+.btn-primary {
+  width:100%;padding:16px;border-radius:18px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;
+  font-size:16px;font-weight:800;border:none;cursor:pointer;
+  box-shadow:0 8px 24px rgba(107,78,255,0.35);
+}
+.btn-secondary {
+  width:100%;padding:14px;border-radius:18px;
+  background:var(--card);color:var(--text);font-size:15px;font-weight:700;
+  border:1.5px solid var(--border);cursor:pointer;box-shadow:var(--shadow);
+}
+.action-row { padding:0 20px 14px; }
+.btn-row { display:flex;gap:10px;padding:0 20px 14px; }
+.btn-row .btn-primary,.btn-row .btn-secondary { margin:0; }
+
+/* ── MATCH BOARD ── */
+.match-board { display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 20px 14px; }
+.match-card {
+  border-radius:18px;background:var(--card);border:1.5px solid var(--border);
+  aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:6px;cursor:pointer;padding:8px;text-align:center;box-shadow:var(--shadow);
+}
+.match-card.flipped { background:var(--accent);border-color:transparent; }
+.match-card.matched { background:var(--green);border-color:transparent; }
+.match-card-icon { font-size:26px; }
+.match-card-text { font-size:10px;font-weight:700;color:var(--text2);line-height:1.2; }
+.match-card.flipped .match-card-text,
+.match-card.matched .match-card-text { color:rgba(255,255,255,0.9); }
+
+/* ── WORD SCRAMBLE ── */
+.scramble-box {
+  margin:0 20px 14px;background:var(--card);border:1.5px solid var(--border);
+  border-radius:22px;padding:22px;text-align:center;box-shadow:var(--shadow);
+}
+.scramble-hint { font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;font-weight:700; }
+.s-letters { display:flex;gap:8px;justify-content:center;margin-top:14px;flex-wrap:wrap; }
+.s-letter {
+  width:44px;height:54px;background:linear-gradient(135deg,var(--accent),var(--accent2));
+  border-radius:13px;display:flex;align-items:center;justify-content:center;
+  font-size:20px;font-weight:900;color:#fff;box-shadow:0 4px 14px rgba(107,78,255,0.35);
+}
+.s-letter.blank { background:var(--card2);border:2px dashed var(--border);box-shadow:none;color:transparent; }
+.a-slots { display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap; }
+.a-slot {
+  width:44px;height:54px;border:2px solid var(--border);border-radius:13px;
+  display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;
+  background:var(--card2);color:var(--text);
+}
+.a-slot.filled { border-color:var(--accent);background:rgba(107,78,255,0.08);color:var(--accent); }
+
+.keyboard { padding:0 20px; }
+.key-row { display:flex;gap:6px;justify-content:center;margin-bottom:6px; }
+.key {
+  height:44px;min-width:32px;padding:0 8px;background:var(--card);
+  border:1.5px solid var(--border);border-radius:11px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:700;cursor:pointer;color:var(--text);
+  box-shadow:0 2px 6px rgba(0,0,0,0.07);
+}
+.key.wide { min-width:54px;font-size:11px; }
+
+/* ── MATH BLITZ ── */
+.math-box {
+  margin:0 20px 14px;background:var(--card);border:1.5px solid var(--border);
+  border-radius:22px;padding:32px 20px;text-align:center;box-shadow:var(--shadow);
+}
+.math-eq { font-size:44px;font-weight:900;letter-spacing:-0.02em;color:var(--text); }
+.math-eq .op { color:var(--accent); }
+.math-eq .blank-ans { border-bottom:4px solid var(--accent);min-width:60px;display:inline-block;color:var(--accent); }
+
+.numpad { display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 20px 14px; }
+.num-btn {
+  background:var(--card);border:1.5px solid var(--border);border-radius:16px;
+  aspect-ratio:1;display:flex;align-items:center;justify-content:center;
+  font-size:22px;font-weight:900;cursor:pointer;color:var(--text);box-shadow:var(--shadow);
+}
+.num-btn.special { background:var(--accent);border-color:transparent;color:#fff;font-size:13px;box-shadow:0 4px 14px rgba(107,78,255,0.35); }
+.num-btn.del { background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.25);color:var(--red); }
+
+/* ── RAPID FIRE ── */
+.rapid-hero {
+  margin:0 20px 14px;background:linear-gradient(135deg,rgba(239,68,68,0.1),rgba(220,38,38,0.05));
+  border:1.5px solid rgba(239,68,68,0.2);border-radius:22px;padding:18px;
+  display:flex;align-items:center;gap:14px;
+}
+.rapid-circle {
+  width:66px;height:66px;border-radius:50%;flex-shrink:0;position:relative;
+  background:conic-gradient(var(--red) 60%,rgba(239,68,68,0.1) 0%);
+  display:flex;align-items:center;justify-content:center;
+}
+.rapid-inner {
+  width:52px;height:52px;border-radius:50%;background:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:900;color:var(--red);
+}
+.rapid-info { flex:1; }
+.rapid-info h3 { font-size:16px;font-weight:800;color:var(--text); }
+.rapid-info p  { font-size:12px;color:var(--muted);margin-top:3px; }
+.rapid-score .big { font-size:26px;font-weight:900;color:var(--gold); }
+.rapid-score .sm  { font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em; }
+
+/* ── CROSSWORD ── */
+.cw-grid { display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin:0 20px 12px; }
+.cw-cell {
+  aspect-ratio:1;background:var(--card);border-radius:7px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:800;border:1.5px solid var(--border);
+  position:relative;color:var(--text);
+}
+.cw-cell.black  { background:rgba(26,24,56,0.08);border-color:transparent; }
+.cw-cell.active { border-color:var(--accent);background:rgba(107,78,255,0.1); }
+.cw-cell.correct{ border-color:var(--green);background:rgba(16,185,129,0.1); }
+.cw-num { position:absolute;top:2px;left:3px;font-size:7px;color:var(--muted);font-weight:700; }
+
+.clues { padding:0 20px 12px; }
+.clue-group h3 { font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:var(--accent);margin-bottom:8px; }
+.clue-item { display:flex;gap:10px;font-size:12px;padding:7px 0;border-bottom:1px solid var(--border);color:var(--text); }
+.clue-num { font-weight:800;color:var(--muted);width:24px;flex-shrink:0; }
+
+/* ── MAP ── */
+.map-box {
+  margin:0 20px 12px;background:var(--card);border:1.5px solid var(--border);
+  border-radius:22px;padding:14px;aspect-ratio:4/3;
+  display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;
+  box-shadow:var(--shadow);
+}
+.map-pin {
+  position:absolute;width:36px;height:36px;
+  background:var(--accent);border-radius:50% 50% 50% 0;transform:rotate(-45deg);
+  border:3px solid #fff;box-shadow:0 4px 14px rgba(107,78,255,0.5);
+}
+
+/* ── HISTORY TIMELINE ── */
+.timeline { padding:0 20px 14px; }
+.tl-item { display:flex;gap:12px;margin-bottom:14px;cursor:grab; }
+.tl-year { width:58px;flex-shrink:0;text-align:right;font-size:13px;font-weight:800;color:var(--accent);padding-top:14px; }
+.tl-dot  { width:14px;height:14px;border-radius:50%;background:var(--accent);border:3px solid var(--bg);margin-top:12px;flex-shrink:0; }
+.tl-conn { width:2px;flex:1;background:var(--border);min-height:20px;margin:0 auto; }
+.tl-line { display:flex;flex-direction:column;align-items:center; }
+.tl-card {
+  flex:1;background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:12px;
+  box-shadow:var(--shadow);
+}
+.tl-card h3 { font-size:13px;font-weight:800;color:var(--text); }
+.tl-card p  { font-size:11px;color:var(--muted);margin-top:3px; }
+.tl-drag { font-size:10px;color:var(--accent);margin-top:6px;font-weight:700; }
+
+/* ── SPELLING BEE ── */
+.hex-grid { display:flex;flex-direction:column;align-items:center;gap:5px;margin:0 20px 12px; }
+.hex-row  { display:flex;gap:5px; }
+.hex {
+  width:62px;height:62px;clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+  background:var(--card2);display:flex;align-items:center;justify-content:center;
+  font-size:22px;font-weight:900;cursor:pointer;color:var(--text);border:none;
+}
+.hex.center { background:var(--gold);color:#fff; }
+.hex:hover  { background:var(--accent);color:#fff; }
+
+.spell-box {
+  margin:0 20px 10px;background:var(--card);border:1.5px solid var(--border);
+  border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:8px;
+  font-size:24px;font-weight:900;min-height:56px;color:var(--accent);
+  box-shadow:var(--shadow);letter-spacing:0.12em;
+}
+.spell-cursor { width:2px;height:28px;background:var(--accent);animation:blink 1s infinite; }
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* ── LOGIC PUZZLE ── */
+.logic-board { display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:0 20px 14px; }
+.logic-cell {
+  aspect-ratio:1;border-radius:18px;background:var(--card);border:1.5px solid var(--border);
+  display:flex;align-items:center;justify-content:center;font-size:26px;cursor:pointer;
+  box-shadow:var(--shadow);
+}
+.logic-cell.selected { border-color:var(--accent);background:rgba(107,78,255,0.08); }
+.logic-cell.target   { border-color:var(--gold);background:rgba(245,158,11,0.1); }
+
+/* ── FLAG MASTER ── */
+.flag-grid { display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 20px 14px; }
+.flag-card {
+  background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:14px;
+  display:flex;align-items:center;gap:12px;cursor:pointer;box-shadow:var(--shadow);
+}
+.flag-card.correct { border-color:var(--green);background:rgba(16,185,129,0.07); }
+.flag-card.wrong   { border-color:var(--red);background:rgba(239,68,68,0.06); }
+.flag-emoji { font-size:32px; }
+.flag-name  { font-size:13px;font-weight:700;color:var(--text); }
+
+/* ── WORD CHAIN ── */
+.word-chain { padding:0 20px 12px; }
+.chain-word {
+  background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:12px 16px;
+  margin-bottom:8px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow);
+}
+.chain-num  { width:28px;height:28px;border-radius:10px;background:var(--accent);color:#fff;font-size:12px;font-weight:900;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+.chain-text { font-size:16px;font-weight:800;color:var(--text);flex:1; }
+.chain-link { font-size:20px; }
+.chain-input {
+  background:var(--card);border:2px solid var(--accent);border-radius:14px;padding:12px 16px;
+  margin-bottom:8px;display:flex;align-items:center;gap:10px;box-shadow:0 4px 14px rgba(107,78,255,0.15);
+}
+.chain-input input { background:none;border:none;outline:none;font-size:16px;font-weight:800;color:var(--text);font-family:inherit;flex:1;width:100%; }
+
+/* ── GK BINGO ── */
+.bingo-grid { display:grid;grid-template-columns:repeat(5,1fr);gap:6px;padding:0 20px 14px; }
+.bingo-cell {
+  aspect-ratio:1;border-radius:12px;background:var(--card);border:1.5px solid var(--border);
+  display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;
+  cursor:pointer;text-align:center;padding:4px;line-height:1.2;color:var(--text);
+  box-shadow:var(--shadow);
+}
+.bingo-cell.marked { background:var(--accent);color:#fff;border-color:transparent;box-shadow:0 4px 12px rgba(107,78,255,0.3); }
+.bingo-cell.free   { background:var(--gold);color:#fff;border-color:transparent; }
+
+/* ── RESULT ── */
+.result-screen { text-align:center;padding:20px 20px 10px; }
+.res-stats { display:flex;gap:10px;margin:18px 0 14px; }
+.res-stat {
+  flex:1;background:var(--card);border:1.5px solid var(--border);border-radius:18px;
+  padding:16px 10px;text-align:center;box-shadow:var(--shadow);
+}
+.res-stat .val { font-size:22px;font-weight:900;color:var(--text); }
+.res-stat .lbl { font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-top:4px; }
+
+/* ── LEADERBOARD ── */
+.lb-item {
+  display:flex;align-items:center;gap:12px;padding:12px 20px;border-bottom:1px solid var(--border);
+}
+.lb-rank { width:28px;font-size:14px;font-weight:900;text-align:center;color:var(--muted); }
+.lb-avatar {
+  width:42px;height:42px;border-radius:14px;display:flex;align-items:center;
+  justify-content:center;font-size:22px;background:var(--card2);border:1.5px solid var(--border);flex-shrink:0;
+}
+.lb-name  { flex:1;font-size:14px;font-weight:700;color:var(--text); }
+.lb-score { font-size:14px;font-weight:900;color:var(--gold); }
+.lb-badge { font-size:11px;color:var(--muted); }
+
+/* ── PROFILE ── */
+.profile-hero {
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  padding:24px 20px;text-align:center;position:relative;overflow:hidden;
+}
+.profile-hero::before { content:'';position:absolute;width:200px;height:200px;background:rgba(255,255,255,0.08);border-radius:50%;right:-50px;top:-60px; }
+.profile-avatar {
+  width:82px;height:82px;border-radius:28px;background:rgba(255,255,255,0.2);
+  display:flex;align-items:center;justify-content:center;font-size:42px;
+  margin:0 auto 12px;border:3px solid rgba(255,255,255,0.35);
+}
+.profile-name { font-size:22px;font-weight:900;color:#fff; }
+.profile-level{ font-size:13px;color:rgba(255,255,255,0.75);margin-top:4px; }
+.profile-badges{ display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap; }
+.badge-pill {
+  background:rgba(0,0,0,0.2);border-radius:20px;padding:5px 12px;
+  font-size:12px;font-weight:700;display:flex;align-items:center;gap:5px;
+  border:1px solid rgba(255,255,255,0.2);color:#fff;
+}
+
+.stats-grid { display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:14px 16px; }
+.stat-card { background:var(--card);border:1.5px solid var(--border);border-radius:18px;padding:16px;box-shadow:var(--shadow); }
+.stat-card .icon { font-size:24px;margin-bottom:8px; }
+.stat-card .val  { font-size:22px;font-weight:900;color:var(--text); }
+.stat-card .lbl  { font-size:11px;color:var(--muted);margin-top:2px; }
+
+.ach-item {
+  display:flex;align-items:center;gap:14px;
+  background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:14px;
+  margin-bottom:10px;box-shadow:var(--shadow);
+}
+.ach-icon { width:46px;height:46px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0; }
+.ach-info h3 { font-size:14px;font-weight:800;color:var(--text); }
+.ach-info p  { font-size:11px;color:var(--muted);margin-top:2px; }
+
+/* ── ONBOARDING ── */
+.onboard-illo {
+  margin:14px 20px;background:linear-gradient(135deg,rgba(107,78,255,0.08),rgba(200,64,245,0.06));
+  border:1.5px solid var(--border);border-radius:28px;height:190px;
+  display:flex;align-items:center;justify-content:center;font-size:80px;box-shadow:var(--shadow);
+}
+.o-dots { display:flex;gap:6px;justify-content:center;margin:12px 0; }
+.o-dot  { width:8px;height:8px;border-radius:50%;background:var(--border); }
+.o-dot.active { background:var(--accent);width:24px;border-radius:4px; }
+.onboard-text { padding:0 24px 14px;text-align:center; }
+.onboard-text h2 { font-size:24px;font-weight:900;color:var(--text);line-height:1.25; }
+.onboard-text p  { font-size:14px;color:var(--muted);margin-top:8px;line-height:1.55; }
+
+/* ── BOTTOM NAV ── */
+.bottom-nav {
+  display:flex;justify-content:space-around;padding:12px 0 28px;
+  background:rgba(255,255,255,0.92);backdrop-filter:blur(20px);
+  border-top:1px solid var(--border);position:sticky;bottom:0;z-index:50;
+}
+.nav-item { display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:0 20px; }
+.nav-item svg { width:22px;height:22px;fill:none;stroke:var(--muted);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round; }
+.nav-item span { font-size:10px;color:var(--muted);font-weight:600; }
+.nav-item.active svg { stroke:var(--accent); }
+.nav-item.active span { color:var(--accent);font-weight:800; }
+.nav-dot { width:4px;height:4px;background:var(--accent);border-radius:50%; }
+
+/* ── INFO PILL ── */
+.info-pill {
+  margin:0 20px 12px;border-radius:14px;padding:12px 14px;font-size:12px;line-height:1.5;
+  display:flex;gap:10px;align-items:flex-start;
+}
+.info-pill.green { background:rgba(16,185,129,0.08);border:1.5px solid rgba(16,185,129,0.2); }
+.info-pill.blue  { background:rgba(107,78,255,0.07);border:1.5px solid rgba(107,78,255,0.18); }
+.info-pill.orange{ background:rgba(249,115,22,0.07);border:1.5px solid rgba(249,115,22,0.2); }
+.info-pill.red   { background:rgba(239,68,68,0.07);border:1.5px solid rgba(239,68,68,0.2); }
+
+/* ── PAGE HEADER ── */
+.page-masthead { width:100%;max-width:1440px;padding:0 4px; }
+.page-masthead h1 { font-size:42px;font-weight:900;letter-spacing:-0.03em;color:var(--text); }
+.page-masthead h1 span { background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text; }
+.page-masthead p { font-size:16px;color:var(--muted);margin-top:6px; }
+
+.divider { width:100%;max-width:1440px;height:1px;background:var(--border); }
+
+/* ── XP BAR ── */
+.xp-bar { background:rgba(107,78,255,0.1);border-radius:8px;overflow:hidden;height:9px;border:1px solid var(--border); }
+.xp-fill{ height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:8px; }
+</style>
+</head>
+<body>
+<div class="canvas">
+
+  <!-- PAGE HEADER -->
+  <div class="page-masthead">
+    <h1>Learning Games <span>Light UI</span></h1>
+    <p>19 screens · 19 games · Student knowledge platform — Figma-ready HTML · Light theme</p>
+  </div>
+  <div class="divider"></div>
+
+  <!-- ═══════════════════════════════════════════════
+       ROW 1 — HOME  |  BROWSE  |  MEMORY MATCH
+  ══════════════════════════════════════════════════ -->
+  <div class="section-label">Screen 01 — Home Hub &nbsp;|&nbsp; Screen 02 — Browse All Games &nbsp;|&nbsp; Screen 03 — Memory Match</div>
+  <div class="frames-row">
+
+    <!-- 01 HOME HUB -->
+    <div class="phone-wrap"><div class="phone"><div class="phone-inner">
+      <div class="status-bar">
+        <span class="status-time">9:41</span>
+        <div style="display:flex;gap:6px;align-items:center">
+          <svg width="16" height="12" viewBox="0 0 16 12" fill="#1A1838"><rect x="0" y="3" width="3" height="9" rx="1"/><rect x="4.5" y="2" width="3" height="10" rx="1"/><rect x="9" y="0" width="3" height="12" rx="1"/><rect x="13.5" y="0" width="2" height="12" rx="1" opacity=".35"/></svg>
+          <svg width="16" height="12" viewBox="0 0 20 15" fill="#1A1838"><path d="M10 3C13.5 3 16.5 4.5 18.5 7L20 5.5C17.5 2.5 14 1 10 1S2.5 2.5 0 5.5L1.5 7C3.5 4.5 6.5 3 10 3z"/><path d="M10 7c2 0 3.8.8 5.1 2.1L16.5 7.5C14.8 5.9 12.5 5 10 5S5.2 5.9 3.5 7.5L5 9.1C6.2 7.8 8 7 10 7z"/><circle cx="10" cy="13" r="2"/></svg>
+          <svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x="0" y="1" width="22" height="10" rx="3" stroke="#1A1838" stroke-width="1.5"/><rect x="23.5" y="4" width="2" height="4" rx="1" fill="#1A1838"/><rect x="1.5" y="2.5" width="16" height="7" rx="1.5" fill="#1A1838"/></svg>
+        </div>
+      </div>
+
+      <div class="top-bar">
+        <div style="flex:1">
+          <div style="font-size:12px;color:var(--muted);font-weight:600">Good morning, Alex 👋</div>
+          <div style="font-size:19px;font-weight:900;margin-top:2px;color:var(--text)">Learning Games</div>
+        </div>
+        <div class="btn-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <div class="notif-dot"></div>
+        </div>
+      </div>
+
+      <div class="hero" style="margin-bottom:14px">
+        <div class="hero-badge">🪙 1,240 XP</div>
+        <div class="hero-title">Play. Learn.<br/>Level Up.</div>
+        <div class="hero-sub">Earn coins & XP with every game</div>
+        <div class="hero-stats">
+          <div class="hero-stat"><div class="hero-stat-val">🔥 7</div><div class="hero-stat-lbl">Day Streak</div></div>
+          <div class="hero-stat"><div class="hero-stat-val">⚡ 42</div><div class="hero-stat-lbl">Games Done</div></div>
+          <div class="hero-stat"><div class="hero-stat-val">🏆 #5</div><div class="hero-stat-lbl">Rank</div></div>
+        </div>
+      </div>
+
+      <!-- Daily challenge -->
+      <div style="margin:0 16px 14px;background:linear-gradient(135deg,#FFF7ED,#FFF0F9);border:1.5px solid rgba(249,115,22,0.2);border-radius:20px;padding:14px 16px;display:flex;align-items:center;gap:14px">
+        <div style="font-size:32px">🎯</div>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:800;color:var(--text)">Daily Challenge</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">Complete Rapid Fire • Expires in 4h 23m</div>
+          <div class="pbar-track" style="background:rgba(249,115,22,0.15);margin-top:6px"><div class="pbar-fill" style="width:35%;background:linear-gradient(90deg,#F97316,#FBBF24)"></div></div>
+        </div>
+        <div style="background:linear-gradient(135deg,#F97316,#FBBF24);border-radius:12px;padding:7px 12px;font-size:12px;font-weight:800;color:#fff">Go →</div>
+      </div>
+
+      <!-- Continue -->
+      <div class="sec-title"><h2>Continue Playing</h2><span>All games →</span></div>
+      <div style="padding:0 16px 12px">
+        <div class="game-card featured" style="background:var(--g-memory)">
+          <div class="card-icon"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="9" height="9" rx="2"/><rect x="13" y="3" width="9" height="9" rx="2"/><rect x="2" y="14" width="9" height="9" rx="2"/><rect x="13" y="14" width="9" height="9" rx="2"/></svg></div>
+          <div class="card-body" style="flex:1">
+            <div class="card-name">Memory Match</div>
+            <div class="card-desc">Round 3/5 • 2 min left</div>
+            <div class="pbar-track" style="width:100%;margin-top:8px"><div class="pbar-fill" style="width:60%"></div></div>
+          </div>
+          <div style="background:rgba(255,255,255,0.2);border-radius:12px;padding:8px 12px;font-size:12px;font-weight:800;color:#fff;flex-shrink:0">Resume</div>
+        </div>
+      </div>
+
+      <div class="sec-title"><h2>🔥 Popular</h2><span>See all 19</span></div>
+      <div class="game-grid">
+        <div class="game-card" style="background:var(--g-scramble)"><div class="card-icon"><svg viewBox="0 0 24 24"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg></div><div class="card-body"><div class="card-name">Word Scramble</div><div class="card-desc">Vocab builder</div></div><div class="card-footer"><div class="card-coins">🪙 +12</div><div class="card-badge">HOT</div></div></div>
+        <div class="game-card" style="background:var(--g-rapid)"><div class="card-icon"><svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div><div class="card-body"><div class="card-name">Rapid Fire</div><div class="card-desc">60-sec GK</div></div><div class="card-footer"><div class="card-coins">🪙 +18</div><div class="card-badge">FAST</div></div></div>
+        <div class="game-card" style="background:var(--g-math)"><div class="card-icon"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="card-body"><div class="card-name">Math Blitz</div><div class="card-desc">Mental math</div></div><div class="card-footer"><div class="card-coins">🪙 +20</div><div class="card-badge">NEW</div></div></div>
+        <div class="game-card" style="background:var(--g-science)"><div class="card-icon"><svg viewBox="0 0 24 24"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v11"/><path d="M3 9v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9"/><path d="M3 9h18"/></svg></div><div class="card-body"><div class="card-name">Science Lab</div><div class="card-desc">Physics & Chem</div></div><div class="card-footer"><div class="card-coins">🪙 +15</div></div></div>
+      </div>
+
+      <div class="bottom-nav">
+        <div class="nav-item active"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span><div class="nav-dot"></div></div>
+        <div class="nav-item"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span>Browse</span></div>
+        <div class="nav-item"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span>Scores</span></div>
+        <div class="nav-item"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Profile</span></div>
+      </div>
+    </div></div><div class="phone-label">01 — Home Hub</div></div>
+
+    <!-- 02 BROWSE ALL -->
+    <div class="phone-wrap"><div class="phone"><div class="phone-inner">
+      <div class="status-bar"><span class="status-time">9:41</span><svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x="0" y="1" width="22" height="10" rx="3" stroke="#1A1838" stroke-width="1.5"/><rect x="23.5" y="4" width="2" height="4" rx="1" fill="#1A1838"/><rect x="1.5" y="2.5" width="19" height="7" rx="1.5" fill="#1A1838"/></svg></div>
+      <div class="top-bar"><div class="btn-back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></div><div class="top-bar-title">All Games</div><div class="btn-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></div></div>
+      <div class="search-wrap"><div class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input placeholder="Search 19 games..."/></div></div>
+      <div class="chips-wrap"><div class="chip active">All</div><div class="chip">Language</div><div class="chip">Math</div><div class="chip">Science</div><div class="chip">GK</div><div class="chip">Logic</div><div class="chip">Geography</div></div>
+      <div class="game-grid">
+        <div class="game-card" style="background:var(--g-memory)"><div class="card-icon"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="9" height="9" rx="2"/><rect x="13" y="3" width="9" height="9" rx="2"/><rect x="2" y="14" width="9" height="9" rx="2"/><rect x="13" y="14" width="9" height="9" rx="2"/></svg></div><div class="card-body"><div class="card-name">Memory Match</div><div class="card-desc">Terms ↔ meanings</div></div><div class="card-footer"><div class="card-coins">🪙 +15</div></div></div>
+        <div class="game-card" style="background:var(--g-scramble)"><div class="card-icon"><svg viewBox="0 0 24 24"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg></div><div class="card-body"><div class="card-name">Word Scramble</div><div class="card-desc">Vocab builder</div></div><div class="card-footer"><div class="card-coins">🪙 +12</div><div class="card-badge">HOT</div></div></div>
+        <div class="game-card" style="background:var(--g-bingo)"><div class="card-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg></div><div class="card-body"><div class="card-name">GK Bingo</div><div class="card-desc">5×5 knowledge grid</div></div><div class="card-footer"><div class="card-coins">🪙 +20</div></div></div>
+        <div class="game-card" style="background:var(--g-rapid)"><div class="card-icon"><svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div><div class="card-body"><div class="card-name">Rapid Fire</div><div class="card-desc">60-sec GK</div></div><div class="card-footer"><div class="card-coins">🪙 +18</div><div class="card-badge">FAST</div></div></div>
+        <div class="game-card" style="background:var(--g-cross)"><div class="card-icon"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="card-body"><div class="card-name">Crossword</div><div class="card-desc">Exam terms</div></div><div class="card-footer"><div class="card-coins">🪙 +10</div></div></div>
+        <div class="game-card" style="background:var(--g-map)"><div class="card-icon"><svg viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg></div><div class="card-body"><div class="card-name">Map Quiz</div><div class="card-desc">Geography</div></div><div class="card-footer"><div class="card-coins">🪙 +14</div></div></div>
+        <div class="game-card" style="background:var(--g-math)"><div class="card-icon"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="card-body"><div class="card-name">Math Blitz</div><div class="card-desc">Mental math</div></div><div class="card-footer"><div class="card-coins">🪙 +20</div><div class="card-badge">NEW</div></div></div>
+        <div class="game-card" style="background:var(--g-grammar)"><div class="card-icon"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div><div class="card-body"><div class="card-name">Grammar Fix</div><div class="card-desc">Correct sentences</div></div><div class="card-footer"><div class="card-coins">🪙 +16</div></div></div>
+        <div class="game-card" style="background:var(--g-science)"><div class="card-icon"><svg viewBox="0 0 24 24"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v11"/><path d="M3 9v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9"/><path d="M3 9h18"/></svg></div><div class="card-body"><div class="card-name">Science Lab</div><div class="card-desc">Physics & Chem</div></div><div class="card-footer"><div class="card-coins">🪙 +15</div></div></div>
+        <div class="game-card" style="background:var(--g-history)"><div class="card-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div><div class="card-body"><div class="card-name">History Line</div><div class="card-desc">Order events</div></div><div class="card-footer"><div class="card-coins">🪙 +22</div><div class="card-badge">NEW</div></div></div>
+        <div class="game-card" style="background:var(--g-spell)"><div class="card-icon"><svg viewBox="0 0 24 24"><path d="M4 15.75l7.5-7.5 7.5 7.5"/><path d="M14.25 8.25L16.5 6a2.121 2.121 0 0 1 3 3l-2.25 2.25"/></svg></div><div class="card-body"><div class="card-name">Spelling Bee</div><div class="card-desc">Spell it right</div></div><div class="card-footer"><div class="card-coins">🪙 +13</div></div></div>
+        <div class="game-card" style="background:var(--g-flag)"><div class="card-icon"><svg viewBox="0 0 24 24"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg></div><div class="card-body"><div class="card-name">Flag Master</div><div class="card-desc">Country flags</div></div><div class="card-footer"><div class="card-coins">🪙 +11</div></div></div>
+        <div class="game-card" style="background:var(--g-logic)"><div class="card-icon"><svg viewBox="0 0 24 24"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M6 21V9a9 9 0 0 0 9 9"/></svg></div><div class="card-body"><div class="card-name">Logic Puzzle</div><div class="card-desc">Patterns & sequences</div></div><div class="card-footer"><div class="card-coins">🪙 +25</div><div class="card-badge">HARD</div></div></div>
+        <div class="game-card" style="background:var(--g-number)"><div class="card-icon"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div><div class="card-body"><div class="card-name">Number Ninja</div><div class="card-desc">Fast calculations</div></div><div class="card-footer"><div class="card-coins">🪙 +17</div></div></div>
+        <div class="game-card" style="background:var(--g-chain)"><div class="card-icon"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div><div class="card-body"><div class="card-name">Word Chain</div><div class="card-desc">Link words</div></div><div class="card-footer"><div class="card-coins">🪙 +14</div></div></div>
+        <div class="game-card" style="background:var(--g-world)"><div class="card-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div><div class="card-body"><div class="card-name">World Quiz</div><div class="card-desc">Capitals & cultures</div></div><div class="card-footer"><div class="card-coins">🪙 +16</div><div class="card-badge">NEW</div></div></div>
+        <div class="game-card" style="background:var(--g-trivia)"><div class="card-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><div class="card-body"><div class="card-name">Trivia Blitz</div><div class="card-desc">Mixed categories</div></div><div class="card-footer"><div class="card-coins">🪙 +19</div><div class="card-badge">MIX</div></div></div>
+        <div class="game-card" style="background:var(--g-code)"><div class="card-icon"><svg viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div><div class="card-body"><div class="card-name">Code Breaker</div><div class="card-desc">Logic & coding</div></div><div class="card-footer"><div class="card-coins">🪙 +28</div><div class="card-badge">HARD</div></div></div>
+        <div class="game-card" style="background:var(--g-word)"><div class="card-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><div class="card-body"><div class="card-name">Story Builder</div><div class="card-desc">Creative writing</div></div><div class="card-footer"><div class="card-coins">🪙 +18</div><div class="card-badge">NEW</div></div></div>
+      </div>
+      <div class="bottom-nav">
+        <div class="nav-item"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span></div>
+        <div class="nav-item active"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span>Browse</span><div class="nav-dot"></div></div>
+        <div class="nav-item"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span>Scores</span></div>
+        <div class="nav-item"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Profile</span></div>
+      </div>
+    </div></div><div class="phone-label">02 — Browse All 19 Games</div></div>
+
+    <!-- 03 MEMORY MATCH -->
+    <div class="phone-wrap"><div class="phone"><div class="phone-inner">
+      <div class="status-bar"><span class="status-time">9:41</span><svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x="0" y="1" width="22" height="10" rx="3" stroke="#1A1838" stroke-width="1.5"/><rect x="23.5" y="4" width="2" height="4" rx="1" fill="#1A1838"/><rect x="1.5" y="2.5" width="16" height="7" rx="1.5" fill="#1A1838"/></svg></div>
+      <div class="game-header"><div class="btn-back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></div><div class="game-header-info"><h1>Memory Match</h1><p>Match terms to their meanings</p></div><div class="timer-chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>1:42</div></div>
+      <div class="progress-strip"><div class="meta"><span>Round 3 / 5</span><span>4 matched ✓</span></div><div class="progress-steps"><div class="step done"></div><div class="step done"></div><div class="step active"></div><div class="step"></div><div class="step"></div></div></div>
+      <div style="display:flex;justify-content:space-between;padding:0 20px 10px;font-size:12px;color:var(--muted);font-weight:600"><span>Score: <strong style="color:var(--gold)">240</strong></span><span>Streak: <strong style="color:#F97316">🔥 3</strong></span></div>
+      <div class="match-board">
+        <div class="match-card matched"><div class="match-card-icon">🧬</div><div class="match-card-text" style="color:#fff">DNA</div></div>
+        <div class="match-card"><div class="match-card-icon">📐</div><div class="match-card-text">Geometry</div></div>
+        <div class="match-card flipped"><div class="match-card-icon">⚡</div><div class="match-card-text" style="color:#fff">Conductor</div></div>
+        <div class="match-card"><div class="match-card-icon">🌊</div><div class="match-card-text">Osmosis</div></div>
+        <div class="match-card matched"><div class="match-card-icon">🔬</div><div class="match-card-text" style="color:#fff">Microscope</div></div>
+        <div class="match-card"><div class="match-card-icon">🧮</div><div class="match-card-text">Algebra</div></div>
+        <div class="match-card flipped"><div class="match-card-icon">⚡</div><div class="match-card-text" style="color:#fff">Electricity</div></div>
+        <div class="match-card"><div class="match-card-icon">🔭</div><div class="match-card-text">Telescope</div></div>
+        <div class="match-card"><div class="match-card-icon">🧲</div><div class="match-card-text">Magnet</div></div>
+      </div>
+      <div class="info-pill blue"><span>💡</span><span><strong style="color:var(--accent)">Tip:</strong> Tap two cards that belong together to make a pair!</span></div>
+      <div style="margin:0 20px 10px;background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:12px 14px;display:flex;gap:14px;align-items:center;box-shadow:var(--shadow)">
+        <div style="font-size:11px;color:var(--muted);flex:1;font-weight:600">Remaining pairs:</div>
+        <div style="display:flex;gap:6px">
+          <div style="width:30px;height:30px;border-radius:9px;background:rgba(107,78,255,0.1);border:1.5px solid var(--accent);font-size:15px;display:flex;align-items:center;justify-content:center">📐</div>
+          <div style="width:30px;height:30px;border-radius:9px;background:rgba(107,78,255,0.1);border:1.5px solid var(--accent);font-size:15px;display:flex;align-items:center;justify-content:center">🌊</div>
+          <div style="width:30px;height:30px;border-radius:9px;background:rgba(107,78,255,0.1);border:1.5px solid var(--accent);font-size:15px;display:flex;align-items:center;justify-content:center">🧮</div>
+        </div>
+      </div>
+    </div></div><div class="phone-label">03 — Memory Match</div></div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       ROW 2 — MCQ  |  WORD SCRAMBLE  |  RAPID FIRE
+  ══════════════════════════════════════════════════ -->
+  <div class="section-label">Screen 04 — Science MCQ &nbsp;|&nbsp; Screen 05 — Word Scramble &nbsp;|&nbsp; Screen 06 — Rapid Fire</div>
+  <div class="frames-row">
+
+    <!-- 04 MCQ -->
+    <div class="phone-wrap"><div class="phone"><div class="phone-inner">
+      <div class="status-bar"><span class="status-time">9:41</span><svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x="0" y="1" width="22" height="10" rx="3" stroke="#1A1838" stroke-width="1.5"/><rect x="23.5" y="4" width="2" height="4" rx="1" fill="#1A1838"/><rect x="1.5" y="2.5" width="19" height="7" rx="1.5" fill="#1A1838"/></svg></div>
+      <div class="game-header"><div class="btn-back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></div><div class="game-header-info"><h1>Science Lab</h1><p>Question 4 of 10</p></div><div class="timer-chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>0:28</div></div>
+      <div class="progress-strip"><div class="meta"><span>4 / 10 questions</span><span>Score: <strong style="color:var(--gold)">60</strong></span></div><div class="progress-steps"><div class="step done"></div><div class="step done"></div><div class="step done"></div><div class="step active"></div><div class="step"></div><div class="step"></div><div class="step"></div><div class="step"></div><div class="step"></div><div class="step"></div></div></div>
+      <div class="q-card"><div class="q-label">⚗️ Chemistry</div><div class="q-text">What is the chemical symbol for Gold?</div><div class="q-img-placeholder">🥇</div></div>
+      <div class="options">
+        <div class="option"><div class="opt-letter">A</div><div class="opt-text">Go</div></div>
+        <div class="option correct"><div class="opt-letter" style="background:rgba(16,185,129,0.15);border-color:var(--green);color:var(--green)">B</div><div class="opt-text" style="font-weight:800;color:var(--green)">Au ✓</div></div>
+        <div class="option wrong"><div class="opt-letter" style="background:rgba(239,68,68,0.1);border-color:var(--red);color:var(--red)">C</div><div class="opt-text" style="color:var(--red)">Gd ✗</div></div>
+        <div class="option"><div class="opt-letter">D</div><div class="opt-text">Ag</div></div>
+      </div>
+      <div class="info-pill green"><span>🎉</span><span><strong style="color:var(--green)">Correct!</strong> Au comes from the Latin "Aurum" meaning gold. <strong>+15 🪙</strong></span></div>
+      <div class="action-row"><button class="btn-primary">Next Question →</button></div>
+    </div></div><div class="phone-label">04 — MCQ Quiz</div></div>
+
+    <!-- 05 WORD SCRAMBLE -->
+    <div class="phone-wrap"><div class="phone"><div class="phone-inner">
+      <div class="status-bar"><span class="status-time">9:41</span><svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x="0" y="1" width="22" height="10" rx="3" stroke="#1A1838" stroke-width="1.5"/><rect x="23.5" y="4" width="2" height="4" rx="1" fill="#1A1838"/><rect x="1.5" y="2.5" width="18" height="7" rx="1.5" fill="#1A1838"/></svg></div>
+      <div class="game-header"><div class="btn-back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></div><div class="game-header-info"><h1>Word Scramble</h1><p>Unscramble the word</p></div><div class="timer-chip orange"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>0:45</div></div>
+      <div class="progress-strip"><div class="meta"><span>Word 3 / 8</span><span>Score: <strong style="color:var(--gold)">180</strong></span></div><div class="progress-steps"><div class="step done"></div><div class="step done"></div><div class="step active"></div><div class="step"></div><div class="step"></div><div class="step"></div><div class="step"></div><div class="step"></div></div></div>
+      <div class="scramble-box">
+        <div class="scramble-hint">🔬 Science — 9 letters</div>
+        <div style="font-size:12px;color:var(--muted);margin-top:6px;font-weight:600">Hint: The study of living organisms</div>
+        <div class="s-letters"><div class="s-letter">Y</div><div class="s-letter">G</div><div class="s-letter">O</div><div class="s-letter">L</div><div class="s-letter blank"></div><div class="s-letter">I</div><div class="s-letter">O</div><div class="s-letter">B</div><div class="s-letter blank"></div></div>
+        <div style="font-size:10px;color:var(--muted);margin-top:14px;text-transform:uppercase;letter-spacing:0.08em;font-weight:700">Your answer</div>
+        <div class="a-slots"><div class="a-slot filled">B</div><div class="a-slot filled">I</div><div class="a-slot filled">O</div><div class="a-slot">_</div><div class="a-slot">_</div><div class="a-slot">_</div><div class="a-slot">_</div><div class="a-slot">_</div><div class="a-slot">_</div></div>
+      </div>
+      <div class="keyboard">
+        <div class="key-row"><div class="key">Q</div><div class="key">W</div><div class="key">E</div><div class="key">R</div><div class="key">T</div><div class="key">Y</div><div class="key">U</div></div>
+        <div class="key-row"><div class="key">A</div><div class="key">S</div><div class="key">D</div><div class="key">F</div><div class="key">G</div><div class="key">H</div><div class="key">J</div></div>
+        <div class="key-row"><div class="key wide">⌫</div><div class="key">Z</div><div class="key">X</div><div class="key">C</div><div class="key">V</div><div class="key">B</div><div class="key">N</div><div class="key">M</div></div>
+      </div>
+      <div class="btn-row" style="margin-top:12px"><button class="btn-secondary">💡 Hint −5🪙</button><button class="btn-primary">Submit ✓</button></div>
+    </div></div><div class="phone-label">05 — Word Scramble</div></div>
+
+    <!-- 06 RAPID FIRE -->
+    <div class="phone-wrap"><div class="phone"><div class="phone-inner">
+      <div class="status-bar"><span class="status-time">9:41</span><svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x="0" y="1" width="22" height="10" rx="3" stroke="#1A1838" stroke-width="1.5"/><rect x="23.5" y="4" width="2" height="4" rx="1" fill="#1A1838"/><rect x="1.5" y="2.5" width="19" height="7" rx="1.5" fill="#1A1838"/></svg></div>
+      <div class="game-header"><div class="btn-back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></div><div class="game-header-info"><h1>Rapid Fire ⚡</h1><p>Answer as fast as you can!</p></div></div>
+      <div class="rapid-hero">
+        <div class="rapid-circle"><div class="rapid-inner">36</div></div>
+        <div class="rapid-info"><h3>60 Seconds Mode</h3><p>24 seconds elapsed</p><div style="margin-top:6px;height:4px;background:rgba(239,68,68,0.15);border-radius:4px;overflow:hidden;width:160px"><div style="height:100%;width:40%;background:var(--red);border-radius:4px"></div></div></div>
+        <div class="rapid-score"><div class="big">12</div><div class="sm">correct</div></div>
+      </div>
+      <div class="q-card" style="background:rgba(239,68,68,0.04);border-color:rgba(239,68,68,0.2)"><div class="q-label" style="color:var(--red)">⚡ RAPID FIRE</div><div class="q-text" style="font-size:20px">Who discovered Penicillin?</div></div>
+      <div class="options">
+        <div class="option"><div class="opt-letter">A</div><div class="opt-text">Marie Curie</div></div>
+        <div class="option selected"><div class="opt-letter" style="background:rgba(107,78,255,0.12);border-color:var(--accent);color:var(--accent)">B</div><div class="opt-text" style="font-weight:700">Alexander Fleming</div></div>
+        <div class="option"><div class="opt-letter">C</div><div class="opt-text">Louis Pasteur</div></div>
+        <div class="option"><div class="opt-letter">D</div><div class="opt-text">Isaac Newton</div></div>
+      </div>
+      <div style="padding:0 20px;display:flex;justify-content:space-between;font-size:12px;color:var(--muted);font-weight:700">
+        <span>✓ 12 correct &nbsp; ✗ 3 wrong</span>
+        <span style="color:var(--red)">AUTO NEXT →</span>
+      </div>
+    </div></div><div class="phone-label">06 — Rapid Fire</div></div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       ROW 3 — MATH BLITZ  |  SPELLING BEE  |  GK BINGO
+  ══════════════════════════════════════════════════ -->
+  <div class="section-label">Screen 07 — Math Blitz &nbsp;|&nbsp; Screen 08 — Spelling Bee &nbsp;|&nbsp; Screen 09 — GK Bingo</div>
+  <div class="frames-row">
+
+    <!-- 07 MATH BLITZ -->
+    <div class="phone-wrap"><div class="phone"><div class="phone-inner">
+      <div class="status-bar"><span class="status-time">9:41</span><svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x="0" y="1" width="22" height="10" rx="3" stroke="#1A1838" stroke-width="1.5"/><rect x="23.5" y="4" width="2" height="4" rx="1" fill="#1A1838"/><rect x="1.5" y="2.5" width="16" height="7" rx="1.5" fill="#1A1838"/></svg></div>
+      <div class="game-header"><div class="btn-back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></div><div class="game-header-info"><h1>Math Blitz ➕</h1><p>20 questions</p></div><div class="timer-chip orange"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>2:11</div></div>
+      <div class="progress-strip"><div class="meta"><span>Problem 7 / 20</span><span>🔥 Streak: 5</span></div><div class="progress-steps"><div class="step done"></div><div class="step done"></div><div class="step done"></div><div class="step done"></div><div class="step done"></div><div class="step done"></div><div class="step active"></div><div class="step"></div><div class="step"></div><div class="step"></div></div></div>
+      <div class="math-box">
+        <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;font-weight:700">Solve for __:</div>
+        <div class="math-eq">128 <span class="op">÷</span> 8 = <span class="blank-ans">__</span></div>
+        <div style="font-size:12px;color:var(--muted);margin-top:16px;font-weight:600">Level: Intermediate • +20 🪙</div>
+      </div>
+      <div class="numpad">
+        <div class="num-btn">7</div><div class="num-btn">8</div><div class="num-btn">9</div>
+        <div class="num-btn">4</div><div class="num-btn">5</div><div class="num-btn">6</div>
+        <div class="num-btn">1</div><div class="num-btn">2</div><div class="num-btn">3</div>
+        <div class="num-btn special">Skip −5🪙</div>
+        <div class="num-btn">0</div>
+        <div class="num-btn del">⌫</div>
+      </div>
+      <div class="action-row"><button class="btn-primary">Submit Answer</button></div>
+    </div></div><div class="phone-label">07 — Math Blitz</div></div>
+
+    <!-- 08 SPELLING BEE -->
+    <div class="phone-wrap"><div class="phone"><div class="phone-inner">
+      <div class="status-bar"><span class="status-time">9:41</span><svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x="0" y="1" width="22" height="10" rx="3" stroke="#1A1838" stroke-width="1.5"/><rect x="23.5" y="4" width="2" height="4" rx="1" fill="#1A1838"/><rect x="1.5" y="2.5" width="19" height="7" rx="1.5" fill="#1A1838"/></svg></div>
+      <div class="game-header"><div class="btn-back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></div><div class="game-header-info"><h1>Spelling Bee 🐝</h1><p>Use the center letter every time</p></div></div>
+      <div style="padding:0 20px 8px;display:flex;justify-content:space-between;font-size:13px;color:var(--muted);font-weight:700"><span>Words found: <strong style="color:var(--text)">7</strong></span><span>Points: <strong style="color:var(--gold)">84</strong></span></div>
+      <div style="margin:0 20px 10px;background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:10px 12px;display:flex;flex-wrap:wrap;gap:6px;box-shadow:var(--shadow)">
+        <span style="background:rgba(16,185,129,0.1);border:1.5px solid rgba(16,185,129,0.3);border-radius:8px;padding:3px 10px;font-size:12px;color:var(--green);font-weight:700">PLOT</span>
+        <span style="background:rgba(16,185,129,0.1);border:1.5px solid rgba(16,185,129,0.3);border-radius:8px;padding:3px 10px;font-size:12px;color:var(--green);font-weight:700">LOOP</span>
+        <span style="background:rgba(16,185,129,0.1);border:1.5px solid rgba(16,185,129,0.3);border-radius:8px;padding:3px 10px;font-size:12px;color:var(--green);font-weight:700">POLO</span>
+        <span style="background:rgba(16,185,129,0.1);border:1.5px solid rgba(16,185,129,0.3);border-radius:8px;padding:3px 10px;font-size:12px;color:var(--green);font-weight:700">POOL</span>
+        <span style="background:rgba(107,78,255,0.08);border:1.5px solid rgba(107,78,255,0.2);border-radius:8px;padding:3px 10px;font-size:12px;color:var(--accent);font-weight:700">+3 more</span>
+      </div>
+      <div class="spell-box"><span>POLL</span><div class="spell-cursor"></div></div>
+      <div class="hex-grid">
+        <div class="hex-row"><div class="hex">T</div><div class="hex">R</div></div>
+        <div class="hex-row"><div class="hex">P</div><div class="hex center">O</div><div class="hex">L</div></div>
+        <div class="hex-row"><div class="hex">E</div><div class="hex">N</div></div>
+      </div>
+      <div style="padding:8px 20px;display:flex;gap:10px;justify-content:center">
+        <button style="padding:11px 20px;border-radius:14px;background:var(--card);border:1.5px solid var(--border);color:var(--text);font-size:14px;font-weight:700;cursor:pointer;box-shadow:var(--shadow)">Delete</button>
+        <button style="padding:11px 20px;border-radius:14px;background:var(--card);border:1.5px solid var(--border);color:var(--text);font-size:14px;font-weight:700;cursor:pointer;box-shadow:var(--shadow)">Shuffle</button>
+        <button style="padding:11px 20px;border-radius:14px;background:var(--accent);border:none;color:#fff;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(107,78,255,0.35)">Enter</button>
+      </div>
+    </div></div><div class="phone-label">08 — Spelling Bee</div></div>
+
+    <!-- 09 GK BINGO -->
+    <div class="phone-wrap"><div class="phone"><div class="phone-inner">
+      <div class="status-bar"><span class="status-time">9:41</span><svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x="0" y="1" width="22" height="10" rx="3" stroke="#1A1838" stroke-width="1.5"/><rect x="23.5" y="4" width="2" height="4" rx="1" fill="#1A1838"/><rect x="1.5" y="2.5" width="14" height="7" rx="1.5" fill="#1A1838"/></svg></div>
+      <div class="game-header"><div class="btn-back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></div><div class="game-header-info"><h1>GK Bingo 🎱</h1><p>Mark correct answers — get BINGO!</p></div></div>
+      <div class="progress-strip"><div class="meta"><span>Round 1</span><span>Score: <strong style="color:var(--gold)">60</strong></span></div></div>
+      <div style="margin:0 20px 10px;background:linear-gradient(135deg,rgba(16,185,129,0.08),rgba(5,150,105,0.05));border:1.5px solid rgba(16,185,129,0.2);border-radius:16px;padding:12px 14px">
+        <div style="font-size:11px;color:var(--green);font-weight:800;text-transform:uppercase;letter-spacing:0.08em">Current Question</div>
+        <div style="font-size:15px;font-weight:800;margin-top:6px;color:var(--text)">The capital of Australia is ___?</div>
+      </div>
+      <div style="padding:0 20px;margin-bottom:10px;display:flex;justify-content:space-between;font-size:12px;color:var(--muted);font-weight:700">
+        <span>Tap a cell to mark it!</span>
+        <span style="color:var(--accent)">BINGO needs 5 in a row</span>
+      </div>
+      <div class="bingo-grid">
+        <div style="font-size:13px;font-weight:900;color:var(--accent);display:flex;align-items:center;justify-content:center;aspect-ratio:1">B</div>
+        <div style="font-size:13px;font-weight:900;color:var(--accent);display:flex;align-items:center;justify-content:center;aspect-ratio:1">I</div>
+        <div style="font-size:13px;font-weight:900;color:var(--accent);display:flex;align-items:center;justify-content:center;aspect-ratio:1">N</div>
+        <div style="font-size:13px;font-weight:900;color:var(--accent);display:flex;align-items:center;justify-content:center;aspect-ratio:1">G</div>
+        <div style="font-size:13px;font-weight:900;color:var(--accent);display:flex;align-items:center;justify-content:center;aspect-ratio:1">O</div>
+        <div class="bingo-cell marked">Paris</div>
+        <div class="bingo-cell">Delhi</div>
+        <div class="bingo-cell marked">Canberra</div>
+        <div class="bingo-cell">Tokyo</div>
+        <div class="bingo-cell marked">DNA</div>
+        <div class="bingo-cell">H₂O</div>
+        <div class="bingo-cell marked">Newton</div>
+        <div class="bingo-cell free" style="font-size:18px">⭐</div>
+        <div class="bingo-cell">Darwin</div>
+        <div class="bingo-cell">Gravity</div>
+        <div class="bingo-cell">1776</div>
+        <div class="bingo-cell">AU</div>
+        <div class="bingo-cell">Nile</div>
+        <div class="bingo-cell marked">Amazon</div>
+        <div class="bingo-cell">Mt. Everest</div>
+        <div class="bingo-cell marked">Oxygen</div>
+        <div class="bingo-cell">Carbon</div>
+        <div class="bingo-cell">Edison</div>
+        <div class="bingo-cell">1945</div>
+        <div class="bingo-cell marked">Moon</div>
+        <div class="bingo-cell">7</div>
+        <div class="bingo-cell">Berlin</div>
+        <div class="bingo-cell marked">Photosynthesis</div>
+        <div class="bingo-cell">Fe</div>
+        <div class="bingo-cell">5</div>
+      </div>
+      <div class="info-pill blue" style="margin-top:4px"><span>🎯</span><span><strong style="color:var(--accent)">Almost BINGO!</strong> Mark one more in column N</span></div>
+    </div></div><div class="phone-label">09 — GK Bingo</div></div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       ROW 4 — CROSSWORD  |  MAP QUIZ  |  HISTORY TIMELINE
+  ══════════════════════════════════════════════════ -->
+  <div class="section-label">Screen 10 — Crossword &nbsp;|&nbsp; Screen 11 — Map Quiz &nbsp;|&nbsp; Screen 12 — History Timeline</div>
+  <div class="frames-row">
+
+    <!-- 10 CROSSWORD -->
+    <div class="phone-wrap"><div class="phone"><div class="phone-inner">
+      <div class="status-bar"><span class="status-time">9:41</span><svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x="0" y="1" width="22" height="10" rx="3" stroke="#1A1838" stroke-width="1.5"/><rect x="23.5" y="4" width="2" height="4" rx="1" fill="#1A1838"/><rect x="1.5" y="2.5" width="19" height="7" rx="1.5" fill="#1A1838"/></svg></div>
+      <div class="game-header"><div class="btn-back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></div><div class="game-header-info"><h1>Crossword ✚</h1><p>Exam terms edition</p></div><div class="timer-chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>5:38</div></div>
+      <div class="cw-grid">
+        <div class="cw-cell" style="background:#E8E6FF;border-color:transparent"></div>
+        <div class="cw-cell correct"><div class="cw-num">1</div>P</div><div class="cw-cell correct">H</div><div class="cw-cell correct">Y</div><div class="cw-cell correct">S</div><div class="cw-cell correct">I</div><div class="cw-cell correct">C</div>
+        <div class="cw-cell" style="background:#E8E6FF;border-color:transparent"></div>
+        <div class="cw-cell active"><div class="cw-num">2</div>A</div>
+        <div class="cw-cell" style="background:#E8E6FF;border-color:transparent"></div>
+        <div class="cw-cell" style="background:#E8E6FF;border-color:transparent"></div>
+        <div class="cw-cell">O</div>
+        <div class="cw-cell" style="background:#E8E6FF;border-color:transparent"></div>
+        <div class="cw-cell" style="background:#E8E6FF;border-color:transparent"></div>
+        <div class="cw-cell"><div class="cw-num">3</div>B</div><div class="cw-cell active">T</div><div class="cw-cell">O</div><div class="cw-cell">N</div><div class="cw-cell">D</div>
+        <div class="cw-cell" style="background:#E8E6FF;border-color:transparent"></div>
+        <div class="cw-cell" style="background:#E8E6FF;border-color:transparent"></div>
+        <div class="cw-cell">I</div><div class="cw-cell active">O</div>
+        <div class="cw-cell" style="background:#E8E6FF;border-color:transparent"></div>
+        <div class="cw-cell"><div class="cw-num">4</div>E</div>
+        <div class="cw-cell" style="background:#E8E6FF;border-color:transparent"></div>
+        <div class="cw-cell" style="background:#E8E6FF;border-color:transparent"></div>
+        <div class="cw-cell" style="background:#E8E6FF;border-color:transparent"></div>
+        <div class="cw-cell">O</div><div class="cw-cell active">M</div>
+        <div class="cw-cell" style="background:#E8E6FF;border-color:transparent"></div>
+        <div class="cw-cell">U</div>
+        <div class="cw-cell" style="background:#E8E6FF;border-color:transparent"></div>
+        <div class="cw-cell" style="background:#E8E6FF;border-color:transparent"></div>
+        <div class="cw-cell" style="background:#E8E6FF;border-color:transparent"></div>
+        <div class="cw-cell" style="background:#E8E6FF;border-color:transparent"></div>
+        <div class="cw-cell active"></div>
+        <div class="cw-cell" style="background:#E8E6FF;border-color:transparent"></div>
+        <div class="cw-cell">M</div>
+        <div class="cw-cell" style="background:#E8E6FF;border-color:transparent"></div>
+        <div class="cw-cell" style="background:#E8E6FF;border-color:transparent"></div>
+        <div class="cw-cell" style="background:#E8E6FF;border-color:transparent"></div>
+      </div>
+      <div style="margin:0 20px 10px;background:rgba(107,78,255,0.07);border:1.5px solid rgba(107,78,255,0.2);border-radius:14px;padding:12px;font-size:13px;color:var(--text)">
+        <strong style="color:var(--accent)">2 Across:</strong> The study of atoms — _____omy (4 letters)
+      </div>
+      <div class="clues">
+        <div class="clue-group"><h3>Across</h3>
+          <div class="clue-item"><div class="clue-num">1.</div><div>Branch of science dealing with matter and energy</div></div>
+          <div class="clue-item"><div class="clue-num">2.</div><div>Study of atoms and molecules</div></div>
+          <div class="clue-item"><div class="clue-num">3.</div><div>Study of living organisms</div></div>
+          <div class="clue-item"><div class="clue-num">4.</div><div>Exam prep term for a fundamental particle</div></div>
+        </div>
+      </div>
+    </div></div><div class="phone-label">10 — Crossword</div></div>
+
+    <!-- 11 MAP QUIZ -->
+    <div class="phone-wrap"><div class="phone"><div class="phone-inner">
+      <div class="status-bar"><span class="status-time">9:41</span><svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x="0" y="1" width="22" height="10" rx="3" stroke="#1A1838" stroke-width="1.5"/><rect x="23.5" y="4" width="2" height="4" rx="1" fill="#1A1838"/><rect x="1.5" y="2.5" width="19" height="7" rx="1.5" fill="#1A1838"/></svg></div>
+      <div class="game-header"><div class="btn-back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></div><div class="game-header-info"><h1>Map Quiz 🗺️</h1><p>Tap the correct location</p></div><div class="timer-chip green"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>0:52</div></div>
+      <div class="progress-strip"><div class="meta"><span>Question 5 / 12</span><span>Score: <strong style="color:var(--gold)">320</strong></span></div><div class="progress-steps"><div class="step done"></div><div class="step done"></div><div class="step done"></div><div class="step done"></div><div class="step active"></div><div class="step"></div><div class="step"></div></div></div>
+      <div class="map-box">
+        <svg style="width:100%;height:100%;opacity:0.55" viewBox="0 0 400 240" fill="none">
+          <rect width="400" height="240" fill="#EEF4FF" rx="16"/>
+          <ellipse cx="200" cy="120" rx="185" ry="108" fill="#D4E8FF" stroke="#BDD4F0" stroke-width="1"/>
+          <path d="M60 75 Q80 58 120 68 Q140 78 130 108 Q120 128 90 118 Q60 108 60 75Z" fill="#B8D4C8" stroke="#90B8A8" stroke-width="1"/>
+          <path d="M148 48 Q190 38 228 48 Q258 68 248 98 Q238 128 208 138 Q178 148 158 128 Q138 108 148 78Z" fill="#B8D4C8" stroke="#90B8A8" stroke-width="1"/>
+          <path d="M268 58 Q308 48 348 68 Q358 88 338 108 Q318 128 288 118 Q268 98 268 78Z" fill="#B8D4C8" stroke="#90B8A8" stroke-width="1"/>
+          <path d="M78 138 Q108 128 128 148 Q138 168 118 183 Q98 193 78 173 Q63 153 78 138Z" fill="#B8D4C8" stroke="#90B8A8" stroke-width="1"/>
+          <path d="M158 158 Q188 148 208 163 Q223 178 208 198 Q193 213 173 203 Q153 188 158 168Z" fill="#B8D4C8" stroke="#90B8A8" stroke-width="1"/>
+          <path d="M278 138 Q318 128 338 153 Q348 173 333 193 Q313 208 288 198 Q268 183 273 158Z" fill="#B8D4C8" stroke="#90B8A8" stroke-width="1"/>
+        </svg>
+        <div class="map-pin" style="top:38%;left:52%"></div>
+      </div>
+      <div style="margin:0 20px 10px;background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:12px 14px;font-size:14px;font-weight:700;color:var(--text);box-shadow:var(--shadow)">
+        📍 Where is the capital of <strong style="color:var(--accent)">France</strong> located?
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;font-weight:500">Tap the correct country on the map above</div>
+      </div>
+      <div class="options" style="padding-top:0">
+        <div class="option correct"><div class="opt-letter" style="background:rgba(16,185,129,0.12);border-color:var(--green);color:var(--green)">A</div><div class="opt-text" style="font-weight:800;color:var(--green)">🇫🇷 France — Paris ✓</div></div>
+        <div class="option"><div class="opt-letter">B</div><div class="opt-text">🇩🇪 Germany — Berlin</div></div>
+        <div class="option"><div class="opt-letter">C</div><div class="opt-text">🇪🇸 Spain — Madrid</div></div>
+      </div>
+      <div class="action-row"><button class="btn-primary">Next Question →</button></div>
+    </div></div><div class="phone-label">11 — Map Quiz</div></div>
+
+    <!-- 12 HISTORY TIMELINE -->
+    <div class="phone-wrap"><div class="phone"><div class="phone-inner">
+      <div class="status-bar"><span class="status-time">9:41</span><svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x="0" y="1" width="22" height="10" rx="3" stroke="#1A1838" stroke-width="1.5"/><rect x="23.5" y="4" width="2" height="4" rx="1" fill="#1A1838"/><rect x="1.5" y="2.5" width="19" height="7" rx="1.5" fill="#1A1838"/></svg></div>
+      <div class="game-header"><div class="btn-back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></div><div class="game-header-info"><h1>History Line 📜</h1><p>Drag events to correct order</p></div></div>
+      <div class="info-pill orange"><span>📌</span><span><strong style="color:#F97316">Task:</strong> Arrange events in chronological order</span></div>
+      <div class="timeline">
+        <div class="tl-item">
+          <div class="tl-year">1776</div>
+          <div class="tl-line"><div class="tl-dot" style="background:var(--green)"></div><div class="tl-conn"></div></div>
+          <div class="tl-card" style="border-color:rgba(16,185,129,0.4);background:rgba(16,185,129,0.06)">
+            <h3>US Declaration of Independence</h3>
+            <p>American colonies break from Britain</p>
+            <div class="tl-drag" style="color:var(--green)">✓ Correct position</div>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-year">1945</div>
+          <div class="tl-line"><div class="tl-dot" style="background:var(--red)"></div><div class="tl-conn"></div></div>
+          <div class="tl-card" style="border-color:rgba(239,68,68,0.35);background:rgba(239,68,68,0.05)">
+            <h3>End of World War II</h3>
+            <p>Allied forces defeat Axis powers</p>
+            <div class="tl-drag" style="color:var(--red)">✗ Wrong — move below 1776</div>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-year">1969</div>
+          <div class="tl-line"><div class="tl-dot"></div><div class="tl-conn"></div></div>
+          <div class="tl-card">
+            <h3>Moon Landing</h3>
+            <p>Apollo 11 — Neil Armstrong walks on the moon</p>
+            <div class="tl-drag">⠿ Drag to reorder</div>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-year">1989</div>
+          <div class="tl-line"><div class="tl-dot"></div></div>
+          <div class="tl-card">
+            <h3>Fall of Berlin Wall</h3>
+            <p>Germany reunified; Cold War ends</p>
+            <div class="tl-drag">⠿ Drag to reorder</div>
+          </div>
+        </div>
+      </div>
+      <div class="action-row"><button class="btn-primary">Check Order →</button></div>
+    </div></div><div class="phone-label">12 — History Timeline</div></div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       ROW 5 — FLAG MASTER  |  WORD CHAIN  |  LOGIC PUZZLE
+  ══════════════════════════════════════════════════ -->
+  <div class="section-label">Screen 13 — Flag Master &nbsp;|&nbsp; Screen 14 — Word Chain &nbsp;|&nbsp; Screen 15 — Logic Puzzle</div>
+  <div class="frames-row">
+
+    <!-- 13 FLAG MASTER -->
+    <div class="phone-wrap"><div class="phone"><div class="phone-inner">
+      <div class="status-bar"><span class="status-time">9:41</span><svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x="0" y="1" width="22" height="10" rx="3" stroke="#1A1838" stroke-width="1.5"/><rect x="23.5" y="4" width="2" height="4" rx="1" fill="#1A1838"/><rect x="1.5" y="2.5" width="19" height="7" rx="1.5" fill="#1A1838"/></svg></div>
+      <div class="game-header"><div class="btn-back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></div><div class="game-header-info"><h1>Flag Master 🏳️</h1><p>Identify the country's flag</p></div><div class="timer-chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>0:18</div></div>
+      <div class="progress-strip"><div class="meta"><span>Flag 7 / 20</span><span>Score: <strong style="color:var(--gold)">180</strong></span></div><div class="progress-steps"><div class="step done"></div><div class="step done"></div><div class="step done"></div><div class="step done"></div><div class="step done"></div><div class="step done"></div><div class="step active"></div><div class="step"></div><div class="step"></div><div class="step"></div></div></div>
+      <div style="margin:0 20px 14px;background:var(--card);border:1.5px solid var(--border);border-radius:22px;padding:20px;text-align:center;box-shadow:var(--shadow)">
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;font-weight:700;margin-bottom:10px">Which country does this flag belong to?</div>
+        <div style="font-size:96px;line-height:1">🇯🇵</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:10px;font-weight:600">Hint available — costs 5 🪙</div>
+      </div>
+      <div class="options">
+        <div class="option"><div class="opt-letter">A</div><div class="opt-text">🌏 South Korea</div></div>
+        <div class="option correct"><div class="opt-letter" style="background:rgba(16,185,129,0.12);border-color:var(--green);color:var(--green)">B</div><div class="opt-text" style="font-weight:800;color:var(--green)">🌸 Japan ✓</div></div>
+        <div class="option"><div class="opt-letter">C</div><div class="opt-text">🌊 China</div></div>
+        <div class="option"><div class="opt-letter">D</div><div class="opt-text">🐉 Taiwan</div></div>
+      </div>
+      <div class="info-pill green"><span>🎉</span><span><strong style="color:var(--green)">Correct!</strong> The flag of Japan — a red sun on white. <strong>+11 🪙</strong></span></div>
+      <div class="action-row"><button class="btn-primary">Next Flag →</button></div>
+    </div></div><div class="phone-label">13 — Flag Master</div></div>
+
+    <!-- 14 WORD CHAIN -->
+    <div class="phone-wrap"><div class="phone"><div class="phone-inner">
+      <div class="status-bar"><span class="status-time">9:41</span><svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x="0" y="1" width="22" height="10" rx="3" stroke="#1A1838" stroke-width="1.5"/><rect x="23.5" y="4" width="2" height="4" rx="1" fill="#1A1838"/><rect x="1.5" y="2.5" width="19" height="7" rx="1.5" fill="#1A1838"/></svg></div>
+      <div class="game-header"><div class="btn-back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></div><div class="game-header-info"><h1>Word Chain 🔗</h1><p>Start where the last word ended</p></div><div class="timer-chip orange"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>1:33</div></div>
+      <div class="progress-strip"><div class="meta"><span>Chain length: 4</span><span>Score: <strong style="color:var(--gold)">120</strong></span></div></div>
+      <div class="info-pill blue"><span>📖</span><span>Each new word must <strong style="color:var(--accent)">start</strong> with the <strong style="color:var(--accent)">last letter</strong> of the previous word</span></div>
+      <div class="word-chain">
+        <div class="chain-word"><div class="chain-num">1</div><div class="chain-text">ATOM</div><div class="chain-link">→ M</div></div>
+        <div class="chain-word"><div class="chain-num">2</div><div class="chain-text">MOLECULE</div><div class="chain-link">→ E</div></div>
+        <div class="chain-word"><div class="chain-num">3</div><div class="chain-text">ENERGY</div><div class="chain-link">→ Y</div></div>
+        <div class="chain-word"><div class="chain-num">4</div><div class="chain-text">YIELD</div><div class="chain-link">→ D</div></div>
+        <div class="chain-input">
+          <div class="chain-num" style="background:var(--accent)">5</div>
+          <input placeholder="Type a word starting with D..." />
+        </div>
+      </div>
+      <div style="padding:0 20px 10px">
+        <div style="background:var(--card2);border:1.5px solid var(--border);border-radius:14px;padding:10px 14px;font-size:12px;color:var(--muted);font-weight:600">
+          Suggestions: DIFFUSE · DENSITY · DARWIN · DISSOLVE
+        </div>
+      </div>
+      <div class="btn-row"><button class="btn-secondary">Skip −10🪙</button><button class="btn-primary">Submit ✓</button></div>
+    </div></div><div class="phone-label">14 — Word Chain</div></div>
+
+    <!-- 15 LOGIC PUZZLE -->
+    <div class="phone-wrap"><div class="phone"><div class="phone-inner">
+      <div class="status-bar"><span class="status-time">9:41</span><svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x="0" y="1" width="22" height="10" rx="3" stroke="#1A1838" stroke-width="1.5"/><rect x="23.5" y="4" width="2" height="4" rx="1" fill="#1A1838"/><rect x="1.5" y="2.5" width="19" height="7" rx="1.5" fill="#1A1838"/></svg></div>
+      <div class="game-header"><div class="btn-back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></div><div class="game-header-info"><h1>Logic Puzzle 🧩</h1><p>Find the odd one out</p></div><div class="timer-chip"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>2:45</div></div>
+      <div class="progress-strip"><div class="meta"><span>Puzzle 2 / 8</span><span>Score: <strong style="color:var(--gold)">80</strong></span></div><div class="progress-steps"><div class="step done"></div><div class="step active"></div><div class="step"></div><div class="step"></div><div class="step"></div><div class="step"></div><div class="step"></div><div class="step"></div></div></div>
+      <div class="q-card"><div class="q-label">🧩 Pattern Recognition</div><div class="q-text" style="font-size:15px">Which item does NOT belong to this group?</div></div>
+      <div class="logic-board">
+        <div class="logic-cell">🐋</div>
+        <div class="logic-cell">🐬</div>
+        <div class="logic-cell target">🐟</div>
+        <div class="logic-cell">🦭</div>
+        <div class="logic-cell">🦈</div>
+        <div class="logic-cell">🐙</div>
+        <div class="logic-cell selected">🐊</div>
+        <div class="logic-cell">🦑</div>
+      </div>
+      <div class="info-pill blue"><span>🧠</span><span>All others are aquatic animals. Which one lives primarily on land?</span></div>
+      <div style="margin:0 20px 12px;background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:14px;box-shadow:var(--shadow)">
+        <div style="font-size:12px;color:var(--muted);font-weight:700;margin-bottom:8px">YOUR ANSWER</div>
+        <div style="font-size:16px;font-weight:800;color:var(--accent)">🐊 Crocodile — selected</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">Crocodiles are reptiles that live on land & water</div>
+      </div>
+      <div class="action-row"><button class="btn-primary">Confirm Answer ✓</button></div>
+    </div></div><div class="phone-label">15 — Logic Puzzle</div></div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       ROW 6 — RESULT  |  LEADERBOARD  |  PROFILE
+  ══════════════════════════════════════════════════ -->
+  <div class="section-label">Screen 16 — Results & Rewards &nbsp;|&nbsp; Screen 17 — Leaderboard &nbsp;|&nbsp; Screen 18 — Player Profile</div>
+  <div class="frames-row">
+
+    <!-- 16 RESULTS -->
+    <div class="phone-wrap"><div class="phone"><div class="phone-inner">
+      <div class="status-bar"><span class="status-time">9:41</span><svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x="0" y="1" width="22" height="10" rx="3" stroke="#1A1838" stroke-width="1.5"/><rect x="23.5" y="4" width="2" height="4" rx="1" fill="#1A1838"/><rect x="1.5" y="2.5" width="19" height="7" rx="1.5" fill="#1A1838"/></svg></div>
+      <div class="result-screen">
+        <div style="font-size:80px;margin-top:10px">🏆</div>
+        <div style="font-size:32px;font-weight:900;margin-top:10px;background:linear-gradient(135deg,var(--gold),#FF6B35);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Amazing!</div>
+        <div style="font-size:14px;color:var(--muted);margin-top:6px;font-weight:600">Science Lab — 90% accuracy</div>
+        <div class="res-stats">
+          <div class="res-stat"><div class="val" style="color:var(--gold)">9/10</div><div class="lbl">Correct</div></div>
+          <div class="res-stat"><div class="val" style="color:var(--green)">+135</div><div class="lbl">Coins 🪙</div></div>
+          <div class="res-stat"><div class="val" style="color:var(--accent)">+250</div><div class="lbl">XP ⚡</div></div>
+        </div>
+        <div style="background:var(--card);border:1.5px solid var(--border);border-radius:18px;padding:16px;margin-bottom:12px;text-align:left;box-shadow:var(--shadow)">
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px;font-weight:700">Level Progress</div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:8px;font-weight:600"><span>Level 8</span><span>Level 9</span></div>
+          <div class="xp-bar"><div class="xp-fill" style="width:72%"></div></div>
+          <div style="font-size:11px;color:var(--muted);margin-top:6px;font-weight:600">1,750 / 2,000 XP to next level</div>
+        </div>
+        <div style="background:linear-gradient(135deg,#FFF7ED,#FFF3E0);border:1.5px solid rgba(249,115,22,0.2);border-radius:18px;padding:14px;margin-bottom:12px;display:flex;align-items:center;gap:12px">
+          <div style="font-size:36px">🔥</div>
+          <div style="text-align:left"><div style="font-size:15px;font-weight:800;color:var(--text)">8-Day Streak!</div><div style="font-size:12px;color:var(--muted);margin-top:2px">Keep going — tomorrow gives +50 bonus 🪙</div></div>
+        </div>
+        <div style="background:rgba(107,78,255,0.06);border:1.5px solid rgba(107,78,255,0.18);border-radius:18px;padding:14px;margin-bottom:14px;display:flex;gap:12px;align-items:center">
+          <div style="font-size:32px">🎖️</div>
+          <div style="text-align:left"><div style="font-size:14px;font-weight:800;color:var(--text)">New Badge Earned!</div><div style="font-size:12px;color:var(--muted);margin-top:2px">Science Wizard — 50+ science questions</div></div>
+        </div>
+      </div>
+      <div class="action-row" style="padding:0 20px"><button class="btn-primary" style="margin-bottom:10px">Play Again 🔄</button><button class="btn-secondary">Back to Home</button></div>
+    </div></div><div class="phone-label">16 — Results & Rewards</div></div>
+
+    <!-- 17 LEADERBOARD -->
+    <div class="phone-wrap"><div class="phone"><div class="phone-inner">
+      <div class="status-bar"><span class="status-time">9:41</span><svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x="0" y="1" width="22" height="10" rx="3" stroke="#1A1838" stroke-width="1.5"/><rect x="23.5" y="4" width="2" height="4" rx="1" fill="#1A1838"/><rect x="1.5" y="2.5" width="19" height="7" rx="1.5" fill="#1A1838"/></svg></div>
+      <div class="top-bar"><div class="btn-back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></div><div class="top-bar-title">Leaderboard</div><div class="btn-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div></div>
+      <div class="chips-wrap"><div class="chip active">Weekly</div><div class="chip">Monthly</div><div class="chip">All Time</div><div class="chip">Friends</div></div>
+      <!-- Podium -->
+      <div style="display:flex;align-items:flex-end;justify-content:center;gap:10px;padding:8px 20px 18px">
+        <div style="text-align:center;flex:1">
+          <div style="font-size:24px;margin-bottom:6px">🥈</div>
+          <div style="width:58px;height:58px;border-radius:20px;background:linear-gradient(135deg,#5B52E5,#7B5EF8);margin:0 auto;display:flex;align-items:center;justify-content:center;font-size:28px;border:3px solid #CBD5E1">🦊</div>
+          <div style="font-size:12px;font-weight:800;margin-top:6px;color:var(--text)">Priya K.</div>
+          <div style="font-size:11px;color:var(--gold);font-weight:900">3,840</div>
+          <div style="height:55px;background:rgba(148,163,184,0.15);border:1.5px solid rgba(148,163,184,0.3);border-radius:8px 8px 0 0;margin-top:6px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:#94A3B8">2</div>
+        </div>
+        <div style="text-align:center;flex:1.3">
+          <div style="font-size:30px;margin-bottom:6px">🥇</div>
+          <div style="width:68px;height:68px;border-radius:24px;background:linear-gradient(135deg,#F59E0B,#D97706);margin:0 auto;display:flex;align-items:center;justify-content:center;font-size:34px;border:3px solid #FCD34D">🦁</div>
+          <div style="font-size:13px;font-weight:900;margin-top:6px;color:var(--text)">Arjun M.</div>
+          <div style="font-size:12px;color:var(--gold);font-weight:900">4,520</div>
+          <div style="height:74px;background:rgba(245,158,11,0.12);border:1.5px solid rgba(245,158,11,0.3);border-radius:8px 8px 0 0;margin-top:6px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:var(--gold)">1</div>
+        </div>
+        <div style="text-align:center;flex:1">
+          <div style="font-size:24px;margin-bottom:6px">🥉</div>
+          <div style="width:58px;height:58px;border-radius:20px;background:linear-gradient(135deg,#10B981,#047857);margin:0 auto;display:flex;align-items:center;justify-content:center;font-size:28px;border:3px solid #CD7F32">🐯</div>
+          <div style="font-size:12px;font-weight:800;margin-top:6px;color:var(--text)">Dev S.</div>
+          <div style="font-size:11px;color:var(--gold);font-weight:900">3,210</div>
+          <div style="height:42px;background:rgba(205,127,50,0.12);border:1.5px solid rgba(205,127,50,0.3);border-radius:8px 8px 0 0;margin-top:6px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;color:#CD7F32">3</div>
+        </div>
+      </div>
+      <!-- YOU -->
+      <div class="lb-item" style="margin:0 16px 4px;background:rgba(107,78,255,0.06);border-radius:14px;border:1.5px solid rgba(107,78,255,0.2)">
+        <div class="lb-rank" style="color:var(--accent)">#5</div>
+        <div class="lb-avatar" style="background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;color:#fff;font-size:22px">😎</div>
+        <div style="flex:1"><div class="lb-name" style="color:var(--accent)">You (Alex)</div><div class="lb-badge">🔥 8 streak</div></div>
+        <div class="lb-score">2,680</div>
+      </div>
+      <div class="lb-item"><div class="lb-rank">#4</div><div class="lb-avatar">🦋</div><div style="flex:1"><div class="lb-name">Riya P.</div><div class="lb-badge">⚡ 42 games</div></div><div class="lb-score">2,890</div></div>
+      <div class="lb-item"><div class="lb-rank">#6</div><div class="lb-avatar">🐉</div><div style="flex:1"><div class="lb-name">Sam T.</div><div class="lb-badge">📚 Top Speller</div></div><div class="lb-score">2,450</div></div>
+      <div class="lb-item"><div class="lb-rank">#7</div><div class="lb-avatar">🦅</div><div style="flex:1"><div class="lb-name">Anya R.</div><div class="lb-badge">🧮 Math Expert</div></div><div class="lb-score">2,200</div></div>
+      <div class="lb-item"><div class="lb-rank">#8</div><div class="lb-avatar">🦚</div><div style="flex:1"><div class="lb-name">Rohan D.</div><div class="lb-badge">🌍 Geo Master</div></div><div class="lb-score">1,980</div></div>
+      <div class="bottom-nav">
+        <div class="nav-item"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span></div>
+        <div class="nav-item"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span>Browse</span></div>
+        <div class="nav-item active"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span>Scores</span><div class="nav-dot"></div></div>
+        <div class="nav-item"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Profile</span></div>
+      </div>
+    </div></div><div class="phone-label">17 — Leaderboard</div></div>
+
+    <!-- 18 PLAYER PROFILE -->
+    <div class="phone-wrap"><div class="phone"><div class="phone-inner">
+      <div class="status-bar"><span class="status-time">9:41</span><svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x="0" y="1" width="22" height="10" rx="3" stroke="#1A1838" stroke-width="1.5"/><rect x="23.5" y="4" width="2" height="4" rx="1" fill="#1A1838"/><rect x="1.5" y="2.5" width="19" height="7" rx="1.5" fill="#1A1838"/></svg></div>
+      <div class="profile-hero">
+        <div style="position:relative;z-index:1">
+          <div class="profile-avatar">😎</div>
+          <div class="profile-name">Alex Johnson</div>
+          <div class="profile-level">⚡ Level 8 Scholar • Class 10-B</div>
+          <div class="profile-badges"><div class="badge-pill">🔥 8-day streak</div><div class="badge-pill">🏆 Top 5</div><div class="badge-pill">⚗️ Science Wizard</div></div>
+        </div>
+      </div>
+      <div style="margin:14px 16px 0;background:var(--card);border:1.5px solid var(--border);border-radius:18px;padding:14px;box-shadow:var(--shadow)">
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:8px;font-weight:700"><span>Level 8</span><span>1,750 / 2,000 XP</span></div>
+        <div class="xp-bar"><div class="xp-fill" style="width:72%"></div></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px;font-weight:600">250 XP to Level 9 — Science Master 🔬</div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="icon">🎮</div><div class="val">42</div><div class="lbl">Games Played</div></div>
+        <div class="stat-card"><div class="icon">✅</div><div class="val">87%</div><div class="lbl">Accuracy</div></div>
+        <div class="stat-card"><div class="icon">🪙</div><div class="val">1,240</div><div class="lbl">Coins Earned</div></div>
+        <div class="stat-card"><div class="icon">🏆</div><div class="val">#5</div><div class="lbl">This Week</div></div>
+      </div>
+      <div class="sec-title"><h2>Achievements</h2><span>View all 24</span></div>
+      <div style="padding:0 16px 16px">
+        <div class="ach-item"><div class="ach-icon" style="background:rgba(245,158,11,0.12)">🥇</div><div class="ach-info"><h3>First Place Finish</h3><p>Ranked #1 in a weekly leaderboard</p></div><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="ach-item"><div class="ach-icon" style="background:rgba(239,68,68,0.1)">🔥</div><div class="ach-info"><h3>On Fire</h3><p>7+ day learning streak</p></div><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
+        <div class="ach-item" style="opacity:0.55"><div class="ach-icon" style="background:rgba(107,78,255,0.1)">🧠</div><div class="ach-info"><h3>Big Brain</h3><p>Answer 100 questions correctly</p></div><div style="font-size:11px;color:var(--muted);font-weight:700">68/100</div></div>
+      </div>
+      <div class="bottom-nav">
+        <div class="nav-item"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Home</span></div>
+        <div class="nav-item"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span>Browse</span></div>
+        <div class="nav-item"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg><span>Scores</span></div>
+        <div class="nav-item active"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Profile</span><div class="nav-dot"></div></div>
+      </div>
+    </div></div><div class="phone-label">18 — Player Profile</div></div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════════
+       ROW 7 — ONBOARDING  (single centered)
+  ══════════════════════════════════════════════════ -->
+  <div class="section-label">Screen 19 — Onboarding</div>
+  <div class="frames-row" style="justify-content:center">
+    <div class="phone-wrap"><div class="phone"><div class="phone-inner">
+      <div class="status-bar"><span class="status-time">9:41</span><svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x="0" y="1" width="22" height="10" rx="3" stroke="#1A1838" stroke-width="1.5"/><rect x="23.5" y="4" width="2" height="4" rx="1" fill="#1A1838"/><rect x="1.5" y="2.5" width="19" height="7" rx="1.5" fill="#1A1838"/></svg></div>
+      <div style="padding:16px 20px 8px;display:flex;justify-content:flex-end"><span style="font-size:13px;color:var(--muted);font-weight:700;cursor:pointer">Skip</span></div>
+      <div class="onboard-illo">🎮</div>
+      <div class="o-dots"><div class="o-dot"></div><div class="o-dot active"></div><div class="o-dot"></div><div class="o-dot"></div></div>
+      <div class="onboard-text">
+        <h2>Play Games, Earn Knowledge</h2>
+        <p>19 educational games covering Math, Science, GK, Geography, Grammar and more. Every correct answer earns you coins and XP!</p>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 20px 16px">
+        <div style="background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:14px;text-align:center;box-shadow:var(--shadow)"><div style="font-size:28px">🏆</div><div style="font-size:13px;font-weight:800;margin-top:6px;color:var(--text)">Leaderboards</div><div style="font-size:11px;color:var(--muted);margin-top:3px">Compete with classmates</div></div>
+        <div style="background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:14px;text-align:center;box-shadow:var(--shadow)"><div style="font-size:28px">🔥</div><div style="font-size:13px;font-weight:800;margin-top:6px;color:var(--text)">Daily Streaks</div><div style="font-size:11px;color:var(--muted);margin-top:3px">Build a habit</div></div>
+        <div style="background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:14px;text-align:center;box-shadow:var(--shadow)"><div style="font-size:28px">🪙</div><div style="font-size:13px;font-weight:800;margin-top:6px;color:var(--text)">Earn Coins</div><div style="font-size:11px;color:var(--muted);margin-top:3px">Unlock hints & power-ups</div></div>
+        <div style="background:var(--card);border:1.5px solid var(--border);border-radius:16px;padding:14px;text-align:center;box-shadow:var(--shadow)"><div style="font-size:28px">📚</div><div style="font-size:13px;font-weight:800;margin-top:6px;color:var(--text)">19 Games</div><div style="font-size:11px;color:var(--muted);margin-top:3px">New ones weekly</div></div>
+      </div>
+      <div style="padding:0 20px 20px"><button class="btn-primary">Continue →</button></div>
+    </div></div><div class="phone-label">19 — Onboarding</div></div>
+  </div>
+
+  <!-- FOOTER -->
+  <div style="max-width:1440px;width:100%;padding:40px 8px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px">
+    <div>
+      <div style="font-size:20px;font-weight:900;letter-spacing:-0.03em;color:var(--text)">Learning Games <span style="background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Light UI</span></div>
+      <div style="font-size:13px;color:var(--muted);margin-top:4px;font-weight:600">19 screens · 19 games · Figma-ready HTML · Light theme · June 2026</div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <div style="padding:6px 14px;border-radius:20px;background:var(--card);border:1.5px solid var(--border);font-size:12px;font-weight:700;color:var(--text2)">Inter typeface</div>
+      <div style="padding:6px 14px;border-radius:20px;background:var(--card);border:1.5px solid var(--border);font-size:12px;font-weight:700;color:var(--text2)">Light mode</div>
+      <div style="padding:6px 14px;border-radius:20px;background:var(--card);border:1.5px solid var(--border);font-size:12px;font-weight:700;color:var(--text2)">390×844 frames</div>
+      <div style="padding:6px 14px;border-radius:20px;background:rgba(107,78,255,0.08);border:1.5px solid rgba(107,78,255,0.2);font-size:12px;font-weight:700;color:var(--accent)">Inline SVG icons</div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

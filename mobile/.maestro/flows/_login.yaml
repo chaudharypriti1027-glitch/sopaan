@@ -1,0 +1,25 @@
+appId: com.sopaan.app
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: splash-get-started
+    timeout: 30000
+- tapOn:
+    id: splash-login-link
+- extendedWaitUntil:
+    visible: 'Log in to Sopaan'
+    timeout: 15000
+- tapOn:
+    id: field-email
+- inputText: ${E2E_EMAIL}
+- tapOn:
+    id: field-password
+- inputText: ${E2E_PASSWORD}
+- hideKeyboard
+- tapOn:
+    id: button-log-in
+- extendedWaitUntil:
+    visible: 'Home'
+    timeout: 30000

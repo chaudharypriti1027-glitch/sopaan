@@ -1,0 +1,38 @@
+name: Backup verify
+
+on:
+  schedule:
+    # 06:00 UTC on the 1st of each month — DR drill reminder + connectivity check
+    - cron: '0 6 1 * *'
+  workflow_dispatch:
+
+jobs:
+  verify-staging-database:
+    runs-on: ubuntu-latest
+    # Skip when staging URI is not configured
+    if: ${{ secrets.STAGING_MONGODB_URI != '' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify staging MongoDB (post-restore checks)
+        env:
+          MONGODB_URI: ${{ secrets.STAGING_MONGODB_URI }}
+          DEPLOY_ENV: staging
+        run: npm run backup:verify-restore -w @sopaan/server
+
+      - name: Reminder
+        if: success()
+        run: |
+          echo "Staging DB verification passed."
+          echo "Schedule a full Atlas PITR or mongodump restore drill this month — see server/docs/BACKUP_RESTORE_RUNBOOK.md"

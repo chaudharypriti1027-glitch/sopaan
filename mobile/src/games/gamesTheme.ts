@@ -1,0 +1,37 @@
+/** Tokens from learning-games-light.html */
+export const GAMES_UI = {
+  bg: '#F2F3FF',
+  surface: '#FFFFFF',
+  card2: '#F7F8FF',
+  border: 'rgba(90,80,180,0.10)',
+  text: '#1A1838',
+  text2: '#3D3B72',
+  muted: '#8E8CB0',
+  accent: '#6B4EFF',
+  accent2: '#C840F5',
+  gold: '#F59E0B',
+  green: '#10B981',
+  red: '#EF4444',
+} as const;
+
+export const GAME_GRADIENTS = {
+  memory: ['#5B52E5', '#3D33C4'],
+  scramble: ['#F59E0B', '#D97706'],
+  bingo: ['#10B981', '#047857'],
+  rapid: ['#EF4444', '#B91C1C'],
+  crossword: ['#818CF8', '#4338CA'],
+  map: ['#14B8A6', '#0D9488'],
+  math: ['#F97316', '#C2410C'],
+  grammar: ['#EC4899', '#BE185D'],
+  science: ['#06B6D4', '#0E7490'],
+  history: ['#A855F7', '#7E22CE'],
+  spell: ['#F43F5E', '#BE123C'],
+  flag: ['#8B5CF6', '#6D28D9'],
+  logic: ['#F59E0B', '#92400E'],
+  number: ['#3B82F6', '#1D4ED8'],
+  chain: ['#10B981', '#065F46'],
+  world: ['#BE185D', '#9D174D'],
+  trivia: ['#0EA5E9', '#0369A1'],
+  code: ['#22C55E', '#15803D'],
+  story: ['#6366F1', '#4338CA'],
+} as const;

@@ -1,0 +1,6 @@
+appId: com.sopaan.app
+env:
+  E2E_EMAIL: student@sopaan.dev
+  E2E_PASSWORD: Password123
+  E2E_PAYWALL_EMAIL: paywall@sopaan.dev
+  E2E_PAYWALL_PASSWORD: Password123

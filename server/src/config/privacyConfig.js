@@ -1,0 +1,48 @@
+export const privacyConfig = Object.freeze({
+  policyVersion: process.env.PRIVACY_POLICY_VERSION?.trim() || '2025-06-01',
+  policyUrl: process.env.PRIVACY_POLICY_URL?.trim() || 'https://sopaan.app/privacy',
+  termsUrl: process.env.TERMS_URL?.trim() || 'https://sopaan.app/terms',
+  supportEmail: process.env.PRIVACY_SUPPORT_EMAIL?.trim() || 'privacy@sopaan.app',
+  deletionConfirmPhrase: 'DELETE MY ACCOUNT',
+  deletionTokenExpiryMin: Number(process.env.PRIVACY_DELETION_TOKEN_MIN ?? 15),
+  retentionDays: Object.freeze({
+    aiCallLogs: Number(process.env.RETENTION_AI_CALL_LOGS_DAYS ?? 90),
+    notifications: Number(process.env.RETENTION_NOTIFICATIONS_DAYS ?? 365),
+    deferredReferralClicks: Number(process.env.RETENTION_DEFERRED_REFERRAL_DAYS ?? 30),
+    anonymizedUserStub: Number(process.env.RETENTION_ANONYMIZED_USER_DAYS ?? 2555),
+  }),
+  processors: Object.freeze([
+    {
+      id: 'anthropic',
+      name: 'Anthropic (Claude)',
+      purpose: 'AI tutoring, test generation, answer evaluation, study coaching',
+      dataSent: 'Study questions, answers, exam topics, performance stats — not name, email, or phone',
+      location: 'United States',
+      policyUrl: 'https://www.anthropic.com/privacy',
+    },
+    {
+      id: 'razorpay',
+      name: 'Razorpay',
+      purpose: 'Subscription and payment processing',
+      dataSent: 'Name, email/phone, payment metadata (handled by Razorpay checkout)',
+      location: 'India',
+      policyUrl: 'https://razorpay.com/privacy/',
+    },
+    {
+      id: 'expo-push',
+      name: 'Expo Push / Apple / Google',
+      purpose: 'Push notifications',
+      dataSent: 'Device push token, notification content',
+      location: 'Varies by device OS',
+      policyUrl: 'https://expo.dev/privacy',
+    },
+    {
+      id: 'sentry',
+      name: 'Sentry',
+      purpose: 'Error monitoring',
+      dataSent: 'User id, request metadata — PII redacted in logs',
+      location: 'United States / EU',
+      policyUrl: 'https://sentry.io/privacy/',
+    },
+  ]),
+});

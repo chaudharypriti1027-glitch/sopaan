@@ -1,0 +1,51 @@
+name: EAS Update
+
+on:
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: Update channel / branch
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+          - production-rollout-10
+          - production-rollout-25
+          - production-rollout-50
+      message:
+        description: Update message (changelog)
+        required: true
+        type: string
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    if: ${{ secrets.EXPO_TOKEN != '' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Publish EAS Update
+        working-directory: mobile
+        env:
+          EAS_PROJECT_ID: ${{ secrets.EAS_PROJECT_ID }}
+        run: |
+          PROFILE="${{ github.event.inputs.channel }}"
+          MSG="${{ github.event.inputs.message }}"
+          eas update --profile "$PROFILE" --non-interactive --message "$MSG"

@@ -1,0 +1,97 @@
+{
+  "title": "सेटिंग्स",
+  "subtitle": "खाता, अध्ययन प्राथमिकताएँ और सहायता",
+  "language": "ऐप भाषा",
+  "languageHint": "UI और AI उत्तर इसी प्राथमिकता का पालन करते हैं।",
+  "account": "खाता",
+  "notifications": "सूचनाएँ",
+  "privacy": "गोपनीयता",
+  "goal": "परीक्षा लक्ष्य",
+  "goalUpdated": "लक्ष्य अपडेट हो गया",
+  "goalUpdatedBody": "अब {{track}} की तैयारी।",
+  "goalSaveFailed": "लक्ष्य अपडेट नहीं हो सका",
+  "logout": "लॉग आउट",
+  "logoutTitle": "लॉग आउट करें?",
+  "logoutBody": "आपको फिर से साइन इन करना होगा।",
+  "logoutConfirm": "सोपान से लॉग आउट करें?",
+  "version": "ऐप संस्करण",
+  "study": "अध्ययन",
+  "focusSounds": "फ़ोकस टाइमर ध्वनियाँ",
+  "pushNotifications": "पुश सूचनाएँ",
+  "pushCap": "प्रति दिन अधिकतम {{count}} अलर्ट",
+  "pushDevBuild": "dev बिल्ड चाहिए (Expo Go नहीं)",
+  "quietHours": "शांत समय",
+  "quietHoursDefault": "22:00–07:00",
+  "privacyData": "गोपनीयता और डेटा",
+  "privacyPolicy": "गोपनीयता नीति",
+  "privacyPolicyDesc": "हम आपका डेटा कैसे एकत्र, उपयोग और सुरक्षित करते हैं",
+  "downloadData": "मेरा डेटा डाउनलोड करें",
+  "downloadDataDesc": "खाते और गतिविधि का JSON निर्यात",
+  "exportTitle": "मेरा सोपान डेटा",
+  "exportMessage": "सोपान डेटा निर्यात",
+  "exportFailed": "निर्यात विफल",
+  "marketingEmails": "मार्केटिंग ईमेल",
+  "marketingDesc": "उत्पाद अपडेट और ऑफ़र",
+  "deleteAccount": "खाता हटाएँ",
+  "deleteAccountDesc": "अपना डेटा स्थायी रूप से मिटाएँ",
+  "support": "सहायता",
+  "helpCentre": "सहायता केंद्र",
+  "whatsappCommunity": "WhatsApp समुदाय में शामिल हों",
+  "whatsappCommunityDesc": "विद्यार्थियों के लिए नवीनतम अपडेट, टिप्स और घोषणाएँ",
+  "contactSupport": "सहायता से संपर्क",
+  "privacyPolicyWeb": "गोपनीयता नीति (वेब)",
+  "name": "नाम",
+  "emailPhone": "ईमेल / फ़ोन",
+  "notSet": "सेट नहीं",
+  "careerGoal": "करियर लक्ष्य",
+  "targetYear": "लक्ष्य वर्ष",
+  "saveGoal": "लक्ष्य सेव करें",
+  "devBuildRequired": "डेवलपमेंट बिल्ड आवश्यक",
+  "notificationsBlocked": "सूचनाएँ अवरुद्ध",
+  "notificationsBlockedBody": "रैंक अपडेट, स्ट्रीक रिमाइंडर आदि के लिए सिस्टम सेटिंग्स में सूचनाएँ सक्षम करें।",
+  "notificationPrefFailed": "सूचना प्राथमिकता अपडेट नहीं हो सकी",
+  "quietHoursFailed": "शांत समय अपडेट नहीं हो सका",
+  "marketingFailed": "मार्केटिंग प्राथमिकता अपडेट नहीं हो सकी",
+  "notificationTypes": {
+    "plan_ready": {
+      "label": "दैनिक अध्ययन योजना",
+      "description": "जब आपकी अनुकूली योजना बनती है"
+    },
+    "streak_reminder": {
+      "label": "स्ट्रीक रिमाइंडर",
+      "description": "अगर आज अध्ययन नहीं किया तो शाम की याद"
+    },
+    "rank_up": {
+      "label": "रैंक सुधार",
+      "description": "जब आप मॉक लीडरबोर्ड पर ऊपर चढ़ें"
+    },
+    "mock_live": {
+      "label": "लाइव मॉक अलर्ट",
+      "description": "जब टेस्ट-सीरीज़ मॉक लाइव हो"
+    },
+    "new_current_affairs": {
+      "label": "करंट अफेयर्स डाइजेस्ट",
+      "description": "दैनिक CA सुर्खियाँ और क्विज़"
+    },
+    "progress_recap": {
+      "label": "साप्ताहिक प्रगति सारांश",
+      "description": "मॉक और अध्ययन घंटों का सारांश"
+    },
+    "badge": {
+      "label": "अर्जित बैज",
+      "description": "उपलब्धि अनलॉक"
+    },
+    "reward": {
+      "label": "इनाम रिडीम",
+      "description": "सिक्के और इनाम अपडेट"
+    },
+    "mentor": {
+      "label": "मेंटर बुकिंग",
+      "description": "सत्र पुष्टि और अपडेट"
+    },
+    "premium_activated": {
+      "label": "प्रीमियम अपडेट",
+      "description": "सब्सक्रिप्शन और ट्रायल पुष्टि"
+    }
+  }
+}

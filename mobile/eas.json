@@ -1,0 +1,81 @@
+{
+  "cli": {
+    "version": ">= 13.0.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "channel": "development"
+    },
+    "e2e-android": {
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleDebug"
+      },
+      "env": {
+        "EXPO_PUBLIC_E2E_SANDBOX": "true"
+      },
+      "channel": "e2e"
+    },
+    "e2e-ios": {
+      "ios": {
+        "simulator": true
+      },
+      "env": {
+        "EXPO_PUBLIC_E2E_SANDBOX": "true"
+      },
+      "channel": "e2e"
+    },
+    "staging": {
+      "distribution": "internal",
+      "channel": "staging",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://staging-api.sopaan.app",
+        "EXPO_PUBLIC_SENTRY_ENVIRONMENT": "staging",
+        "SENTRY_ORG": "sopaan",
+        "SENTRY_PROJECT": "mobile"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "channel": "production",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://api.sopaan.app",
+        "EXPO_PUBLIC_SENTRY_ENVIRONMENT": "production",
+        "SENTRY_ORG": "sopaan",
+        "SENTRY_PROJECT": "mobile"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  },
+  "update": {
+    "staging": {
+      "channel": "staging"
+    },
+    "production": {
+      "channel": "production"
+    },
+    "production-rollout-10": {
+      "channel": "production",
+      "rollout": {
+        "percentage": 10
+      }
+    },
+    "production-rollout-25": {
+      "channel": "production",
+      "rollout": {
+        "percentage": 25
+      }
+    },
+    "production-rollout-50": {
+      "channel": "production",
+      "rollout": {
+        "percentage": 50
+      }
+    }
+  }
+}

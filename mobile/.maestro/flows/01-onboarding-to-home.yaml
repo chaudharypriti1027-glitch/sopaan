@@ -1,0 +1,65 @@
+appId: com.sopaan.app
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: splash-get-started
+    timeout: 30000
+- tapOn:
+    id: splash-get-started
+- extendedWaitUntil:
+    visible:
+      id: chip-ssc
+    timeout: 15000
+- tapOn:
+    id: chip-ssc
+- tapOn:
+    id: onboarding-continue
+- extendedWaitUntil:
+    visible:
+      id: goal-ssc-officer
+    timeout: 15000
+- tapOn:
+    id: goal-ssc-officer
+- tapOn:
+    id: goal-setup-continue
+- extendedWaitUntil:
+    visible:
+      id: chip-graduate
+    timeout: 15000
+- tapOn:
+    id: chip-graduate
+- tapOn:
+    id: chip-gen
+- tapOn:
+    id: chip-delhi
+- tapOn:
+    id: chip-1
+- tapOn:
+    id: chip-2027
+- tapOn:
+    id: profile-setup-continue
+- extendedWaitUntil:
+    visible:
+      id: field-full-name
+    timeout: 15000
+- tapOn:
+    id: field-full-name
+- inputText: E2E New User
+- tapOn:
+    id: field-email
+- inputText: ${E2E_SIGNUP_EMAIL}
+- tapOn:
+    id: field-password
+- inputText: Password123
+- hideKeyboard
+- tapOn:
+    id: consent-policy
+- tapOn:
+    id: consent-ai
+- tapOn:
+    id: signup-create-account
+- extendedWaitUntil:
+    visible: 'Home'
+    timeout: 45000

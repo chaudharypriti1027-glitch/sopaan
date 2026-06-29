@@ -1,0 +1,87 @@
+import { describe, expect, it } from '@jest/globals';
+import { validateEnvironment } from '../src/config/validateEnv.js';
+
+const PRODUCTION_BASE = {
+  NODE_ENV: 'production',
+  DEPLOY_ENV: 'production',
+  PORT: '4000',
+  MONGODB_URI: 'mongodb+srv://user:pass@cluster/sopaan',
+  JWT_SECRET: 'production-jwt-secret-min-32-characters',
+  JWT_REFRESH_SECRET: 'production-refresh-secret-min-32-chars',
+  CLIENT_URL: 'https://api.sopaan.app',
+  ANTHROPIC_API_KEY: 'sk-ant-test',
+  RAZORPAY_KEY_ID: 'rzp_live_test',
+  RAZORPAY_KEY_SECRET: 'razorpay_secret',
+  RAZORPAY_WEBHOOK_SECRET: 'webhook_secret',
+  NEWSAPI_AI_KEY: 'newsapi-key',
+  SENTRY_DSN: 'https://key@o0.ingest.sentry.io/1',
+};
+
+describe('validateEnvironment', () => {
+  it('throws when production is missing ANTHROPIC_API_KEY', () => {
+    expect(() =>
+      validateEnvironment({
+        ...PRODUCTION_BASE,
+        ANTHROPIC_API_KEY: '',
+      }),
+    ).toThrow(/ANTHROPIC_API_KEY/);
+  });
+
+  it('throws when production is missing Razorpay keys', () => {
+    expect(() =>
+      validateEnvironment({
+        ...PRODUCTION_BASE,
+        RAZORPAY_KEY_SECRET: '',
+      }),
+    ).toThrow(/RAZORPAY_KEY_SECRET/);
+  });
+
+  it('throws when production is missing NEWSAPI_AI_KEY', () => {
+    expect(() =>
+      validateEnvironment({
+        ...PRODUCTION_BASE,
+        NEWSAPI_AI_KEY: '',
+      }),
+    ).toThrow(/NEWSAPI_AI_KEY/);
+  });
+
+  it('throws when production is missing SENTRY_DSN', () => {
+    expect(() =>
+      validateEnvironment({
+        ...PRODUCTION_BASE,
+        SENTRY_DSN: '',
+      }),
+    ).toThrow(/SENTRY_DSN/);
+  });
+
+  it('throws when DEV_STUB_AI is set in production', () => {
+    expect(() =>
+      validateEnvironment({
+        ...PRODUCTION_BASE,
+        DEV_STUB_AI: 'true',
+      }),
+    ).toThrow(/DEV_STUB_AI cannot be enabled/);
+  });
+
+  it('allows development with DEV_STUB_AI and no Anthropic key', () => {
+    const result = validateEnvironment({
+      NODE_ENV: 'development',
+      PORT: '4000',
+      MONGODB_URI: 'mongodb://127.0.0.1:27017/sopaan',
+      JWT_SECRET: 'dev-jwt-secret-min-32-characters-long',
+      JWT_REFRESH_SECRET: 'dev-refresh-secret-min-32-chars',
+      CLIENT_URL: 'http://localhost:8081',
+      DEV_STUB_AI: 'true',
+    });
+
+    expect(result.stubAiMode).toBe(true);
+    expect(result.anthropicApiKey).toBe('dev-stub-key');
+  });
+
+  it('accepts complete production configuration', () => {
+    const result = validateEnvironment(PRODUCTION_BASE);
+    expect(result.isProduction).toBe(true);
+    expect(result.stubAiMode).toBe(false);
+    expect(result.anthropicApiKey).toBe('sk-ant-test');
+  });
+});

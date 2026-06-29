@@ -1,0 +1,21 @@
+/** Tokens from auth UI HTML mockup */
+export const AUTH_UI = {
+  bg: '#F0F0F7',
+  card: '#FFFFFF',
+  ink: '#0F172A',
+  muted: '#64748B',
+  faint: '#94A3B8',
+  label: '#475569',
+  border: '#E2E8F0',
+  borderHover: '#CBD5E1',
+  focus: '#818CF8',
+  focusRing: 'rgba(99,102,241,0.12)',
+  accent: '#6366F1',
+  accentDark: '#4F46E5',
+  accentDeep: '#7C3AED',
+  gradient: ['#6366F1', '#7C3AED'] as const,
+  cardRadius: 28,
+  inputRadius: 16,
+  btnRadius: 16,
+  shadow: 'rgba(99,102,241,0.10)',
+} as const;

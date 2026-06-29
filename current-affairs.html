@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<title>Current Affairs</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #F8F9FC; display: flex; justify-content: center; }
+
+  .app { position: relative; width: 390px; height: 100svh; max-height: 844px; display: flex; flex-direction: column; overflow: hidden; background: #F8F9FC; }
+
+  /* ── Header ── */
+  .header { background: #fff; border-bottom: 1px solid #f1f5f9; padding: 44px 16px 12px; }
+  .header-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .header-title h1 { font-size: 18px; font-weight: 800; color: #0f172a; letter-spacing: -0.3px; }
+  .header-title p { font-size: 11px; color: #94a3b8; font-weight: 500; margin-top: 2px; }
+  .header-actions { display: flex; align-items: center; gap: 8px; }
+  .ai-btn {
+    display: flex; align-items: center; gap: 6px;
+    background: linear-gradient(135deg, #7c3aed, #4f46e5);
+    color: #fff; font-size: 11px; font-weight: 700;
+    padding: 7px 12px; border-radius: 20px; border: none; cursor: pointer;
+    box-shadow: 0 4px 12px rgba(99,102,241,0.3);
+  }
+  .notif-btn { width: 32px; height: 32px; border-radius: 50%; background: #f1f5f9; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; position: relative; }
+  .notif-dot { position: absolute; top: 6px; right: 6px; width: 6px; height: 6px; background: #6366f1; border-radius: 50%; border: 1.5px solid #fff; }
+
+  /* Stats */
+  .stats { display: flex; gap: 8px; }
+  .stat { flex: 1; background: #f8fafc; border-radius: 12px; padding: 8px 10px; display: flex; align-items: center; gap: 8px; }
+  .stat-icon { width: 26px; height: 26px; border-radius: 8px; background: #eef2ff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .stat-val { font-size: 13px; font-weight: 800; color: #1e293b; line-height: 1; }
+  .stat-label { font-size: 9px; color: #94a3b8; margin-top: 2px; }
+
+  /* ── Scrollable body ── */
+  .body { flex: 1; overflow-y: auto; }
+  .body::-webkit-scrollbar { display: none; }
+
+  /* Filter bar */
+  .filter-bar { padding: 14px 16px 8px; display: flex; gap: 8px; align-items: center; }
+  .filter-btn {
+    flex: 1; display: flex; align-items: center; gap: 6px;
+    background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;
+    padding: 8px 10px; font-size: 11px; font-weight: 700; color: #334155;
+    cursor: pointer; white-space: nowrap;
+  }
+  .filter-btn .chevron { margin-left: auto; color: #94a3b8; }
+  .sort-btn {
+    width: 36px; height: 36px; border-radius: 12px; border: 1px solid #e2e8f0;
+    background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: all 0.15s;
+  }
+  .sort-btn.active { background: #4f46e5; border-color: #4f46e5; }
+  .sort-btn.active svg path { stroke: #fff; }
+
+  /* Category pills */
+  .categories { padding: 0 16px 12px; display: flex; gap: 6px; overflow-x: auto; }
+  .categories::-webkit-scrollbar { display: none; }
+  .cat-pill {
+    flex-shrink: 0; display: flex; align-items: center; gap: 4px;
+    padding: 6px 10px; border-radius: 10px; font-size: 10px; font-weight: 700;
+    border: 1px solid #e2e8f0; background: #fff; color: #64748b; cursor: pointer;
+    white-space: nowrap; transition: all 0.15s;
+  }
+  .cat-pill.active { border-color: transparent; }
+
+  /* Sort label */
+  .sort-label { padding: 0 16px 8px; display: flex; align-items: center; justify-content: space-between; }
+  .sort-label span { font-size: 11px; font-weight: 600; color: #64748b; }
+  .filter-link { display: flex; align-items: center; gap: 3px; font-size: 10px; color: #6366f1; font-weight: 700; background: none; border: none; cursor: pointer; }
+
+  /* Articles */
+  .articles { padding: 0 16px 24px; display: flex; flex-direction: column; gap: 12px; }
+  .card { background: #fff; border-radius: 20px; border: 1px solid #f1f5f9; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+  .card-top { display: flex; gap: 12px; padding: 12px 12px 8px; }
+  .thumb { flex-shrink: 0; width: 68px; height: 68px; border-radius: 12px; overflow: hidden; background: #f1f5f9; position: relative; }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .hot-badge { position: absolute; top: 4px; left: 4px; background: #f97316; border-radius: 6px; padding: 2px 4px; display: flex; align-items: center; gap: 2px; }
+  .hot-badge span { font-size: 7px; color: #fff; font-weight: 800; }
+  .card-info { flex: 1; min-width: 0; }
+  .card-badges { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; flex-wrap: wrap; }
+  .cat-badge { font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 6px; }
+  .exam-badge { font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 6px; border: 1px solid; display: flex; align-items: center; gap: 2px; }
+  .exam-high { background: #fff1f2; color: #e11d48; border-color: #fecdd3; }
+  .exam-med  { background: #fffbeb; color: #d97706; border-color: #fde68a; }
+  .card-title { font-size: 12px; font-weight: 700; color: #1e293b; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .card-excerpt { padding: 0 12px 8px; font-size: 10px; color: #64748b; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .card-tags { padding: 0 12px 8px; display: flex; gap: 4px; flex-wrap: wrap; }
+  .tag { font-size: 9px; background: #f1f5f9; color: #64748b; padding: 2px 6px; border-radius: 6px; font-weight: 600; }
+  .card-footer { padding: 8px 12px 12px; border-top: 1px solid #f8fafc; display: flex; align-items: center; justify-content: space-between; }
+  .card-meta { display: flex; align-items: center; gap: 6px; }
+  .card-meta span { font-size: 10px; color: #94a3b8; font-weight: 600; display: flex; align-items: center; gap: 2px; }
+  .card-meta .dot { color: #cbd5e1; }
+  .card-right { display: flex; align-items: center; gap: 8px; }
+  .card-date { font-size: 9px; color: #94a3b8; }
+  .bookmark-btn { background: none; border: none; cursor: pointer; color: #cbd5e1; padding: 2px; }
+  .bookmark-btn.saved { color: #6366f1; }
+
+  /* ── Bottom Nav ── */
+  .bottom-nav { background: #fff; border-top: 1px solid #f1f5f9; padding: 8px 8px 20px; display: flex; align-items: center; justify-content: space-around; }
+  .nav-btn { display: flex; flex-direction: column; align-items: center; gap: 2px; background: none; border: none; cursor: pointer; padding: 4px 14px; }
+  .nav-icon { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 10px; }
+  .nav-btn.active .nav-icon { background: #eef2ff; }
+  .nav-btn.active svg path, .nav-btn.active svg polyline, .nav-btn.active svg line, .nav-btn.active svg rect, .nav-btn.active svg circle { stroke: #4f46e5; }
+  .nav-label { font-size: 10px; font-weight: 700; color: #94a3b8; }
+  .nav-btn.active .nav-label { color: #4f46e5; }
+
+  /* ── Bottom Sheets ── */
+  .sheet-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.3); backdrop-filter: blur(4px); z-index: 30; display: flex; flex-direction: column; justify-content: flex-end; }
+  .sheet { background: #fff; border-radius: 24px 24px 0 0; padding: 16px 16px 32px; box-shadow: 0 -8px 40px rgba(0,0,0,0.12); }
+  .sheet-handle { width: 40px; height: 4px; background: #e2e8f0; border-radius: 2px; margin: 0 auto 16px; }
+  .sheet h3 { font-size: 15px; font-weight: 800; color: #0f172a; margin-bottom: 12px; }
+  .sheet-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-radius: 12px; font-size: 13px; font-weight: 600; color: #334155; cursor: pointer; border: none; background: none; width: 100%; text-align: left; }
+  .sheet-item:hover { background: #f8fafc; }
+  .sheet-item.active { background: #eef2ff; color: #4338ca; }
+
+  /* ── AI Panel ── */
+  .ai-panel { position: absolute; inset: 0; z-index: 40; background: #F8F9FC; display: flex; flex-direction: column; }
+  .ai-header { background: #fff; border-bottom: 1px solid #f1f5f9; padding: 44px 16px 12px; display: flex; align-items: center; gap: 12px; }
+  .ai-avatar { width: 36px; height: 36px; background: linear-gradient(135deg,#7c3aed,#4f46e5); border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 12px rgba(99,102,241,0.3); }
+  .ai-header-info { flex: 1; }
+  .ai-header-info h2 { font-size: 15px; font-weight: 800; color: #0f172a; }
+  .ai-status { display: flex; align-items: center; gap: 4px; margin-top: 2px; }
+  .status-dot { width: 6px; height: 6px; background: #10b981; border-radius: 50%; animation: pulse 2s infinite; }
+  .ai-status span { font-size: 10px; color: #94a3b8; font-weight: 600; }
+  .close-btn { width: 32px; height: 32px; border-radius: 50%; background: #f1f5f9; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+  .ai-messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .ai-messages::-webkit-scrollbar { display: none; }
+  .msg-row { display: flex; }
+  .msg-row.user { justify-content: flex-end; }
+  .msg-row.ai  { justify-content: flex-start; }
+  .msg-avatar { width: 28px; height: 28px; background: linear-gradient(135deg,#7c3aed,#4f46e5); border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 8px; flex-shrink: 0; align-self: flex-start; margin-top: 2px; }
+  .bubble { max-width: 78%; padding: 10px 14px; border-radius: 16px; font-size: 12px; line-height: 1.6; white-space: pre-line; }
+  .bubble.user { background: #4f46e5; color: #fff; border-top-right-radius: 4px; }
+  .bubble.ai   { background: #fff; color: #334155; border: 1px solid #f1f5f9; box-shadow: 0 1px 4px rgba(0,0,0,0.04); border-top-left-radius: 4px; }
+  .typing-dots { display: flex; gap: 4px; padding: 12px 14px; }
+  .dot { width: 6px; height: 6px; background: #94a3b8; border-radius: 50%; animation: bounce 0.8s infinite; }
+  .dot:nth-child(2) { animation-delay: 0.15s; }
+  .dot:nth-child(3) { animation-delay: 0.3s; }
+
+  .suggestions { padding: 0 16px 8px; }
+  .suggestions p { font-size: 10px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .sugg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .sugg-btn { text-align: left; font-size: 11px; color: #334155; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 12px; font-weight: 600; cursor: pointer; display: flex; align-items: flex-start; gap: 6px; transition: border-color 0.15s; }
+  .sugg-btn:hover { border-color: #a5b4fc; color: #4338ca; }
+
+  .ai-input-bar { background: #fff; border-top: 1px solid #f1f5f9; padding: 12px 16px 24px; }
+  .ai-input-wrap { display: flex; align-items: center; gap: 8px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 20px; padding: 8px 12px; }
+  .ai-input-wrap input { flex: 1; border: none; background: transparent; font-size: 12px; color: #334155; outline: none; }
+  .ai-input-wrap input::placeholder { color: #94a3b8; }
+  .send-btn { width: 28px; height: 28px; border-radius: 10px; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: all 0.15s; }
+  .send-btn.active { background: #4f46e5; }
+  .send-btn.inactive { background: #e2e8f0; }
+
+  /* Empty state */
+  .empty { display: flex; flex-direction: column; align-items: center; padding: 48px 0; color: #94a3b8; }
+  .empty svg { margin-bottom: 8px; }
+  .empty p { font-size: 13px; font-weight: 600; }
+  .empty small { font-size: 11px; margin-top: 4px; }
+
+  @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
+  @keyframes pulse  { 0%,100%{opacity:1} 50%{opacity:0.4} }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- ── Header ── -->
+  <div class="header">
+    <div class="header-top">
+      <div class="header-title">
+        <h1>Current Affairs</h1>
+        <p>Stay updated for your exam</p>
+      </div>
+      <div class="header-actions">
+        <button class="ai-btn" onclick="openAI()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 3l1.88 5.76L20 10l-6.12.24L12 16l-1.88-5.76L4 10l6.12-.24z"/><path d="M5 3l.5 1.5L7 5l-1.5.5L5 7l-.5-1.5L3 5l1.5-.5z"/></svg>
+          AI Ask
+        </button>
+        <button class="notif-btn">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span class="notif-dot"></span>
+        </button>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.5"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v2"/><path d="M2 9h4v13H2z"/><line x1="10" y1="9" x2="18" y2="9"/><line x1="10" y1="13" x2="18" y2="13"/><line x1="10" y1="17" x2="18" y2="17"/></svg></div>
+        <div><div class="stat-val">59</div><div class="stat-label">Articles</div></div>
+      </div>
+      <div class="stat">
+        <div class="stat-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+        <div><div class="stat-val">12</div><div class="stat-label">Today</div></div>
+      </div>
+      <div class="stat">
+        <div class="stat-icon"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.5"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg></div>
+        <div><div class="stat-val">8</div><div class="stat-label">Trending</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Body ── -->
+  <div class="body">
+
+    <!-- Filter bar -->
+    <div class="filter-bar">
+      <button class="filter-btn" onclick="openSheet('state')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        <span id="selectedState">National</span>
+        <span class="chevron"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></span>
+      </button>
+      <button class="filter-btn" onclick="openSheet('month')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span id="selectedMonth">This month</span>
+        <span class="chevron"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></span>
+      </button>
+      <button class="sort-btn" id="sortBtn" onclick="toggleSort()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.5"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="14" y2="12"/><line x1="4" y1="18" x2="8" y2="18"/></svg>
+      </button>
+    </div>
+
+    <!-- Category pills -->
+    <div class="categories" id="categories"></div>
+
+    <!-- Sort label -->
+    <div class="sort-label">
+      <span id="sortLabel">🕐 Latest first · 5 articles</span>
+      <button class="filter-link">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="20" y2="12"/><line x1="12" y1="18" x2="20" y2="18"/></svg>
+        Filter
+      </button>
+    </div>
+
+    <!-- Articles -->
+    <div class="articles" id="articles"></div>
+  </div>
+
+  <!-- ── Bottom Nav ── -->
+  <div class="bottom-nav" id="bottomNav"></div>
+</div>
+
+<!-- ── State sheet ── -->
+<div class="sheet-overlay" id="stateSheet" style="display:none" onclick="closeSheets(event)">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <h3>Select State</h3>
+    <div id="stateList"></div>
+  </div>
+</div>
+
+<!-- ── Month sheet ── -->
+<div class="sheet-overlay" id="monthSheet" style="display:none" onclick="closeSheets(event)">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <h3>Select Month</h3>
+    <div id="monthList"></div>
+  </div>
+</div>
+
+<!-- ── AI Panel ── -->
+<div class="ai-panel" id="aiPanel" style="display:none">
+  <div class="ai-header">
+    <div class="ai-avatar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M12 3l1.88 5.76L20 10l-6.12.24L12 16l-1.88-5.76L4 10l6.12-.24z"/></svg>
+    </div>
+    <div class="ai-header-info">
+      <h2>AI Study Assistant</h2>
+      <div class="ai-status"><span class="status-dot"></span><span>Ready to help with current affairs</span></div>
+    </div>
+    <button class="close-btn" onclick="closeAI()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="ai-messages" id="aiMessages"></div>
+  <div class="suggestions" id="aiSuggestions">
+    <p>Quick ask</p>
+    <div class="sugg-grid" id="suggGrid"></div>
+  </div>
+  <div class="ai-input-bar">
+    <div class="ai-input-wrap">
+      <input type="text" id="aiInput" placeholder="Ask about any current affair..." oninput="onAiInput()" onkeydown="onAiKey(event)" />
+      <button class="send-btn inactive" id="sendBtn" onclick="sendMessage()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2.5" id="sendIcon"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── Data ── */
+const STATES = ["National","Uttar Pradesh","Maharashtra","Gujarat","Rajasthan","Tamil Nadu","Karnataka"];
+const MONTHS = ["This month","May 2026","Apr 2026","Mar 2026","Feb 2026"];
+const CATEGORIES = [
+  { label:"All",         color:"#1e293b", bg:"#1e293b", icon:'<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>' },
+  { label:"Economy",     color:"#059669", bg:"#059669", icon:'<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>' },
+  { label:"International",color:"#2563eb",bg:"#2563eb", icon:'<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>' },
+  { label:"Defence",     color:"#dc2626", bg:"#dc2626", icon:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>' },
+  { label:"Schemes",     color:"#7c3aed", bg:"#7c3aed", icon:'<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>' },
+  { label:"Politics",    color:"#ea580c", bg:"#ea580c", icon:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>' },
+  { label:"Health",      color:"#db2777", bg:"#db2777", icon:'<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>' },
+  { label:"Environment", color:"#16a34a", bg:"#16a34a", icon:'<path d="M17 8C8 10 5.9 16.17 3.82 19.67A7 7 0 0 0 7 21"/><path d="M7.44 9.08C8.93 6.24 12.67 4 17 4c0 2.94-1.75 5.55-4 7"/><path d="M12 16c-3-1-5-4.1-5.17-7-2.26-.87-4.17.83-5 3.6"/>' },
+  { label:"Science & Tech",color:"#0891b2",bg:"#0891b2",icon:'<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>' },
+];
+const ARTICLES = [
+  { id:1, category:"SCHEMES",  catColor:"#7c3aed", catBg:"#f5f3ff", date:"29 Jun", readTime:"3 min", views:"12.4k", title:"Mallikarjun Kharge takes Rajya Sabha oath, reaffirms commitment to raise public issues", excerpt:"The oath was administered by Rajya Sabha Chairman and Vice President C.P. Radhakrishnan in a historic ceremony.", source:"mid-day", trending:true, examWeight:"High", image:"https://images.unsplash.com/photo-1529107386315-e1a2ed48a620?w=200&h=200&fit=crop", tags:["Rajya Sabha","Congress","Parliament"] },
+  { id:2, category:"ECONOMY",  catColor:"#059669", catBg:"#ecfdf5", date:"29 Jun", readTime:"4 min", views:"8.1k",  title:"Foreign Investment hits record ₹39,640 Crore into Government Bonds in 2026",              excerpt:"Global investors poured record amounts into Indian government bonds as yields remain attractive.",            source:"Economic Times", trending:false, examWeight:"High", image:"https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=200&h=200&fit=crop", tags:["FDI","Bonds","RBI"] },
+  { id:3, category:"DEFENCE",  catColor:"#dc2626", catBg:"#fef2f2", date:"28 Jun", readTime:"5 min", views:"21.3k", title:"India successfully tests new indigenous anti-drone system in live field trials",               excerpt:"The DRDO-developed system showed 94% interception accuracy across multiple test scenarios.",                  source:"The Hindu", trending:true, examWeight:"Medium", image:"https://images.unsplash.com/photo-1608178398319-48f814d0750c?w=200&h=200&fit=crop", tags:["DRDO","Defence","Technology"] },
+  { id:4, category:"INTERNATIONAL", catColor:"#2563eb", catBg:"#eff6ff", date:"28 Jun", readTime:"3 min", views:"6.7k", title:"India-EU Free Trade Agreement talks enter decisive final round in Brussels", excerpt:"Negotiators signal optimism as key tariff barriers narrow significantly in the latest discussions.", source:"Hindustan Times", trending:false, examWeight:"High", image:"https://images.unsplash.com/photo-1543286386-713bdd548da4?w=200&h=200&fit=crop", tags:["EU","Trade","Diplomacy"] },
+  { id:5, category:"ENVIRONMENT", catColor:"#16a34a", catBg:"#f0fdf4", date:"27 Jun", readTime:"4 min", views:"9.5k", title:"India achieves 200 GW renewable energy milestone ahead of 2026 target", excerpt:"Solar and wind installations drive India past a key clean energy benchmark two months early.", source:"Times of India", trending:true, examWeight:"High", image:"https://images.unsplash.com/photo-1509391366360-2e959784a276?w=200&h=200&fit=crop", tags:["Solar","Renewable","Climate"] },
+];
+const AI_SUGGESTIONS = [
+  "Which articles are most important for UPSC?",
+  "Explain India-EU FTA in simple terms",
+  "Latest defence news this week",
+  "Economy articles with high exam weight",
+];
+const TABS = [
+  { label:"Home",    icon:'<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>' },
+  { label:"Practice",icon:'<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>' },
+  { label:"CA",      icon:'<path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v2"/><path d="M2 9h4v13H2z"/><line x1="10" y1="9" x2="18" y2="9"/><line x1="10" y1="13" x2="18" y2="13"/>' },
+  { label:"Profile", icon:'<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>' },
+];
+
+/* ── State ── */
+let state = {
+  selectedState: "National",
+  selectedMonth: "This month",
+  selectedCategory: "All",
+  saved: [3],
+  activeTab: "CA",
+  sortBy: "latest",
+  aiMessages: [{ role:"ai", text:"👋 Hi! I'm your AI study assistant. Ask me to find articles, explain current affairs, or suggest what's important for your exam!" }],
+};
+
+/* ── AI response ── */
+function simulateAI(q) {
+  const l = q.toLowerCase();
+  if(l.includes("upsc")||l.includes("important")||l.includes("exam"))
+    return "🎯 Top picks for UPSC 2026:\n1. India-EU FTA (Economy + IR)\n2. Anti-drone system test (Defence + Science)\n3. ₹39,640Cr FDI into bonds (Economy)\n4. 200 GW renewable milestone (Environment)\n\nAll carry high exam relevance in prelims & mains!";
+  if(l.includes("eu")||l.includes("fta")||l.includes("trade"))
+    return "🌐 India-EU FTA Simplified:\n• Negotiations ongoing since 2007, revived in 2022\n• Covers trade in goods, services & investments\n• Aims to reduce tariffs on 90%+ of goods\n• Key sectors: textiles, pharma, automobiles\n• Expected to boost bilateral trade by $100B";
+  if(l.includes("defence")||l.includes("drdo")||l.includes("drone"))
+    return "🛡️ Defence highlights this week:\n• Anti-drone system: 94% intercept rate\n• DRDO's 'Project Kavach' enters phase 2\n• Budget allocation ₹6.2L Cr for FY27\n• 3 indigenous defence exports approved";
+  if(l.includes("economy")||l.includes("bond")||l.includes("fdi"))
+    return "📈 Economy round-up:\n• FDI in bonds: Record ₹39,640 Cr in June\n• Rupee stable at ₹83.4/USD\n• RBI maintains repo rate at 6.25%\n• GST collections at ₹2.1L Cr (all-time high)";
+  return `🤖 Searching articles about "${q}"...\n\nFound 3 related articles:\n• Economy: FDI record bonds\n• International: India-EU FTA\n• Environment: 200 GW milestone\n\nWould you like me to summarize any of these?`;
+}
+
+/* ── Render ── */
+function render() {
+  renderCategories();
+  renderArticles();
+  renderNav();
+}
+
+function renderCategories() {
+  const el = document.getElementById("categories");
+  el.innerHTML = CATEGORIES.map(c => {
+    const active = state.selectedCategory === c.label;
+    return `<button class="cat-pill${active?' active':''}"
+      style="${active?`background:${c.bg};color:#fff;border-color:transparent`:''}"
+      onclick="selectCategory('${c.label}')">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="${active?'#fff':c.color}" stroke-width="2.5">${c.icon}</svg>
+      ${c.label}
+    </button>`;
+  }).join("");
+}
+
+function renderArticles() {
+  const filtered = ARTICLES.filter(a => {
+    if(state.selectedCategory === "All") return true;
+    const cat = state.selectedCategory.toUpperCase();
+    return a.category === cat || a.category.startsWith(cat.slice(0,4));
+  }).sort((a,b) => state.sortBy==="trending" ? (b.trending?1:0)-(a.trending?1:0) : 0);
+
+  const sortEmoji = state.sortBy === "trending" ? "🔥 Trending first" : "🕐 Latest first";
+  document.getElementById("sortLabel").textContent = `${sortEmoji} · ${filtered.length} articles`;
+
+  const el = document.getElementById("articles");
+  if(!filtered.length) {
+    el.innerHTML = `<div class="empty">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.2"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v2"/><path d="M2 9h4v13H2z"/><line x1="10" y1="9" x2="18" y2="9"/><line x1="10" y1="13" x2="18" y2="13"/></svg>
+      <p>No articles found</p><small>Try a different category or filter</small>
+    </div>`;
+    return;
+  }
+  el.innerHTML = filtered.map(a => {
+    const isSaved = state.saved.includes(a.id);
+    const examClass = a.examWeight === "High" ? "exam-high" : "exam-med";
+    return `<div class="card">
+      <div class="card-top">
+        <div class="thumb">
+          <img src="${a.image}" alt="${a.title}" loading="lazy" />
+          ${a.trending ? `<div class="hot-badge"><svg width="7" height="7" viewBox="0 0 24 24" fill="#fff" stroke="none"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg><span>HOT</span></div>` : ""}
+        </div>
+        <div class="card-info">
+          <div class="card-badges">
+            <span class="cat-badge" style="color:${a.catColor};background:${a.catBg}">${a.category}</span>
+            <span class="exam-badge ${examClass}">
+              <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+              ${a.examWeight}
+            </span>
+          </div>
+          <div class="card-title">${a.title}</div>
+        </div>
+      </div>
+      <div class="card-excerpt">${a.excerpt}</div>
+      <div class="card-tags">${a.tags.map(t=>`<span class="tag">#${t}</span>`).join("")}</div>
+      <div class="card-footer">
+        <div class="card-meta">
+          <span>${a.source}</span>
+          <span class="dot">·</span>
+          <span><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ${a.readTime}</span>
+          <span class="dot">·</span>
+          <span><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> ${a.views}</span>
+        </div>
+        <div class="card-right">
+          <span class="card-date">${a.date}</span>
+          <button class="bookmark-btn${isSaved?' saved':''}" onclick="toggleSave(${a.id})">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="${isSaved?'currentColor':'none'}" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function renderNav() {
+  const el = document.getElementById("bottomNav");
+  el.innerHTML = TABS.map(t => `<button class="nav-btn${state.activeTab===t.label?' active':''}" onclick="setTab('${t.label}')">
+    <div class="nav-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="${state.activeTab===t.label?'#4f46e5':'#94a3b8'}" stroke-width="${state.activeTab===t.label?'2.5':'1.8'}">${t.icon}</svg></div>
+    <span class="nav-label">${t.label}</span>
+  </button>`).join("");
+}
+
+function renderSheetList(listId, items, selected, onSelect) {
+  const el = document.getElementById(listId);
+  el.innerHTML = items.map(item => `<button class="sheet-item${selected===item?' active':''}" onclick="${onSelect}('${item.replace(/'/g,"\\'")}')">
+    ${item}
+    ${selected===item ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4338ca" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>` : ""}
+  </button>`).join("");
+}
+
+function renderAI() {
+  const msgs = document.getElementById("aiMessages");
+  msgs.innerHTML = state.aiMessages.map(m => `<div class="msg-row ${m.role}">
+    ${m.role==="ai" ? `<div class="msg-avatar"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M12 3l1.88 5.76L20 10l-6.12.24L12 16l-1.88-5.76L4 10l6.12-.24z"/></svg></div>` : ""}
+    <div class="bubble ${m.role}">${m.text.replace(/\n/g,"<br>")}</div>
+  </div>`).join("");
+
+  const suggEl = document.getElementById("aiSuggestions");
+  suggEl.style.display = state.aiMessages.length <= 1 ? "block" : "none";
+  if(state.aiMessages.length <= 1) {
+    document.getElementById("suggGrid").innerHTML = AI_SUGGESTIONS.map(s => `<button class="sugg-btn" onclick="sendSugg('${s.replace(/'/g,"\\'")}')">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.5"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+      ${s}
+    </button>`).join("");
+  }
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+/* ── Actions ── */
+function selectCategory(cat) { state.selectedCategory = cat; render(); }
+function setTab(tab) { state.activeTab = tab; renderNav(); }
+function toggleSave(id) {
+  state.saved = state.saved.includes(id) ? state.saved.filter(x=>x!==id) : [...state.saved, id];
+  renderArticles();
+}
+function toggleSort() {
+  state.sortBy = state.sortBy === "latest" ? "trending" : "latest";
+  const btn = document.getElementById("sortBtn");
+  btn.classList.toggle("active", state.sortBy === "trending");
+  renderArticles();
+}
+
+function openSheet(type) {
+  if(type === "state") {
+    renderSheetList("stateList", STATES, state.selectedState, "selectState");
+    document.getElementById("stateSheet").style.display = "flex";
+  } else {
+    renderSheetList("monthList", MONTHS, state.selectedMonth, "selectMonth");
+    document.getElementById("monthSheet").style.display = "flex";
+  }
+}
+function closeSheets(e) {
+  document.getElementById("stateSheet").style.display = "none";
+  document.getElementById("monthSheet").style.display = "none";
+}
+function selectState(s) {
+  state.selectedState = s;
+  document.getElementById("selectedState").textContent = s;
+  closeSheets();
+}
+function selectMonth(m) {
+  state.selectedMonth = m;
+  document.getElementById("selectedMonth").textContent = m;
+  closeSheets();
+}
+
+function openAI() {
+  document.getElementById("aiPanel").style.display = "flex";
+  renderAI();
+}
+function closeAI() { document.getElementById("aiPanel").style.display = "none"; }
+
+function onAiInput() {
+  const val = document.getElementById("aiInput").value.trim();
+  const btn = document.getElementById("sendBtn");
+  const icon = document.getElementById("sendIcon");
+  if(val) {
+    btn.className = "send-btn active";
+    icon.setAttribute("stroke","#fff");
+  } else {
+    btn.className = "send-btn inactive";
+    icon.setAttribute("stroke","#94a3b8");
+  }
+}
+function onAiKey(e) { if(e.key==="Enter") sendMessage(); }
+function sendSugg(s) { document.getElementById("aiInput").value = s; onAiInput(); sendMessage(); }
+
+function sendMessage() {
+  const input = document.getElementById("aiInput");
+  const q = input.value.trim();
+  if(!q) return;
+  state.aiMessages.push({ role:"user", text: q });
+  input.value = "";
+  onAiInput();
+  renderAI();
+
+  // typing indicator
+  const msgs = document.getElementById("aiMessages");
+  const typingEl = document.createElement("div");
+  typingEl.className = "msg-row ai";
+  typingEl.id = "typing";
+  typingEl.innerHTML = `<div class="msg-avatar"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M12 3l1.88 5.76L20 10l-6.12.24L12 16l-1.88-5.76L4 10l6.12-.24z"/></svg></div>
+    <div class="bubble ai"><div class="typing-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>`;
+  msgs.appendChild(typingEl);
+  msgs.scrollTop = msgs.scrollHeight;
+
+  setTimeout(() => {
+    typingEl.remove();
+    state.aiMessages.push({ role:"ai", text: simulateAI(q) });
+    renderAI();
+  }, 1200);
+}
+
+/* ── Init ── */
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,72 @@
+{
+  "expo": {
+    "name": "Sopaan",
+    "slug": "sopaan",
+    "version": "0.1.0",
+    "runtimeVersion": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "sopaan",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.sopaan.app",
+      "associatedDomains": ["applinks:sopaan.app"]
+    },
+    "icon": "./assets/icon.png",
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon-foreground.png",
+        "backgroundColor": "#043FCF"
+      },
+      "package": "com.sopaan.app",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "sopaan.app",
+              "pathPrefix": "/refer"
+            },
+            {
+              "scheme": "sopaan",
+              "host": "refer"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
+    },
+    "plugins": [
+      "expo-font",
+      "expo-splash-screen",
+      "expo-secure-store",
+      "expo-web-browser",
+      [
+        "@sentry/react-native/expo",
+        {
+          "organization": "sopaan",
+          "project": "mobile",
+          "experimental_android": {
+            "enableAndroidGradlePlugin": true
+          }
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Allow Sopaan to scan questions and answers with your camera.",
+          "photosPermission": "Allow Sopaan to pick images from your gallery."
+        }
+      ],
+      "expo-notifications"
+    ],
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "backgroundColor": "#043FCF",
+      "resizeMode": "contain"
+    }
+  }
+}
