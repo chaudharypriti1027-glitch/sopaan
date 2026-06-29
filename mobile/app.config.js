@@ -5,6 +5,7 @@ module.exports = () => {
   const projectId =
     process.env.EAS_PROJECT_ID?.trim() ||
     process.env.EXPO_PUBLIC_EAS_PROJECT_ID?.trim() ||
+    appJson.expo.extra?.eas?.projectId?.trim() ||
     '';
 
   const updatesEnabled = Boolean(projectId);

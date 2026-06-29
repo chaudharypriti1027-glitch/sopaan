@@ -1,37 +1,29 @@
-# Git & editor
+# Build context: server/ (used by server/Dockerfile and Render rootDir: server)
 .git
 .gitignore
 **/.DS_Store
 
-# Dependencies (reinstalled in image)
 node_modules
 **/node_modules
 
-# Mobile app (not needed for API image)
-mobile
-
 # Local env & secrets — inject at runtime
-server/.env
-server/.env.*
-!server/.env.example
-!server/.env.docker.example
-!server/.env.staging.example
+.env
+.env.*
+!.env.example
+!.env.docker.example
+!.env.staging.example
 
 # Tests & dev tooling
-server/tests
-server/coverage
+tests
+coverage
 **/*.test.js
 **/__tests__
 
 # Backups & logs
-server/backups
+backups
 **/*.log
 npm-debug.log*
 
 # Documentation (not needed at runtime)
 **/*.md
-!server/docs/DEPLOY.md
-
-# CI / E2E artifacts
-.maestro
-.github
+!docs/DEPLOY.md

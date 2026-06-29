@@ -1,0 +1,29 @@
+# Render — https://render.com/docs/blueprint-spec
+# Root directory `server` matches server/Dockerfile COPY paths (package.json, src/).
+
+services:
+  - type: web
+    name: sopaan-api
+    runtime: docker
+    rootDir: server
+    dockerfilePath: Dockerfile
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 4000
+      - key: PROCESS_ROLE
+        value: api
+
+  - type: worker
+    name: sopaan-worker
+    runtime: docker
+    rootDir: server
+    dockerfilePath: Dockerfile
+    dockerCommand: node src/worker.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PROCESS_ROLE
+        value: worker

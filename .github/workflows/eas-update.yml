@@ -46,6 +46,12 @@ jobs:
         env:
           EAS_PROJECT_ID: ${{ secrets.EAS_PROJECT_ID }}
         run: |
-          PROFILE="${{ github.event.inputs.channel }}"
+          CHANNEL="${{ github.event.inputs.channel }}"
           MSG="${{ github.event.inputs.message }}"
-          eas update --profile "$PROFILE" --non-interactive --message "$MSG"
+          ROLLOUT=""
+          case "$CHANNEL" in
+            production-rollout-10) CHANNEL=production; ROLLOUT="--rollout-percentage 10" ;;
+            production-rollout-25) CHANNEL=production; ROLLOUT="--rollout-percentage 25" ;;
+            production-rollout-50) CHANNEL=production; ROLLOUT="--rollout-percentage 50" ;;
+          esac
+          eas update --channel "$CHANNEL" $ROLLOUT --non-interactive --message "$MSG"

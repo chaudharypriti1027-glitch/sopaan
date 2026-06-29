@@ -2,6 +2,7 @@
   "expo": {
     "name": "Sopaan",
     "slug": "sopaan",
+    "owner": "priti1027",
     "version": "0.1.0",
     "runtimeVersion": "0.1.0",
     "orientation": "portrait",
@@ -11,7 +12,9 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.sopaan.app",
-      "associatedDomains": ["applinks:sopaan.app"]
+      "associatedDomains": [
+        "applinks:sopaan.app"
+      ]
     },
     "icon": "./assets/icon.png",
     "android": {
@@ -35,7 +38,10 @@
               "host": "refer"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
@@ -67,6 +73,11 @@
       "image": "./assets/splash-icon.png",
       "backgroundColor": "#043FCF",
       "resizeMode": "contain"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "7d8edc07-25a2-4eea-96ca-1d41c5b4f498"
+      }
     }
   }
 }

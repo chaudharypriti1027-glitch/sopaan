@@ -31,6 +31,9 @@
     "staging": {
       "distribution": "internal",
       "channel": "staging",
+      "android": {
+        "buildType": "apk"
+      },
       "env": {
         "EXPO_PUBLIC_API_URL": "https://staging-api.sopaan.app",
         "EXPO_PUBLIC_SENTRY_ENVIRONMENT": "staging",
@@ -41,6 +44,9 @@
     "production": {
       "autoIncrement": true,
       "channel": "production",
+      "android": {
+        "buildType": "apk"
+      },
       "env": {
         "EXPO_PUBLIC_API_URL": "https://api.sopaan.app",
         "EXPO_PUBLIC_SENTRY_ENVIRONMENT": "production",
@@ -51,31 +57,5 @@
   },
   "submit": {
     "production": {}
-  },
-  "update": {
-    "staging": {
-      "channel": "staging"
-    },
-    "production": {
-      "channel": "production"
-    },
-    "production-rollout-10": {
-      "channel": "production",
-      "rollout": {
-        "percentage": 10
-      }
-    },
-    "production-rollout-25": {
-      "channel": "production",
-      "rollout": {
-        "percentage": 25
-      }
-    },
-    "production-rollout-50": {
-      "channel": "production",
-      "rollout": {
-        "percentage": 50
-      }
-    }
   }
 }

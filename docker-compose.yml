@@ -39,8 +39,8 @@ services:
 
   api:
     build:
-      context: .
-      dockerfile: server/Dockerfile
+      context: server
+      dockerfile: Dockerfile
     restart: unless-stopped
     ports:
       - '4000:4000'
@@ -66,8 +66,8 @@ services:
 
   worker:
     build:
-      context: .
-      dockerfile: server/Dockerfile
+      context: server
+      dockerfile: Dockerfile
     restart: unless-stopped
     command: ['node', 'src/worker.js']
     env_file:

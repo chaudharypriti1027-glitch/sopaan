@@ -72,27 +72,30 @@ const ReviewAnswerCard = memo(function ReviewAnswerCard({
   );
 });
 
-export function ResultScreen() {
-  const route = useRoute();
+function ResultUnavailable() {
   const navigation = useNavigation<ResultNav>();
-  const params = route.params as MainStackParamList['Result'] | undefined;
+  const { theme } = useTheme();
+  const { t } = useTranslation('app');
+  const styles = useMemo(() => createStyles(theme), [theme]);
+
+  return (
+    <Screen scroll contentContainerStyle={styles.content}>
+      <Card style={styles.errorCard}>
+        <Text style={styles.errorTitle}>{t('result.unavailable')}</Text>
+        <Text style={styles.errorBody}>{t('result.unavailableHint')}</Text>
+        <Button label={t('result.backToPractice')} onPress={() => navigation.goBack()} fullWidth />
+      </Card>
+    </Screen>
+  );
+}
+
+function ResultScreenContent({ params }: { params: MainStackParamList['Result'] }) {
+  const navigation = useNavigation<ResultNav>();
   const { user } = useAuth();
   const { theme } = useTheme();
   const { t } = useTranslation('app');
   const { formatNumber, formatPercent, formatOrdinal } = useFormat();
   const styles = useMemo(() => createStyles(theme), [theme]);
-
-  if (!params?.result?.attempt || !Array.isArray(params.result.answers)) {
-    return (
-      <Screen scroll contentContainerStyle={styles.content}>
-        <Card style={styles.errorCard}>
-          <Text style={styles.errorTitle}>{t('result.unavailable')}</Text>
-          <Text style={styles.errorBody}>{t('result.unavailableHint')}</Text>
-          <Button label={t('result.backToPractice')} onPress={() => navigation.goBack()} fullWidth />
-        </Card>
-      </Screen>
-    );
-  }
 
   const { result, previousRank, attemptId } = params;
 
@@ -297,6 +300,17 @@ export function ResultScreen() {
       {listFooter}
     </Screen>
   );
+}
+
+export function ResultScreen() {
+  const route = useRoute();
+  const params = route.params as MainStackParamList['Result'] | undefined;
+
+  if (!params?.result?.attempt || !Array.isArray(params.result.answers)) {
+    return <ResultUnavailable />;
+  }
+
+  return <ResultScreenContent params={params} />;
 }
 
 function createStyles(theme: ReturnType<typeof useTheme>['theme']) {

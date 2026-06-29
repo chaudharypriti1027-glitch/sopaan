@@ -1,10 +1,8 @@
 # syntax=docker/dockerfile:1
 #
-# Build context: server/ directory
-#   cd server && docker build -t sopaan-api .
-#
-# For monorepo lockfile installs from repo root, use /Dockerfile instead:
+# Monorepo build — context must be repository root
 #   docker build -f Dockerfile -t sopaan-api .
+#   docker compose up --build
 
 # -----------------------------------------------------------------------------
 # Stage 1 — install production dependencies (bcrypt needs native build tools)
@@ -17,8 +15,10 @@ RUN apt-get update \
 
 WORKDIR /app
 
-COPY package.json ./
-RUN npm install --omit=dev \
+COPY package.json package-lock.json ./
+COPY server/package.json ./server/
+
+RUN npm ci -w @sopaan/server --omit=dev \
   && npm cache clean --force
 
 # -----------------------------------------------------------------------------
@@ -30,7 +30,7 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends curl \
   && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /app
+WORKDIR /app/server
 
 ENV NODE_ENV=production \
     PORT=4000
@@ -38,9 +38,10 @@ ENV NODE_ENV=production \
 RUN groupadd --gid 1001 sopaan \
   && useradd --uid 1001 --gid sopaan --shell /bin/sh --create-home sopaan
 
-COPY --from=deps --chown=sopaan:sopaan /app/node_modules ./node_modules
-COPY --chown=sopaan:sopaan package.json ./
-COPY --chown=sopaan:sopaan src ./src
+COPY --from=deps --chown=sopaan:sopaan /app/node_modules /app/node_modules
+COPY --from=deps --chown=sopaan:sopaan /app/server/node_modules ./node_modules
+COPY --chown=sopaan:sopaan server/package.json ./
+COPY --chown=sopaan:sopaan server/src ./src
 
 USER sopaan
 

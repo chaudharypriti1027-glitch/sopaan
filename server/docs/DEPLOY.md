@@ -36,7 +36,11 @@ Point the mobile app at `http://localhost:4000` (or `http://10.0.2.2:4000` on An
 ### Build image only
 
 ```bash
-docker build -f server/Dockerfile -t sopaan-api:local .
+# From repo root (lockfile-pinned monorepo install)
+docker build -f Dockerfile -t sopaan-api:local .
+
+# From server/ (matches Render / Railway when root directory is server)
+docker build -t sopaan-api:local .
 ```
 
 ## Environment variables
@@ -62,11 +66,21 @@ See also [STAGING.md](./STAGING.md) for staging-specific wiring.
 
 ## Production deploy paths
 
-All platforms use the same image built from `server/Dockerfile` (build context = monorepo root).
+All platforms use the Sopaan API container image.
+
+| Deploy target | Root directory | Dockerfile path |
+|---------------|----------------|-----------------|
+| Render (see `render.yaml`) | `server` | `Dockerfile` |
+| Railway / similar | `server` | `Dockerfile` |
+| Monorepo / Compose | `server` or repo root | `server/Dockerfile` or `/Dockerfile` |
+
+**Important:** Root directory must match the Dockerfile. `server/Dockerfile` expects context `server/` (`package.json`, `src/`). Root `/Dockerfile` expects the monorepo root (`server/src`, `package-lock.json`). A mismatch causes `"/server/src": not found`.
 
 ### Render (recommended for simplicity)
 
-1. **New Web Service** — Docker, connect repo, set **Dockerfile path** `server/Dockerfile`, **root directory** `/`.
+Use the included `render.yaml` blueprint, or configure manually:
+
+1. **New Web Service** — Docker, connect repo, set **root directory** `server`, **Dockerfile path** `Dockerfile`.
 2. **Environment** — add secrets from the table above; `PROCESS_ROLE=api`, `NODE_ENV=production`.
 3. **Managed MongoDB** (Render or Atlas) → `MONGODB_URI`.
 4. **Managed Redis** (Render Key Value or Upstash) → `REDIS_URL`, `REDIS_ENABLED=true`.
@@ -80,7 +94,7 @@ All platforms use the same image built from `server/Dockerfile` (build context =
 ### Railway
 
 1. Create project from repo; add **MongoDB** and **Redis** plugins.
-2. **API service:** Dockerfile `server/Dockerfile`, start `node src/index.js`, `PROCESS_ROLE=api`.
+2. **API service:** root directory `server`, Dockerfile `Dockerfile`, start `node src/index.js`, `PROCESS_ROLE=api`.
 3. **Worker service:** same image, start `node src/worker.js`, `PROCESS_ROLE=worker`.
 4. Map plugin URLs to `MONGODB_URI` and `REDIS_URL` via Railway variables.
 
