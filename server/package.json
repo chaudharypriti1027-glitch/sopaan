@@ -27,7 +27,7 @@
     "bullmq": "^5.79.1",
     "compression": "^1.8.0",
     "cors": "^2.8.5",
-    "dotenv": "^16.5.0",
+    "dotenv": "^17.4.2",
     "express": "^5.1.0",
     "express-rate-limit": "^7.5.0",
     "google-auth-library": "^9.15.1",
