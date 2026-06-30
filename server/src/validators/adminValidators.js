@@ -32,6 +32,7 @@ export const examCreateSchema = z.object({
     'Police',
     'Defence',
     'Teaching',
+    'Other',
   ]),
   description: z.string().trim().optional(),
   eligibility: z
@@ -47,7 +48,7 @@ export const examCreateSchema = z.object({
       z.object({
         label: z.string(),
         date: z.coerce.date(),
-        type: z.enum(['apply', 'exam', 'result', 'admit']),
+        type: z.enum(['open', 'apply', 'exam', 'result', 'admit', 'other']),
       })
     )
     .optional(),

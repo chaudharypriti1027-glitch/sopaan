@@ -8,6 +8,7 @@ export const TARGET_EXAM_OPTIONS = [
   { label: 'State PSC', value: 'State PSC', emoji: '📍' },
   { label: 'UPSC', value: 'UPSC CSE', emoji: '🏛️' },
   { label: 'Police', value: 'Police Constable', emoji: '🛡️' },
+  { label: 'Other', value: 'Other', emoji: '✨' },
 ] as const;
 
 export const INDIAN_STATES_ALL = [
@@ -51,6 +52,7 @@ export const EDUCATION_LEVEL_OPTIONS = [
   { label: 'Graduate', value: 'Graduate' as const },
   { label: 'Post Graduate', value: 'PG' as const },
   { label: 'Diploma', value: 'Diploma' as const },
+  { label: 'Other', value: 'Other' as const },
 ];
 
 export const LANGUAGE_OPTIONS = [

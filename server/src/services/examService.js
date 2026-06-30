@@ -50,7 +50,7 @@ export async function getExamCalendar(query) {
       {
         $match: {
           'importantDates.date': { $gte: now },
-          'importantDates.type': { $in: ['apply', 'exam', 'result'] },
+          'importantDates.type': { $in: ['open', 'apply', 'exam', 'result', 'admit', 'other'] },
         },
       },
       {

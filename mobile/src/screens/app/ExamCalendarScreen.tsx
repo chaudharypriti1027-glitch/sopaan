@@ -10,6 +10,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { Card, DateChip, Screen, SectionTitle } from '../../components';
 import { listReminderKeys, toggleReminder } from '../../calendar/reminders';
 import { useExamCalendar } from '../../hooks';
@@ -19,17 +20,14 @@ import { useTheme } from '../../theme';
 
 type CalendarNav = NativeStackNavigationProp<MainStackParamList, 'ExamCalendar'>;
 
-type CalendarGroup = 'apply' | 'upcoming' | 'result';
+type CalendarGroup = 'openJobs' | 'upcoming' | 'results' | 'other';
 
-const GROUP_LABELS: Record<CalendarGroup, string> = {
-  apply: 'Apply',
-  upcoming: 'Upcoming exams',
-  result: 'Results',
-};
+const GROUP_ORDER: CalendarGroup[] = ['openJobs', 'upcoming', 'results', 'other'];
 
 function mapGroup(type: ExamCalendarEntry['type']): CalendarGroup {
-  if (type === 'apply') return 'apply';
-  if (type === 'result') return 'result';
+  if (type === 'open' || type === 'apply') return 'openJobs';
+  if (type === 'result') return 'results';
+  if (type === 'other') return 'other';
   return 'upcoming';
 }
 
@@ -82,10 +80,21 @@ function CalendarRow({
 export function ExamCalendarScreen() {
   const navigation = useNavigation<CalendarNav>();
   const { theme } = useTheme();
+  const { t } = useTranslation('app');
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   const calendarQuery = useExamCalendar({ limit: 50 });
   const [reminderKeys, setReminderKeys] = useState<string[]>([]);
+
+  const groupLabels = useMemo(
+    () => ({
+      openJobs: t('examCalendar.openJobs'),
+      upcoming: t('examCalendar.upcoming'),
+      results: t('examCalendar.results'),
+      other: t('examCalendar.other'),
+    }),
+    [t],
+  );
 
   const loadReminders = useCallback(async () => {
     setReminderKeys(await listReminderKeys());
@@ -97,9 +106,10 @@ export function ExamCalendarScreen() {
 
   const grouped = useMemo(() => {
     const groups: Record<CalendarGroup, ExamCalendarEntry[]> = {
-      apply: [],
+      openJobs: [],
       upcoming: [],
-      result: [],
+      results: [],
+      other: [],
     };
 
     for (const entry of calendarQuery.data?.items ?? []) {
@@ -127,18 +137,18 @@ export function ExamCalendarScreen() {
         ),
       }}
     >
-      <SectionTitle title="Exam calendar" subtitle="Application, exam, and result dates" />
+      <SectionTitle title={t('examCalendar.title')} subtitle={t('examCalendar.subtitle')} />
 
       {calendarQuery.isLoading ? (
         <ActivityIndicator color={theme.colors.brand.primary} />
       ) : (
-        (['apply', 'upcoming', 'result'] as CalendarGroup[]).map((group) => {
+        GROUP_ORDER.map((group) => {
           const items = grouped[group];
           if (!items.length) return null;
 
           return (
             <View key={group} style={styles.section}>
-              <SectionTitle title={GROUP_LABELS[group]} />
+              <SectionTitle title={groupLabels[group]} />
               <Card style={styles.groupCard}>
                 {items.map((entry) => {
                   const key = `${entry.examId}:${entry.date}`;

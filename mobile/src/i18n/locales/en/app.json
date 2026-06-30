@@ -1017,10 +1017,12 @@
   },
   "examCalendar": {
     "title": "Exam calendar",
-    "subtitle": "Application, exam, and result dates",
+    "subtitle": "Open jobs, exams, results, and other dates",
+    "openJobs": "Open jobs",
     "apply": "Apply",
     "upcoming": "Upcoming exams",
-    "results": "Results"
+    "results": "Results",
+    "other": "Other"
   },
   "mockAnalysis": {
     "title": "Mock analysis",

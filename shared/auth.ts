@@ -5,7 +5,7 @@
 
 export type ProfileCategory = 'GEN' | 'OBC' | 'SC' | 'ST' | 'EWS';
 export type ProfileLanguage = 'en' | 'hi' | 'gu';
-export type EducationLevel = '10th' | '12th' | 'Graduate' | 'PG' | 'Diploma';
+export type EducationLevel = '10th' | '12th' | 'Graduate' | 'PG' | 'Diploma' | 'Other';
 
 export interface Profile {
   id: string;

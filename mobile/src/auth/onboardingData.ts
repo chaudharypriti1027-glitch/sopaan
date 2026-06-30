@@ -6,7 +6,8 @@ export type ExamCategoryId =
   | 'Police'
   | 'Defence'
   | 'State PSC'
-  | 'Teaching';
+  | 'Teaching'
+  | 'Other';
 
 export type ProfileCategory = 'GEN' | 'OBC' | 'SC' | 'ST' | 'EWS';
 
@@ -19,6 +20,7 @@ export const EXAM_CATEGORIES: { id: ExamCategoryId; label: string; emoji: string
   { id: 'Defence', label: 'Defence', emoji: '⚔️' },
   { id: 'State PSC', label: 'State PSC', emoji: '📍' },
   { id: 'Teaching', label: 'Teaching', emoji: '📚' },
+  { id: 'Other', label: 'Other', emoji: '✨' },
 ];
 
 export type CareerGoal = {
@@ -85,6 +87,13 @@ export const CAREER_GOALS: CareerGoal[] = [
     subtitle: 'CTET / TET',
     examTrack: 'CTET',
     categories: ['Teaching'],
+  },
+  {
+    id: 'other-govt-job',
+    title: 'Other Government Job',
+    subtitle: 'PSU, clerk, or any sarkari role',
+    examTrack: 'Other',
+    categories: ['Other'],
   },
 ];
 

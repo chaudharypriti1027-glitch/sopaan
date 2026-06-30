@@ -91,7 +91,7 @@ export type Exam = {
   importantDates?: {
     label: string;
     date: string;
-    type: 'apply' | 'exam' | 'result' | 'admit';
+    type: 'open' | 'apply' | 'exam' | 'result' | 'admit' | 'other';
   }[];
   vacancies?: number;
   cutoffs?: { year: number; category: string; marks: number }[];
@@ -112,7 +112,7 @@ export type ExamCalendarEntry = {
   category: string;
   label: string;
   date: string;
-  type: 'apply' | 'exam' | 'result' | 'admit';
+  type: 'open' | 'apply' | 'exam' | 'result' | 'admit' | 'other';
 };
 
 export type Course = {

@@ -55,6 +55,8 @@ function GoalIcon({ goalId, color }: { goalId: string; color: string }) {
       return <Users size={size} color={color} />;
     case 'teacher':
       return <GraduationCap size={size} color={color} />;
+    case 'other-govt-job':
+      return <Briefcase size={size} color={color} />;
     default:
       return <Briefcase size={size} color={color} />;
   }

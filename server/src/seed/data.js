@@ -20,7 +20,7 @@ export const exams = [
       { name: 'Tier 4', order: 4 },
     ],
     importantDates: [
-      { label: 'Application Start', date: addDays(now, 14), type: 'apply' },
+      { label: 'Application Start', date: addDays(now, 14), type: 'open' },
       { label: 'Application End', date: addDays(now, 45), type: 'apply' },
       { label: 'Tier 1 Exam', date: addDays(now, 90), type: 'exam' },
       { label: 'Tier 1 Result', date: addDays(now, 130), type: 'result' },

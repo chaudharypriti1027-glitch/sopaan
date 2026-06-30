@@ -54,10 +54,7 @@
         "@sentry/react-native/expo",
         {
           "organization": "sopaan",
-          "project": "mobile",
-          "experimental_android": {
-            "enableAndroidGradlePlugin": true
-          }
+          "project": "mobile"
         }
       ],
       [

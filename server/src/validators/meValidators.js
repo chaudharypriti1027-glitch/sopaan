@@ -13,7 +13,7 @@ export const updateMeSchema = z
       .optional()
       .nullable(),
     language: z.enum(['en', 'hi', 'gu']).optional(),
-    educationLevel: z.enum(['10th', '12th', 'Graduate', 'PG', 'Diploma']).optional(),
+    educationLevel: z.enum(['10th', '12th', 'Graduate', 'PG', 'Diploma', 'Other']).optional(),
   })
   .refine((data) => Object.values(data).some((value) => value !== undefined), {
     message: 'At least one profile field is required',

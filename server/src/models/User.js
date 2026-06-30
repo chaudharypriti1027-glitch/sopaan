@@ -99,7 +99,7 @@ const userSchema = new mongoose.Schema(
     },
     educationLevel: {
       type: String,
-      enum: ['10th', '12th', 'Graduate', 'PG', 'Diploma'],
+      enum: ['10th', '12th', 'Graduate', 'PG', 'Diploma', 'Other'],
     },
     onboardingComplete: {
       type: Boolean,

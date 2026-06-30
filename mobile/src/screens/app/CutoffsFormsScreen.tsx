@@ -57,7 +57,9 @@ export function CutoffsFormsScreen() {
   }, [examDetailQuery.data, examTrack, examsQuery.data?.items, goalQuery.data?.exam]);
 
   const cutoffs = exam?.cutoffs ?? [];
-  const applyDates = (exam?.importantDates ?? []).filter((d) => d.type === 'apply');
+  const applyDates = (exam?.importantDates ?? []).filter(
+    (d) => d.type === 'apply' || d.type === 'open',
+  );
   const isLoading =
     profileQuery.isLoading ||
     examsQuery.isLoading ||

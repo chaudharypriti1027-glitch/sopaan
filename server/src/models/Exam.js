@@ -48,7 +48,7 @@ const importantDateSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ['apply', 'exam', 'result', 'admit'],
+      enum: ['open', 'apply', 'exam', 'result', 'admit', 'other'],
       required: true,
     },
   },
@@ -130,6 +130,7 @@ const examSchema = new mongoose.Schema(
         'Police',
         'Defence',
         'Teaching',
+        'Other',
       ],
       required: true,
     },
