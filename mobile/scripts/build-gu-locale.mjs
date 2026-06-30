@@ -134,7 +134,7 @@ const auth = {
     brandSubtitle: 'તમારી તૈયારી ચાલુ રાખવા લૉગ ઇન કરો',
     phoneNumber: 'ફોન નંબર',
     emailAddress: 'ઇમેઇલ સરનામું',
-    emailPlaceholder: 'jane@example.com',
+    emailPlaceholder: 'kuldip@gmail.com',
     passwordPlaceholder: 'તમારો પાસવર્ડ દાખલ કરો',
     sendOtp: 'OTP મોકલો',
     useOtpInstead: 'OTP વાપરો',
@@ -189,7 +189,7 @@ const auth = {
     emailInvalidBody: 'માન્ય ઇમેઇલ સરનામું દાખલ કરો',
     emailCheckBody: 'તમારી ઇમેઇલ તપાસો',
     emailOptional: 'ઇમેઇલ (વૈકલ્પિક)',
-    namePlaceholder: 'જેન ડો',
+    namePlaceholder: 'Kuldip Chaudhary',
   },
   onboarding: enAuth.onboarding,
   goalSetup: {

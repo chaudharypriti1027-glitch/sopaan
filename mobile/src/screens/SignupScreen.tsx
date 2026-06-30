@@ -286,7 +286,7 @@ function SignupRegistration() {
         onChangeText={setEmail}
         keyboardType="email-address"
         autoCapitalize="none"
-        placeholder="jane@example.com"
+        placeholder={t('signup.emailPlaceholder')}
       />
       <AuthPremiumField
         variant="phone"

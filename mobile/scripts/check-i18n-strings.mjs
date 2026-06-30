@@ -103,8 +103,8 @@ const ALLOWED_EXACT = new Set([
   'ST',
   'EWS',
   '₹100',
-  'Jane Doe',
-  'jane@example.com',
+  'Kuldip Chaudhary',
+  'kuldip@gmail.com',
 ]);
 
 function hasTranslationCall(line) {
