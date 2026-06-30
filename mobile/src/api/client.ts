@@ -62,7 +62,7 @@ export const apiClient = axios.create({
     Accept: 'application/json',
     'Content-Type': 'application/json',
   },
-  timeout: 30_000,
+  timeout: 60_000,
 });
 
 const CONTENT_GET_PREFIXES = ['/courses', '/revision-capsules'];

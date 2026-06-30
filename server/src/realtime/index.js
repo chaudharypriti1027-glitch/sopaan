@@ -12,7 +12,25 @@ import { setRealtimeIo } from './io.js';
 export function initRealtimeServer(httpServer) {
   const io = new Server(httpServer, {
     cors: {
-      origin: env.clientUrl,
+      origin: (origin, callback) => {
+        if (!origin || origin === env.clientUrl) {
+          callback(null, true);
+          return;
+        }
+
+        if (env.isDevelopment) {
+          const isLocalDev =
+            /^https?:\/\/localhost(:\d+)?$/i.test(origin) ||
+            /^https?:\/\/127\.0\.0\.1(:\d+)?$/i.test(origin) ||
+            /^https?:\/\/192\.168\.\d+\.\d+(:\d+)?$/i.test(origin) ||
+            /^https?:\/\/10\.\d+\.\d+\.\d+(:\d+)?$/i.test(origin);
+
+          callback(null, isLocalDev);
+          return;
+        }
+
+        callback(null, false);
+      },
       credentials: true,
     },
     path: '/socket.io',

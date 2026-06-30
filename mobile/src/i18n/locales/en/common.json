@@ -19,7 +19,7 @@
   "offline": "You are offline",
   "offlineCached": "Offline — showing saved content",
   "couldNotLoad": "Could not load content",
-  "offlineHint": "Connect to the internet to load fresh content, or open a screen you have visited before.",
+  "offlineHint": "Cannot reach the server. Check your internet connection and try again in a moment.",
   "connectionHint": "Check your connection and try again.",
   "couldNotRefresh": "Could not refresh. Showing cached data.",
   "requestFailed": "Request failed",
