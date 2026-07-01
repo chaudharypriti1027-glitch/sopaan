@@ -92,11 +92,13 @@ export async function updateCourseProgress(userId, courseId, { lessonId, complet
     throw new AppError('Lesson not found in this course', 404, 'NOT_FOUND');
   }
 
-  let progress = await CourseProgress.findOne({ userId, courseId });
-
-  if (!progress) {
-    progress = new CourseProgress({ userId, courseId, completedLessons: [] });
-  }
+  // Atomic upsert avoids a find-then-create race on the unique (userId, courseId)
+  // index when duplicate/retried requests land close together (e.g. flaky network retries).
+  let progress = await CourseProgress.findOneAndUpdate(
+    { userId, courseId },
+    { $setOnInsert: { userId, courseId, completedLessons: [] } },
+    { upsert: true, new: true },
+  );
 
   const lessonObjectId = course.lessons.id(lessonId)._id;
   const completedSet = new Set(progress.completedLessons.map((id) => id.toString()));

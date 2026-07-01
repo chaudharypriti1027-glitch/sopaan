@@ -40,7 +40,7 @@ async function signupUser() {
       withPrivacyConsent({
         name: 'Webhook User',
         email: `webhook_${Date.now()}@test.com`,
-        password: 'Password123',
+        password: 'Password123!',
       }),
     );
 

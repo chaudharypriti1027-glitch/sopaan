@@ -22,7 +22,7 @@ describe('Home feed API', () => {
       withPrivacyConsent({
         name: 'Feed User',
         email: 'feed@example.com',
-        password: 'Password123',
+        password: 'Password123!',
       }),
     );
 

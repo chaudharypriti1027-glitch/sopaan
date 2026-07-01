@@ -9,7 +9,7 @@ import { Text } from '../Text';
 import { colors } from '../../theme/tokens';
 import { useTheme } from '../../theme';
 import type { HomeFeed } from '../../types/home';
-import { HOME_V2 } from './homeStyles';
+import { HOME_UI } from './homeTheme';
 
 type GreetingHeaderProps = {
   greeting: HomeFeed['greeting'];
@@ -50,7 +50,7 @@ export function GreetingHeader({
 
   return (
     <LinearGradient
-      colors={[...HOME_V2.headerGradient]}
+      colors={[...HOME_UI.heroGradient]}
       start={{ x: 0.2, y: 0 }}
       end={{ x: 0.85, y: 1 }}
       style={styles.gradient}
@@ -121,21 +121,21 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme'], topInset: num
     },
     decorA: {
       position: 'absolute',
-      top: -50,
+      top: -60,
       right: -40,
-      width: 190,
-      height: 190,
-      borderRadius: 95,
-      backgroundColor: 'rgba(255,255,255,0.1)',
+      width: 210,
+      height: 210,
+      borderRadius: 105,
+      backgroundColor: 'rgba(194,154,78,0.22)',
     },
     decorB: {
       position: 'absolute',
-      bottom: -30,
-      left: -30,
-      width: 150,
-      height: 150,
-      borderRadius: 75,
-      backgroundColor: 'rgba(124,118,240,0.35)',
+      bottom: -40,
+      left: -40,
+      width: 170,
+      height: 170,
+      borderRadius: 85,
+      backgroundColor: 'rgba(255,255,255,0.06)',
     },
     greetRow: {
       flexDirection: 'row',
@@ -190,9 +190,9 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme'], topInset: num
       width: 8,
       height: 8,
       borderRadius: 4,
-      backgroundColor: theme.colors.accent.coral,
+      backgroundColor: theme.colors.accent.gold,
       borderWidth: 2,
-      borderColor: '#322EA8',
+      borderColor: theme.colors.brand.primary,
     },
     pressed: {
       opacity: 0.92,

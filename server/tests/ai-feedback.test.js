@@ -33,7 +33,7 @@ async function createAuthedUser({ role = 'student' } = {}) {
   const signup = await request(app).post('/api/auth/signup').send(withPrivacyConsent({
     name: 'AI User',
     email,
-    password: 'Password123',
+    password: 'Password123!',
   }));
 
   if (role === 'admin') {

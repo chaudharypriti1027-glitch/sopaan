@@ -52,7 +52,7 @@ function createStyles(topInset: number) {
       width: 200,
       height: 200,
       borderRadius: 100,
-      backgroundColor: 'rgba(167,139,250,0.35)',
+      backgroundColor: 'rgba(194,154,78,0.22)',
     },
     decorB: {
       position: 'absolute',
@@ -61,7 +61,7 @@ function createStyles(topInset: number) {
       width: 140,
       height: 140,
       borderRadius: 70,
-      backgroundColor: 'rgba(96,165,250,0.15)',
+      backgroundColor: 'rgba(255,255,255,0.06)',
     },
     eyebrow: {
       fontSize: 11,

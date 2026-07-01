@@ -24,7 +24,7 @@ describe('Auth password API', () => {
 
     const response = await request(app).post('/api/auth/login').send({
       phone: '9876543210',
-      password: 'Password123',
+      password: 'Password123!',
     });
 
     expect(response.status).toBe(401);
@@ -39,14 +39,14 @@ describe('Auth password API', () => {
     const setResponse = await request(app)
       .post('/api/auth/set-password')
       .set('Authorization', `Bearer ${token}`)
-      .send({ password: 'Password123' });
+      .send({ password: 'Password123!' });
 
     expect(setResponse.status).toBe(200);
     expect(setResponse.body.message).toBe('Password set successfully');
 
     const loginResponse = await request(app).post('/api/auth/login').send({
       phone: PHONE,
-      password: 'Password123',
+      password: 'Password123!',
     });
 
     expect(loginResponse.status).toBe(200);

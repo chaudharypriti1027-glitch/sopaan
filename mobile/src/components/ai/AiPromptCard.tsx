@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { ChevronRight, type LucideIcon } from 'lucide-react-native';
+import { PremiumIcon } from '../premium/PremiumIcon';
 import { Text } from '../Text';
 import { useTheme } from '../../theme';
 import { AI_UI } from './aiTheme';
@@ -22,9 +23,7 @@ export function AiPromptCard({ Icon, text, tag, onPress }: AiPromptCardProps) {
       onPress={onPress}
       style={({ pressed }) => [styles.card, pressed && styles.pressed]}
     >
-      <View style={styles.iconBox}>
-        <Icon size={19} color={AI_UI.primary} strokeWidth={1.8} />
-      </View>
+      <PremiumIcon Icon={Icon} tone="lavender" size="md" filled />
       <View style={styles.copy}>
         <Text style={styles.text}>{text}</Text>
         <Text style={styles.tag}>{tag}</Text>
@@ -42,36 +41,27 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       gap: theme.spacing.md,
       paddingHorizontal: theme.spacing.md,
       paddingVertical: theme.spacing.md,
-      borderRadius: 16,
+      borderRadius: 20,
       backgroundColor: AI_UI.card,
-      borderWidth: 1.5,
+      borderWidth: 1,
       borderColor: AI_UI.border,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.05,
-      shadowRadius: 10,
+      shadowColor: AI_UI.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.06,
+      shadowRadius: 12,
       elevation: 2,
     },
     pressed: {
       opacity: 0.94,
-      borderColor: 'rgba(79,53,210,0.27)',
-    },
-    iconBox: {
-      width: 44,
-      height: 44,
-      borderRadius: 12,
-      backgroundColor: AI_UI.primaryLight,
-      alignItems: 'center',
-      justifyContent: 'center',
-      flexShrink: 0,
+      borderColor: AI_UI.borderStrong,
     },
     copy: {
       flex: 1,
       gap: 2,
     },
     text: {
-      fontSize: 13.5,
-      lineHeight: 18,
+      fontSize: 14,
+      lineHeight: 19,
       fontFamily: theme.typography.fonts.ui.semibold,
       fontWeight: '600',
       color: AI_UI.ink,

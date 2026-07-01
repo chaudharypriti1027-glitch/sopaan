@@ -27,15 +27,23 @@ export async function reviewCard(userId, cardId, rating) {
     return existing.toObject();
   }
 
-  const created = await FlashcardReview.create({
-    userId,
-    cardId,
-    easeFactor: next.easeFactor,
-    intervalDays: next.intervalDays,
-    repetitions: next.repetitions,
-    dueDate: next.dueDate,
-    lastReviewedAt: now,
-  });
+  // Atomic upsert avoids a find-then-create race on the unique (userId, cardId)
+  // index if the same review is submitted twice in quick succession.
+  const created = await FlashcardReview.findOneAndUpdate(
+    { userId, cardId },
+    {
+      $setOnInsert: {
+        userId,
+        cardId,
+        easeFactor: next.easeFactor,
+        intervalDays: next.intervalDays,
+        repetitions: next.repetitions,
+        dueDate: next.dueDate,
+        lastReviewedAt: now,
+      },
+    },
+    { upsert: true, new: true },
+  );
 
   return created.toObject();
 }

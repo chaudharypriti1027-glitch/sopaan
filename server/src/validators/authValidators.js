@@ -20,7 +20,8 @@ const passwordSchema = z
   .max(128, 'Password must be at most 128 characters')
   .regex(/[A-Z]/, 'Password must contain an uppercase letter')
   .regex(/[a-z]/, 'Password must contain a lowercase letter')
-  .regex(/[0-9]/, 'Password must contain a number');
+  .regex(/[0-9]/, 'Password must contain a number')
+  .regex(/[^A-Za-z0-9]/, 'Password must contain a symbol');
 
 export const privacyConsentInputSchema = z.object({
   policyVersion: z.string().trim().min(1).default(privacyConfig.policyVersion),
@@ -30,15 +31,20 @@ export const privacyConsentInputSchema = z.object({
   marketing: z.boolean().optional().default(false),
 });
 
-export const signupSchema = z.object({
-  name: z.string().trim().min(1, 'Name is required'),
-  phone: z.string().trim().min(10, 'Phone must be at least 10 digits'),
-  email: z.string().trim().email('Invalid email').optional(),
-  password: passwordSchema,
-  referralCode: z.string().trim().min(4).max(32).optional(),
-  installId: z.string().trim().min(8).max(128).optional(),
-  privacyConsent: privacyConsentInputSchema,
-});
+export const signupSchema = z
+  .object({
+    name: z.string().trim().min(1, 'Name is required'),
+    phone: indianPhoneSchema.optional(),
+    email: z.string().trim().email('Invalid email'),
+    password: passwordSchema,
+    referralCode: z.string().trim().min(4).max(32).optional(),
+    installId: z.string().trim().min(8).max(128).optional(),
+    privacyConsent: privacyConsentInputSchema,
+  })
+  .refine((data) => Boolean(data.email || data.phone), {
+    message: 'Email or phone is required',
+    path: ['email'],
+  });
 
 export const loginSchema = z
   .object({

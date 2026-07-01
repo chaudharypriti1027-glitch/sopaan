@@ -16,7 +16,7 @@ export function MainStack() {
         headerTitleStyle: { fontWeight: '800', fontSize: 16 },
         headerShadowVisible: false,
         headerStyle: { backgroundColor: PREMIUM.bg },
-        headerTintColor: '#16182A',
+        headerTintColor: PREMIUM.ink,
         contentStyle: { backgroundColor: PREMIUM.bg },
       }}
     >

@@ -175,7 +175,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       marginTop: 14,
       paddingTop: 13,
       borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: '#F4F5FA',
+      borderTopColor: '#F0EEF8',
     },
     hintLeft: {
       flex: 1,

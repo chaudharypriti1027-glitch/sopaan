@@ -29,7 +29,7 @@ export function GradientSurface({
     if (variant === 'goldSoft') {
       return ['#FFFBF2', theme.colors.surface.default] as const;
     }
-    return [theme.colors.brand.primary, theme.colors.brand.primaryHover] as const;
+    return [theme.colors.brand.primaryMuted, theme.colors.brand.primary] as const;
   }, [theme, variant]);
 
   return (

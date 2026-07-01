@@ -53,9 +53,14 @@ export function LeagueSnapshot({ league, onPress }: LeagueSnapshotProps) {
         <View style={[styles.blob, styles.blobB]} />
 
         <View style={styles.top}>
-          <View style={styles.trophyBox}>
-            <Trophy size={28} color="#F59E0B" strokeWidth={1.8} />
-          </View>
+          <LinearGradient
+            colors={['#D8B368', '#C29A4E']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.trophyBox}
+          >
+            <Trophy size={26} color="#FFFFFF" strokeWidth={1.8} />
+          </LinearGradient>
 
           <View style={styles.mid}>
             <View style={styles.rookieBadge}>
@@ -84,7 +89,7 @@ export function LeagueSnapshot({ league, onPress }: LeagueSnapshotProps) {
           </View>
           <View style={styles.xpTrack}>
             <LinearGradient
-              colors={['#FBBF24', '#F59E0B']}
+              colors={['#E3C97F', '#C29A4E']}
               start={{ x: 0, y: 0.5 }}
               end={{ x: 1, y: 0.5 }}
               style={[styles.xpFill, { width: `${progressPct}%` }]}
@@ -100,25 +105,25 @@ export function LeagueSnapshot({ league, onPress }: LeagueSnapshotProps) {
 
 function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
-    pressable: { borderRadius: 24 },
+    pressable: { borderRadius: 26 },
     pressed: { opacity: 0.96 },
     card: {
-      borderRadius: 24,
+      borderRadius: 26,
       paddingVertical: 20,
       paddingHorizontal: 18,
-      borderWidth: 1.5,
-      borderColor: 'rgba(139,92,246,0.2)',
+      borderWidth: 1,
+      borderColor: 'rgba(255,255,255,0.05)',
       overflow: 'hidden',
-      shadowColor: '#4F46E5',
+      shadowColor: HOME_UI.shadow,
       shadowOffset: { width: 0, height: 12 },
-      shadowOpacity: 0.3,
+      shadowOpacity: 0.32,
       shadowRadius: 40,
       elevation: 6,
     },
     blob: {
       position: 'absolute',
       borderRadius: 999,
-      backgroundColor: 'rgba(99,102,241,0.28)',
+      backgroundColor: 'rgba(194,154,78,0.22)',
     },
     blobA: { top: -50, right: -50, width: 200, height: 200 },
     blobB: { bottom: -30, left: -20, width: 140, height: 140 },
@@ -132,10 +137,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     trophyBox: {
       width: 58,
       height: 58,
-      borderRadius: 19,
-      backgroundColor: 'rgba(245,158,11,0.1)',
-      borderWidth: 1.5,
-      borderColor: 'rgba(245,158,11,0.25)',
+      borderRadius: 16,
       alignItems: 'center',
       justifyContent: 'center',
       flexShrink: 0,
@@ -143,8 +145,8 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     mid: { flex: 1 },
     rookieBadge: {
       alignSelf: 'flex-start',
-      backgroundColor: '#FCD34D',
-      borderRadius: 8,
+      backgroundColor: '#E3C97F',
+      borderRadius: 99,
       paddingHorizontal: 11,
       paddingVertical: 3,
       marginBottom: 7,
@@ -153,7 +155,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       fontSize: 10,
       fontWeight: '900',
       letterSpacing: 0.8,
-      color: '#1C0A00',
+      color: '#3A2C10',
     },
     rankLine: {
       fontSize: 18,
@@ -162,7 +164,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       letterSpacing: -0.3,
     },
     rankGold: {
-      color: '#FCD34D',
+      color: '#E3C97F',
       fontWeight: '800',
     },
     rankMuted: {
@@ -223,9 +225,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       width: 15,
       height: 15,
       borderRadius: 8,
-      backgroundColor: '#FCD34D',
-      borderWidth: 2.5,
-      borderColor: '#12084A',
+      backgroundColor: '#FFFFFF',
       top: -3.5,
     },
   });

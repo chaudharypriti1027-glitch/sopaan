@@ -59,7 +59,7 @@ const userSchema = new mongoose.Schema(
       sparse: true,
       trim: true,
       required() {
-        return !this.googleSub;
+        return !this.googleSub && !this.email;
       },
       index: true,
     },

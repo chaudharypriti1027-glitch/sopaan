@@ -86,7 +86,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     iconWrap: {
       width: 48,
       height: 48,
-      borderRadius: 16,
+      borderRadius: 18,
       alignItems: 'center',
       justifyContent: 'center',
     },

@@ -213,7 +213,7 @@ export function OtpInput({
 
 function createStyles(error: boolean, success: boolean) {
   const filledBorder = success ? '#10B981' : AUTH_UI.accent;
-  const filledBg = success ? '#ECFDF5' : '#EEF2FF';
+  const filledBg = success ? '#ECFDF5' : 'rgba(35,42,77,0.06)';
 
   return StyleSheet.create({
     row: {

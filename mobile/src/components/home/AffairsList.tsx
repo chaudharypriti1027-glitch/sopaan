@@ -14,14 +14,14 @@ type AffairsListProps = {
   onItemPress?: (affairId: string) => void;
 };
 
-const SOURCE_COLORS = ['#EA580C', '#2563EB', '#16A34A', '#7C3AED', '#DB2777'];
+const SOURCE_COLORS = [HOME_UI.goldDeep, HOME_UI.accent, HOME_UI.sageDeep, HOME_UI.accent, HOME_UI.goldDeep];
 const THUMB_EMOJI = ['🏛️', '📈', '🏠', '🌐', '⚖️'];
-const THUMB_STYLES = [
-  { bg: '#FFF7ED', border: '#FED7AA' },
-  { bg: '#EFF6FF', border: '#BFDBFE' },
-  { bg: '#F0FDF4', border: '#BBF7D0' },
-  { bg: '#F5F3FF', border: '#DDD6FE' },
-  { bg: '#FDF2F8', border: '#FBCFE8' },
+const THUMB_GRADIENTS = [
+  ['#C29A4E', '#A67C33'],
+  ['#2E3766', '#1A1F3B'],
+  ['#6C9A8A', '#4C7264'],
+  ['#2E3766', '#1A1F3B'],
+  ['#C29A4E', '#A67C33'],
 ];
 
 function AffairThumb({
@@ -32,7 +32,7 @@ function AffairThumb({
   index: number;
 }) {
   const styles = useMemo(() => createThumbStyles(), []);
-  const thumb = THUMB_STYLES[index % THUMB_STYLES.length];
+  const gradient = THUMB_GRADIENTS[index % THUMB_GRADIENTS.length];
 
   if (item.imageUrl) {
     return (
@@ -56,8 +56,15 @@ function AffairThumb({
   }
 
   return (
-    <View style={[styles.thumbWrap, { backgroundColor: thumb.bg, borderColor: thumb.border }]}>
-      <Text style={styles.thumbEmoji}>{THUMB_EMOJI[index % THUMB_EMOJI.length]}</Text>
+    <View style={styles.thumbWrap}>
+      <LinearGradient
+        colors={gradient as [string, string]}
+        style={styles.thumbImage}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      >
+        <Text style={styles.thumbEmoji}>{THUMB_EMOJI[index % THUMB_EMOJI.length]}</Text>
+      </LinearGradient>
     </View>
   );
 }
@@ -91,11 +98,11 @@ export function AffairsList({ items, onItemPress }: AffairsListProps) {
                   {item.headline}
                 </Text>
                 <View style={styles.timeRow}>
-                  <Clock size={11} color="#C4CBD8" strokeWidth={2.2} />
+                  <Clock size={11} color={HOME_UI.muted} strokeWidth={2.2} />
                   <Text style={styles.readTime}>{t('home.readMin', { count: item.readMin })}</Text>
                 </View>
               </View>
-              <ChevronRight size={15} color="#C4CBD8" strokeWidth={2.2} style={styles.chev} />
+              <ChevronRight size={15} color={HOME_UI.muted} strokeWidth={2.2} style={styles.chev} />
             </Pressable>
           </View>
         );
@@ -107,11 +114,9 @@ export function AffairsList({ items, onItemPress }: AffairsListProps) {
 function createThumbStyles() {
   return StyleSheet.create({
     thumbWrap: {
-      width: 54,
-      height: 54,
-      borderRadius: 16,
-      borderWidth: 1.5,
-      borderColor: HOME_UI.border,
+      width: 50,
+      height: 50,
+      borderRadius: 15,
       alignItems: 'center',
       justifyContent: 'center',
       flexShrink: 0,
@@ -120,9 +125,11 @@ function createThumbStyles() {
     thumbImage: {
       width: '100%',
       height: '100%',
-      borderRadius: 14,
+      borderRadius: 15,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
-    thumbEmoji: { fontSize: 24 },
+    thumbEmoji: { fontSize: 21 },
   });
 }
 
@@ -134,9 +141,9 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       borderWidth: 1.5,
       borderColor: HOME_UI.border,
       overflow: 'hidden',
-      shadowColor: '#0F143C',
+      shadowColor: HOME_UI.shadow,
       shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.06,
+      shadowOpacity: 0.08,
       shadowRadius: 12,
       elevation: 2,
     },
@@ -150,8 +157,8 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     pressed: { opacity: 0.96 },
     divider: {
       height: 1,
-      backgroundColor: '#F3F6FB',
-      marginLeft: 83,
+      backgroundColor: HOME_UI.border,
+      marginLeft: 79,
     },
     content: { flex: 1, minWidth: 0 },
     source: {

@@ -430,7 +430,7 @@ export const seedAdminUser = {
   email: 'admin@sopaan.dev',
   phone: '9999999999',
   role: 'admin',
-  password: 'Password123',
+  password: 'Password123!',
 };
 
 export const seedMentorUser = {
@@ -438,7 +438,7 @@ export const seedMentorUser = {
   email: 'mentor@sopaan.dev',
   phone: '9888888888',
   role: 'mentor',
-  password: 'Password123',
+  password: 'Password123!',
 };
 
 /** Pre-seeded student for Maestro / Detox E2E (login flows). */
@@ -447,7 +447,7 @@ export const seedE2eStudentUser = {
   email: 'student@sopaan.dev',
   phone: '9777777777',
   role: 'student',
-  password: 'Password123',
+  password: 'Password123!',
   coins: 500,
   privacyConsent: {
     policyVersion: '2025-06-01',
@@ -478,7 +478,7 @@ export const seedE2ePaywallStudentUser = {
   email: 'paywall@sopaan.dev',
   phone: '9666666666',
   role: 'student',
-  password: 'Password123',
+  password: 'Password123!',
   coins: 50,
   premiumTrialUsed: true,
   privacyConsent: {

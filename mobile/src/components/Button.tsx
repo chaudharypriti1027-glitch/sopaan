@@ -115,7 +115,7 @@ function createStyles(
 
   return StyleSheet.create({
     button: {
-      borderRadius: theme.radii.button,
+      borderRadius: theme.radii.pill,
       paddingVertical: sizeMap.py,
       paddingHorizontal: sizeMap.px,
       minHeight: theme.a11y.minTouchTarget,

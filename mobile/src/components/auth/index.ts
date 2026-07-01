@@ -16,4 +16,6 @@ export { GhostButton } from './GhostButton';
 export { VerifiedPhoneChip } from './VerifiedPhoneChip';
 export { OtpInput } from './OtpInput';
 export { AuthAnimatedSection } from './AuthAnimatedSection';
+export { ComingSoonNotice } from './ComingSoonNotice';
+export { PasswordRequirements } from './PasswordRequirements';
 export { useShakeOnError } from './useShakeOnError';

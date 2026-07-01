@@ -7,7 +7,7 @@ import {
   View,
   type TextInputProps,
 } from 'react-native';
-import { Eye, EyeOff, Phone } from 'lucide-react-native';
+import { Eye, EyeOff, Lock, Mail, Phone, User, type LucideIcon } from 'lucide-react-native';
 import { scalableTextProps } from '../../a11y/textProps';
 import { AUTH_UI } from './authTheme';
 
@@ -20,12 +20,29 @@ export type AuthPremiumFieldProps = Omit<TextInputProps, 'value' | 'onChangeText
   variant?: AuthPremiumFieldVariant;
   error?: string;
   testID?: string;
+  /** Compact icon-led pill row (no floating label) — matches the "Classic Premium" auth mockup. */
+  dense?: boolean;
+  /** Override the auto-resolved leading icon (dense mode only). */
+  icon?: LucideIcon;
 };
 
 const PHONE_DIGITS = 10;
 
 function normalizePhone(raw: string) {
   return raw.replace(/\D/g, '').slice(0, PHONE_DIGITS);
+}
+
+function resolveIcon(variant: AuthPremiumFieldVariant): LucideIcon {
+  switch (variant) {
+    case 'email':
+      return Mail;
+    case 'password':
+      return Lock;
+    case 'phone':
+      return Phone;
+    default:
+      return User;
+  }
 }
 
 export const AuthPremiumField = forwardRef<TextInput, AuthPremiumFieldProps>(
@@ -42,6 +59,8 @@ export const AuthPremiumField = forwardRef<TextInput, AuthPremiumFieldProps>(
       keyboardType,
       autoCapitalize,
       secureTextEntry,
+      dense = false,
+      icon,
       ...rest
     },
     ref,
@@ -50,9 +69,10 @@ export const AuthPremiumField = forwardRef<TextInput, AuthPremiumFieldProps>(
     const [passwordVisible, setPasswordVisible] = useState(false);
     const isPhone = variant === 'phone';
     const isPassword = variant === 'password';
+    const Icon = icon ?? resolveIcon(variant);
     const styles = useMemo(
-      () => createStyles({ focused, hasError: Boolean(error) }),
-      [focused, error],
+      () => createStyles({ focused, hasError: Boolean(error), dense }),
+      [focused, error, dense],
     );
 
     const resolvedKeyboard =
@@ -64,9 +84,13 @@ export const AuthPremiumField = forwardRef<TextInput, AuthPremiumFieldProps>(
 
     return (
       <View style={styles.field}>
-        <Text style={styles.label}>{label}</Text>
+        {dense ? null : <Text style={styles.label}>{label}</Text>}
         <View style={styles.inputWrap}>
-          {isPhone ? (
+          {dense ? (
+            <View style={styles.denseIcon} pointerEvents="none">
+              <Icon size={19} color={AUTH_UI.muted} strokeWidth={1.8} />
+            </View>
+          ) : isPhone ? (
             <View style={styles.prefix} pointerEvents="none">
               <Phone size={14} color={AUTH_UI.accent} strokeWidth={2} />
               <Text style={styles.prefixCode}>+91</Text>
@@ -76,6 +100,7 @@ export const AuthPremiumField = forwardRef<TextInput, AuthPremiumFieldProps>(
           <TextInput
             ref={ref}
             testID={testID}
+            accessibilityLabel={dense ? label : undefined}
             value={value}
             onChangeText={(text) => onChangeText(isPhone ? normalizePhone(text) : text)}
             onFocus={() => setFocused(true)}
@@ -87,7 +112,12 @@ export const AuthPremiumField = forwardRef<TextInput, AuthPremiumFieldProps>(
             autoCapitalize={resolvedCapitalize}
             autoCorrect={variant === 'email' || isPassword ? false : rest.autoCorrect}
             secureTextEntry={isPassword ? !passwordVisible : secureTextEntry}
-            style={[styles.input, isPhone && styles.inputPhone, isPassword && styles.inputEye]}
+            style={[
+              styles.input,
+              dense && styles.inputDense,
+              !dense && isPhone && styles.inputPhone,
+              isPassword && styles.inputEye,
+            ]}
             {...scalableTextProps}
             {...rest}
           />
@@ -113,16 +143,16 @@ export const AuthPremiumField = forwardRef<TextInput, AuthPremiumFieldProps>(
   },
 );
 
-function createStyles(state: { focused: boolean; hasError: boolean }) {
+function createStyles(state: { focused: boolean; hasError: boolean; dense: boolean }) {
   const borderColor = state.hasError
-    ? '#F87171'
+    ? '#C4634F'
     : state.focused
       ? AUTH_UI.focus
       : AUTH_UI.border;
 
   return StyleSheet.create({
     field: {
-      marginBottom: 14,
+      marginBottom: state.dense ? 13 : 14,
     },
     label: {
       fontSize: 11,
@@ -133,6 +163,14 @@ function createStyles(state: { focused: boolean; hasError: boolean }) {
     },
     inputWrap: {
       position: 'relative',
+    },
+    denseIcon: {
+      position: 'absolute',
+      left: 15,
+      top: 0,
+      bottom: 0,
+      justifyContent: 'center',
+      zIndex: 1,
     },
     prefix: {
       position: 'absolute',
@@ -172,6 +210,16 @@ function createStyles(state: { focused: boolean; hasError: boolean }) {
           }
         : {}),
     },
+    inputDense: {
+      paddingLeft: 46,
+      paddingVertical: 15,
+      borderWidth: 1,
+      shadowColor: AUTH_UI.shadowSm,
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: state.focused ? 0.12 : 0.06,
+      shadowRadius: 14,
+      elevation: 2,
+    },
     inputPhone: {
       paddingLeft: 72,
     },
@@ -187,7 +235,7 @@ function createStyles(state: { focused: boolean; hasError: boolean }) {
     },
     error: {
       fontSize: 11,
-      color: '#EF4444',
+      color: '#C4634F',
       marginTop: 6,
       marginLeft: 4,
     },

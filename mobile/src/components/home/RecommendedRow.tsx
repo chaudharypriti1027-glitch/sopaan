@@ -7,7 +7,7 @@ import {
   View,
   type ListRenderItem,
 } from 'react-native';
-import { Clock } from 'lucide-react-native';
+import { ArrowRight, Clock } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { Text } from '../Text';
 import { useTheme } from '../../theme';
@@ -28,11 +28,11 @@ function difficultyStyle(
 ) {
   switch (difficulty) {
     case 'easy':
-      return { color: '#059669', bg: '#DCFCE7', label: t('home.difficultyEasyLabel') };
+      return { color: HOME_UI.sageDeep, bg: HOME_UI.sageSoft, label: t('home.difficultyEasyLabel') };
     case 'hard':
-      return { color: '#DC2626', bg: '#FEE2E2', label: t('home.difficultyHardLabel') };
+      return { color: HOME_UI.accent, bg: HOME_UI.accentSoft, label: t('home.difficultyHardLabel') };
     default:
-      return { color: '#D97706', bg: '#FEF9C3', label: t('home.difficultyMediumLabel') };
+      return { color: HOME_UI.goldDeep, bg: HOME_UI.goldSoft, label: t('home.difficultyMediumLabel') };
   }
 }
 
@@ -55,8 +55,13 @@ export function RecommendedRow({ tests, onTestPress }: RecommendedRowProps) {
           style={styles.cardWrap}
         >
           <View style={styles.card}>
-            <View style={styles.testIcon}>
-              <RNText style={styles.emoji}>{emoji}</RNText>
+            <View style={styles.topRow}>
+              <View style={styles.testIcon}>
+                <RNText style={styles.emoji}>{emoji}</RNText>
+              </View>
+              <View style={[styles.badge, { backgroundColor: pill.bg }]}>
+                <Text style={[styles.badgeText, { color: pill.color }]}>{pill.label}</Text>
+              </View>
             </View>
             <Text style={styles.title} numberOfLines={2}>
               {item.title}
@@ -65,14 +70,15 @@ export function RecommendedRow({ tests, onTestPress }: RecommendedRowProps) {
               {subject} · {difficultyLabel}
             </Text>
             <View style={styles.metaRow}>
-              <Clock size={11} color="#C4CBD8" strokeWidth={2.2} />
+              <Clock size={11} color={HOME_UI.muted} strokeWidth={2.2} />
               <Text style={styles.meta}>
                 {t('practice.questionCount', { count: item.qCount })} ·{' '}
                 {t('practice.durationMin', { count: item.durationMin })}
               </Text>
             </View>
-            <View style={[styles.badge, { backgroundColor: pill.bg }]}>
-              <Text style={[styles.badgeText, { color: pill.color }]}>{pill.label}</Text>
+            <View style={styles.cta}>
+              <Text style={styles.ctaText}>{t('home.startTest')}</Text>
+              <ArrowRight size={13} color="#FFFFFF" strokeWidth={2.4} />
             </View>
           </View>
         </Pressable>
@@ -113,17 +119,23 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     },
     card: {
       backgroundColor: HOME_UI.surface,
-      borderRadius: 20,
+      borderRadius: 26,
       paddingVertical: 16,
       paddingHorizontal: 15,
       borderWidth: 1.5,
       borderColor: HOME_UI.border,
-      shadowColor: '#0F143C',
+      shadowColor: HOME_UI.shadow,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.06,
       shadowRadius: 12,
       elevation: 2,
-      minHeight: 168,
+      minHeight: 206,
+    },
+    topRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 11,
     },
     testIcon: {
       width: 44,
@@ -131,10 +143,9 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       borderRadius: 14,
       backgroundColor: HOME_UI.accentSoft,
       borderWidth: 1.5,
-      borderColor: '#C7D2FE',
+      borderColor: HOME_UI.borderSoft,
       alignItems: 'center',
       justifyContent: 'center',
-      marginBottom: 12,
     },
     emoji: { fontSize: 22 },
     title: {
@@ -165,14 +176,34 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     },
     badge: {
       alignSelf: 'flex-start',
-      borderRadius: 8,
+      borderRadius: 99,
       paddingHorizontal: 10,
       paddingVertical: 4,
     },
     badgeText: {
-      fontSize: 10,
+      fontSize: 9.5,
       fontWeight: '800',
-      letterSpacing: 0.6,
+      letterSpacing: 0.5,
+    },
+    cta: {
+      marginTop: 13,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 5,
+      backgroundColor: HOME_UI.accent,
+      borderRadius: 12,
+      paddingVertical: 10,
+      shadowColor: HOME_UI.accent,
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.35,
+      shadowRadius: 10,
+      elevation: 2,
+    },
+    ctaText: {
+      fontSize: 12,
+      fontWeight: '800',
+      color: '#FFFFFF',
     },
   });
 }

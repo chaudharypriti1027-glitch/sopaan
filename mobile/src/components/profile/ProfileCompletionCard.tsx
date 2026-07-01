@@ -57,7 +57,7 @@ export function ProfileCompletionCard({ profile }: ProfileCompletionCardProps) {
       </View>
       <View style={styles.track}>
         <LinearGradient
-          colors={['#5B57E8', '#3A36CC']}
+          colors={['#454C79', '#232A4D']}
           start={{ x: 0, y: 0.5 }}
           end={{ x: 1, y: 0.5 }}
           style={[styles.fill, { width: `${pct}%` }]}

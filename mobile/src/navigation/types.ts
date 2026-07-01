@@ -10,6 +10,7 @@ export type PremiumPaywallParams = {
 };
 
 export type AuthStackParamList = {
+  Welcome: undefined;
   Onboarding: undefined;
   GoalSetup: undefined;
   ProfileSetup: undefined;

@@ -8,7 +8,8 @@ import { Avatar } from '../Avatar';
 import { Text } from '../Text';
 import { maskIndianPhone } from '../../lib/phone';
 import type { Profile } from '../../types/auth';
-import { HOME_V2 } from '../home/homeStyles';
+import { HOME_UI } from '../home/homeTheme';
+import { PREMIUM } from '../premium/premiumStyles';
 
 type ProfileHeaderProps = {
   profile: Profile;
@@ -24,7 +25,7 @@ export function ProfileHeader({ profile, onSettingsPress, onAvatarPress }: Profi
 
   return (
     <LinearGradient
-      colors={[...HOME_V2.headerGradient]}
+      colors={[...HOME_UI.heroGradient]}
       start={{ x: 0.2, y: 0 }}
       end={{ x: 0.85, y: 1 }}
       style={styles.gradient}
@@ -61,7 +62,7 @@ export function ProfileHeader({ profile, onSettingsPress, onAvatarPress }: Profi
           <Avatar name={profile.name} source={avatarSource} size="lg" style={styles.avatar} />
         </LinearGradient>
         <View style={styles.cameraBadge}>
-          <Camera size={14} color="#3A36CC" strokeWidth={1.75} />
+          <Camera size={14} color={PREMIUM.accent} strokeWidth={1.75} />
         </View>
       </Pressable>
 
@@ -89,12 +90,12 @@ function createStyles(topInset: number) {
     },
     decorA: {
       position: 'absolute',
-      top: -50,
+      top: -60,
       right: -40,
-      width: 190,
-      height: 190,
-      borderRadius: 95,
-      backgroundColor: 'rgba(255,255,255,0.1)',
+      width: 210,
+      height: 210,
+      borderRadius: 105,
+      backgroundColor: 'rgba(194,154,78,0.22)',
     },
     decorB: {
       position: 'absolute',
@@ -103,7 +104,7 @@ function createStyles(topInset: number) {
       width: 160,
       height: 160,
       borderRadius: 80,
-      backgroundColor: 'rgba(124,118,240,0.35)',
+      backgroundColor: 'rgba(255,255,255,0.06)',
     },
     topbar: {
       width: '100%',
@@ -159,7 +160,7 @@ function createStyles(topInset: number) {
       borderRadius: 15,
       backgroundColor: '#FFFFFF',
       borderWidth: 2,
-      borderColor: '#322EA8',
+      borderColor: PREMIUM.accent,
       alignItems: 'center',
       justifyContent: 'center',
     },

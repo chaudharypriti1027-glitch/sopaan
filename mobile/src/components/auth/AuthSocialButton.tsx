@@ -46,7 +46,7 @@ export function AuthSocialButton({
         style,
       ]}
     >
-      {variant === 'google' ? <GoogleMark /> : <Phone size={16} color="#334155" strokeWidth={2} />}
+      {variant === 'google' ? <GoogleMark /> : <Phone size={16} color={AUTH_UI.sageDeep} strokeWidth={2} />}
       <Text style={styles.label}>{label}</Text>
     </Pressable>
   );
@@ -58,6 +58,7 @@ type AuthSocialPairProps = {
   onGooglePress?: () => void;
   onOtpPress?: () => void;
   googleDisabled?: boolean;
+  otpDisabled?: boolean;
 };
 
 export function AuthSocialPair({
@@ -66,6 +67,7 @@ export function AuthSocialPair({
   onGooglePress,
   onOtpPress,
   googleDisabled,
+  otpDisabled,
 }: AuthSocialPairProps) {
   const styles = useMemo(() => createStyles(), []);
 
@@ -78,7 +80,12 @@ export function AuthSocialPair({
         disabled={googleDisabled}
         style={styles.half}
       />
-      <AuthSocialButton label={otpLabel} onPress={onOtpPress} style={styles.half} />
+      <AuthSocialButton
+        label={otpLabel}
+        onPress={onOtpPress}
+        disabled={otpDisabled}
+        style={styles.half}
+      />
     </View>
   );
 }
@@ -97,24 +104,29 @@ function createStyles() {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: 8,
-      paddingVertical: 13,
-      borderRadius: AUTH_UI.btnRadius,
-      borderWidth: 1.5,
+      gap: 9,
+      paddingVertical: 14,
+      borderRadius: 15,
+      borderWidth: 1,
       borderColor: AUTH_UI.border,
       backgroundColor: AUTH_UI.card,
+      shadowColor: AUTH_UI.shadowSm,
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.05,
+      shadowRadius: 12,
+      elevation: 1,
     },
     btnGoogle: {},
     label: {
       fontSize: 13,
-      fontWeight: '600',
-      color: '#334155',
+      fontWeight: '700',
+      color: AUTH_UI.label,
     },
     disabled: {
       opacity: 0.55,
     },
     pressed: {
-      backgroundColor: '#F8FAFC',
+      backgroundColor: AUTH_UI.bg,
       borderColor: AUTH_UI.borderHover,
     },
   });

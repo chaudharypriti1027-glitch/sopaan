@@ -110,7 +110,7 @@ See [`server/docs/DEPLOY.md`](server/docs/DEPLOY.md) for container details.
 npm run seed -w @sopaan/server
 ```
 
-Creates exams, tests, current affairs, courses, and dev users (password `Password123`):
+Creates exams, tests, current affairs, courses, and dev users (password `Password123!`):
 
 | Email | Role |
 | ----- | ---- |
@@ -148,7 +148,7 @@ Press `i` (iOS simulator), `a` (Android emulator), or scan the QR code with Expo
 
 ### 7. Core dev loop
 
-1. **Log in** — email `student@sopaan.dev` / password `Password123`, or sign up with OTP (dev OTP is printed in the API console: `[sms][dev] OTP`).
+1. **Log in** — email `student@sopaan.dev` / password `Password123!` (email sign-in; phone/OTP coming in a later release).
 2. **Home** — personalized feed, streak, daily challenge, recommended tests.
 3. **Practice** — start a seeded mock test or tap **Generate with AI** (stubbed when `DEV_STUB_AI=true`).
 4. **Quiz → Result** — answer questions, submit, review score and **AI coach** feedback.

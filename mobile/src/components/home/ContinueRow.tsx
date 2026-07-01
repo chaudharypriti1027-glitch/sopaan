@@ -14,6 +14,7 @@ import { useTheme } from '../../theme';
 import type { ContinueItem } from '../../types/home';
 import { CONTINUE_CARD_WIDTH, resolveContinueAccent } from './homeUtils';
 import { homePremiumCard } from './homeStyles';
+import { HOME_UI } from './homeTheme';
 
 type ContinueRowProps = {
   items: ContinueItem[];
@@ -40,10 +41,10 @@ function accentBg(accent: ContinueItem['accent'], theme: ReturnType<typeof useTh
 }
 
 function progressGradient(accent: ContinueItem['accent']): [string, string] {
-  if (accent === 'teal') return ['#16C6B0', '#0FA896'];
-  if (accent === 'gold') return ['#F2A516', '#C97E00'];
-  if (accent === 'coral') return ['#F2554B', '#E0453C'];
-  return ['#5B57E8', '#3A36CC'];
+  if (accent === 'teal') return ['#6C9A8A', '#4C7264'];
+  if (accent === 'gold') return ['#E3C97F', '#C29A4E'];
+  if (accent === 'coral') return ['#D4A08C', '#A8503E'];
+  return [...HOME_UI.accentGradient];
 }
 
 function ContinueProgressBar({
@@ -154,7 +155,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     card: {
       padding: 15,
       gap: 12,
-      borderRadius: 22,
+      borderRadius: 26,
       ...homePremiumCard(theme),
       borderWidth: 0,
     },

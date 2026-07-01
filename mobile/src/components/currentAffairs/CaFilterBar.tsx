@@ -101,7 +101,7 @@ function createStyles() {
       gap: 5,
       backgroundColor: CA_UI.accentSoft,
       borderWidth: 1,
-      borderColor: '#C7D2FE',
+      borderColor: 'rgba(35,42,77,0.22)',
       borderRadius: 10,
       paddingVertical: 8,
       paddingHorizontal: 10,

@@ -44,6 +44,12 @@ export function errorHandler(err, req, res, _next) {
 
   if (err?.code === 11000) {
     const field = Object.keys(err.keyPattern ?? {})[0] ?? 'field';
+    logger.error('duplicate key error', {
+      route,
+      keyPattern: err.keyPattern,
+      message: err.message,
+    });
+    recordAppError('CONFLICT', route);
     return res.status(409).json({
       error: {
         message: `${field} is already registered`,

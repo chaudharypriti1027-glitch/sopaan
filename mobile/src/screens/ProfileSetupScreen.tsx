@@ -733,11 +733,11 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     },
     languageCardSelected: {
       borderColor: AUTH_UI.accent,
-      backgroundColor: '#EEF2FF',
+      backgroundColor: 'rgba(35,42,77,0.06)',
     },
     formError: {
       fontSize: 12,
-      color: '#EF4444',
+      color: '#C4634F',
       textAlign: 'center',
     },
     modalRoot: {
@@ -767,7 +767,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     },
     stateRowSelected: {
       borderColor: AUTH_UI.accent,
-      backgroundColor: '#EEF2FF',
+      backgroundColor: 'rgba(35,42,77,0.06)',
     },
   });
 }

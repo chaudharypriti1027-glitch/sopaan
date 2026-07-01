@@ -81,7 +81,8 @@
     "leagueXpProgress": "{{current}} / {{target}} XP",
     "difficultyEasyLabel": "● आसान",
     "difficultyMediumLabel": "● मध्यम",
-    "difficultyHardLabel": "● कठिन"
+    "difficultyHardLabel": "● कठिन",
+    "startTest": "टेस्ट शुरू करें"
   },
   "practice": {
     "eyebrow": "अभ्यास",

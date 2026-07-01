@@ -210,7 +210,7 @@ const styles = StyleSheet.create({
   },
   error: {
     fontSize: 12,
-    color: '#EF4444',
+    color: '#C4634F',
     textAlign: 'center',
   },
   verifying: {

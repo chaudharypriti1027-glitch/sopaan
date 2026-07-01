@@ -21,7 +21,7 @@ describe('Auth logout', () => {
     const signup = await request(app).post('/api/auth/signup').send(withPrivacyConsent({
       name: 'Logout User',
       email: 'logout@example.com',
-      password: 'Password123',
+      password: 'Password123!',
     }));
 
     const response = await request(app).post('/api/auth/logout').send({

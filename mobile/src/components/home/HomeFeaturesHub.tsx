@@ -80,7 +80,7 @@ export function HomeFeaturesHub({
           testID="home-explore-premium"
         >
           <View style={styles.proIcon}>
-            <Crown size={14} color="#B45309" strokeWidth={2.2} />
+            <Crown size={14} color={HOME_UI.goldDeep} strokeWidth={2.2} />
           </View>
           <View style={styles.proCopy}>
             <Text style={styles.proTitle}>{t('app:home.premiumStripTitle')}</Text>
@@ -145,7 +145,7 @@ export function HomeFeaturesHub({
                   <Icon size={17} color={colors.fg} strokeWidth={2} />
                   {showPro ? (
                     <View style={styles.proBadge}>
-                      <Crown size={8} color="#B45309" strokeWidth={2.5} />
+                      <Crown size={8} color={HOME_UI.goldDeep} strokeWidth={2.5} />
                     </View>
                   ) : null}
                 </View>
@@ -170,10 +170,10 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 10,
-      backgroundColor: '#FFFBEB',
+      backgroundColor: HOME_UI.goldSoft,
       borderRadius: 14,
       borderWidth: 1,
-      borderColor: '#FDE68A',
+      borderColor: '#EADFC4',
       paddingHorizontal: 12,
       paddingVertical: 10,
     },
@@ -181,7 +181,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       width: 28,
       height: 28,
       borderRadius: 9,
-      backgroundColor: '#FEF3C7',
+      backgroundColor: '#FFFFFF',
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -194,18 +194,18 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       lineHeight: 16,
       fontFamily: theme.typography.fonts.ui.bold,
       fontWeight: '700',
-      color: '#92400E',
+      color: HOME_UI.goldDeep,
     },
     proSubtitle: {
       fontSize: 11,
       lineHeight: 13,
-      color: '#B45309',
+      color: HOME_UI.goldDeep,
     },
     proCta: {
       fontSize: 12,
       fontFamily: theme.typography.fonts.ui.bold,
       fontWeight: '700',
-      color: '#D97706',
+      color: HOME_UI.goldDeep,
     },
     shortcutsRow: {
       gap: 8,
@@ -231,11 +231,16 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     },
     card: {
       backgroundColor: HOME_UI.surface,
-      borderRadius: 18,
+      borderRadius: 22,
       borderWidth: 1,
       borderColor: HOME_UI.border,
       padding: CARD_PAD,
       gap: 10,
+      shadowColor: HOME_UI.shadow,
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.08,
+      shadowRadius: 16,
+      elevation: 2,
     },
     tabs: {
       marginBottom: 2,
@@ -264,9 +269,9 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       width: 14,
       height: 14,
       borderRadius: 7,
-      backgroundColor: '#FEF3C7',
+      backgroundColor: HOME_UI.goldSoft,
       borderWidth: 1,
-      borderColor: '#FDE68A',
+      borderColor: '#EADFC4',
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -276,7 +281,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       textAlign: 'center',
       fontFamily: theme.typography.fonts.ui.semibold,
       fontWeight: '600',
-      color: '#4B5563',
+      color: HOME_UI.muted,
       minHeight: 22,
     },
     pressed: {

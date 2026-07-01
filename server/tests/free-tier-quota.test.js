@@ -29,7 +29,7 @@ describe('free tier quotas', () => {
     const signup = await request(app).post('/api/auth/signup').send(withPrivacyConsent({
       name: 'Tier User',
       email: 'tier@test.com',
-      password: 'Password123',
+      password: 'Password123!',
     }));
 
     const response = await request(app)

@@ -25,7 +25,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       fontWeight: '800',
       letterSpacing: 0.4,
       textTransform: 'uppercase',
-      color: '#A2A5BC',
+      color: theme.colors.text.tertiary,
     },
   });
 }

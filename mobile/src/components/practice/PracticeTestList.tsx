@@ -127,7 +127,7 @@ export function PracticeEmptyState({ title, description, actionLabel, onAction }
 
   return (
     <View style={styles.empty}>
-      <LinearGradient colors={['#E0E7FF', '#C7D2FE']} style={styles.emptyIcon}>
+      <LinearGradient colors={['#E9EBF3', '#C0C4DB']} style={styles.emptyIcon}>
         <FilePlus size={28} color={PRACTICE_UI.startEnd} strokeWidth={2} />
       </LinearGradient>
       <Text style={styles.emptyTitle}>{title}</Text>

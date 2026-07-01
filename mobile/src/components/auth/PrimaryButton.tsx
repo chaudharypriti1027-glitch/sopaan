@@ -120,6 +120,7 @@ function createStyles() {
       elevation: 4,
     },
     disabled: {
+      backgroundColor: AUTH_UI.border,
       shadowOpacity: 0,
       elevation: 0,
     },
@@ -132,7 +133,7 @@ function createStyles() {
     disabledLabel: {
       fontSize: 14,
       fontWeight: '700',
-      color: AUTH_UI.faint,
+      color: AUTH_UI.muted,
     },
   });
 }

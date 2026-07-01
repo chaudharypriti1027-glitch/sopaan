@@ -65,7 +65,7 @@ describe('AI billing protection', () => {
       const signup = await request(app).post('/api/auth/signup').send(withPrivacyConsent({
         name: 'Doubt User',
         email: `doubt_${Date.now()}@test.com`,
-        password: 'Password123',
+        password: 'Password123!',
       }));
 
       const userId = signup.body.user.id;

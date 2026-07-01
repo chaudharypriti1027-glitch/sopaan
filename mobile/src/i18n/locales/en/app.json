@@ -81,7 +81,8 @@
     "leagueXpProgress": "{{current}} / {{target}} XP",
     "difficultyEasyLabel": "● EASY",
     "difficultyMediumLabel": "● MEDIUM",
-    "difficultyHardLabel": "● HARD"
+    "difficultyHardLabel": "● HARD",
+    "startTest": "Start test"
   },
   "practice": {
     "eyebrow": "Practice",

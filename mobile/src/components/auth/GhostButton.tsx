@@ -86,8 +86,8 @@ function createStyles() {
       opacity: 0.5,
     },
     pressed: {
-      backgroundColor: '#EEF2FF',
-      borderColor: '#C7D2FE',
+      backgroundColor: AUTH_UI.bg,
+      borderColor: AUTH_UI.borderHover,
     },
     label: {
       fontSize: 14,

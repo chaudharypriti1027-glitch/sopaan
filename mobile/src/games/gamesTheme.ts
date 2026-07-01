@@ -1,17 +1,17 @@
-/** Tokens from learning-games-light.html */
+/** Tokens from learning-games-light.html — navy/gold "Classic Premium" accent. */
 export const GAMES_UI = {
-  bg: '#F2F3FF',
+  bg: '#F4F1E9',
   surface: '#FFFFFF',
-  card2: '#F7F8FF',
-  border: 'rgba(90,80,180,0.10)',
-  text: '#1A1838',
-  text2: '#3D3B72',
-  muted: '#8E8CB0',
-  accent: '#6B4EFF',
-  accent2: '#C840F5',
-  gold: '#F59E0B',
-  green: '#10B981',
-  red: '#EF4444',
+  card2: '#FAFAF7',
+  border: 'rgba(35,42,77,0.12)',
+  text: '#1C1E2E',
+  text2: '#41435A',
+  muted: '#87889A',
+  accent: '#232A4D',
+  accent2: '#2E3766',
+  gold: '#C29A4E',
+  green: '#5F8A7B',
+  red: '#C4634F',
 } as const;
 
 export const GAME_GRADIENTS = {

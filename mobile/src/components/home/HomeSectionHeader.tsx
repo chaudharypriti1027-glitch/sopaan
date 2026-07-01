@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { ChevronRight } from 'lucide-react-native';
 import { Text } from '../Text';
 import { useTheme } from '../../theme';
+import { HOME_UI } from './homeTheme';
 
 type HomeSectionHeaderProps = {
   title: string;
@@ -38,7 +39,7 @@ export function HomeSectionHeader({
           >
             <Text style={[styles.action, !onActionPress && styles.actionMuted]}>{actionLabel}</Text>
             {onActionPress ? (
-              <ChevronRight size={14} color="#4F46E5" strokeWidth={2.2} />
+              <ChevronRight size={14} color={HOME_UI.accent} strokeWidth={2.2} />
             ) : null}
           </Pressable>
         ) : null}
@@ -65,7 +66,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme'], compact: bool
       fontFamily: theme.typography.fonts.ui.bold,
       fontWeight: '800',
       letterSpacing: -0.4,
-      color: '#0D0F1A',
+      color: HOME_UI.ink,
     },
     trailing: {
       flexDirection: 'row',
@@ -77,7 +78,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme'], compact: bool
       fontSize: 13,
       fontFamily: theme.typography.fonts.ui.bold,
       fontWeight: '700',
-      color: '#4F46E5',
+      color: HOME_UI.accent,
     },
     actionMuted: {
       opacity: 0.55,

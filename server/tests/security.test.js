@@ -5,7 +5,7 @@ import { clearTestDatabase, setupTestDatabase, teardownTestDatabase } from './he
 import { withPrivacyConsent } from './helpers/privacy.js';
 import { resetRefreshStoreForTests } from '../src/lib/refreshTokenStore.js';
 
-const STRONG_PASSWORD = 'Password123';
+const STRONG_PASSWORD = 'Password123!';
 
 describe('Security hardening', () => {
   beforeAll(async () => {
@@ -26,6 +26,17 @@ describe('Security hardening', () => {
       name: 'Weak Password User',
       email: 'weak@example.com',
       password: 'password123',
+    }));
+
+    expect(response.status).toBe(400);
+    expect(response.body.error.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('rejects passwords without a symbol', async () => {
+    const response = await request(app).post('/api/auth/signup').send(withPrivacyConsent({
+      name: 'No Symbol User',
+      email: 'nosymbol@example.com',
+      password: 'Password123',
     }));
 
     expect(response.status).toBe(400);

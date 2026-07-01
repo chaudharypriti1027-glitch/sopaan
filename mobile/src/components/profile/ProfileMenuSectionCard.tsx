@@ -8,15 +8,10 @@ import { Skeleton } from '../Skeleton';
 import { Text } from '../Text';
 import { useTheme } from '../../theme';
 import { homePremiumCard } from '../home/homeStyles';
+import { MENU_TONE_STYLES } from '../premium/premiumIconTokens';
+import { PREMIUM } from '../premium/premiumStyles';
 import { formatProfileSummaryCount } from './profileMenu';
 import type { ProfileMenuSection } from './profileMenuTypes';
-
-const toneStyles = {
-  indigo: { bg: '#ECEBFB', fg: '#3A36CC' },
-  teal: { bg: '#DBF4F0', fg: '#0FA896' },
-  gold: { bg: '#FDF1D8', fg: '#C97E00' },
-  coral: { bg: '#FDE6E4', fg: '#F2554B' },
-} as const;
 
 type ProfileMenuSectionCardProps = {
   section: ProfileMenuSection;
@@ -38,7 +33,7 @@ export function ProfileMenuSectionCard({
   return (
     <View style={styles.card}>
       {section.items.map((item, index) => {
-        const tone = toneStyles[item.tone];
+        const tone = MENU_TONE_STYLES[item.tone];
         const Icon = item.icon;
         const countValue = item.countKey ? summary?.[item.countKey] : undefined;
         const label = t(`app:profile.menu.${item.labelKey}`);
@@ -72,7 +67,7 @@ export function ProfileMenuSectionCard({
             ) : meta ? (
               <NumText style={styles.meta}>{meta}</NumText>
             ) : null}
-            <ChevronRight size={18} color="#A2A5BC" strokeWidth={1.75} />
+            <ChevronRight size={18} color={PREMIUM.sectionLabel} strokeWidth={1.75} />
           </Pressable>
         );
       })}
@@ -95,7 +90,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     },
     rowBorder: {
       borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: '#F4F5FA',
+      borderTopColor: PREMIUM.hairline,
     },
     pressed: {
       opacity: 0.92,
@@ -118,7 +113,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       fontSize: 11,
       fontFamily: theme.typography.fonts.stat.bold,
       fontWeight: '700',
-      color: '#A2A5BC',
+      color: PREMIUM.sectionLabel,
       marginRight: 2,
     },
     badge: {

@@ -8,6 +8,7 @@ import {
   GoalSetupScreen,
   OnboardingScreen,
   OtpLoginScreen,
+  WelcomeScreen,
 } from '../screens/auth';
 import type { AuthStackParamList } from './types';
 
@@ -17,12 +18,13 @@ export function AuthStack() {
   return (
     <OnboardingProvider>
       <Stack.Navigator
-        initialRouteName="Login"
+        initialRouteName="Welcome"
         screenOptions={{
           headerShown: false,
           animation: 'slide_from_right',
         }}
       >
+        <Stack.Screen name="Welcome" component={WelcomeScreen} />
         <Stack.Screen name="Onboarding" component={OnboardingScreen} />
         <Stack.Screen name="GoalSetup" component={GoalSetupScreen} />
         <Stack.Screen name="Signup" component={SignupScreen} />

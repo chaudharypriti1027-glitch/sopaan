@@ -57,7 +57,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     },
     statBorder: {
       borderLeftWidth: StyleSheet.hairlineWidth,
-      borderLeftColor: '#F4F5FA',
+      borderLeftColor: '#F0EEF8',
     },
     value: {
       fontSize: 19,

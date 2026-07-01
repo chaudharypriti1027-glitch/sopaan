@@ -132,8 +132,8 @@ export const HOME_FEATURE_TONE_COLORS: Record<
   FeatureLinkTone,
   { bg: string; fg: string }
 > = {
-  primary: { bg: '#EEF2FF', fg: '#4F46E5' },
-  gold: { bg: '#FFFBEB', fg: '#D97706' },
-  teal: { bg: '#ECFDF5', fg: '#059669' },
-  coral: { bg: '#FFF1F2', fg: '#E11D48' },
+  primary: { bg: '#E9EBF3', fg: '#232A4D' },
+  gold: { bg: '#F4EBD8', fg: '#A67C33' },
+  teal: { bg: '#E4EDE9', fg: '#4C7264' },
+  coral: { bg: '#F5E2DC', fg: '#A8503E' },
 };

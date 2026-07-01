@@ -72,7 +72,7 @@ describe('POST /api/auth/google', () => {
       name: 'Existing User',
       phone: '+919876543210',
       email: 'google.user@example.com',
-      password: 'Password123',
+      password: 'Password123!',
     }));
 
     mockVerifiedToken(mockGooglePayload());

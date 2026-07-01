@@ -24,7 +24,7 @@ describe('Auth API', () => {
       name: 'Asha Kumar',
       phone: TEST_PHONE,
       email: 'asha@example.com',
-      password: 'Password123',
+      password: 'Password123!',
     }));
 
     expect(response.status).toBe(201);
@@ -36,17 +36,35 @@ describe('Auth API', () => {
     });
   });
 
+  it('signs up with email only (no phone)', async () => {
+    const payload = withPrivacyConsent({
+      name: 'Email Only User',
+      email: 'emailonly@example.com',
+      password: 'Password123!',
+    });
+    delete payload.phone;
+
+    const response = await request(app).post('/api/auth/signup').send(payload);
+
+    expect(response.status).toBe(201);
+    expect(response.body.user).toMatchObject({
+      name: 'Email Only User',
+      email: 'emailonly@example.com',
+    });
+    expect(response.body.user.phone).toBeFalsy();
+  });
+
   it('logs in with phone and password and returns AuthResult', async () => {
     await request(app).post('/api/auth/signup').send(withPrivacyConsent({
       name: 'Ravi Singh',
       phone: '+919876543211',
       email: 'ravi@example.com',
-      password: 'Password123',
+      password: 'Password123!',
     }));
 
     const response = await request(app).post('/api/auth/login').send({
       phone: '9876543211',
-      password: 'Password123',
+      password: 'Password123!',
     });
 
     expect(response.status).toBe(200);
@@ -61,7 +79,7 @@ describe('Auth API', () => {
       name: 'Ravi Singh',
       phone: '+919876543211',
       email: 'ravi@example.com',
-      password: 'Password123',
+      password: 'Password123!',
     }));
 
     const response = await request(app).post('/api/auth/login').send({
@@ -78,12 +96,12 @@ describe('Auth API', () => {
       name: 'Email User',
       phone: '+919876543214',
       email: 'email-login@example.com',
-      password: 'Password123',
+      password: 'Password123!',
     }));
 
     const response = await request(app).post('/api/auth/login').send({
       email: 'email-login@example.com',
-      password: 'Password123',
+      password: 'Password123!',
     });
 
     expect(response.status).toBe(200);
@@ -96,7 +114,7 @@ describe('Auth API', () => {
       name: 'Token User',
       phone: '+919876543212',
       email: 'token@example.com',
-      password: 'Password123',
+      password: 'Password123!',
     }));
 
     const response = await request(app).post('/api/auth/refresh').send({
@@ -114,7 +132,7 @@ describe('Auth API', () => {
       name: 'Duplicate User',
       phone: '+919876543213',
       email: 'dup@example.com',
-      password: 'Password123',
+      password: 'Password123!',
     });
 
     await request(app).post('/api/auth/signup').send(payload);

@@ -70,7 +70,7 @@ export async function openRazorpayCheckout(
       email: prefill?.email ?? undefined,
       contact: prefill?.contact ?? undefined,
     },
-    theme: { color: '#4F46E5' },
+    theme: { color: '#232A4D' },
   });
 }
 

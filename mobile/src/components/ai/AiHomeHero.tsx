@@ -19,7 +19,7 @@ export function AiHomeHero({ title, subtitle }: AiHomeHeroProps) {
     <View style={styles.wrap}>
       <View style={styles.iconShell}>
         <LinearGradient
-          colors={[AI_UI.primaryLight, '#DDD6FE']}
+          colors={[AI_UI.primaryLight, '#C0C4DB']}
           start={{ x: 0.2, y: 0 }}
           end={{ x: 0.85, y: 1 }}
           style={styles.iconGradient}
@@ -52,7 +52,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: 1.5,
-      borderColor: 'rgba(79,53,210,0.18)',
+      borderColor: 'rgba(194,154,78,0.25)',
       overflow: 'hidden',
       shadowColor: AI_UI.primary,
       shadowOffset: { width: 0, height: 8 },

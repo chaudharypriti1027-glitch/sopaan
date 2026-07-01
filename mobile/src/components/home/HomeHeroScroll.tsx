@@ -11,6 +11,7 @@ import { useTheme } from '../../theme';
 import type { HomeFeed } from '../../types/home';
 import { GoalDots } from './GoalDots';
 import { HOME_UI } from './homeTheme';
+import { WeekStrip } from './WeekStrip';
 
 const DAILY_GOAL_TOTAL = 3;
 
@@ -71,7 +72,7 @@ export function HomeHeroScroll({
 
       <View style={styles.greetRow} testID="home-section-greeting">
         <LinearGradient
-          colors={['#FF6B35', '#FFA265']}
+          colors={['#E3C97F', '#C29A4E']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.avatarRing}
@@ -97,8 +98,10 @@ export function HomeHeroScroll({
         ) : null}
       </View>
 
+      <WeekStrip streakDays={streak.current} />
+
       <View style={styles.streakPill}>
-        <Flame size={14} color="#F97316" fill="#F97316" />
+        <Flame size={14} color="#C29A4E" fill="#C29A4E" />
         <NumText style={styles.streakText}>
           {streak.current <= 0
             ? t('home.startStreak')
@@ -108,7 +111,7 @@ export function HomeHeroScroll({
 
       {countdown ? (
         <View style={styles.countdownChip} testID="home-section-countdown">
-          <Calendar size={13} color="#FCD34D" strokeWidth={2} />
+          <Calendar size={13} color="#E3C97F" strokeWidth={2} />
           <NumText style={styles.countdownNum}>{countdown.daysLeft}</NumText>
           <Text style={styles.countdownLabel}>
             {t('home.daysToExamSuffix', { examName: countdown.examName })}
@@ -126,16 +129,16 @@ export function HomeHeroScroll({
         <View style={styles.goalInner}>
           <View style={styles.goalRow}>
             <LinearGradient
-              colors={['#FBBF24', '#EF4444']}
+              colors={['#D8B368', '#C29A4E']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.goalFlame}
             >
-              <Text style={styles.flameEmoji}>🔥</Text>
+              <Flame size={22} color="#FFFFFF" strokeWidth={2} fill="#FFFFFF" />
             </LinearGradient>
 
             <View style={styles.goalMid}>
-              <Text style={styles.goalLabel}>{t('home.todaysGoal')}</Text>
+  <Text style={styles.goalLabel}>{t('home.todaysGoal')}</Text>
               <Text style={styles.goalTitle}>
                 {t('home.goalProgress', { done: goal.done, total: goal.total })}
               </Text>
@@ -160,7 +163,7 @@ export function HomeHeroScroll({
               style={({ pressed }) => [styles.goalCta, pressed && styles.pressed]}
             >
               <Text style={styles.goalCtaText}>{t('home.takeTestToRank')}</Text>
-              <ArrowRight size={14} color="#A5B4FC" strokeWidth={2.2} />
+              <ArrowRight size={14} color="#E3C97F" strokeWidth={2.2} />
             </Pressable>
           ) : null}
         </View>
@@ -180,7 +183,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme'], topInset: num
     blob: {
       position: 'absolute',
       borderRadius: 999,
-      backgroundColor: 'rgba(99,102,241,0.28)',
+      backgroundColor: 'rgba(194,154,78,0.18)',
     },
     blobA: { top: -80, right: -60, width: 260, height: 260 },
     blobB: { top: 50, right: 55, width: 90, height: 90, opacity: 0.5 },
@@ -234,9 +237,9 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme'], topInset: num
       width: 9,
       height: 9,
       borderRadius: 5,
-      backgroundColor: '#FF3D5A',
+      backgroundColor: '#C29A4E',
       borderWidth: 2,
-      borderColor: '#2E12A0',
+      borderColor: '#232A4D',
     },
     streakPill: {
       alignSelf: 'flex-start',
@@ -256,7 +259,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme'], topInset: num
     streakText: {
       fontSize: 12,
       fontWeight: '700',
-      color: '#FCD34D',
+      color: '#E3C97F',
     },
     countdownChip: {
       alignSelf: 'flex-start',
@@ -305,7 +308,6 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme'], topInset: num
       alignItems: 'center',
       justifyContent: 'center',
     },
-    flameEmoji: { fontSize: 24 },
     goalMid: { flex: 1 },
     goalLabel: {
       fontSize: 11,
@@ -364,7 +366,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme'], topInset: num
     goalCtaText: {
       fontSize: 12,
       fontWeight: '700',
-      color: '#A5B4FC',
+      color: '#E3C97F',
     },
     pressed: { opacity: 0.9 },
   });

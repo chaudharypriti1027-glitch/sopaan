@@ -26,7 +26,7 @@ export function AINudgeCard({ nudge, onPress, showForYouHeader = true }: AINudge
     >
       <View style={styles.card}>
         <View style={styles.icon}>
-          <Target size={22} color="#EF4444" strokeWidth={2} />
+          <Target size={22} color={HOME_UI.goldDeep} strokeWidth={2} />
         </View>
 
         <View style={styles.copy}>
@@ -34,7 +34,7 @@ export function AINudgeCard({ nudge, onPress, showForYouHeader = true }: AINudge
             <View style={styles.titleRow}>
               <Text style={styles.forYou}>For You</Text>
               <LinearGradient
-                colors={['#4F46E5', '#7C3AED']}
+                colors={[...HOME_UI.accentGradient]}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={styles.aiBadge}
@@ -47,17 +47,14 @@ export function AINudgeCard({ nudge, onPress, showForYouHeader = true }: AINudge
             {nudge.title}
           </Text>
           {isUrgent || nudge.body ? (
-            <View style={styles.warnRow}>
-              <View style={styles.warnDot} />
-              <Text style={styles.warnText} numberOfLines={2}>
-                {nudge.body}
-              </Text>
-            </View>
+            <Text style={styles.bodyText} numberOfLines={2}>
+              {nudge.body}
+            </Text>
           ) : null}
         </View>
 
         <View style={styles.arrow}>
-          <ChevronRight size={15} color={HOME_UI.accent} strokeWidth={2.2} />
+          <ChevronRight size={16} color={HOME_UI.goldDeep} strokeWidth={2.4} />
         </View>
       </View>
     </Pressable>
@@ -67,35 +64,38 @@ export function AINudgeCard({ nudge, onPress, showForYouHeader = true }: AINudge
 function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
     wrap: {
-      borderRadius: 22,
+      borderRadius: 20,
     },
     pressed: { opacity: 0.96 },
     card: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 14,
-      backgroundColor: HOME_UI.surface,
-      borderRadius: 22,
+      gap: 13,
+      backgroundColor: HOME_UI.goldSoft,
+      borderRadius: 20,
       paddingVertical: 15,
-      paddingHorizontal: 16,
-      borderWidth: 1.5,
-      borderColor: HOME_UI.borderSoft,
-      shadowColor: '#6366F1',
+      paddingHorizontal: 15,
+      borderWidth: 1,
+      borderColor: '#EADFC4',
+      shadowColor: HOME_UI.shadow,
       shadowOffset: { width: 0, height: 6 },
-      shadowOpacity: 0.13,
-      shadowRadius: 28,
-      elevation: 4,
+      shadowOpacity: 0.1,
+      shadowRadius: 20,
+      elevation: 3,
     },
     icon: {
-      width: 48,
-      height: 48,
+      width: 46,
+      height: 46,
       borderRadius: 15,
-      backgroundColor: '#FEF2F2',
-      borderWidth: 1.5,
-      borderColor: '#FECACA',
+      backgroundColor: '#FFFFFF',
       alignItems: 'center',
       justifyContent: 'center',
       flexShrink: 0,
+      shadowColor: HOME_UI.goldDeep,
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.3,
+      shadowRadius: 10,
+      elevation: 2,
     },
     copy: { flex: 1, minWidth: 0 },
     titleRow: {
@@ -107,12 +107,12 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     forYou: {
       fontSize: 14,
       fontWeight: '800',
-      color: HOME_UI.ink,
+      color: HOME_UI.accent,
     },
     aiBadge: {
-      borderRadius: 6,
+      borderRadius: 8,
       paddingHorizontal: 8,
-      paddingVertical: 2,
+      paddingVertical: 3,
     },
     aiBadgeText: {
       fontSize: 9,
@@ -121,40 +121,20 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       letterSpacing: 0.6,
     },
     subtitle: {
-      fontSize: 13,
-      fontWeight: '700',
-      color: HOME_UI.ink,
+      fontSize: 13.5,
+      fontWeight: '800',
+      color: HOME_UI.accent,
       lineHeight: 18,
-      marginBottom: 4,
+      marginBottom: 2,
     },
-    warnRow: {
-      flexDirection: 'row',
-      alignItems: 'flex-start',
-      gap: 5,
-    },
-    warnDot: {
-      width: 6,
-      height: 6,
-      borderRadius: 3,
-      backgroundColor: '#EF4444',
-      marginTop: 5,
-      flexShrink: 0,
-    },
-    warnText: {
-      flex: 1,
-      fontSize: 11,
+    bodyText: {
+      fontSize: 11.5,
       fontWeight: '600',
-      color: '#EF4444',
+      color: HOME_UI.goldDeep,
       lineHeight: 15,
     },
     arrow: {
-      width: 32,
-      height: 32,
-      borderRadius: 10,
-      backgroundColor: HOME_UI.accentSoft,
-      alignItems: 'center',
-      justifyContent: 'center',
-      flexShrink: 0,
+      opacity: 0.7,
     },
   });
 }

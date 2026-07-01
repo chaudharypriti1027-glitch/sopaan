@@ -68,7 +68,7 @@ export async function createTestUser(overrides = {}) {
   }
 
   const user = new User(payload);
-  await user.setPassword(overrides.password ?? 'Password123');
+  await user.setPassword(overrides.password ?? 'Password123!');
   await user.save();
   return user;
 }

@@ -3,7 +3,7 @@ import { Question } from '../src/models/Question.js';
 import { TopicMastery } from '../src/models/TopicMastery.js';
 import { clearTestDatabase, setupTestDatabase, teardownTestDatabase } from './helpers/db.js';
 import { createTestUser } from './helpers/fixtures.js';
-import { recordAnswerOutcome } from '../src/services/adaptive/masteryService.js';
+import { recordAnswerOutcome, recordAttemptOutcomes } from '../src/services/adaptive/masteryService.js';
 import { getNextQuestions } from '../src/services/adaptive/questionPicker.js';
 import { ratingFromDifficulty } from '../src/services/adaptive/rating.js';
 
@@ -94,5 +94,47 @@ describe('adaptive mastery and question picker', () => {
 
     const { mastery } = await recordAnswerOutcome(user._id, question, false);
     expect(mastery.rating).toBeLessThan(1500);
+  });
+
+  it('grades a full attempt with several questions from the same topic without a duplicate-key crash', async () => {
+    // Regression test: recordAttemptOutcomes used to fire one recordAnswerOutcome
+    // call per answer via Promise.all. When several questions shared the same
+    // (subject, topic) — the common case for a sectional/topic test — the first
+    // TopicMastery document didn't exist yet, so multiple concurrent calls raced
+    // to create() it and hit the unique index, crashing the entire test submission
+    // with a duplicate-key error surfaced to users as "userId is already registered".
+    const user = await createUser();
+    const questions = await Question.insertMany(
+      Array.from({ length: 5 }, (_, i) => ({
+        subject: 'Math',
+        topic: 'Time and Work',
+        difficulty: 'medium',
+        rating: ratingFromDifficulty('medium'),
+        text: `Time and Work question ${i}`,
+        options: defaultOptions,
+        correctKey: 'A',
+        explanation: 'Because A.',
+        examTags: ['SSC CGL'],
+        source: 'official',
+      })),
+    );
+
+    const gradedAnswers = questions.map((question, i) => ({
+      questionId: question._id,
+      correct: i % 2 === 0,
+    }));
+
+    await expect(
+      recordAttemptOutcomes(user._id, questions, gradedAnswers),
+    ).resolves.toHaveLength(5);
+
+    const masteries = await TopicMastery.find({
+      userId: user._id,
+      subject: 'Math',
+      topic: 'Time and Work',
+    }).lean();
+
+    expect(masteries).toHaveLength(1);
+    expect(masteries[0].attempts).toBe(5);
   });
 });

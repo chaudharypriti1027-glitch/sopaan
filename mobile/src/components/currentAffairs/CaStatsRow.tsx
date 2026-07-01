@@ -27,7 +27,7 @@ export function CaStatsRow({ total, today, trending }: CaStatsRowProps) {
       {stats.map(({ Icon, value, label }) => (
         <View key={label} style={styles.stat}>
           <View style={styles.icon}>
-            <Icon size={12} color="#6366F1" strokeWidth={2.5} />
+            <Icon size={12} color={CA_UI.accent} strokeWidth={2.5} />
           </View>
           <View>
             <NumText style={styles.value}>{value}</NumText>
@@ -53,7 +53,7 @@ function createStyles() {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 8,
-      backgroundColor: '#F8FAFC',
+      backgroundColor: CA_UI.bg,
       borderRadius: 12,
       paddingVertical: 8,
       paddingHorizontal: 10,

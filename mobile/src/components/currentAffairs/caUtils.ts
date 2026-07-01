@@ -89,7 +89,7 @@ export function categoryStyle(category?: string) {
     schemes: { color: '#7C3AED', bg: '#F5F3FF' },
     polity: { color: '#EA580C', bg: '#FFF7ED' },
     politics: { color: '#EA580C', bg: '#FFF7ED' },
-    national: { color: '#4F46E5', bg: '#EEF2FF' },
+    national: { color: '#232A4D', bg: '#E9EBF3' },
     science: { color: '#0891B2', bg: '#ECFEFF' },
     environment: { color: '#16A34A', bg: '#F0FDF4' },
     sports: { color: '#DB2777', bg: '#FDF2F8' },

@@ -4,6 +4,7 @@ import Animated from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
+import { Clock3 } from 'lucide-react-native';
 import {
   AUTH_UI,
   AuthAnimatedSection,
@@ -11,8 +12,9 @@ import {
   AuthDivider,
   AuthPremiumField,
   AuthScreen,
-  AuthSocialPair,
+  AuthSocialButton,
   AuthTermsBox,
+  PasswordRequirements,
   PrimaryButton,
   VerifiedPhoneChip,
   useShakeOnError,
@@ -24,6 +26,7 @@ import { normalizeAuthResult } from '../auth/normalizeAuthResult';
 import { routeAfterSession } from '../auth/routeAfterSession';
 import { useGoogleSignIn } from '../auth/useGoogleSignIn';
 import { useOnboarding } from '../auth/OnboardingContext';
+import { isStrongPassword } from '../lib/passwordPolicy';
 import type { AuthStackParamList } from '../navigation/types';
 import { useAuthStore } from '../store/auth';
 
@@ -115,6 +118,7 @@ function SignupProfileCompletion() {
 
         <AuthAnimatedSection index={1}>
           <AuthPremiumField
+            dense
             label={t('signup.name')}
             value={name}
             onChangeText={(value) => {
@@ -135,6 +139,7 @@ function SignupProfileCompletion() {
 
         <AuthAnimatedSection index={2}>
           <AuthPremiumField
+            dense
             variant="email"
             label={t('signup.emailOptional')}
             value={email}
@@ -171,7 +176,6 @@ function SignupRegistration() {
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -184,17 +188,11 @@ function SignupRegistration() {
     void privacyApi.getPolicy().then((policy) => setPolicyVersion(policy.version)).catch(() => {});
   }, []);
 
-  const passwordStrong =
-    password.length >= 8 &&
-    /[A-Z]/.test(password) &&
-    /[a-z]/.test(password) &&
-    /[0-9]/.test(password);
+  const passwordStrong = isStrongPassword(password);
+  const emailValid = EMAIL_PATTERN.test(email.trim());
 
   const canSubmit =
-    name.trim().length > 0 &&
-    passwordStrong &&
-    (email.trim() || phone.trim()) &&
-    acceptedTerms;
+    name.trim().length > 0 && emailValid && passwordStrong && acceptedTerms;
 
   const handleSignUp = async () => {
     if (!canSubmit) return;
@@ -204,8 +202,7 @@ function SignupRegistration() {
     try {
       await signup({
         name: name.trim(),
-        email: email.trim() || undefined,
-        phone: phone.trim() || undefined,
+        email: email.trim().toLowerCase(),
         password,
         privacyConsent: {
           policyVersion,
@@ -249,37 +246,25 @@ function SignupRegistration() {
 
   return (
     <AuthScreen
-      header={
-        <AuthBrandHeader
-          badge={t('signup.eyebrow')}
-          title={t('signup.title')}
-          subtitle={t('signup.subtitle')}
-        />
-      }
+      header={<AuthBrandHeader title={t('signup.title')} subtitle={t('signup.subtitle')} />}
       footer={
-        <View style={styles.footer}>
-          <PrimaryButton
-            label={t('signup.submit')}
-            testID="signup-create-account"
-            loading={loading}
-            disabled={!canSubmit}
-            onPress={handleSignUp}
-          />
-          <Pressable onPress={() => navigation.navigate('Login')} style={styles.footerLink}>
-            <Text style={styles.footerMuted}>{t('signup.loginPrompt')} </Text>
-            <Text style={styles.footerStrong}>{t('signup.loginLink')}</Text>
-          </Pressable>
-        </View>
+        <Pressable onPress={() => navigation.navigate('Login')} style={styles.footerLink}>
+          <Text style={styles.footerMuted}>{t('signup.loginPrompt')} </Text>
+          <Text style={styles.footerStrong}>{t('signup.loginLink')}</Text>
+        </Pressable>
       }
     >
       <AuthPremiumField
+        dense
         label={t('signup.name')}
         value={name}
         onChangeText={setName}
         autoCapitalize="words"
         placeholder={t('signup.namePlaceholder')}
+        testID="signup-name-field"
       />
       <AuthPremiumField
+        dense
         variant="email"
         label={t('signup.email')}
         value={email}
@@ -287,21 +272,18 @@ function SignupRegistration() {
         keyboardType="email-address"
         autoCapitalize="none"
         placeholder={t('signup.emailPlaceholder')}
+        testID="signup-email-field"
       />
       <AuthPremiumField
-        variant="phone"
-        label={t('signup.phone')}
-        value={phone}
-        onChangeText={setPhone}
-        placeholder={t('signup.phonePlaceholder')}
-      />
-      <AuthPremiumField
+        dense
         variant="password"
         label={t('signup.password')}
         value={password}
         onChangeText={setPassword}
         placeholder={t('signup.passwordHint')}
+        testID="signup-password-field"
       />
+      <PasswordRequirements password={password} />
 
       <AuthTermsBox
         testID="consent-policy"
@@ -312,15 +294,27 @@ function SignupRegistration() {
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
+      <PrimaryButton
+        label={t('signup.submit')}
+        testID="signup-create-account"
+        loading={loading}
+        disabled={!canSubmit}
+        onPress={handleSignUp}
+      />
+
       <AuthDivider label={t('signup.orContinueWith')} />
 
-      <AuthSocialPair
-        googleLabel="Google"
-        otpLabel="OTP"
-        googleDisabled={!isGoogleConfigured || loading || googleLoading}
-        onGooglePress={() => void handleGoogleSignIn()}
-        onOtpPress={() => navigation.navigate('OtpLogin')}
+      <AuthSocialButton
+        label="Google"
+        variant="google"
+        disabled={!isGoogleConfigured || loading || googleLoading}
+        onPress={() => void handleGoogleSignIn()}
       />
+
+      <View style={styles.otpNote}>
+        <Clock3 size={12} color={AUTH_UI.faint} strokeWidth={2} />
+        <Text style={styles.otpNoteText}>{t('beta.otpNote')}</Text>
+      </View>
     </AuthScreen>
   );
 }
@@ -342,7 +336,7 @@ function createCompletionStyles() {
     },
     formError: {
       fontSize: 12,
-      color: '#EF4444',
+      color: '#C4634F',
       textAlign: 'center',
       marginTop: 8,
     },
@@ -351,13 +345,9 @@ function createCompletionStyles() {
 
 function createRegistrationStyles() {
   return StyleSheet.create({
-    footer: {
-      marginTop: 4,
-    },
     footerLink: {
       flexDirection: 'row',
       justifyContent: 'center',
-      marginTop: 16,
       minHeight: 44,
       alignItems: 'center',
     },
@@ -372,8 +362,21 @@ function createRegistrationStyles() {
     },
     error: {
       fontSize: 12,
-      color: '#EF4444',
+      color: '#C4634F',
+      textAlign: 'center',
       marginBottom: 8,
+    },
+    otpNote: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 5,
+      marginTop: 16,
+    },
+    otpNoteText: {
+      fontSize: 11,
+      color: AUTH_UI.faint,
+      fontWeight: '500',
     },
   });
 }

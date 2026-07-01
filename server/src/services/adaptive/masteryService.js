@@ -11,19 +11,23 @@ export async function getTopicMastery(userId, subject, topic) {
 }
 
 export async function getOrCreateTopicMastery(userId, subject, topic) {
-  let mastery = await getTopicMastery(userId, subject, topic);
-
-  if (!mastery) {
-    mastery = await TopicMastery.create({
-      userId,
-      subject,
-      topic,
-      rating: DEFAULT_MASTERY_RATING,
-      attempts: 0,
-    });
-  }
-
-  return mastery;
+  // Atomic upsert avoids a find-then-create race: concurrent calls for the same
+  // (userId, subject, topic) — e.g. grading several questions from the same topic
+  // in one attempt — would otherwise both find nothing and both try to `create()`,
+  // tripping the unique index and crashing the whole request with a duplicate-key error.
+  return TopicMastery.findOneAndUpdate(
+    { userId, subject, topic },
+    {
+      $setOnInsert: {
+        userId,
+        subject,
+        topic,
+        rating: DEFAULT_MASTERY_RATING,
+        attempts: 0,
+      },
+    },
+    { upsert: true, new: true },
+  );
 }
 
 /**
@@ -68,10 +72,17 @@ export async function recordAnswerOutcome(userId, question, correct) {
 
 /**
  * Batch update from a graded attempt (one call per answer).
+ *
+ * Answers are grouped by topic and applied sequentially within each group:
+ * the Elo-style rating update is order-dependent and read-modify-write, so
+ * firing concurrent updates for the same (userId, subject, topic) would both
+ * race on the same mastery document (lost updates) and re-trigger the
+ * create-race that `getOrCreateTopicMastery` already guards against.
+ * Different topics still update in parallel.
  */
 export async function recordAttemptOutcomes(userId, questions, gradedAnswers) {
   const questionMap = new Map(questions.map((question) => [question._id.toString(), question]));
-  const updates = [];
+  const groups = new Map();
 
   for (const answer of gradedAnswers) {
     const question = questionMap.get(answer.questionId.toString());
@@ -79,10 +90,24 @@ export async function recordAttemptOutcomes(userId, questions, gradedAnswers) {
       continue;
     }
 
-    updates.push(recordAnswerOutcome(userId, question, answer.correct));
+    const key = `${question.subject}::${question.topic}`;
+    if (!groups.has(key)) {
+      groups.set(key, []);
+    }
+    groups.get(key).push({ question, correct: answer.correct });
   }
 
-  return Promise.all(updates);
+  const groupResults = await Promise.all(
+    Array.from(groups.values()).map(async (entries) => {
+      const results = [];
+      for (const { question, correct } of entries) {
+        results.push(await recordAnswerOutcome(userId, question, correct));
+      }
+      return results;
+    }),
+  );
+
+  return groupResults.flat();
 }
 
 export async function listTopicMasteries(userId, subject) {

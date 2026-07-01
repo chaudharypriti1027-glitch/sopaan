@@ -72,12 +72,12 @@ function createStyles(
     },
     decorA: {
       position: 'absolute',
-      top: -50,
+      top: -60,
       right: -40,
-      width: 190,
-      height: 190,
-      borderRadius: 95,
-      backgroundColor: 'rgba(255,255,255,0.1)',
+      width: 210,
+      height: 210,
+      borderRadius: 105,
+      backgroundColor: 'rgba(194,154,78,0.22)',
     },
     decorB: {
       position: 'absolute',
@@ -86,7 +86,7 @@ function createStyles(
       width: 160,
       height: 160,
       borderRadius: 80,
-      backgroundColor: 'rgba(124,118,240,0.35)',
+      backgroundColor: 'rgba(255,255,255,0.06)',
     },
     topbar: {
       flexDirection: 'row',

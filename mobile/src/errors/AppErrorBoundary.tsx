@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 16,
     padding: 24,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F4F1E9',
   },
   title: {
     fontSize: 20,
@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
     minHeight: 44,
     minWidth: 160,
     borderRadius: 12,
-    backgroundColor: '#4F46E5',
+    backgroundColor: '#232A4D',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 20,

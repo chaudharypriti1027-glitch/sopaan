@@ -20,7 +20,7 @@ type AuthScreenProps = {
   scrollProps?: Omit<ScrollViewProps, 'contentContainerStyle' | 'style' | 'children'>;
 };
 
-/** Auth flow shell — premium card on soft canvas. */
+/** Auth flow shell — "Classic Premium" cream canvas with soft brand decor. */
 export function AuthScreen({
   children,
   footer,
@@ -46,6 +46,9 @@ export function AuthScreen({
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
     >
+      <View style={[styles.decoGold]} pointerEvents="none" />
+      <View style={[styles.decoSage]} pointerEvents="none" />
+
       {scroll ? (
         <ScrollView
           style={styles.scroll}
@@ -69,38 +72,47 @@ function createStyles(insets: { top: number; bottom: number; left: number; right
       flex: 1,
       backgroundColor: AUTH_UI.bg,
     },
+    decoGold: {
+      position: 'absolute',
+      top: -70,
+      right: -60,
+      width: 220,
+      height: 220,
+      borderRadius: 110,
+      backgroundColor: AUTH_UI.goldSoft,
+    },
+    decoSage: {
+      position: 'absolute',
+      bottom: 120,
+      left: -70,
+      width: 200,
+      height: 200,
+      borderRadius: 100,
+      backgroundColor: AUTH_UI.sageSoft,
+    },
     scroll: {
       flex: 1,
     },
     scrollContent: {
       flexGrow: 1,
       justifyContent: 'center',
-      paddingTop: insets.top + 16,
-      paddingBottom: insets.bottom + 16,
-      paddingHorizontal: 16 + insets.left,
-      paddingRight: 16 + insets.right,
+      paddingTop: insets.top + 24,
+      paddingBottom: insets.bottom + 24,
+      paddingHorizontal: 24 + insets.left,
+      paddingRight: 24 + insets.right,
     },
     staticContent: {
       flex: 1,
       justifyContent: 'center',
     },
     card: {
-      backgroundColor: AUTH_UI.card,
-      borderRadius: AUTH_UI.cardRadius,
-      borderWidth: 1,
-      borderColor: 'rgba(226,232,240,0.8)',
-      padding: 32,
-      shadowColor: AUTH_UI.accent,
-      shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 0.1,
-      shadowRadius: 48,
-      elevation: 8,
+      zIndex: 2,
     },
     body: {
       gap: 0,
     },
     footer: {
-      marginTop: 4,
+      marginTop: 20,
       gap: 10,
     },
   });

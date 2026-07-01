@@ -11,6 +11,7 @@ import Animated, {
   useReducedMotion,
   useSharedValue,
   withDelay,
+  withRepeat,
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
@@ -21,15 +22,16 @@ import { isOnboardingComplete } from '../auth/onboardingComplete';
 import { queryKeys } from '../hooks/queryKeys';
 import type { RootStackParamList } from '../navigation/types';
 import { useAuthStore, type BootstrapResult } from '../store/auth';
-import { colors } from '../theme/tokens';
+import { PREMIUM } from '../components/premium/premiumStyles';
 
 type SplashNav = NativeStackNavigationProp<RootStackParamList, 'Splash'>;
 
 const LOGO_IN_MS = 520;
-const SHIMMER_MS = 720;
-const SHIMMER_DELAY_MS = 380;
-const HOLD_MS = 700;
+const WORDMARK_DELAY_MS = 220;
+const WORDMARK_MS = 420;
+const HOLD_MS = 900;
 const REDUCED_MOTION_DELAY_MS = 120;
+const LOADER_TRACK_WIDTH = 150;
 
 function wait(ms: number) {
   return new Promise<void>((resolve) => {
@@ -43,10 +45,10 @@ async function waitForBrandMoment(reducedMotion: boolean) {
     return;
   }
 
-  await wait(LOGO_IN_MS + SHIMMER_DELAY_MS + SHIMMER_MS + HOLD_MS);
+  await wait(LOGO_IN_MS + WORDMARK_DELAY_MS + WORDMARK_MS + HOLD_MS);
 }
 
-function resetToLogin(navigation: SplashNav) {
+function resetToWelcome(navigation: SplashNav) {
   navigation.reset({
     index: 0,
     routes: [
@@ -54,7 +56,7 @@ function resetToLogin(navigation: SplashNav) {
         name: 'Auth',
         state: {
           index: 0,
-          routes: [{ name: 'Login' }],
+          routes: [{ name: 'Welcome' }],
         },
       },
     ],
@@ -85,7 +87,7 @@ function resetToHome(navigation: SplashNav) {
 
 function routeAfterBootstrap(navigation: SplashNav, result: BootstrapResult) {
   if (result.kind === 'guest') {
-    resetToLogin(navigation);
+    resetToWelcome(navigation);
     return;
   }
 
@@ -106,20 +108,28 @@ export function SplashScreen() {
 
   const logoOpacity = useSharedValue(reducedMotion ? 1 : 0);
   const logoScale = useSharedValue(reducedMotion ? 1 : 0.86);
+  const logoFloat = useSharedValue(0);
   const wordmarkOpacity = useSharedValue(reducedMotion ? 1 : 0);
-  const shimmerX = useSharedValue(reducedMotion ? 200 : -140);
+  const ringScale = useSharedValue(1);
+  const ringOpacity = useSharedValue(0.6);
+  const loaderX = useSharedValue(-0.4);
 
   const logoStyle = useAnimatedStyle(() => ({
     opacity: logoOpacity.value,
-    transform: [{ scale: logoScale.value }],
+    transform: [{ scale: logoScale.value }, { translateY: logoFloat.value }],
   }));
 
   const wordmarkStyle = useAnimatedStyle(() => ({
     opacity: wordmarkOpacity.value,
   }));
 
-  const shimmerStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: shimmerX.value }],
+  const ringStyle = useAnimatedStyle(() => ({
+    opacity: ringOpacity.value,
+    transform: [{ scale: ringScale.value }],
+  }));
+
+  const loaderStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: loaderX.value * LOADER_TRACK_WIDTH }],
   }));
 
   useEffect(() => {
@@ -140,24 +150,48 @@ export function SplashScreen() {
         easing: Easing.out(Easing.cubic),
         reduceMotion: ReduceMotion.System,
       });
+      logoFloat.value = withDelay(
+        LOGO_IN_MS,
+        withRepeat(
+          withSequence(
+            withTiming(-8, { duration: 1800, easing: Easing.inOut(Easing.sin) }),
+            withTiming(0, { duration: 1800, easing: Easing.inOut(Easing.sin) }),
+          ),
+          -1,
+          true,
+        ),
+      );
       wordmarkOpacity.value = withDelay(
-        180,
+        WORDMARK_DELAY_MS,
         withTiming(1, {
-          duration: 420,
+          duration: WORDMARK_MS,
           easing: Easing.out(Easing.quad),
           reduceMotion: ReduceMotion.System,
         }),
       );
-      shimmerX.value = withDelay(
-        SHIMMER_DELAY_MS,
+      ringScale.value = withRepeat(
         withSequence(
-          withTiming(220, {
-            duration: SHIMMER_MS,
-            easing: Easing.inOut(Easing.quad),
-            reduceMotion: ReduceMotion.System,
-          }),
-          withTiming(220, { duration: HOLD_MS, reduceMotion: ReduceMotion.System }),
+          withTiming(1.04, { duration: 1700, easing: Easing.inOut(Easing.sin) }),
+          withTiming(1, { duration: 1700, easing: Easing.inOut(Easing.sin) }),
         ),
+        -1,
+        true,
+      );
+      ringOpacity.value = withRepeat(
+        withSequence(
+          withTiming(1, { duration: 1700, easing: Easing.inOut(Easing.sin) }),
+          withTiming(0.6, { duration: 1700, easing: Easing.inOut(Easing.sin) }),
+        ),
+        -1,
+        true,
+      );
+      loaderX.value = withRepeat(
+        withSequence(
+          withTiming(1, { duration: 1600, easing: Easing.inOut(Easing.quad) }),
+          withTiming(-0.4, { duration: 0 }),
+        ),
+        -1,
+        false,
       );
     }
 
@@ -176,12 +210,15 @@ export function SplashScreen() {
     })();
   }, [
     bootstrap,
+    loaderX,
+    logoFloat,
     logoOpacity,
     logoScale,
     navigation,
     queryClient,
     reducedMotion,
-    shimmerX,
+    ringOpacity,
+    ringScale,
     wordmarkOpacity,
   ]);
 
@@ -189,32 +226,39 @@ export function SplashScreen() {
 
   return (
     <LinearGradient
-      colors={[colors.boardPrimary, colors.boardPrimaryDeep]}
+      colors={[...PREMIUM.heroGradient]}
       start={{ x: 0.15, y: 0 }}
       end={{ x: 0.85, y: 1 }}
       style={styles.root}
     >
       <View style={styles.center}>
+        {!reducedMotion ? (
+          <View style={styles.ringsWrap} pointerEvents="none">
+            <Animated.View style={[styles.ring, styles.ringOuter, ringStyle]} />
+            <Animated.View style={[styles.ring, styles.ringMid, ringStyle]} />
+            <Animated.View style={[styles.ring, styles.ringInner, ringStyle]} />
+            <View style={styles.glow} />
+          </View>
+        ) : null}
+
         <Animated.View style={[styles.logoWrap, logoStyle]}>
-          <SopaanLogo size={112} showBackground={false} />
+          <SopaanLogo size={100} />
         </Animated.View>
 
         <Animated.View style={[styles.wordmarkWrap, wordmarkStyle]}>
-          <View style={styles.wordmarkClip}>
-            <Text style={styles.wordmark}>Sopaan</Text>
-            {!reducedMotion ? (
-              <Animated.View pointerEvents="none" style={[styles.shimmerTrack, shimmerStyle]}>
-                <LinearGradient
-                  colors={['transparent', 'rgba(255,255,255,0.42)', 'transparent']}
-                  start={{ x: 0, y: 0.5 }}
-                  end={{ x: 1, y: 0.5 }}
-                  style={styles.shimmerBand}
-                />
-              </Animated.View>
-            ) : null}
-          </View>
-          <Text style={styles.tagline}>Climb your rank</Text>
+          <Text style={styles.wordmark}>
+            S<Text style={styles.wordmarkO}>O</Text>PAAN
+          </Text>
+          <Text style={styles.tagline}>CLIMB YOUR RANK</Text>
         </Animated.View>
+
+        {!reducedMotion ? (
+          <View style={styles.loaderTrack}>
+            <Animated.View style={[styles.loaderFill, loaderStyle]} />
+          </View>
+        ) : null}
+
+        <Text style={styles.byline}>EXAM PREP · POWERED BY AI</Text>
       </View>
     </LinearGradient>
   );
@@ -230,43 +274,100 @@ function createStyles() {
       alignItems: 'center',
       justifyContent: 'center',
       paddingHorizontal: 32,
-      gap: 28,
+    },
+    ringsWrap: {
+      position: 'absolute',
+      width: 340,
+      height: 340,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    ring: {
+      position: 'absolute',
+      borderRadius: 999,
+      borderWidth: 1,
+      borderColor: 'rgba(194,154,78,0.16)',
+    },
+    ringOuter: {
+      width: 330,
+      height: 330,
+      borderColor: 'rgba(194,154,78,0.08)',
+    },
+    ringMid: {
+      width: 240,
+      height: 240,
+      borderColor: 'rgba(194,154,78,0.12)',
+    },
+    ringInner: {
+      width: 150,
+      height: 150,
+    },
+    glow: {
+      position: 'absolute',
+      width: 220,
+      height: 220,
+      borderRadius: 110,
+      backgroundColor: 'rgba(194,154,78,0.16)',
     },
     logoWrap: {
       alignItems: 'center',
       justifyContent: 'center',
+      marginBottom: 30,
+      shadowColor: '#C29A4E',
+      shadowOffset: { width: 0, height: 18 },
+      shadowOpacity: 0.45,
+      shadowRadius: 24,
+      elevation: 10,
     },
     wordmarkWrap: {
       alignItems: 'center',
-      gap: 10,
-    },
-    wordmarkClip: {
-      overflow: 'hidden',
-      position: 'relative',
+      gap: 9,
     },
     wordmark: {
       fontFamily: 'SpaceGrotesk_700Bold',
-      fontSize: 44,
-      lineHeight: 48,
-      letterSpacing: -0.8,
-      color: colors.white,
+      fontSize: 32,
+      lineHeight: 38,
+      letterSpacing: 3,
+      color: '#FFFFFF',
       textAlign: 'center',
     },
-    shimmerTrack: {
-      position: 'absolute',
-      top: 0,
-      bottom: 0,
-      width: 120,
-    },
-    shimmerBand: {
-      flex: 1,
-      width: 120,
+    wordmarkO: {
+      fontFamily: 'SpaceGrotesk_700Bold',
+      fontSize: 32,
+      lineHeight: 38,
+      letterSpacing: 3,
+      color: '#E3C97F',
     },
     tagline: {
-      fontFamily: 'PlusJakartaSans_500Medium',
-      fontSize: 16,
-      lineHeight: 22,
-      color: 'rgba(255,255,255,0.78)',
+      fontFamily: 'PlusJakartaSans_600SemiBold',
+      fontSize: 12,
+      letterSpacing: 3,
+      textTransform: 'uppercase',
+      color: 'rgba(255,255,255,0.65)',
+      textAlign: 'center',
+    },
+    loaderTrack: {
+      position: 'absolute',
+      bottom: 88,
+      width: LOADER_TRACK_WIDTH,
+      height: 4,
+      borderRadius: 99,
+      backgroundColor: 'rgba(255,255,255,0.14)',
+      overflow: 'hidden',
+    },
+    loaderFill: {
+      height: '100%',
+      width: '40%',
+      borderRadius: 99,
+      backgroundColor: '#C29A4E',
+    },
+    byline: {
+      position: 'absolute',
+      bottom: 52,
+      fontFamily: 'PlusJakartaSans_700Bold',
+      fontSize: 11,
+      letterSpacing: 1,
+      color: 'rgba(255,255,255,0.4)',
       textAlign: 'center',
     },
   });

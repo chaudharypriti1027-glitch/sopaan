@@ -47,6 +47,24 @@ const EN_ORDINAL_SUFFIX: Record<Intl.LDMLPluralRule, string> = {
   other: 'th',
 };
 
+/** Manual fallback for engines (older Hermes builds) missing `Intl.PluralRules`. */
+function englishOrdinalSuffix(n: number): string {
+  const mod100 = Math.abs(n) % 100;
+  if (mod100 >= 11 && mod100 <= 13) {
+    return 'th';
+  }
+  switch (Math.abs(n) % 10) {
+    case 1:
+      return 'st';
+    case 2:
+      return 'nd';
+    case 3:
+      return 'rd';
+    default:
+      return 'th';
+  }
+}
+
 /** Locale-aware ordinal suffix for ranks/percentiles (e.g. 1st, 2nd, 85वां). */
 export function formatOrdinal(value: number, locale: AppLocale): string {
   const n = Math.round(value);
@@ -56,6 +74,14 @@ export function formatOrdinal(value: number, locale: AppLocale): string {
     return `${formatNumber(n, locale)}वां`;
   }
 
-  const rule = new Intl.PluralRules(intlLocale, { type: 'ordinal' }).select(n);
-  return `${n}${EN_ORDINAL_SUFFIX[rule]}`;
+  if (typeof Intl.PluralRules !== 'function') {
+    return `${n}${englishOrdinalSuffix(n)}`;
+  }
+
+  try {
+    const rule = new Intl.PluralRules(intlLocale, { type: 'ordinal' }).select(n);
+    return `${n}${EN_ORDINAL_SUFFIX[rule]}`;
+  } catch {
+    return `${n}${englishOrdinalSuffix(n)}`;
+  }
 }

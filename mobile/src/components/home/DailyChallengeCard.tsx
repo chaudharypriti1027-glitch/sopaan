@@ -7,7 +7,8 @@ import { Text } from '../Text';
 import { colors } from '../../theme/tokens';
 import { useTheme } from '../../theme';
 import type { HomeFeed } from '../../types/home';
-import { HOME_V2 } from './homeStyles';
+import { HOME_UI } from './homeTheme';
+import { PREMIUM } from '../premium/premiumStyles';
 
 type DailyChallengeCardProps = {
   challenge: HomeFeed['dailyChallenge'];
@@ -33,7 +34,7 @@ export function DailyChallengeCard({ challenge, onPress }: DailyChallengeCardPro
       style={({ pressed }) => [styles.wrap, pressed && styles.pressed]}
     >
       <LinearGradient
-        colors={['#3C38C6', '#221F84']}
+        colors={[...HOME_UI.leagueGradient]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.gradient}
@@ -51,7 +52,7 @@ export function DailyChallengeCard({ challenge, onPress }: DailyChallengeCardPro
           </Text>
         </View>
         <LinearGradient
-          colors={done ? ['rgba(255,255,255,0.25)', 'rgba(255,255,255,0.15)'] : ['#FFC24A', '#F2A516']}
+          colors={done ? ['rgba(255,255,255,0.25)', 'rgba(255,255,255,0.15)'] : ['#E3C97F', '#C29A4E']}
           start={{ x: 0.2, y: 0 }}
           end={{ x: 0.9, y: 1 }}
           style={styles.cta}
@@ -68,9 +69,9 @@ export function DailyChallengeCard({ challenge, onPress }: DailyChallengeCardPro
 function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
     wrap: {
-      borderRadius: HOME_V2.cardRadius,
+      borderRadius: PREMIUM.cardRadius,
       overflow: 'hidden',
-      shadowColor: '#221F84',
+      shadowColor: HOME_UI.shadow,
       shadowOffset: { width: 0, height: 18 },
       shadowOpacity: 0.35,
       shadowRadius: 36,
@@ -132,9 +133,9 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       borderRadius: 13,
       paddingHorizontal: 17,
       paddingVertical: 11,
-      shadowColor: '#F2A516',
+      shadowColor: '#C29A4E',
       shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 0.45,
+      shadowOpacity: 0.4,
       shadowRadius: 16,
       elevation: 4,
     },
@@ -142,7 +143,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       fontSize: 12.5,
       fontFamily: theme.typography.fonts.ui.bold,
       fontWeight: '800',
-      color: '#3A2600',
+      color: '#3A2C10',
     },
     ctaLabelDone: {
       color: colors.white,

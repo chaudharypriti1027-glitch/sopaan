@@ -14,7 +14,7 @@ async function signupUser(overrides = {}) {
   const payload = withPrivacyConsent({
     name: 'Privacy Test User',
     email: 'privacy@example.com',
-    password: 'Password123',
+    password: 'Password123!',
     ...overrides,
   });
 
@@ -48,7 +48,7 @@ describe('Privacy API', () => {
     const response = await request(app).post('/api/auth/signup').send({
       name: 'No Consent',
       email: 'noconsent@example.com',
-      password: 'Password123',
+      password: 'Password123!',
     });
 
     expect(response.status).toBe(400);
@@ -100,7 +100,7 @@ describe('Privacy API', () => {
     const requestDeletion = await request(app)
       .post('/api/privacy/deletion/request')
       .set('Authorization', `Bearer ${token}`)
-      .send({ password: 'Password123' });
+      .send({ password: 'Password123!' });
 
     expect(requestDeletion.status).toBe(200);
     expect(requestDeletion.body.deletionToken).toEqual(expect.any(String));

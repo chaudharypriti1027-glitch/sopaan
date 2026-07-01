@@ -25,16 +25,18 @@ function createStyles() {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 12,
-      marginVertical: 20,
+      marginVertical: 18,
     },
     line: {
       flex: 1,
       height: 1,
-      backgroundColor: '#F1F5F9',
+      backgroundColor: AUTH_UI.border,
     },
     label: {
-      fontSize: 11,
-      fontWeight: '500',
+      fontSize: 10.5,
+      fontWeight: '700',
+      letterSpacing: 0.5,
+      textTransform: 'uppercase',
       color: AUTH_UI.faint,
     },
   });

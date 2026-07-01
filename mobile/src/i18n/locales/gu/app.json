@@ -64,6 +64,7 @@
     "difficultyEasyLabel": "● સરળ",
     "difficultyMediumLabel": "● મધ્યમ",
     "difficultyHardLabel": "● કઠિન",
+    "startTest": "ટેસ્ટ શરૂ કરો",
     "readinessScore": "{{score}}% તૈયારી",
     "streakDays_one": "{{count}}-દિવસની સ્ટ્રીક",
     "streakDays_other": "{{count}}-દિવસની સ્ટ્રીક",

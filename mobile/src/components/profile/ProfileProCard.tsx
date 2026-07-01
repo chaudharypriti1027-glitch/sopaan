@@ -23,14 +23,14 @@ export function ProfileProCard({ onPress }: ProfileProCardProps) {
       style={({ pressed }) => [styles.wrap, pressed && styles.pressed]}
     >
       <LinearGradient
-        colors={['#2E2AB6', '#211F84']}
+        colors={['#2E3766', '#1A1F3B']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.card}
       >
         <View style={styles.decor} />
         <LinearGradient
-          colors={['#FFC24A', '#F2A516']}
+          colors={['#E3C97F', '#C29A4E']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.iconWrap}
@@ -54,7 +54,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     wrap: {
       borderRadius: 22,
       overflow: 'hidden',
-      shadowColor: '#221F84',
+      shadowColor: '#232A4D',
       shadowOffset: { width: 0, height: 18 },
       shadowOpacity: 0.35,
       shadowRadius: 20,
@@ -78,7 +78,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       width: 130,
       height: 130,
       borderRadius: 65,
-      backgroundColor: 'rgba(242,165,22,0.22)',
+      backgroundColor: 'rgba(194,154,78,0.22)',
     },
     iconWrap: {
       width: 48,
@@ -117,7 +117,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       fontSize: 12,
       fontFamily: theme.typography.fonts.ui.bold,
       fontWeight: '800',
-      color: '#211E78',
+      color: '#232A4D',
     },
   });
 }

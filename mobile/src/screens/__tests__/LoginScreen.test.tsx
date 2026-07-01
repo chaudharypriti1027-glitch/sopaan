@@ -3,7 +3,6 @@ import { LoginScreen } from '../LoginScreen';
 import { renderWithProviders } from '../../test/render';
 
 const mockNavigate = jest.fn();
-const mockRequestOtp = jest.fn();
 const mockLogin = jest.fn();
 const mockSetSession = jest.fn();
 
@@ -24,7 +23,6 @@ jest.mock('../../auth/useGoogleSignIn', () => ({
 
 jest.mock('../../api', () => ({
   authApi: {
-    requestOtp: (...args: unknown[]) => mockRequestOtp(...args),
     login: (...args: unknown[]) => mockLogin(...args),
   },
   privacyApi: {
@@ -64,69 +62,55 @@ jest.mock('../../auth/routeAfterSession', () => ({
 describe('LoginScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockRequestOtp.mockResolvedValue({ sent: true });
     mockLogin.mockResolvedValue({
       token: 'token',
       refreshToken: 'refresh',
-      profile: { id: '1', name: 'Test', phone: '+919876543210', state: 'GJ', targetExam: 'SSC', language: 'en', createdAt: '', onboardingComplete: true },
+      profile: {
+        id: '1',
+        name: 'Test',
+        phone: '+919876543210',
+        state: 'GJ',
+        targetExam: 'SSC',
+        language: 'en',
+        createdAt: '',
+        onboardingComplete: true,
+      },
       isNewUser: false,
     });
     mockSetSession.mockResolvedValue(undefined);
   });
 
-  it('keeps Send OTP disabled until phone is valid', () => {
-    const { getByTestId, getByRole } = renderWithProviders(<LoginScreen />);
-
-    fireEvent.press(getByRole('tab', { name: 'Phone' }));
-    fireEvent.changeText(getByTestId('login-phone'), '123');
-    fireEvent.press(getByRole('button', { name: 'Send OTP' }));
-
-    expect(mockRequestOtp).not.toHaveBeenCalled();
+  it('shows a disabled-looking Phone social option that explains it is coming soon', () => {
+    const { getByRole } = renderWithProviders(<LoginScreen />);
+    expect(getByRole('button', { name: 'Phone' })).toBeTruthy();
   });
 
-  it('requests OTP and navigates to Otp screen', async () => {
-    const { getByTestId, getByRole } = renderWithProviders(<LoginScreen />);
-
-    fireEvent.press(getByRole('tab', { name: 'Phone' }));
-    fireEvent.changeText(getByTestId('login-phone'), '9876543210');
-    fireEvent.press(getByRole('button', { name: 'Send OTP' }));
-
-    await waitFor(() => {
-      expect(mockRequestOtp).toHaveBeenCalledWith({ phone: '+919876543210' });
-      expect(mockNavigate).toHaveBeenCalledWith('Otp', { phone: '+919876543210' });
-    });
+  it('shows a forgot password link', () => {
+    const { getByTestId } = renderWithProviders(<LoginScreen />);
+    expect(getByTestId('login-forgot-password')).toBeTruthy();
   });
 
-  it('reveals password mode and submits login', async () => {
+  it('keeps Sign in disabled until email and password are valid', () => {
     const { getByTestId, getByRole } = renderWithProviders(<LoginScreen />);
 
-    fireEvent.press(getByRole('tab', { name: 'Phone' }));
-    fireEvent.changeText(getByTestId('login-phone'), '9876543210');
-    fireEvent.press(getByRole('button', { name: 'Use password instead' }));
-    fireEvent.changeText(getByTestId('login-password'), 'Password1');
-    fireEvent.press(getByRole('button', { name: 'Log in' }));
-
-    await waitFor(() => {
-      expect(mockLogin).toHaveBeenCalledWith({
-        phone: '+919876543210',
-        password: 'Password1',
-      });
-      expect(mockSetSession).toHaveBeenCalled();
-    });
+    fireEvent.changeText(getByTestId('login-email'), 'bad');
+    fireEvent.changeText(getByTestId('login-password'), 'short');
+    expect(getByRole('button', { name: 'Sign in' })).toBeDisabled();
   });
 
   it('logs in with email and password', async () => {
     const { getByTestId, getByRole } = renderWithProviders(<LoginScreen />);
 
     fireEvent.changeText(getByTestId('login-email'), 'user@example.com');
-    fireEvent.changeText(getByTestId('login-password'), 'Password1');
-    fireEvent.press(getByRole('button', { name: 'Log in' }));
+    fireEvent.changeText(getByTestId('login-password'), 'Password123!');
+    fireEvent.press(getByRole('button', { name: 'Sign in' }));
 
     await waitFor(() => {
       expect(mockLogin).toHaveBeenCalledWith({
         email: 'user@example.com',
-        password: 'Password1',
+        password: 'Password123!',
       });
+      expect(mockSetSession).toHaveBeenCalled();
     });
   });
 

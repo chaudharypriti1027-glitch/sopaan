@@ -25,7 +25,7 @@ async function signupAndGetToken() {
   const response = await request(app).post('/api/auth/signup').send(withPrivacyConsent({
     name: 'Test Taker',
     email: `taker_${Date.now()}@example.com`,
-    password: 'Password123',
+    password: 'Password123!',
   }));
 
   return {

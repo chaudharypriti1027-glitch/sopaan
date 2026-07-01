@@ -7,6 +7,8 @@ import { useFormat } from '../../i18n/useFormat';
 import { useTheme } from '../../theme';
 import type { Profile } from '../../types/auth';
 import { homePremiumCard } from '../home/homeStyles';
+import { MENU_TONE_STYLES } from '../premium/premiumIconTokens';
+import { PREMIUM } from '../premium/premiumStyles';
 
 type DetailRow = {
   id: string;
@@ -75,13 +77,6 @@ function buildRows(
   ];
 }
 
-const toneStyles = {
-  indigo: { bg: '#ECEBFB', fg: '#3A36CC' },
-  teal: { bg: '#DBF4F0', fg: '#0FA896' },
-  gold: { bg: '#FDF1D8', fg: '#C97E00' },
-  coral: { bg: '#FDE6E4', fg: '#F2554B' },
-} as const;
-
 type ProfileAccountDetailsProps = {
   profile: Profile;
 };
@@ -96,7 +91,7 @@ export function ProfileAccountDetails({ profile }: ProfileAccountDetailsProps) {
   return (
     <View style={styles.card}>
       {rows.map((row, index) => {
-        const tone = toneStyles[row.tone];
+        const tone = MENU_TONE_STYLES[row.tone];
         const Icon = row.icon;
         return (
           <View
@@ -131,7 +126,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     },
     rowBorder: {
       borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: '#F4F5FA',
+      borderTopColor: PREMIUM.hairline,
     },
     icon: {
       width: 38,

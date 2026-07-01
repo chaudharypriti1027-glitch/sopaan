@@ -1,16 +1,26 @@
 import type { ViewStyle } from 'react-native';
 import type { Theme } from '../../theme/types';
 
-/** Premium v2 design tokens — shared across Home, Profile, and all screens. */
+/** Premium v4 — "Classic Premium" navy/gold/sage design tokens (reference UI). */
 export const PREMIUM = {
-  bg: '#F4F6FB',
+  bg: '#F4F1E9',
   cardRadius: 22,
   bodyLift: -34,
-  headerGradient: ['#4844E6', '#322EAE', '#221F84'] as const,
-  sectionLabel: '#A2A5BC',
-  hairline: '#F4F5FA',
+  headerGradient: ['#2E3766', '#232A4D', '#1A1F3B'] as const,
+  heroGradient: ['#2E3766', '#232A4D', '#1A1F3B'] as const,
+  sectionLabel: '#B3B4C2',
+  hairline: '#F3F0E8',
   tabBottomPadding: 120,
   stackBottomPadding: 32,
+  accent: '#232A4D',
+  accentSoft: '#E9EBF3',
+  gold: '#C29A4E',
+  goldDeep: '#A67C33',
+  goldSoft: '#F4EBD8',
+  sage: '#5F8A7B',
+  sageDeep: '#4C7264',
+  sageSoft: '#E4EDE9',
+  ink: '#1C1E2E',
 } as const;
 
 /** @deprecated use PREMIUM — kept for Home/Profile imports */
@@ -21,12 +31,13 @@ export function premiumCard(theme: Theme): ViewStyle {
   return {
     backgroundColor: theme.colors.surface.default,
     borderRadius: PREMIUM.cardRadius,
-    borderWidth: 0,
+    borderWidth: 1,
+    borderColor: 'rgba(236,232,221,0.9)',
     shadowColor: theme.colors.shadow.color,
-    shadowOffset: { width: 0, height: 14 },
-    shadowOpacity: 0.14,
-    shadowRadius: 34,
-    elevation: 6,
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.1,
+    shadowRadius: 26,
+    elevation: 5,
   };
 }
 
@@ -37,10 +48,10 @@ export const homePremiumCard = premiumCard;
 export function premiumTileShadow(theme: Theme): ViewStyle {
   return {
     shadowColor: theme.colors.shadow.color,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.12,
-    shadowRadius: 20,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.09,
+    shadowRadius: 16,
+    elevation: 3,
   };
 }
 
@@ -52,7 +63,7 @@ export function premiumGlowShadow(color: string): ViewStyle {
   return {
     shadowColor: color,
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.45,
+    shadowOpacity: 0.35,
     shadowRadius: 14,
     elevation: 6,
   };
@@ -65,10 +76,10 @@ export const homeGlowShadow = premiumGlowShadow;
 export function premiumNavShadow(theme: Theme): ViewStyle {
   return {
     shadowColor: theme.colors.shadow.color,
-    shadowOffset: { width: 0, height: 20 },
-    shadowOpacity: 0.18,
-    shadowRadius: 40,
-    elevation: 12,
+    shadowOffset: { width: 0, height: 16 },
+    shadowOpacity: 0.16,
+    shadowRadius: 32,
+    elevation: 10,
   };
 }
 
