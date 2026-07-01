@@ -21,7 +21,7 @@ export function formatOtpError(error: ApiError): string {
     return "That code didn't work. Check the SMS and try again.";
   }
 
-  if (error.code === 'RATE_LIMITED' || error.status === 429) {
+  if (error.code === 'RATE_LIMITED' || error.code === 'OTP_RATE_LIMIT_EXCEEDED' || error.status === 429) {
     return 'Too many requests. Please wait a moment and try again.';
   }
 

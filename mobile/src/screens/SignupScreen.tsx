@@ -4,7 +4,7 @@ import Animated from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
-import { Clock3 } from 'lucide-react-native';
+import { Smartphone } from 'lucide-react-native';
 import {
   AUTH_UI,
   AuthAnimatedSection,
@@ -311,10 +311,16 @@ function SignupRegistration() {
         onPress={() => void handleGoogleSignIn()}
       />
 
-      <View style={styles.otpNote}>
-        <Clock3 size={12} color={AUTH_UI.faint} strokeWidth={2} />
-        <Text style={styles.otpNoteText}>{t('beta.otpNote')}</Text>
-      </View>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={t('signup.continueWithOtp')}
+        onPress={() => navigation.navigate('OtpLogin')}
+        style={({ pressed }) => [styles.otpNote, pressed && styles.otpNotePressed]}
+        testID="signup-continue-with-otp"
+      >
+        <Smartphone size={12} color={AUTH_UI.accent} strokeWidth={2} />
+        <Text style={styles.otpNoteText}>{t('signup.continueWithOtp')}</Text>
+      </Pressable>
     </AuthScreen>
   );
 }
@@ -370,13 +376,17 @@ function createRegistrationStyles() {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: 5,
+      gap: 6,
       marginTop: 16,
+      minHeight: 32,
+    },
+    otpNotePressed: {
+      opacity: 0.7,
     },
     otpNoteText: {
-      fontSize: 11,
-      color: AUTH_UI.faint,
-      fontWeight: '500',
+      fontSize: 12,
+      color: AUTH_UI.accent,
+      fontWeight: '700',
     },
   });
 }

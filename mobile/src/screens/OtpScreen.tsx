@@ -71,7 +71,7 @@ export function OtpScreen() {
   const { t } = useTranslation('auth');
   const navigation = useNavigation<OtpNav>();
   const route = useRoute<OtpRoute>();
-  const { phone } = route.params;
+  const { phone, privacyConsent } = route.params;
   const setSession = useAuthStore((state) => state.setSession);
   const reducedMotion = useReducedMotion();
 
@@ -96,7 +96,7 @@ export function OtpScreen() {
     setError(null);
 
     try {
-      const result = await authApi.verifyOtp({ phone, code });
+      const result = await authApi.verifyOtp({ phone, code, privacyConsent });
       setSuccess(true);
 
       const holdMs = reducedMotion ? 120 : SUCCESS_HOLD_MS;
@@ -114,7 +114,7 @@ export function OtpScreen() {
     } finally {
       setVerifying(false);
     }
-  }, [code, verifying, success, phone, reducedMotion, setSession, navigation]);
+  }, [code, verifying, success, phone, privacyConsent, reducedMotion, setSession, navigation]);
 
   useEffect(() => {
     if (code.length === 6) {

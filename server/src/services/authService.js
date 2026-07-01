@@ -246,7 +246,7 @@ export async function requestOtp(phone) {
   return { sent: true };
 }
 
-export async function verifyOtp(phone, code, { referralCode, installId } = {}) {
+export async function verifyOtp(phone, code, { referralCode, installId, privacyConsent } = {}) {
   const normalized = normalizeIndianPhone(phone);
   const trimmedCode = String(code).trim();
 
@@ -262,6 +262,10 @@ export async function verifyOtp(phone, code, { referralCode, installId } = {}) {
       phone: normalized,
       name: 'Student',
       onboardingComplete: false,
+      // Consent is optional here for backward compatibility with older clients
+      // that only ever sent { phone, code }; the current mobile app always
+      // collects it before requesting an OTP and passes it through.
+      ...(privacyConsent?.aiProcessing ? { privacyConsent: buildConsentRecord(privacyConsent) } : {}),
     });
 
     try {

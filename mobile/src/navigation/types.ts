@@ -16,8 +16,14 @@ export type AuthStackParamList = {
   ProfileSetup: undefined;
   Signup: undefined;
   Login: undefined;
-  Otp: { phone: string };
-  /** @deprecated use Otp */
+  Otp: {
+    phone: string;
+    privacyConsent?: {
+      policyVersion: string;
+      aiProcessing: true;
+      marketing?: boolean;
+    };
+  };
   OtpLogin: undefined;
 };
 

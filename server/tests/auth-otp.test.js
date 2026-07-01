@@ -63,6 +63,29 @@ describe('Auth OTP API', () => {
     expect(await OtpToken.findOne({ phone: PHONE })).toBeNull();
   });
 
+  it('POST /verify-otp stores privacy consent for a new user when provided', async () => {
+    const code = '222333';
+    await OtpToken.create({
+      phone: PHONE,
+      codeHash: await bcrypt.hash(code, 10),
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+      attempts: 0,
+    });
+
+    const response = await request(app).post('/api/auth/verify-otp').send({
+      phone: PHONE_RAW,
+      code,
+      privacyConsent: { policyVersion: '2025-06-01', aiProcessing: true, marketing: false },
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.body.isNewUser).toBe(true);
+
+    const user = await User.findOne({ phone: PHONE });
+    expect(user?.privacyConsent?.policyVersion).toBe('2025-06-01');
+    expect(user?.privacyConsent?.acceptedAt).toBeTruthy();
+  });
+
   it('POST /verify-otp returns isNewUser false for existing user', async () => {
     await User.create({ name: 'Existing', phone: PHONE, onboardingComplete: true });
 

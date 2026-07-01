@@ -124,7 +124,7 @@ export function LoginScreen() {
   };
 
   const handlePhonePress = () => {
-    Alert.alert(t('beta.comingSoonTitle'), t('beta.phoneOtpBody'));
+    navigation.navigate('OtpLogin');
   };
 
   const handleForgotPassword = () => {

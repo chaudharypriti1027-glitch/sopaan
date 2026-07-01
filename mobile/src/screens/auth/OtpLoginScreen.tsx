@@ -1,11 +1,23 @@
-import { useMemo } from 'react';
-import { StyleSheet } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
-import { AuthBrandHeader, AuthScreen, ComingSoonNotice, GhostButton } from '../../components/auth';
+import {
+  AuthAnimatedSection,
+  AuthBrandHeader,
+  AuthPremiumField,
+  AuthScreen,
+  AuthTermsBox,
+  GhostButton,
+  PrimaryButton,
+  useShakeOnError,
+} from '../../components/auth';
 import { Text } from '../../components/Text';
-import { AUTH_UI } from '../../components/auth/authTheme';
+import { authApi, parseApiError, privacyApi } from '../../api';
+import { formatOtpError } from '../../auth/otpErrors';
+import { formatIndianPhone, isValidIndianMobile } from '../../lib/phone';
 import type { AuthStackParamList } from '../../navigation/types';
 
 type OtpLoginNav = NativeStackNavigationProp<AuthStackParamList, 'OtpLogin'>;
@@ -15,35 +27,117 @@ export function OtpLoginScreen() {
   const { t } = useTranslation('auth');
   const styles = useMemo(() => createStyles(), []);
 
+  const [digits, setDigits] = useState('');
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [policyVersion, setPolicyVersion] = useState('2025-06-01');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    void privacyApi.getPolicy().then((policy) => setPolicyVersion(policy.version)).catch(() => {});
+  }, []);
+
+  const shakeStyle = useShakeOnError(error);
+  const phoneValid = isValidIndianMobile(digits);
+  const canSubmit = phoneValid && acceptedTerms && !loading;
+
+  const handleSendOtp = async () => {
+    setError(null);
+
+    if (!phoneValid) {
+      setError(t('otp.invalidPhone'));
+      return;
+    }
+
+    if (!acceptedTerms) {
+      setError(t('otp.consentRequired'));
+      return;
+    }
+
+    const phone = formatIndianPhone(digits);
+    setLoading(true);
+
+    try {
+      await authApi.requestOtp({ phone });
+      navigation.navigate('Otp', {
+        phone,
+        privacyConsent: {
+          policyVersion,
+          aiProcessing: true,
+          marketing: false,
+        },
+      });
+    } catch (err) {
+      setError(formatOtpError(parseApiError(err)));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <AuthScreen
+      scrollProps={{ keyboardShouldPersistTaps: 'handled' }}
       header={
-        <AuthBrandHeader title={t('otp.title')} subtitle={t('beta.phoneOtpBody')} />
+        <AuthBrandHeader title={t('otp.phoneVerification')} subtitle={t('otp.subtitle')} />
       }
       footer={
-        <GhostButton
-          label={t('beta.backToEmailLogin')}
-          onPress={() => navigation.navigate('Login')}
-        />
+        <View style={styles.footer}>
+          <PrimaryButton
+            label={t('otp.request')}
+            loading={loading}
+            disabled={!canSubmit}
+            onPress={() => void handleSendOtp()}
+            testID="otp-login-send"
+          />
+          <GhostButton
+            label={t('beta.backToEmailLogin')}
+            disabled={loading}
+            onPress={() => navigation.navigate('Login')}
+          />
+        </View>
       }
     >
-      <ComingSoonNotice
-        title={t('beta.comingSoonTitle')}
-        body={t('beta.phoneOtpBody')}
-      />
-      <Text style={styles.hint}>{t('beta.betaSignupHint')}</Text>
+      <Animated.View style={shakeStyle}>
+        <AuthAnimatedSection index={0}>
+          <AuthPremiumField
+            dense
+            variant="phone"
+            label={t('otp.phone')}
+            value={digits}
+            placeholder={t('otp.phonePlaceholder')}
+            onChangeText={(value) => {
+              setDigits(value);
+              if (error) setError(null);
+            }}
+            editable={!loading}
+            testID="otp-login-phone"
+          />
+        </AuthAnimatedSection>
+
+        <AuthTermsBox
+          testID="otp-login-consent"
+          checked={acceptedTerms}
+          onToggle={() => setAcceptedTerms((v) => !v)}
+          policyVersion={policyVersion}
+        />
+
+        {error ? <Text style={styles.error}>{error}</Text> : null}
+      </Animated.View>
     </AuthScreen>
   );
 }
 
 function createStyles() {
   return StyleSheet.create({
-    hint: {
-      fontSize: 13,
-      lineHeight: 20,
-      color: AUTH_UI.muted,
+    footer: {
+      gap: 10,
+    },
+    error: {
+      fontSize: 12,
+      color: '#C4634F',
       textAlign: 'center',
-      marginTop: 8,
+      marginTop: 4,
+      marginBottom: 8,
     },
   });
 }

@@ -26,7 +26,11 @@ export async function requestOtp(req, res) {
 }
 
 export async function verifyOtp(req, res) {
-  const result = await authService.verifyOtp(req.body.phone, req.body.code);
+  const result = await authService.verifyOtp(req.body.phone, req.body.code, {
+    referralCode: req.body.referralCode,
+    installId: req.body.installId,
+    privacyConsent: req.body.privacyConsent,
+  });
   res.status(200).json(result);
 }
 
@@ -41,6 +45,7 @@ export async function verifyOtpLegacy(req, res) {
   const result = await authService.verifyOtp(req.body.phone, req.body.code, {
     referralCode: req.body.referralCode,
     installId: req.body.installId,
+    privacyConsent: req.body.privacyConsent,
   });
   res.status(200).json(authService.toLegacyAuthSession(result));
 }

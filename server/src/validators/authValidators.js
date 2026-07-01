@@ -76,6 +76,9 @@ export const requestOtpSchema = z.object({
 export const verifyOtpSchema = z.object({
   phone: indianPhoneSchema,
   code: otpCodeSchema,
+  referralCode: z.string().trim().min(4).max(32).optional(),
+  installId: z.string().trim().min(8).max(128).optional(),
+  privacyConsent: privacyConsentInputSchema.optional(),
 });
 
 /** @deprecated prefer requestOtpSchema */
@@ -88,9 +91,5 @@ export const googleAuthSchema = z.object({
   privacyConsent: privacyConsentInputSchema.optional(),
 });
 
-/** Legacy OTP verify — optional referral / consent fields for old clients. */
-export const otpVerifySchema = verifyOtpSchema.extend({
-  referralCode: z.string().trim().min(4).max(32).optional(),
-  installId: z.string().trim().min(8).max(128).optional(),
-  privacyConsent: privacyConsentInputSchema.optional(),
-});
+/** @deprecated prefer verifyOtpSchema */
+export const otpVerifySchema = verifyOtpSchema;

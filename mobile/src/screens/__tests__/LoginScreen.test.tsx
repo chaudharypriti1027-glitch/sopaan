@@ -80,9 +80,12 @@ describe('LoginScreen', () => {
     mockSetSession.mockResolvedValue(undefined);
   });
 
-  it('shows a disabled-looking Phone social option that explains it is coming soon', () => {
+  it('navigates to phone/OTP login when the Phone option is pressed', () => {
     const { getByRole } = renderWithProviders(<LoginScreen />);
-    expect(getByRole('button', { name: 'Phone' })).toBeTruthy();
+
+    fireEvent.press(getByRole('button', { name: 'Phone' }));
+
+    expect(mockNavigate).toHaveBeenCalledWith('OtpLogin');
   });
 
   it('shows a forgot password link', () => {
