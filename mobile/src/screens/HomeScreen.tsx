@@ -17,9 +17,11 @@ import {
   HomeHeroScroll,
   HomeOfflineBanner,
   HomeSkeleton,
+  HomeTopBanner,
   HOME_UI,
 } from '../components/home';
 import { useHomeFeed } from '../hooks/useHomeFeed';
+import { useHomeBanner } from '../hooks/useHomeBanner';
 import { navigateHomeDeeplink } from '../navigation/homeDeeplink';
 import { navigateHomeFeature } from '../navigation/navigateHomeFeature';
 import type { HomeFeatureLink } from '../navigation/homeFeatureConfig';
@@ -49,6 +51,7 @@ function HomeStudentScreen() {
   const styles = useMemo(() => createStyles(), []);
 
   const { data: feed, isLoading, isError, isOffline, refetch, isRefetching } = useHomeFeed();
+  const { data: banner } = useHomeBanner();
 
   useScreenPerf('Home', {
     isContentReady: Boolean(feed ?? isError),
@@ -147,6 +150,10 @@ function HomeStudentScreen() {
           />
         }
       >
+        {banner ? (
+          <HomeTopBanner banner={banner} onPress={handleDeeplinkWithHaptic} />
+        ) : null}
+
         <HomeHeroScroll
           greeting={feed.greeting}
           streak={feed.streak}

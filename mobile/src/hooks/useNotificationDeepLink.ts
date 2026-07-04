@@ -6,6 +6,7 @@ import {
   navigateFromNotificationPayload,
   type NotificationPayload,
 } from '../notifications/notificationDeepLinks';
+import { trackNotificationOpen } from '../api/notifications';
 import { isRemotePushSupported, loadNotificationsModule } from '../notifications/notificationsModule';
 
 function extractPayload(response: { notification?: { request?: { content?: { data?: unknown } } } }) {
@@ -16,6 +17,24 @@ function extractPayload(response: { notification?: { request?: { content?: { dat
   }
 
   return raw as NotificationPayload;
+}
+
+function trackPushOpen(payload: NotificationPayload | null) {
+  if (!payload) {
+    return;
+  }
+
+  const notificationId =
+    typeof payload.notificationId === 'string' ? payload.notificationId : undefined;
+  const campaignId = typeof payload.campaignId === 'string' ? payload.campaignId : undefined;
+
+  if (!notificationId && !campaignId) {
+    return;
+  }
+
+  void trackNotificationOpen({ notificationId, campaignId }).catch(() => {
+    // best-effort analytics
+  });
 }
 
 export function useNotificationDeepLink() {
@@ -40,12 +59,14 @@ export function useNotificationDeepLink() {
       const lastPayload = lastResponse ? extractPayload(lastResponse) : null;
 
       if (lastPayload) {
+        trackPushOpen(lastPayload);
         navigateFromNotificationPayload(navigation, lastPayload);
       }
 
       subscription = Notifications.addNotificationResponseReceivedListener((response) => {
         const payload = extractPayload(response);
         if (payload) {
+          trackPushOpen(payload);
           navigateFromNotificationPayload(navigation, payload);
         }
       });

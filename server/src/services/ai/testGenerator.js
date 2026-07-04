@@ -178,7 +178,7 @@ export async function generateMultiSectionExam({
   difficulty,
   sections,
   userId,
-  publish = false,
+  _publish = false,
 }) {
   const sectionPreviews = [];
   const allQuestionIds = [];
@@ -214,13 +214,13 @@ export async function generateMultiSectionExam({
     type: 'mock',
     examTag,
     createdBy: userId,
-    status: publish ? 'published' : 'draft',
+    status: 'pending_review',
   });
 
   const populated = await test.populate('questions');
 
   return {
-    preview: !publish,
+    preview: true,
     test: populated,
     sections: sectionPreviews,
     totalQuestions: allQuestionIds.length,

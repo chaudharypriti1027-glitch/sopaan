@@ -24,6 +24,7 @@ import { AiCallLog } from '../../models/AiCallLog.js';
 import { AiDoubtCache } from '../../models/AiDoubtCache.js';
 import { AiDoubtAnswer } from '../../models/AiDoubtAnswer.js';
 import { AiModelFeedback } from '../../models/AiModelFeedback.js';
+import { AnswerEvaluation } from '../../models/AnswerEvaluation.js';
 import { SubscriptionEntitlement } from '../../models/SubscriptionEntitlement.js';
 import { User } from '../../models/User.js';
 import { privacyConfig } from '../../config/privacyConfig.js';
@@ -60,6 +61,7 @@ export async function eraseUserData(userId) {
     AiDoubtCache.deleteMany({ userId: userObjectId }),
     AiDoubtAnswer.deleteMany({ userId: userObjectId }),
     AiModelFeedback.deleteMany({ userId: userObjectId }),
+    AnswerEvaluation.deleteMany({ userId: userObjectId }),
     StudentProfile.deleteOne({ userId: userObjectId }),
     Referral.deleteMany({ $or: [{ referrerId: userObjectId }, { refereeId: userObjectId }] }),
     SubscriptionEntitlement.deleteMany({ userId: userObjectId }),

@@ -31,7 +31,7 @@ export function enrichProfileFromAccessToken(profile: Profile, token: string): P
   }
 
   const claims = readJwtPayload(token);
-  if (claims?.role === 'admin' || claims?.role === 'mentor') {
+  if (claims?.role === 'admin' || claims?.role === 'creator' || claims?.role === 'moderator') {
     return {
       ...profile,
       role: claims.role,

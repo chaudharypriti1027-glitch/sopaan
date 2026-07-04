@@ -13,6 +13,7 @@ export const JOB_NAMES = Object.freeze({
   WEEKLY_RECAP: 'weekly-recap',
   OBSERVABILITY_SPIKE_CHECK: 'observability-spike-check',
   DAILY_LEAGUE_MAINTENANCE: 'daily-league-maintenance',
+  ADMIN_NOTIFICATION_SEND: 'admin-notification-send',
 });
 
 export const jobConfig = Object.freeze({

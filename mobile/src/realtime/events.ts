@@ -23,6 +23,23 @@ export const SOCKET_EVENTS = {
   REJOIN: 'realtime:rejoin',
 } as const;
 
+export const LIVE_NS_EVENTS = {
+  JOIN: 'join',
+  LEAVE: 'leave',
+  PRESENCE: 'presence',
+  CHAT_MESSAGE: 'chat:message',
+  CHAT_HISTORY: 'chat:history',
+  REACTION: 'reaction',
+  HAND_RAISE: 'hand:raise',
+  HAND_LOWER: 'hand:lower',
+  HAND_NOTIFY: 'hand:notify',
+  HOST_MUTE_ALL: 'host:muteAll',
+  HOST_ANNOUNCEMENT: 'host:announcement',
+  DEV_STREAM_REQUEST: 'dev-stream:request',
+  DEV_STREAM_SIGNAL: 'dev-stream:signal',
+  ERROR: 'error',
+} as const;
+
 export type LiveMockLeaderboardEntry = {
   rank: number;
   userId: string;
@@ -62,4 +79,27 @@ export type LiveClassReaction = {
   kind: 'raise_hand' | 'emoji';
   value?: string | null;
   createdAt: string;
+};
+
+export type LiveChatMessage = {
+  id: string;
+  classId: string;
+  userId: string;
+  userName: string;
+  text: string;
+  createdAt: string;
+};
+
+export type LiveReaction = {
+  classId: string;
+  userId: string;
+  userName: string;
+  emoji: string;
+  createdAt: string;
+};
+
+export type LivePresenceParticipant = {
+  userId: string;
+  name: string;
+  isHost?: boolean;
 };

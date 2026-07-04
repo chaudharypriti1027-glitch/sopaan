@@ -11,11 +11,20 @@ import {
   refreshSocketAuth,
 } from '../realtime/socketManager';
 import {
+  connectLiveSocket,
+  disconnectLiveSocket,
+  getLiveSocket,
+  isLiveSocketConnected,
+} from '../realtime/liveSocket';
+import {
+  LIVE_NS_EVENTS,
   SOCKET_EVENTS,
   type GroupChatError,
   type GroupChatMessage,
-  type LiveClassReaction,
+  type LiveChatMessage,
   type LiveMockLeaderboardPayload,
+  type LivePresenceParticipant,
+  type LiveReaction,
 } from '../realtime/events';
 
 export function useSocketConnection() {
@@ -196,97 +205,216 @@ export async function refreshRealtimeAuth() {
 }
 
 export function useLiveClassChat(liveClassId?: string) {
-  const connected = useSocketStatus();
-  const { user } = useAuth();
-  const [messages, setMessages] = useState<GroupChatMessage[]>([]);
+  const { user, isAuthenticated } = useAuth();
+  const [liveConnected, setLiveConnected] = useState(isLiveSocketConnected());
+  const [joinedClass, setJoinedClass] = useState(false);
+  const [messages, setMessages] = useState<LiveChatMessage[]>([]);
   const [error, setError] = useState<GroupChatError | null>(null);
-  const [reactions, setReactions] = useState<LiveClassReaction[]>([]);
+  const [reactions, setReactions] = useState<LiveReaction[]>([]);
+  const [presenceCount, setPresenceCount] = useState(0);
+  const [participants, setParticipants] = useState<LivePresenceParticipant[]>([]);
+  const [muteAllSignal, setMuteAllSignal] = useState(0);
+  const [hostAnnouncement, setHostAnnouncement] = useState<string | null>(null);
+  const [handRaised, setHandRaised] = useState(false);
 
   useEffect(() => {
-    const socket = getSocket();
-
-    if (!liveClassId || !socket) {
+    if (!isAuthenticated) {
+      disconnectLiveSocket();
+      setLiveConnected(false);
+      setJoinedClass(false);
       return;
     }
 
-    const onHistory = (history: GroupChatMessage[]) => {
-      setMessages(history);
-    };
+    void connectLiveSocket(getAccessToken);
+  }, [isAuthenticated]);
 
-    const onMessage = (message: GroupChatMessage) => {
-      const roomId = message.groupId;
-      if (roomId === liveClassId) {
-        setMessages((current) => [...current, message]);
-      }
-    };
-
-    const onError = (payload: GroupChatError) => {
-      if (!payload.liveClassId || payload.liveClassId === liveClassId) {
-        setError(payload);
-      }
-    };
-
-    const onReaction = (payload: LiveClassReaction) => {
-      if (payload.liveClassId === liveClassId) {
-        setReactions((current) => [...current.slice(-19), payload]);
-      }
-    };
-
-    socket.on(SOCKET_EVENTS.CLASS_HISTORY, onHistory);
-    socket.on(SOCKET_EVENTS.CLASS_MESSAGE_NEW, onMessage);
-    socket.on(SOCKET_EVENTS.CLASS_ERROR, onError);
-    socket.on(SOCKET_EVENTS.CLASS_REACTION_NEW, onReaction);
-
-    const join = () => {
-      socket.emit(SOCKET_EVENTS.CLASS_JOIN, { liveClassId });
-    };
-
-    if (socket.connected) {
-      join();
-    } else {
-      socket.once('connect', join);
+  useEffect(() => {
+    if (!liveClassId) {
+      return;
     }
 
-    const rejoin = () => join();
-    onSocketReconnect(rejoin);
+    let cancelled = false;
+
+    const bindSocket = (socket: NonNullable<ReturnType<typeof getLiveSocket>>) => {
+      const onConnect = () => {
+        if (!cancelled) {
+          setLiveConnected(true);
+        }
+      };
+
+      const onDisconnect = () => {
+        if (!cancelled) {
+          setLiveConnected(false);
+          setJoinedClass(false);
+        }
+      };
+
+      const onHistory = ({
+        classId,
+        messages: history,
+      }: {
+        classId: string;
+        messages: LiveChatMessage[];
+      }) => {
+        if (classId === liveClassId) {
+          setMessages(history);
+          setJoinedClass(true);
+        }
+      };
+
+      const onMessage = (message: LiveChatMessage) => {
+        if (message.classId === liveClassId) {
+          setMessages((current) => [...current, message]);
+        }
+      };
+
+      const onPresence = ({
+        classId,
+        count,
+        participants: nextParticipants,
+      }: {
+        classId: string;
+        count: number;
+        participants: LivePresenceParticipant[];
+      }) => {
+        if (classId === liveClassId) {
+          setPresenceCount(count);
+          setParticipants(nextParticipants);
+          setJoinedClass(true);
+        }
+      };
+
+      const onReaction = (payload: LiveReaction) => {
+        if (payload.classId === liveClassId) {
+          setReactions((current) => [...current.slice(-19), payload]);
+        }
+      };
+
+      const onMuteAll = ({ classId }: { classId: string }) => {
+        if (classId === liveClassId) {
+          setMuteAllSignal((value) => value + 1);
+        }
+      };
+
+      const onAnnouncement = ({ classId, message }: { classId: string; message: string }) => {
+        if (classId === liveClassId) {
+          setHostAnnouncement(message);
+        }
+      };
+
+      const onError = (payload: GroupChatError & { classId?: string }) => {
+        if (!payload.classId || payload.classId === liveClassId) {
+          setError(payload);
+        }
+      };
+
+      const join = () => {
+        socket.emit(LIVE_NS_EVENTS.JOIN, { classId: liveClassId });
+      };
+
+      socket.on('connect', onConnect);
+      socket.on('disconnect', onDisconnect);
+      socket.on(LIVE_NS_EVENTS.CHAT_HISTORY, onHistory);
+      socket.on(LIVE_NS_EVENTS.CHAT_MESSAGE, onMessage);
+      socket.on(LIVE_NS_EVENTS.PRESENCE, onPresence);
+      socket.on(LIVE_NS_EVENTS.REACTION, onReaction);
+      socket.on(LIVE_NS_EVENTS.HOST_MUTE_ALL, onMuteAll);
+      socket.on(LIVE_NS_EVENTS.HOST_ANNOUNCEMENT, onAnnouncement);
+      socket.on(LIVE_NS_EVENTS.ERROR, onError);
+
+      if (socket.connected) {
+        setLiveConnected(true);
+        join();
+      } else {
+        socket.once('connect', join);
+      }
+
+      return () => {
+        socket.off('connect', onConnect);
+        socket.off('disconnect', onDisconnect);
+        socket.off(LIVE_NS_EVENTS.CHAT_HISTORY, onHistory);
+        socket.off(LIVE_NS_EVENTS.CHAT_MESSAGE, onMessage);
+        socket.off(LIVE_NS_EVENTS.PRESENCE, onPresence);
+        socket.off(LIVE_NS_EVENTS.REACTION, onReaction);
+        socket.off(LIVE_NS_EVENTS.HOST_MUTE_ALL, onMuteAll);
+        socket.off(LIVE_NS_EVENTS.HOST_ANNOUNCEMENT, onAnnouncement);
+        socket.off(LIVE_NS_EVENTS.ERROR, onError);
+        socket.off('connect', join);
+        socket.emit(LIVE_NS_EVENTS.LEAVE, { classId: liveClassId });
+        setHandRaised(false);
+        setJoinedClass(false);
+      };
+    };
+
+    let cleanup: (() => void) | undefined;
+    const existing = getLiveSocket();
+
+    if (existing) {
+      cleanup = bindSocket(existing);
+    } else {
+      void connectLiveSocket(getAccessToken).then((socket) => {
+        if (cancelled || !socket) {
+          return;
+        }
+
+        cleanup = bindSocket(socket);
+      });
+    }
 
     return () => {
-      socket.off(SOCKET_EVENTS.CLASS_HISTORY, onHistory);
-      socket.off(SOCKET_EVENTS.CLASS_MESSAGE_NEW, onMessage);
-      socket.off(SOCKET_EVENTS.CLASS_ERROR, onError);
-      socket.off(SOCKET_EVENTS.CLASS_REACTION_NEW, onReaction);
-      socket.off('connect', join);
-      offSocketReconnect();
-      socket.emit(SOCKET_EVENTS.CLASS_LEAVE, { liveClassId });
+      cancelled = true;
+      cleanup?.();
     };
-  }, [liveClassId, connected]);
+  }, [liveClassId]);
 
   const sendMessage = useCallback(
     (text: string): boolean => {
-      const socket = getSocket();
+      const socket = getLiveSocket();
       if (!liveClassId || !socket?.connected) {
         return false;
       }
 
       setError(null);
-      socket.emit(SOCKET_EVENTS.CLASS_MESSAGE, { liveClassId, text });
+      socket.emit(LIVE_NS_EVENTS.CHAT_MESSAGE, { classId: liveClassId, text });
       return true;
     },
     [liveClassId],
   );
 
   const sendReaction = useCallback(
-    (kind: LiveClassReaction['kind'], value?: string) => {
-      const socket = getSocket();
+    (emoji: string) => {
+      const socket = getLiveSocket();
       if (!liveClassId || !socket?.connected) {
         return false;
       }
 
-      socket.emit(SOCKET_EVENTS.CLASS_REACTION, { liveClassId, kind, value });
+      socket.emit(LIVE_NS_EVENTS.REACTION, { classId: liveClassId, emoji });
       return true;
     },
     [liveClassId],
   );
+
+  const raiseHand = useCallback(() => {
+    const socket = getLiveSocket();
+    if (!liveClassId || !socket?.connected) {
+      return false;
+    }
+
+    socket.emit(LIVE_NS_EVENTS.HAND_RAISE, { classId: liveClassId });
+    setHandRaised(true);
+    return true;
+  }, [liveClassId]);
+
+  const lowerHand = useCallback(() => {
+    const socket = getLiveSocket();
+    if (!liveClassId || !socket?.connected) {
+      return false;
+    }
+
+    socket.emit(LIVE_NS_EVENTS.HAND_LOWER, { classId: liveClassId });
+    setHandRaised(false);
+    return true;
+  }, [liveClassId]);
 
   return {
     messages,
@@ -294,7 +422,14 @@ export function useLiveClassChat(liveClassId?: string) {
     error,
     sendMessage,
     sendReaction,
+    raiseHand,
+    lowerHand,
+    handRaised,
+    presenceCount,
+    participants,
+    muteAllSignal,
+    hostAnnouncement,
     currentUserId: user?.id,
-    connected,
+    connected: liveConnected && joinedClass,
   };
 }

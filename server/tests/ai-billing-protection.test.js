@@ -1,7 +1,8 @@
 import { beforeAll, afterAll, beforeEach, describe, expect, it } from '@jest/globals';
 import request from 'supertest';
 import { AiDailyUsage } from '../src/models/AiDailyUsage.js';
-import { FREE_TIER_LIMITS } from '../src/config/freeTierConfig.js';
+import { getTierLimits } from '../src/config/freeTierConfig.js';
+import { ensurePlatformSettings } from '../src/services/platformSettingsService.js';
 import {
   resetGlobalBudgetForTests,
   incrementGlobalTokenUsage,
@@ -33,6 +34,7 @@ describe('AI billing protection', () => {
 
   beforeEach(async () => {
     await clearTestDatabase();
+    await ensurePlatformSettings();
     resetGlobalBudgetForTests();
     process.env.AI_GLOBAL_DAILY_TOKEN_BUDGET = '100';
   });
@@ -69,7 +71,7 @@ describe('AI billing protection', () => {
       }));
 
       const userId = signup.body.user.id;
-      const limit = FREE_TIER_LIMITS.aiDoubtsFastPerDay;
+      const limit = getTierLimits(false).aiDoubtsFastPerDay;
 
       await AiDailyUsage.findOneAndUpdate(
         { userId, dateKey: utcDateKey() },

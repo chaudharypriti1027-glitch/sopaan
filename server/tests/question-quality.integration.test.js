@@ -4,6 +4,7 @@ import {
   createQuestion,
   setQuestionStatus,
   reviewQuestion,
+  mergeQuestion,
 } from '../src/services/admin/adminQuestionService.js';
 import { clearTestDatabase, setupTestDatabase, teardownTestDatabase } from './helpers/db.js';
 import { createTestUser } from './helpers/fixtures.js';
@@ -90,10 +91,14 @@ describe('question quality gate integration', () => {
 
     await expect(setQuestionStatus(adminId, duplicate.id, 'published')).rejects.toMatchObject({
       code: 'QUALITY_GATE_FAILED',
+      details: expect.objectContaining({
+        qualityIssues: expect.any(Array),
+        canPublish: false,
+      }),
     });
   });
 
-  it('supports merge and reject review actions', async () => {
+  it('merges via POST /questions/:id/merge', async () => {
     const canonical = await createQuestion(adminId, {
       subject: 'Math',
       topic: 'Roots',
@@ -124,10 +129,7 @@ describe('question quality gate integration', () => {
       explanation: 'Twelve multiplied by twelve equals one hundred forty-four.',
     });
 
-    const merged = await reviewQuestion(adminId, duplicate.id, {
-      action: 'merge',
-      mergeTargetId: canonical.id,
-    });
+    const merged = await mergeQuestion(adminId, duplicate.id, canonical.id);
 
     expect(merged.reviewStatus).toBe('rejected');
     expect(merged.duplicateOf?.id).toBe(canonical.id);

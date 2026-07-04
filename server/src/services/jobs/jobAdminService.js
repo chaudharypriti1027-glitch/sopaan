@@ -33,6 +33,7 @@ export async function listJobDefinitions() {
       period: definition.period,
       timezone: jobConfig.timezone,
       enabled: jobConfig.enabled,
+      status: lastRun?.status ?? 'never_run',
       lastRun: lastRun
         ? {
             id: lastRun._id.toString(),

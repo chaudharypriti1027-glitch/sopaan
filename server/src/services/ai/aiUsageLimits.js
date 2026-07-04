@@ -1,19 +1,12 @@
-/** Daily AI call limits per tier (resets UTC midnight). Values from freeTierConfig. */
-import { FREE_TIER_LIMITS, PRO_TIER_LIMITS } from '../../config/freeTierConfig.js';
-
-export const DAILY_LIMITS = Object.freeze({
-  free: {
-    fast: FREE_TIER_LIMITS.aiDoubtsFastPerDay,
-    quality: FREE_TIER_LIMITS.aiDoubtsQualityPerDay,
-  },
-  premium: {
-    fast: PRO_TIER_LIMITS.aiDoubtsFastPerDay,
-    quality: PRO_TIER_LIMITS.aiDoubtsQualityPerDay,
-  },
-});
+/** Daily AI call limits per tier (resets UTC midnight). Values from PlatformSettings. */
+import { getTierLimits } from '../../config/freeTierConfig.js';
 
 export function getDailyLimits(isPremium) {
-  return isPremium ? DAILY_LIMITS.premium : DAILY_LIMITS.free;
+  const limits = getTierLimits(isPremium);
+  return {
+    fast: limits.aiDoubtsFastPerDay,
+    quality: limits.aiDoubtsQualityPerDay,
+  };
 }
 
 export function getUsageFieldForTier(tier) {

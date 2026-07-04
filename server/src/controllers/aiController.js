@@ -1,7 +1,7 @@
 import { generateTest } from '../services/ai/testGenerator.js';
 import { solveDoubt } from '../services/ai/doubtSolver.js';
 import { evaluateAnswer } from '../services/ai/answerEvaluator.js';
-import { reportAiOutput } from '../services/ai/aiFeedbackService.js';
+import { persistAnswerEvaluation, reportAiOutput } from '../services/ai/aiFeedbackService.js';
 import { listDoubtAnswers } from '../services/ai/aiDoubtHistoryService.js';
 import { recordFeatureUsage } from '../services/quotaService.js';
 import { getValidatedQuery } from '../middleware/validate.js';
@@ -55,7 +55,13 @@ export async function evaluateAnswerHandler(req, res) {
 
   await recordFeatureUsage(req.user._id, 'ai_evaluate');
 
-  res.status(200).json(result);
+  const evaluation = await persistAnswerEvaluation(req.user._id, req.body, result);
+
+  res.status(200).json({
+    ...result,
+    evaluationId: evaluation._id.toString(),
+    maxMarks: req.body.maxMarks ?? 10,
+  });
 }
 
 export async function reportAiFeedbackHandler(req, res) {

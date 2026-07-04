@@ -57,6 +57,10 @@ const courseSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    thumbnailUrl: {
+      type: String,
+      trim: true,
+    },
     language: {
       type: String,
       enum: ['en', 'hi'],

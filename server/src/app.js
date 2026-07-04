@@ -15,6 +15,7 @@ import { notFound } from './middleware/notFound.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { asyncHandler } from './utils/asyncHandler.js';
 import * as paymentController from './controllers/paymentController.js';
+import * as liveController from './controllers/liveController.js';
 import {
   attachUserToRequestContext,
   requestContextMiddleware,
@@ -101,6 +102,12 @@ app.post(
   asyncHandler(paymentController.handleWebhook),
 );
 
+app.post(
+  '/api/live/egress-webhook',
+  express.raw({ type: 'application/json', limit: '512kb' }),
+  asyncHandler(liveController.handleEgressWebhook),
+);
+
 app.use(express.json({ limit: securityConfig.jsonBodyLimit }));
 app.use(requestContextMiddleware);
 app.use(optionalAuth);
@@ -128,6 +135,9 @@ app.get(['/admin', '/admin/'], (_req, res) => {
   res.sendFile(adminIndexHtml);
 });
 app.use('/admin', express.static(adminPublicDir, { index: 'index.html' }));
+
+const uploadsDir = path.join(__dirname, '../uploads');
+app.use('/uploads', express.static(uploadsDir, { fallthrough: true, maxAge: env.isProduction ? '7d' : 0 }));
 
 app.use(notFound);
 setupSentryExpressErrorHandler(app);

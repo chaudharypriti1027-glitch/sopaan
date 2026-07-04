@@ -6,7 +6,8 @@
   "workspaces": [
     "server",
     "mobile",
-    "shared"
+    "shared",
+    "admin"
   ],
   "scripts": {
     "format": "prettier --write .",

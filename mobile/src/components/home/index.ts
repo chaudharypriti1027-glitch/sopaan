@@ -1,3 +1,4 @@
+export { HomeTopBanner } from './HomeTopBanner';
 export { HomeHeroScroll } from './HomeHeroScroll';
 export { HOME_UI } from './homeTheme';
 export { GoalDots } from './GoalDots';

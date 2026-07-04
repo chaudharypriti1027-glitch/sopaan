@@ -1,6 +1,7 @@
 import { User } from '../models/User.js';
 import { verifyAccessToken } from '../services/tokens.js';
 import { AppError } from '../utils/AppError.js';
+import { isAccountSuspended } from '../utils/accountAuthPolicy.js';
 
 const USER_AUTH_SELECT = '-passwordHash';
 
@@ -25,6 +26,10 @@ export async function requireAuth(req, _res, next) {
 
     if (user.accountStatus === 'deleted') {
       throw new AppError('Account has been deleted', 401, 'UNAUTHORIZED');
+    }
+
+    if (isAccountSuspended(user)) {
+      throw new AppError('Account suspended', 403, 'ACCOUNT_SUSPENDED');
     }
 
     req.user = user;

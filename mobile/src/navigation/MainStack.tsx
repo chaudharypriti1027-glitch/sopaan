@@ -150,7 +150,10 @@ export function MainStack() {
       />
       <Stack.Screen
         name="CutoffsForms"
-        getComponent={lazyScreen(() => require('../screens/app'), 'CutoffsFormsScreen')}
+        getComponent={lazyScreen(
+          () => require('../screens/app/CutoffsFormsScreen'),
+          'CutoffsFormsScreen',
+        )}
         options={{ title: t('cutoffsForms') }}
       />
       <Stack.Screen

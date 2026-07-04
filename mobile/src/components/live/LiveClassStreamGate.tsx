@@ -1,20 +1,36 @@
 import { Radio } from 'lucide-react-native';
 import { useEffect, useMemo, useState, type ComponentType } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Platform, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { ensureLiveKitReady, isLiveKitNativeAvailable } from '../../livekit/bootstrap';
 import { useTheme } from '../../theme';
+import { isDevStreamingUrl } from '../../utils/streaming';
+import { LiveClassDevStage } from './LiveClassDevStage';
+import { LiveClassStreamWebView } from './LiveClassStreamWebView';
 import type { LiveClassStreamProps } from './LiveClassStream';
 
-export function LiveClassStreamGate(props: LiveClassStreamProps) {
+type DevStreamProps = {
+  classId: string;
+  title?: string;
+  instructor?: string;
+};
+
+export type LiveClassStreamGateProps = LiveClassStreamProps & {
+  classId?: string;
+};
+
+export function LiveClassStreamGate(props: LiveClassStreamGateProps) {
   const { t } = useTranslation('app', { keyPrefix: 'liveClassViewer' });
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const [Stream, setStream] = useState<ComponentType<LiveClassStreamProps> | null>(null);
-  const [nativeUnavailable, setNativeUnavailable] = useState(!isLiveKitNativeAvailable());
+  const [DevStream, setDevStream] = useState<ComponentType<DevStreamProps> | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const devMode = isDevStreamingUrl(props.url);
+  const playbackAvailable = isLiveKitNativeAvailable();
 
   useEffect(() => {
-    if (nativeUnavailable) {
+    if (!devMode || !playbackAvailable || !props.classId) {
       return;
     }
 
@@ -22,14 +38,17 @@ export function LiveClassStreamGate(props: LiveClassStreamProps) {
 
     void (async () => {
       try {
-        await ensureLiveKitReady();
-        const mod = await import('./LiveClassStream');
+        const mod =
+          Platform.OS === 'web'
+            ? await import('./LiveClassDevStream.web')
+            : await import('./LiveClassDevStream');
+
         if (!cancelled) {
-          setStream(() => mod.LiveClassStream);
+          setDevStream(() => mod.LiveClassDevStream);
         }
-      } catch {
+      } catch (err) {
         if (!cancelled) {
-          setNativeUnavailable(true);
+          setLoadError(err instanceof Error ? err.message : t('joinFailed'));
         }
       }
     })();
@@ -37,14 +56,106 @@ export function LiveClassStreamGate(props: LiveClassStreamProps) {
     return () => {
       cancelled = true;
     };
-  }, [nativeUnavailable]);
+  }, [devMode, playbackAvailable, props.classId, t]);
 
-  if (nativeUnavailable) {
+  useEffect(() => {
+    if (devMode || !playbackAvailable) {
+      return;
+    }
+
+    let cancelled = false;
+
+    void (async () => {
+      try {
+        if (Platform.OS !== 'web') {
+          await ensureLiveKitReady();
+        }
+
+        const mod =
+          Platform.OS === 'web'
+            ? await import('./LiveClassStream.web')
+            : await import('./LiveClassStream');
+
+        if (!cancelled) {
+          setStream(() => mod.LiveClassStream);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setLoadError(err instanceof Error ? err.message : t('joinFailed'));
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [devMode, playbackAvailable, t]);
+
+  if (devMode) {
+    if (!playbackAvailable || !props.classId) {
+      return (
+        <LiveClassDevStage
+          title={props.title}
+          instructor={props.instructorName}
+          role={props.role === 'host' ? 'host' : 'viewer'}
+        />
+      );
+    }
+
+    if (loadError) {
+      return (
+        <View style={styles.centered}>
+          <Radio size={28} color={theme.colors.semantic.error} />
+          <Text style={styles.body}>{loadError}</Text>
+        </View>
+      );
+    }
+
+    if (!DevStream) {
+      return (
+        <View style={styles.centered}>
+          <ActivityIndicator color={theme.colors.brand.primary} size="large" />
+          <Text style={styles.body}>{t('joining')}</Text>
+        </View>
+      );
+    }
+
+    return (
+      <DevStream
+        classId={props.classId}
+        title={props.title}
+        instructor={props.instructorName}
+      />
+    );
+  }
+
+  if (!playbackAvailable) {
+    if (Platform.OS !== 'web' && props.url && props.token && !devMode) {
+      return (
+        <LiveClassStreamWebView
+          url={props.url}
+          token={props.token}
+          instructorName={props.instructorName}
+          topic={props.topic}
+          title={props.title}
+        />
+      );
+    }
+
     return (
       <View style={styles.centered}>
         <Radio size={28} color={theme.colors.semantic.warning} />
         <Text style={styles.title}>{t('nativeUnavailableTitle')}</Text>
         <Text style={styles.body}>{t('nativeUnavailableBody')}</Text>
+      </View>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <View style={styles.centered}>
+        <Radio size={28} color={theme.colors.semantic.error} />
+        <Text style={styles.body}>{loadError}</Text>
       </View>
     );
   }

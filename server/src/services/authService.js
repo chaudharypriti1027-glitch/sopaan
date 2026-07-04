@@ -13,6 +13,7 @@ import { securityConfig } from '../config/securityConfig.js';
 import { logger } from '../observability/logger.js';
 import { buildConsentRecord } from './privacy/privacyService.js';
 import { verifyGoogleIdToken } from './googleAuthService.js';
+import { assertAccountCanAuthenticate } from '../utils/accountAuthPolicy.js';
 
 function formatUser(user) {
   const id = user._id ?? user.id;
@@ -37,6 +38,7 @@ async function issueAuthTokens(user, { familyId } = {}) {
 }
 
 async function issueAuthResult(user, { isNewUser }) {
+  assertAccountCanAuthenticate(user);
   const tokens = await issueAuthTokens(user);
 
   return {
@@ -119,7 +121,16 @@ async function resetFailedLogin(user) {
   }
 }
 
-export async function signup({ name, email, phone, password, referralCode, installId, privacyConsent }) {
+export async function signup({
+  name,
+  email,
+  phone,
+  password,
+  referralCode,
+  installId,
+  inviteToken,
+  privacyConsent,
+}) {
   const normalizedEmail = email?.toLowerCase();
 
   if (!privacyConsent?.aiProcessing) {
@@ -157,6 +168,18 @@ export async function signup({ name, email, phone, password, referralCode, insta
 
   await ensureUserReferralCode(user._id);
   await applyReferralAtSignup(user._id, referralCode, { installId });
+
+  if (inviteToken) {
+    const { acceptTeamInviteOnSignup } = await import('./admin/teamService.js');
+    const teamRole = await acceptTeamInviteOnSignup({
+      inviteToken,
+      userId: user._id,
+      email: normalizedEmail,
+    });
+    if (teamRole) {
+      user.role = teamRole;
+    }
+  }
 
   if (installId) {
     const { trackSignupComplete } = await import('./experimentService.js');
@@ -218,6 +241,10 @@ export async function refreshAccessToken(refreshToken) {
 
   if (!user || user.accountStatus === 'deleted') {
     throw new AppError('User not found', 401, 'UNAUTHORIZED');
+  }
+
+  if (user.accountStatus === 'suspended') {
+    throw new AppError('Account suspended', 403, 'ACCOUNT_SUSPENDED');
   }
 
   return {

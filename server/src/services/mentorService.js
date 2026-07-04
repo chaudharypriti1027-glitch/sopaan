@@ -5,10 +5,13 @@ import { AppError } from '../utils/AppError.js';
 import { buildPaginatedResult, parsePagination } from '../utils/pagination.js';
 import { createNotification } from './notificationService.js';
 import { caseInsensitiveRegex } from '../utils/regex.js';
+import { formatMentor } from './mentorFormat.js';
+
+const activeMentorFilter = { isActive: { $ne: false } };
 
 export async function listMentors(query) {
   const { limit, offset } = parsePagination(query);
-  const filters = {};
+  const filters = { ...activeMentorFilter };
 
   if (query.expertise) {
     filters.expertise = caseInsensitiveRegex(query.expertise);
@@ -26,8 +29,10 @@ export async function listMentors(query) {
 
   return buildPaginatedResult({
     items: items.map((mentor) => ({
-      ...mentor,
-      availableSlots: (mentor.slots ?? []).filter((slot) => !slot.isBooked && new Date(slot.start) > new Date()),
+      ...formatMentor(mentor),
+      availableSlots: (mentor.slots ?? []).filter(
+        (slot) => !slot.isBooked && new Date(slot.start) > new Date(),
+      ),
     })),
     total,
     limit,
@@ -36,20 +41,24 @@ export async function listMentors(query) {
 }
 
 export async function getMentorById(mentorId) {
-  const mentor = await Mentor.findById(mentorId).populate('userId', 'name email').lean();
+  const mentor = await Mentor.findOne({ _id: mentorId, ...activeMentorFilter })
+    .populate('userId', 'name email')
+    .lean();
 
   if (!mentor) {
     throw new AppError('Mentor not found', 404, 'NOT_FOUND');
   }
 
   return {
-    ...mentor,
-    availableSlots: (mentor.slots ?? []).filter((slot) => !slot.isBooked && new Date(slot.start) > new Date()),
+    ...formatMentor(mentor),
+    availableSlots: (mentor.slots ?? []).filter(
+      (slot) => !slot.isBooked && new Date(slot.start) > new Date(),
+    ),
   };
 }
 
 export async function bookMentor(studentId, mentorId, slotStartInput) {
-  const mentor = await Mentor.findById(mentorId);
+  const mentor = await Mentor.findOne({ _id: mentorId, ...activeMentorFilter });
 
   if (!mentor) {
     throw new AppError('Mentor not found', 404, 'NOT_FOUND');
@@ -57,7 +66,7 @@ export async function bookMentor(studentId, mentorId, slotStartInput) {
 
   const slotStart = new Date(slotStartInput);
   const slot = mentor.slots.find(
-    (item) => new Date(item.start).getTime() === slotStart.getTime() && !item.isBooked
+    (item) => new Date(item.start).getTime() === slotStart.getTime() && !item.isBooked,
   );
 
   if (!slot) {
@@ -75,11 +84,13 @@ export async function bookMentor(studentId, mentorId, slotStartInput) {
     status: 'booked',
   });
 
-  const mentorUser = await User.findById(mentor.userId);
+  const mentorUser = mentor.userId ? await User.findById(mentor.userId) : null;
+  const mentorLabel = mentor.name?.trim() || mentorUser?.name || 'mentor';
+
   await createNotification(studentId, {
     type: 'mentor',
     title: 'Mentor session booked',
-    body: `Your session with ${mentorUser?.name ?? 'mentor'} is confirmed.`,
+    body: `Your session with ${mentorLabel} is confirmed.`,
   });
 
   return booking;

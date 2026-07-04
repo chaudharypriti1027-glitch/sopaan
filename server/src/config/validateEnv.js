@@ -75,6 +75,16 @@ export function validateEnvironment(raw = process.env) {
     LIVEKIT_API_KEY: z.string().trim().optional(),
     LIVEKIT_API_SECRET: z.string().trim().optional(),
     LIVEKIT_URL: z.string().trim().optional(),
+    LIVEKIT_HTTP_URL: z.string().trim().optional(),
+    LIVEKIT_RECORDING_BASE_URL: z.string().trim().optional(),
+    LIVEKIT_EGRESS_ENABLED: z.string().trim().optional(),
+    S3_BUCKET: z.string().trim().optional(),
+    S3_REGION: z.string().trim().optional(),
+    S3_ACCESS_KEY: z.string().trim().optional(),
+    S3_SECRET_KEY: z.string().trim().optional(),
+    S3_ENDPOINT: z.string().trim().optional(),
+    S3_PUBLIC_BASE_URL: z.string().trim().optional(),
+    STREAMING_PROVIDER: z.string().trim().optional(),
   });
 
   const parsed = baseSchema.safeParse(raw);
@@ -133,6 +143,34 @@ export function validateEnvironment(raw = process.env) {
     );
   }
 
+  const livekitEgressEnabled = isTruthyFlag(raw.LIVEKIT_EGRESS_ENABLED);
+  const s3Bucket = data.S3_BUCKET || '';
+  const s3AccessKey = data.S3_ACCESS_KEY || '';
+  const s3SecretKey = data.S3_SECRET_KEY || '';
+
+  if (isProduction && livekitEgressEnabled) {
+    const egressMissing = [];
+    if (!s3Bucket) egressMissing.push('S3_BUCKET');
+    if (!s3AccessKey) egressMissing.push('S3_ACCESS_KEY');
+    if (!s3SecretKey) egressMissing.push('S3_SECRET_KEY');
+    if (!data.S3_REGION && !raw.S3_ENDPOINT?.trim()) {
+      egressMissing.push('S3_REGION (or set S3_ENDPOINT for R2/MinIO)');
+    }
+    if (egressMissing.length > 0) {
+      throw new Error(
+        [
+          'LIVEKIT_EGRESS_ENABLED=true but recording storage is incomplete:',
+          ...egressMissing.map((key) => `  - ${key}`),
+        ].join('\n'),
+      );
+    }
+  }
+
+  const livekitUrl = data.LIVEKIT_URL || '';
+  const livekitHttpUrl =
+    data.LIVEKIT_HTTP_URL ||
+    livekitUrl.replace(/^wss:\/\//, 'https://').replace(/^ws:\/\//, 'http://');
+
   return {
     port: data.PORT,
     mongodbUri: data.MONGODB_URI,
@@ -153,8 +191,16 @@ export function validateEnvironment(raw = process.env) {
     expoAccessToken: data.EXPO_ACCESS_TOKEN || '',
     livekitApiKey: data.LIVEKIT_API_KEY || '',
     livekitApiSecret: data.LIVEKIT_API_SECRET || '',
-    livekitUrl: data.LIVEKIT_URL || '',
+    livekitUrl,
+    livekitHttpUrl,
     livekitRecordingBaseUrl: data.LIVEKIT_RECORDING_BASE_URL || '',
+    livekitEgressEnabled,
+    s3Bucket,
+    s3Region: data.S3_REGION || '',
+    s3AccessKey,
+    s3SecretKey,
+    s3Endpoint: data.S3_ENDPOINT || '',
+    s3PublicBaseUrl: data.S3_PUBLIC_BASE_URL || '',
     razorpayKeyId: data.RAZORPAY_KEY_ID || '',
     razorpayKeySecret: data.RAZORPAY_KEY_SECRET || '',
     razorpayWebhookSecret: data.RAZORPAY_WEBHOOK_SECRET || '',

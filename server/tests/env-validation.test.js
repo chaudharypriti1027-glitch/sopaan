@@ -84,4 +84,28 @@ describe('validateEnvironment', () => {
     expect(result.stubAiMode).toBe(false);
     expect(result.anthropicApiKey).toBe('sk-ant-test');
   });
+
+  it('derives LIVEKIT_HTTP_URL from LIVEKIT_URL when omitted', () => {
+    const result = validateEnvironment({
+      NODE_ENV: 'development',
+      PORT: '4000',
+      MONGODB_URI: 'mongodb://127.0.0.1:27017/sopaan',
+      JWT_SECRET: 'dev-jwt-secret-min-32-characters-long',
+      JWT_REFRESH_SECRET: 'dev-refresh-secret-min-32-chars',
+      CLIENT_URL: 'http://localhost:8081',
+      DEV_STUB_AI: 'true',
+      LIVEKIT_URL: 'wss://sopaan-qxyfh89u.livekit.cloud',
+    });
+
+    expect(result.livekitHttpUrl).toBe('https://sopaan-qxyfh89u.livekit.cloud');
+  });
+
+  it('requires S3 vars when egress is enabled in production', () => {
+    expect(() =>
+      validateEnvironment({
+        ...PRODUCTION_BASE,
+        LIVEKIT_EGRESS_ENABLED: 'true',
+      }),
+    ).toThrow(/S3_BUCKET/);
+  });
 });

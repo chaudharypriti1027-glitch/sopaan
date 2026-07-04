@@ -22,7 +22,8 @@ describe('Leaderboard API', () => {
   async function loginToken(user) {
     const login = await request(app)
       .post('/api/auth/login')
-      .send({ email: user.email, password: 'Password123!' });
+      .send({ email: user.email, password: 'Password123!' })
+      .expect(200);
     return login.body.token;
   }
 

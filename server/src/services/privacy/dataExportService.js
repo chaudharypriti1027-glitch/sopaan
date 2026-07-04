@@ -19,6 +19,7 @@ import { DailyQuotaUsage } from '../../models/DailyQuotaUsage.js';
 import { AiDailyUsage } from '../../models/AiDailyUsage.js';
 import { AiCallLog } from '../../models/AiCallLog.js';
 import { AiModelFeedback } from '../../models/AiModelFeedback.js';
+import { AnswerEvaluation } from '../../models/AnswerEvaluation.js';
 import { PaymentOrder } from '../../models/PaymentOrder.js';
 import { SubscriptionEntitlement } from '../../models/SubscriptionEntitlement.js';
 import { User } from '../../models/User.js';
@@ -57,6 +58,7 @@ export async function exportUserData(userId) {
     aiDailyUsage,
     aiCallLogs,
     aiModelFeedback,
+    answerEvaluations,
     paymentOrders,
     subscriptionEntitlements,
   ] = await Promise.all([
@@ -82,6 +84,7 @@ export async function exportUserData(userId) {
     AiDailyUsage.find({ userId }).lean(),
     AiCallLog.find({ userId }).sort({ createdAt: -1 }).limit(EXPORT_LIMIT).lean(),
     AiModelFeedback.find({ userId }).sort({ createdAt: -1 }).limit(EXPORT_LIMIT).lean(),
+    AnswerEvaluation.find({ userId }).sort({ createdAt: -1 }).limit(EXPORT_LIMIT).lean(),
     PaymentOrder.find({ userId }).sort({ createdAt: -1 }).lean(),
     SubscriptionEntitlement.find({ userId }).lean(),
   ]);
@@ -126,6 +129,7 @@ export async function exportUserData(userId) {
       aiDailyUsage,
       aiCallLogs,
       aiModelFeedback,
+      answerEvaluations,
     },
     billing: {
       paymentOrders,

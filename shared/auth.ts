@@ -32,7 +32,7 @@ export interface Profile {
   /** True once name, state, and targetExam are saved via PUT /api/me. */
   onboardingComplete?: boolean;
   /** App access level — used for admin dashboard and pro bypass. */
-  role?: 'student' | 'admin' | 'mentor';
+  role?: 'user' | 'student' | 'creator' | 'moderator' | 'admin';
   isPremium?: boolean;
   premiumPlan?: 'monthly' | 'yearly' | 'trial' | null;
   premiumExpiresAt?: string | null;

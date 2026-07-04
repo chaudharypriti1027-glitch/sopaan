@@ -64,7 +64,10 @@
           "photosPermission": "Allow Sopaan to pick images from your gallery."
         }
       ],
-      "expo-notifications"
+      "expo-notifications",
+      "expo-video",
+      "@livekit/react-native-expo-plugin",
+      "@config-plugins/react-native-webrtc"
     ],
     "splash": {
       "image": "./assets/splash-icon.png",

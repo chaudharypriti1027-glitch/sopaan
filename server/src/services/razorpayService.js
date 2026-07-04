@@ -16,6 +16,11 @@ import {
 } from './entitlementService.js';
 import { createNotification } from './notificationService.js';
 import { User } from '../models/User.js';
+import {
+  computeCouponDiscount,
+  redeemCouponUsage,
+  validateCouponForCheckout,
+} from './couponService.js';
 
 const RAZORPAY_API = 'https://api.razorpay.com/v1';
 
@@ -95,11 +100,23 @@ async function razorpayFetch(path, options = {}) {
   return data;
 }
 
-export async function createRazorpayOrder(userId, planId) {
+export async function createRazorpayOrder(userId, planId, options = {}) {
   const plan = getPlan(planId);
 
   if (!plan) {
     throw new AppError('Invalid subscription plan', 400, 'INVALID_PLAN');
+  }
+
+  const originalAmountPaise = plan.amountPaise;
+  let coupon = null;
+  let discountPaise = 0;
+  let amountPaise = originalAmountPaise;
+
+  if (options.couponCode) {
+    coupon = await validateCouponForCheckout(options.couponCode);
+    const pricing = computeCouponDiscount(originalAmountPaise, coupon);
+    discountPaise = pricing.discountPaise;
+    amountPaise = pricing.finalAmountPaise;
   }
 
   const receipt = `sopaan_${userId}_${Date.now()}`;
@@ -107,12 +124,13 @@ export async function createRazorpayOrder(userId, planId) {
   const razorpayOrder = await razorpayFetch('/orders', {
     method: 'POST',
     body: JSON.stringify({
-      amount: plan.amountPaise,
+      amount: amountPaise,
       currency: 'INR',
       receipt,
       notes: {
         userId: userId.toString(),
         plan: plan.id,
+        couponCode: coupon?.code ?? '',
       },
     }),
   });
@@ -120,7 +138,11 @@ export async function createRazorpayOrder(userId, planId) {
   await PaymentOrder.create({
     userId,
     plan: plan.id,
-    amountPaise: plan.amountPaise,
+    amountPaise,
+    originalAmountPaise: coupon ? originalAmountPaise : null,
+    discountPaise,
+    couponId: coupon?._id ?? null,
+    couponCode: coupon?.code ?? null,
     currency: 'INR',
     receipt,
     razorpayOrderId: razorpayOrder.id,
@@ -135,6 +157,16 @@ export async function createRazorpayOrder(userId, planId) {
     plan: plan.id,
     displayAmount: plan.displayAmount,
     receipt,
+    originalAmountPaise: coupon ? originalAmountPaise : undefined,
+    discountPaise: coupon ? discountPaise : undefined,
+    finalAmountPaise: amountPaise,
+    coupon: coupon
+      ? {
+          code: coupon.code,
+          type: coupon.type,
+          value: coupon.value,
+        }
+      : undefined,
   };
 }
 
@@ -214,6 +246,12 @@ export async function fulfillPaymentOrder(order, paymentId, options = {}) {
 
   order.status = 'paid';
   order.razorpayPaymentId = paymentId;
+
+  if (order.couponId && !order.couponRedeemed) {
+    await redeemCouponUsage(order.couponId);
+    order.couponRedeemed = true;
+  }
+
   await order.save();
 
   await activateEntitlementFromPayment(order.userId, order.plan, {
@@ -325,6 +363,39 @@ async function markOrderRefunded(order, paymentId, reason) {
   order.failureReason = reason;
   await order.save();
   return order;
+}
+
+export async function refundRazorpayPayment(paymentId, amountPaise) {
+  return razorpayFetch(`/payments/${paymentId}/refund`, {
+    method: 'POST',
+    body: JSON.stringify({
+      amount: amountPaise,
+    }),
+  });
+}
+
+export async function adminRefundPaymentOrder(order) {
+  if (order.status === 'refunded') {
+    return {
+      refundId: null,
+      order,
+      duplicate: true,
+    };
+  }
+
+  const refund = await refundRazorpayPayment(order.razorpayPaymentId, order.amountPaise);
+
+  await markOrderRefunded(order, order.razorpayPaymentId, 'admin_refund');
+  await revokeEntitlementFromRefund(order.userId, {
+    paymentId: order.razorpayPaymentId,
+    reason: 'admin_refund',
+  });
+
+  return {
+    refundId: refund.id,
+    order,
+    duplicate: false,
+  };
 }
 
 function subscriptionPlanFromNotes(notes = {}) {

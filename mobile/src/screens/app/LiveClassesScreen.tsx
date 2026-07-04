@@ -1,15 +1,15 @@
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Bell, BellOff, PlayCircle, Radio, Sparkles } from 'lucide-react-native';
+import { Bell, BellOff, ChevronRight, PlayCircle, Radio, Sparkles } from 'lucide-react-native';
 import { useMemo } from 'react';
 import {
   Alert,
-  Linking,
   Pressable,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { Button, Card, Eyebrow, Pill, QueryStateView, Screen, SectionTitle } from '../../components';
 import { useLiveClassReminder, useLiveClasses, useNetworkStatus } from '../../hooks';
 import type { MainStackParamList } from '../../navigation/types';
@@ -32,9 +32,10 @@ function RecordedCard({
   onOpen,
 }: {
   item: LiveClass;
-  onOpen: (recordingUrl: string, title: string) => void;
+  onOpen: (liveClassId: string) => void;
 }) {
   const { theme } = useTheme();
+  const { t } = useTranslation('app', { keyPrefix: 'liveClasses' });
   const styles = useMemo(() => createCardStyles(theme), [theme]);
 
   if (!item.recordingUrl) {
@@ -42,29 +43,35 @@ function RecordedCard({
   }
 
   return (
-    <Card style={styles.scheduledCard}>
-      <View style={[styles.accent, { backgroundColor: item.thumbnailColor ?? theme.colors.brand.primary }]} />
-      <View style={styles.scheduledBody}>
-        <Eyebrow>{item.examTag}</Eyebrow>
-        <Text style={styles.scheduledTitle}>{item.title}</Text>
-        <Text style={styles.scheduledMeta}>
-          {item.instructor} · {item.durationMin} min
-        </Text>
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => onOpen(item.recordingUrl!, item.title)}
-          style={styles.playRow}
-        >
-          <PlayCircle size={18} color={theme.colors.brand.primary} />
-          <Text style={styles.playLabel}>Watch recording</Text>
-        </Pressable>
-      </View>
-    </Card>
+    <Pressable accessibilityRole="button" onPress={() => onOpen(item.id)}>
+      <Card style={styles.scheduledCard}>
+        <View style={[styles.accent, { backgroundColor: item.thumbnailColor ?? theme.colors.brand.primary }]} />
+        <View style={styles.scheduledBody}>
+          <Eyebrow>{item.examTag}</Eyebrow>
+          <Text style={styles.scheduledTitle}>{item.title}</Text>
+          <Text style={styles.scheduledMeta}>
+            {item.instructor} · {t('durationMin', { count: item.durationMin })}
+          </Text>
+          <View style={styles.playRow}>
+            <PlayCircle size={18} color={theme.colors.brand.primary} />
+            <Text style={styles.playLabel}>{t('watchRecording')}</Text>
+            <ChevronRight size={16} color={theme.colors.text.tertiary} />
+          </View>
+        </View>
+      </Card>
+    </Pressable>
   );
 }
 
-function ScheduledCard({ item }: { item: LiveClass }) {
+function ScheduledCard({
+  item,
+  onOpen,
+}: {
+  item: LiveClass;
+  onOpen: (liveClassId: string) => void;
+}) {
   const { theme } = useTheme();
+  const { t } = useTranslation('app', { keyPrefix: 'liveClasses' });
   const styles = useMemo(() => createCardStyles(theme), [theme]);
   const reminderMutation = useLiveClassReminder();
 
@@ -74,12 +81,10 @@ function ScheduledCard({ item }: { item: LiveClass }) {
       {
         onSuccess: () =>
           Alert.alert(
-            item.reminderSet ? 'Reminder removed' : 'Reminder set',
-            item.reminderSet
-              ? 'You will no longer be reminded before this class.'
-              : 'We will remind you 15 minutes before the class starts.',
+            item.reminderSet ? t('reminderRemoved') : t('reminderSet'),
+            item.reminderSet ? t('reminderRemovedBody') : t('reminderSetBody'),
           ),
-        onError: (err) => Alert.alert('Reminder failed', String(err)),
+        onError: (err) => Alert.alert(t('reminderFailed'), String(err)),
       },
     );
   };
@@ -88,22 +93,30 @@ function ScheduledCard({ item }: { item: LiveClass }) {
     <Card style={styles.scheduledCard}>
       <View style={[styles.accent, { backgroundColor: item.thumbnailColor ?? theme.colors.brand.primary }]} />
       <View style={styles.scheduledBody}>
-        <Eyebrow>{item.examTag}</Eyebrow>
-        <Text style={styles.scheduledTitle}>{item.title}</Text>
-        <Text style={styles.scheduledMeta}>
-          {item.instructor} · {item.durationMin} min
-        </Text>
-        <Text style={styles.scheduledWhen}>{formatWhen(item.scheduledAt)}</Text>
-        <Pressable onPress={toggleReminder} style={styles.reminderBtn} hitSlop={8}>
-          {item.reminderSet ? (
-            <BellOff size={16} color={theme.colors.brand.primary} />
-          ) : (
-            <Bell size={16} color={theme.colors.text.secondary} />
-          )}
-          <Text style={styles.reminderLabel}>
-            {item.reminderSet ? 'Reminder on' : 'Set reminder'}
+        <Pressable accessibilityRole="button" onPress={() => onOpen(item.id)}>
+          <Eyebrow>{item.examTag}</Eyebrow>
+          <Text style={styles.scheduledTitle}>{item.title}</Text>
+          <Text style={styles.scheduledMeta}>
+            {item.instructor} · {t('durationMin', { count: item.durationMin })}
           </Text>
+          <Text style={styles.scheduledWhen}>{formatWhen(item.startsAt ?? item.scheduledAt)}</Text>
         </Pressable>
+        <View style={styles.scheduledActions}>
+          <Pressable onPress={toggleReminder} style={styles.reminderBtn} hitSlop={8}>
+            {item.reminderSet ? (
+              <BellOff size={16} color={theme.colors.brand.primary} />
+            ) : (
+              <Bell size={16} color={theme.colors.text.secondary} />
+            )}
+            <Text style={styles.reminderLabel}>
+              {item.reminderSet ? t('reminderOn') : t('setReminder')}
+            </Text>
+          </Pressable>
+          <Pressable accessibilityRole="button" onPress={() => onOpen(item.id)} style={styles.viewBtn}>
+            <Text style={styles.viewLabel}>{t('viewClass')}</Text>
+            <ChevronRight size={16} color={theme.colors.brand.primary} />
+          </Pressable>
+        </View>
       </View>
     </Card>
   );
@@ -112,6 +125,7 @@ function ScheduledCard({ item }: { item: LiveClass }) {
 export function LiveClassesScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
   const { theme } = useTheme();
+  const { t } = useTranslation('app', { keyPrefix: 'liveClasses' });
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   const { isOffline } = useNetworkStatus();
@@ -120,36 +134,24 @@ export function LiveClassesScreen() {
 
   const openViewer = (liveClassId: string) => {
     if (!data?.streamingConfigured) {
-      Alert.alert('Coming soon', data?.message ?? 'Live streaming is not configured yet.');
+      Alert.alert(t('comingSoonAlert'), data?.message ?? t('comingSoonDefault'));
       return;
     }
 
     navigation.navigate('LiveClassViewer', { liveClassId });
   };
 
-  const openRecording = (recordingUrl: string, title: string) => {
-    Alert.alert('Open recording', title, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Play',
-        onPress: () => {
-          void Linking.openURL(recordingUrl);
-        },
-      },
-    ]);
-  };
-
   return (
     <Screen scroll contentContainerStyle={styles.content}>
-      <SectionTitle title="Live classes" subtitle="Interactive sessions with faculty" />
+      <SectionTitle title={t('title')} subtitle={t('subtitle')} />
 
       {data?.comingSoon ? (
         <Card style={styles.comingSoon}>
           <Sparkles size={20} color={theme.colors.accent.gold} />
           <View style={styles.comingSoonText}>
-            <Text style={styles.comingSoonTitle}>Coming Soon</Text>
+            <Text style={styles.comingSoonTitle}>{t('comingSoon')}</Text>
             <Text style={styles.comingSoonBody}>
-              {data.message ?? 'Full live classroom launching soon.'}
+              {data.message ?? t('comingSoonDefault')}
             </Text>
           </View>
         </Card>
@@ -166,7 +168,7 @@ export function LiveClassesScreen() {
         <>
           {data?.liveNow ? (
             <View style={styles.section}>
-              <SectionTitle title="Live now" />
+              <SectionTitle title={t('liveNow')} />
               <Card style={{ ...styles.liveCard, borderColor: theme.colors.semantic.error }}>
                 <View style={styles.liveHeader}>
                   <Radio size={18} color={theme.colors.semantic.error} />
@@ -174,10 +176,13 @@ export function LiveClassesScreen() {
                 </View>
                 <Text style={styles.liveTitle}>{data.liveNow.title}</Text>
                 <Text style={styles.liveMeta}>
-                  {data.liveNow.instructor} · {data.liveNow.attendeeCount ?? data.liveNow.viewers ?? 0} watching
+                  {data.liveNow.instructor} ·{' '}
+                  {t('watching', {
+                    count: data.liveNow.attendeeCount ?? data.liveNow.viewers ?? 0,
+                  })}
                 </Text>
                 <Button
-                  label={data.streamingConfigured ? 'Join live class' : 'Preview unavailable'}
+                  label={data.streamingConfigured ? t('joinLive') : t('previewUnavailable')}
                   onPress={() => openViewer(data.liveNow!.id)}
                   disabled={!data.streamingConfigured}
                   fullWidth
@@ -187,24 +192,26 @@ export function LiveClassesScreen() {
           ) : null}
 
           <View style={styles.section}>
-            <SectionTitle title="Scheduled" />
+            <SectionTitle title={t('scheduled')} />
             <View style={styles.list}>
               {(data?.scheduled ?? []).length === 0 ? (
                 <Card>
-                  <Text style={styles.empty}>No upcoming classes scheduled.</Text>
+                  <Text style={styles.empty}>{t('noUpcoming')}</Text>
                 </Card>
               ) : (
-                (data?.scheduled ?? []).map((item) => <ScheduledCard key={item.id} item={item} />)
+                (data?.scheduled ?? []).map((item) => (
+                  <ScheduledCard key={item.id} item={item} onOpen={openViewer} />
+                ))
               )}
             </View>
           </View>
 
           {(data?.recorded ?? []).length > 0 ? (
             <View style={styles.section}>
-              <SectionTitle title="Recorded classes" />
+              <SectionTitle title={t('recorded')} />
               <View style={styles.list}>
                 {(data?.recorded ?? []).map((item) => (
-                  <RecordedCard key={item.id} item={item} onOpen={openRecording} />
+                  <RecordedCard key={item.id} item={item} onOpen={openViewer} />
                 ))}
               </View>
             </View>
@@ -227,10 +234,23 @@ function createCardStyles(theme: ReturnType<typeof useTheme>['theme']) {
     },
     scheduledMeta: { ...theme.typography.presets.caption, color: theme.colors.text.secondary },
     scheduledWhen: { ...theme.typography.presets.caption, color: theme.colors.text.tertiary },
-    reminderBtn: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.xs, marginTop: theme.spacing.sm },
+    scheduledActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginTop: theme.spacing.sm,
+      gap: theme.spacing.md,
+    },
+    reminderBtn: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.xs },
     reminderLabel: { ...theme.typography.presets.caption, color: theme.colors.brand.primary },
+    viewBtn: { flexDirection: 'row', alignItems: 'center', gap: 2 },
+    viewLabel: {
+      ...theme.typography.presets.caption,
+      fontFamily: theme.typography.fonts.ui.semibold,
+      color: theme.colors.brand.primary,
+    },
     playRow: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.xs, marginTop: theme.spacing.sm },
-    playLabel: { ...theme.typography.presets.caption, color: theme.colors.brand.primary },
+    playLabel: { ...theme.typography.presets.caption, color: theme.colors.brand.primary, flex: 1 },
   });
 }
 

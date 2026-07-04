@@ -7,6 +7,9 @@ import type { Mentor } from '../../api/mentors';
 import { useTheme } from '../../theme';
 
 function mentorName(mentor: Mentor): string {
+  if (mentor.name?.trim()) {
+    return mentor.name;
+  }
   if (mentor.userId && typeof mentor.userId === 'object' && 'name' in mentor.userId) {
     return mentor.userId.name ?? 'Mentor';
   }

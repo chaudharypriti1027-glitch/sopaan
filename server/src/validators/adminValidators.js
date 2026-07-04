@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { objectIdParamsSchema } from './commonValidators.js';
 
 const examSectionSchema = z.object({
   subject: z.string().trim().min(1),
@@ -7,18 +8,31 @@ const examSectionSchema = z.object({
   count: z.coerce.number().int().min(1).max(25),
 });
 
-export const reviewTestSchema = z.object({
-  decision: z.enum(['approve', 'reject']),
-});
+export const reviewTestSchema = z
+  .object({
+    action: z.enum(['approve', 'reject']).optional(),
+    decision: z.enum(['approve', 'reject']).optional(),
+  })
+  .refine((data) => Boolean(data.action || data.decision), {
+    message: 'action is required',
+    path: ['action'],
+  });
 
-export const generateExamSchema = z.object({
-  title: z.string().trim().min(1),
-  examTag: z.string().trim().min(1),
-  language: z.enum(['en', 'hi']).default('en'),
-  difficulty: z.enum(['easy', 'medium', 'hard']).default('medium'),
-  publish: z.boolean().default(false),
-  sections: z.array(examSectionSchema).min(1).max(8),
-});
+export const generateExamSchema = z
+  .object({
+    exam: z.string().trim().min(1).optional(),
+    title: z.string().trim().min(1).optional(),
+    examTag: z.string().trim().min(1).optional(),
+    count: z.coerce.number().int().min(1).max(25).optional(),
+    language: z.enum(['en', 'hi']).default('en'),
+    difficulty: z.enum(['easy', 'medium', 'hard']).default('medium'),
+    publish: z.boolean().default(false),
+    sections: z.array(examSectionSchema).min(1).max(8).optional(),
+  })
+  .refine((data) => Boolean(data.exam || data.examTag), {
+    message: 'exam is required',
+    path: ['exam'],
+  });
 
 export const examCreateSchema = z.object({
   name: z.string().trim().min(1),
@@ -93,6 +107,7 @@ export const courseCreateSchema = z.object({
     )
     .optional(),
   thumbnailColor: z.string().optional(),
+  thumbnailUrl: z.string().trim().url().optional(),
   status: z.enum(['draft', 'published']).optional(),
 });
 
@@ -107,15 +122,43 @@ export const currentAffairCreateSchema = z.object({
   status: z.enum(['draft', 'published']).optional(),
 });
 
-export const mentorCreateSchema = z.object({
-  userId: z.string().min(1),
-  expertise: z.array(z.string()).optional(),
+export const mentorCreateSchema = z
+  .object({
+    userId: z.string().min(1).optional(),
+    name: z.string().trim().min(1).optional(),
+    expertise: z.array(z.string().trim().min(1)).optional(),
+    subjects: z.array(z.string().trim().min(1)).optional(),
+    bio: z.string().trim().optional(),
+    rate: z.coerce.number().min(0).optional(),
+    avatarUrl: z.string().trim().url().optional(),
+    rating: z.number().min(0).max(5).optional(),
+    sessionsCount: z.number().min(0).optional(),
+    slots: z
+      .array(z.object({ start: z.coerce.date(), isBooked: z.boolean().optional() }))
+      .optional(),
+  })
+  .refine((data) => Boolean(data.name?.trim() || data.userId), {
+    message: 'name is required',
+    path: ['name'],
+  });
+
+export const mentorUpdateSchema = z.object({
+  name: z.string().trim().min(1).optional(),
+  expertise: z.array(z.string().trim().min(1)).optional(),
+  subjects: z.array(z.string().trim().min(1)).optional(),
+  bio: z.string().trim().optional(),
+  rate: z.coerce.number().min(0).optional(),
+  avatarUrl: z.union([z.string().trim().url(), z.literal('')]).optional(),
   rating: z.number().min(0).max(5).optional(),
   sessionsCount: z.number().min(0).optional(),
-  bio: z.string().optional(),
   slots: z
     .array(z.object({ start: z.coerce.date(), isBooked: z.boolean().optional() }))
     .optional(),
+  isActive: z.boolean().optional(),
+});
+
+export const mentorStatusSchema = z.object({
+  isActive: z.boolean(),
 });
 
 export const paginationQuerySchema = z.object({
@@ -130,10 +173,16 @@ export const aiFeedbackQuerySchema = paginationQuerySchema.extend({
     .optional(),
 });
 
-export const aiFeedbackReviewSchema = z.object({
-  status: z.enum(['reviewed', 'dismissed']),
-  adminNotes: z.string().trim().max(1000).optional(),
-});
+export const aiFeedbackReviewSchema = z
+  .object({
+    action: z.enum(['keep', 'override']),
+    grade: z.coerce.number().min(0).max(100).optional(),
+    note: z.string().trim().max(1000).optional(),
+  })
+  .refine((data) => data.action !== 'override' || data.grade != null, {
+    message: 'grade is required when action is override',
+    path: ['grade'],
+  });
 
 export const jobRunsQuerySchema = paginationQuerySchema.extend({
   jobName: z.string().trim().min(1).optional(),
@@ -148,15 +197,180 @@ export const adminStudentQuerySchema = paginationQuerySchema.extend({
   q: z.string().trim().optional(),
 });
 
+export const adminMentorQuerySchema = paginationQuerySchema.extend({
+  q: z.string().trim().optional(),
+});
+
+export const studentStatusSchema = z.object({
+  status: z.enum(['active', 'suspended']),
+});
+
 export const adminBroadcastSchema = z.object({
   title: z.string().trim().min(1).max(120),
   body: z.string().trim().min(1).max(500),
   audience: z.enum(['all', 'active', 'pro', 'free']).optional().default('all'),
 });
 
+export const adminNotificationCreateSchema = z
+  .object({
+    title: z.string().trim().min(1).max(120),
+    body: z.string().trim().min(1).max(500),
+    audience: z.enum(['all', 'active30d', 'pro', 'free', 'byExam']),
+    exam: z.string().trim().min(1).max(80).optional(),
+    sendAt: z.coerce.date().optional(),
+  })
+  .refine((data) => data.audience !== 'byExam' || Boolean(data.exam), {
+    message: 'exam is required when audience is byExam',
+    path: ['exam'],
+  });
+
+export const adminNotificationAudienceQuerySchema = z.object({
+  audience: z.enum(['all', 'active30d', 'pro', 'free', 'byExam']),
+  exam: z.string().trim().min(1).max(80).optional(),
+});
+
 export const adminAnnouncementSchema = z.object({
   message: z.string().trim().min(1).max(280),
   link: z.string().trim().max(80).optional(),
+  coverImageUrl: z.string().trim().url().optional(),
 });
 
-export { adminContentQuerySchema, publishStatusSchema, questionReviewSchema } from './questionImportValidators.js';
+export const bannerLinkTypeSchema = z.enum([
+  'premium',
+  'test_series',
+  'current_affairs',
+  'live_classes',
+  'readiness',
+  'quiz',
+  'deeplink',
+]);
+
+export const bannerCreateSchema = z
+  .object({
+    message: z.string().trim().min(1).max(280),
+    linkType: bannerLinkTypeSchema,
+    linkRef: z.string().trim().max(200).optional(),
+  })
+  .refine((data) => data.linkType !== 'quiz' || Boolean(data.linkRef), {
+    message: 'linkRef (test id) is required for quiz links',
+    path: ['linkRef'],
+  })
+  .refine((data) => data.linkType !== 'deeplink' || Boolean(data.linkRef), {
+    message: 'linkRef (deeplink path) is required for custom deeplinks',
+    path: ['linkRef'],
+  });
+
+export const bannerUpdateSchema = z
+  .object({
+    message: z.string().trim().min(1).max(280).optional(),
+    linkType: bannerLinkTypeSchema.optional(),
+    linkRef: z.union([z.string().trim().max(200), z.literal(''), z.null()]).optional(),
+  })
+  .refine((data) => Object.keys(data).length > 0, {
+    message: 'At least one field is required',
+  });
+
+export const bannerActiveSchema = z.object({
+  active: z.boolean(),
+});
+
+export const couponTypeSchema = z.enum(['percent', 'flat']);
+
+export const couponCreateSchema = z
+  .object({
+    code: z.string().trim().min(2).max(32),
+    type: couponTypeSchema,
+    value: z.coerce.number().int().min(1),
+    usageLimit: z.coerce.number().int().min(1).max(1_000_000),
+    expiresAt: z.coerce.date(),
+  })
+  .refine((data) => data.type !== 'percent' || data.value <= 100, {
+    message: 'Percent value must be between 1 and 100',
+    path: ['value'],
+  })
+  .refine((data) => data.type !== 'flat' || data.value >= 100, {
+    message: 'Flat discount must be at least ₹1 (100 paise)',
+    path: ['value'],
+  });
+
+export const couponUpdateSchema = z
+  .object({
+    type: couponTypeSchema.optional(),
+    value: z.coerce.number().int().min(1).optional(),
+    usageLimit: z.coerce.number().int().min(1).max(1_000_000).optional(),
+    expiresAt: z.coerce.date().optional(),
+  })
+  .refine((data) => Object.keys(data).length > 0, {
+    message: 'At least one field is required',
+  })
+  .refine((data) => data.type !== 'percent' || data.value === undefined || data.value <= 100, {
+    message: 'Percent value must be between 1 and 100',
+    path: ['value'],
+  })
+  .refine((data) => data.type !== 'flat' || data.value === undefined || data.value >= 100, {
+    message: 'Flat discount must be at least ₹1 (100 paise)',
+    path: ['value'],
+  });
+
+export const couponActiveSchema = z.object({
+  active: z.boolean(),
+});
+
+export const teamInviteSchema = z.object({
+  email: z.string().trim().email('Invalid email'),
+  role: z.enum(['admin', 'creator', 'moderator']),
+});
+
+export const teamRoleUpdateSchema = z.object({
+  role: z.enum(['admin', 'creator', 'moderator']),
+});
+
+export const platformSettingsUpdateSchema = z
+  .object({
+    freeAiQuota: z.coerce.number().int().min(0).max(10_000).optional(),
+    freeAiTestsPerDay: z.coerce.number().int().min(0).max(10_000).optional(),
+    freeAiQualityDoubtsPerDay: z.coerce.number().int().min(0).max(10_000).optional(),
+    freeAiEvaluationsPerDay: z.coerce.number().int().min(0).max(10_000).optional(),
+    freeMocksPerDay: z.coerce.number().int().min(0).max(10_000).optional(),
+    freeShowAds: z.boolean().optional(),
+    freeDetailedAnalytics: z.boolean().optional(),
+    proPriceMonthly: z.coerce.number().int().min(1).max(1_000_000).optional(),
+    proPriceYearly: z.coerce.number().int().min(1).max(10_000_000).optional(),
+    proAiTestsPerDay: z.coerce.number().int().min(0).max(100_000).optional(),
+    proAiDoubtsPerDay: z.coerce.number().int().min(0).max(100_000).optional(),
+    proAiQualityDoubtsPerDay: z.coerce.number().int().min(0).max(100_000).optional(),
+    proAiEvaluationsPerDay: z.coerce.number().int().min(0).max(100_000).optional(),
+    proMocksPerDay: z.coerce.number().int().min(0).max(100_000).optional(),
+  })
+  .refine((data) => Object.keys(data).length > 0, {
+    message: 'At least one setting is required',
+  });
+
+export const mediaPostSchema = z.discriminatedUnion('action', [
+  z.object({
+    action: z.literal('presign'),
+    filename: z.string().trim().min(1).max(200),
+    mimeType: z.string().trim().min(1),
+    sizeBytes: z.coerce.number().int().min(1).max(200 * 1024 * 1024),
+  }),
+  z.object({
+    action: z.literal('complete'),
+    key: z.string().trim().min(1),
+    mimeType: z.string().trim().min(1),
+    sizeBytes: z.coerce.number().int().min(1).max(200 * 1024 * 1024),
+  }),
+]);
+
+export const mediaQuerySchema = paginationQuerySchema.extend({
+  kind: z.enum(['image', 'video']).optional(),
+});
+
+export const adminResourceParamsSchema = objectIdParamsSchema;
+
+export const adminJobNameParamsSchema = z.object({
+  jobName: z.string().trim().min(1).max(64),
+});
+
+export const emptyMutationBodySchema = z.object({}).strict().optional().default({});
+
+export { adminContentQuerySchema, publishStatusSchema, questionReviewSchema, questionMergeSchema } from './questionImportValidators.js';

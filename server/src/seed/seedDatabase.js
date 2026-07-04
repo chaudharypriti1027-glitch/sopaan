@@ -91,6 +91,11 @@ export async function ensureAdminUser() {
   return adminUser;
 }
 
+/** Dev/student app login — student@sopaan.dev (see seedE2eStudentUser). */
+export async function ensureDevStudentUser() {
+  return ensureSeedUser(seedE2eStudentUser);
+}
+
 async function ensureSeedUser(seedUser, { coins, premiumTrialUsed, privacyConsent } = {}) {
   let user = await User.findOne({ email: seedUser.email });
 

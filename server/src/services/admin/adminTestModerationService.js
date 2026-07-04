@@ -2,6 +2,42 @@ import { Test } from '../../models/Test.js';
 import { AppError } from '../../utils/AppError.js';
 import { buildPaginatedResult, parsePagination } from '../../utils/pagination.js';
 
+export function formatPendingTest(doc) {
+  const createdBy =
+    doc.createdBy && typeof doc.createdBy === 'object'
+      ? {
+          id: doc.createdBy._id?.toString?.() ?? String(doc.createdBy._id),
+          name: doc.createdBy.name,
+          email: doc.createdBy.email ?? null,
+        }
+      : null;
+
+  const questionCount = Array.isArray(doc.questions)
+    ? doc.questions.length
+    : typeof doc.questionCount === 'number'
+      ? doc.questionCount
+      : 0;
+
+  const isAiMock = doc.type === 'mock';
+
+  return {
+    id: doc._id?.toString?.() ?? doc.id,
+    title: doc.title,
+    subject: doc.subject,
+    topic: doc.topic,
+    type: doc.type,
+    examTag: doc.examTag,
+    status: doc.status,
+    difficulty: doc.difficulty,
+    durationSec: doc.durationSec,
+    questionCount,
+    source: isAiMock ? 'AI generator' : 'Community',
+    createdBy,
+    createdAt: doc.createdAt,
+    updatedAt: doc.updatedAt,
+  };
+}
+
 export async function listPendingTests(query) {
   const { limit, offset } = parsePagination(query);
 
@@ -15,7 +51,12 @@ export async function listPendingTests(query) {
     Test.countDocuments({ status: 'pending_review' }),
   ]);
 
-  return buildPaginatedResult({ items, total, limit, offset });
+  return buildPaginatedResult({
+    items: items.map(formatPendingTest),
+    total,
+    limit,
+    offset,
+  });
 }
 
 export async function reviewTest(testId, decision) {
@@ -32,5 +73,6 @@ export async function reviewTest(testId, decision) {
   test.status = decision === 'approve' ? 'published' : 'rejected';
   await test.save();
 
-  return test.populate('createdBy', 'name email');
+  const populated = await test.populate('createdBy', 'name email');
+  return formatPendingTest(populated.toObject());
 }

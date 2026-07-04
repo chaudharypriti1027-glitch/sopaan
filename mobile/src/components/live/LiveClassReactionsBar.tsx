@@ -1,27 +1,36 @@
-import { Hand, Heart, ThumbsUp } from 'lucide-react-native';
+import { Hand } from 'lucide-react-native';
 import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import type { LiveClassReaction } from '../../realtime/events';
 import { useTheme } from '../../theme';
 
 type LiveClassReactionsBarProps = {
+  handRaised: boolean;
   onRaiseHand: () => void;
+  onLowerHand: () => void;
   onReaction: (emoji: string) => void;
-  recent?: LiveClassReaction[];
 };
 
-const REACTIONS = ['👏', '🔥', '❤️', '🎉'];
+const REACTIONS = ['👍', '🔥', '👏'] as const;
 
-export function LiveClassReactionsBar({ onRaiseHand, onReaction, recent = [] }: LiveClassReactionsBarProps) {
+export function LiveClassReactionsBar({
+  handRaised,
+  onRaiseHand,
+  onLowerHand,
+  onReaction,
+}: LiveClassReactionsBarProps) {
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const latestRaise = [...recent].reverse().find((item) => item.kind === 'raise_hand');
 
   return (
     <View style={styles.root}>
-      <Pressable accessibilityRole="button" accessibilityLabel="Raise hand" onPress={onRaiseHand} style={styles.raiseBtn}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={handRaised ? 'Lower hand' : 'Raise hand'}
+        onPress={handRaised ? onLowerHand : onRaiseHand}
+        style={[styles.raiseBtn, handRaised ? styles.raiseBtnActive : null]}
+      >
         <Hand size={18} color={theme.colors.brand.onPrimary} />
-        <Text style={styles.raiseLabel}>Raise hand</Text>
+        <Text style={styles.raiseLabel}>{handRaised ? 'Lower hand' : 'Raise hand'}</Text>
       </Pressable>
 
       <View style={styles.emojiRow}>
@@ -36,19 +45,7 @@ export function LiveClassReactionsBar({ onRaiseHand, onReaction, recent = [] }: 
             <Text style={styles.emoji}>{emoji}</Text>
           </Pressable>
         ))}
-        <Pressable accessibilityRole="button" onPress={() => onReaction('❤️')} style={styles.iconBtn}>
-          <Heart size={18} color={theme.colors.semantic.error} />
-        </Pressable>
-        <Pressable accessibilityRole="button" onPress={() => onReaction('👍')} style={styles.iconBtn}>
-          <ThumbsUp size={18} color={theme.colors.brand.primary} />
-        </Pressable>
       </View>
-
-      {latestRaise ? (
-        <Text style={styles.toast} numberOfLines={1}>
-          ✋ {latestRaise.userName} raised a hand
-        </Text>
-      ) : null}
     </View>
   );
 }
@@ -73,6 +70,9 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       paddingVertical: 10,
       paddingHorizontal: theme.spacing.lg,
     },
+    raiseBtnActive: {
+      backgroundColor: theme.colors.semantic.warning,
+    },
     raiseLabel: {
       ...theme.typography.presets.caption,
       fontFamily: theme.typography.fonts.ui.semibold,
@@ -94,18 +94,5 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       backgroundColor: theme.colors.surface.muted,
     },
     emoji: { fontSize: 20 },
-    iconBtn: {
-      width: 40,
-      height: 40,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderRadius: theme.radii.pill,
-      backgroundColor: theme.colors.surface.muted,
-    },
-    toast: {
-      ...theme.typography.presets.caption,
-      color: theme.colors.text.secondary,
-      textAlign: 'center',
-    },
   });
 }

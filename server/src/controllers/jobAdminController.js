@@ -1,5 +1,6 @@
 import * as jobAdminService from '../services/jobs/jobAdminService.js';
 import { triggerJob, getJobHandler } from '../jobs/scheduler.js';
+import { enqueueManualJob } from '../jobs/bullmqScheduler.js';
 import { AppError } from '../utils/AppError.js';
 import { getValidatedQuery } from '../middleware/validate.js';
 
@@ -31,7 +32,23 @@ export async function runJobNow(req, res) {
   }
 
   const force = req.body?.force === true;
-  const result = await triggerJob(req.params.jobName, { force, triggeredBy: 'manual' });
+  const queued = await enqueueManualJob(req.params.jobName, { force });
 
-  res.status(200).json(result);
+  if (queued) {
+    res.status(202).json({
+      queued: true,
+      queueJobId: queued.id,
+      jobName: req.params.jobName,
+      force,
+      message: 'Job queued for execution via BullMQ',
+    });
+    return;
+  }
+
+  const result = await triggerJob(req.params.jobName, { force, triggeredBy: 'manual' });
+  res.status(200).json({
+    queued: false,
+    jobName: req.params.jobName,
+    ...result,
+  });
 }

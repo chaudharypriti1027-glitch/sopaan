@@ -52,7 +52,7 @@ export async function broadcastNotification({ title, body, audience = 'all' }) {
   };
 }
 
-export async function publishAnnouncement({ message, link = 'Premium' }) {
+export async function publishAnnouncement({ message, link = 'Premium', coverImageUrl }) {
   const title = 'Announcement';
   const body = message;
   const result = await dispatchNotificationToMatchingStudents(
@@ -61,7 +61,7 @@ export async function publishAnnouncement({ message, link = 'Premium' }) {
       type: ADMIN_NOTIFICATION_TYPES.ANNOUNCEMENT,
       title,
       body,
-      data: { link, banner: true },
+      data: { link, banner: true, coverImageUrl: coverImageUrl ?? null },
     },
     { limit: 1000 },
   );
@@ -70,6 +70,7 @@ export async function publishAnnouncement({ message, link = 'Premium' }) {
     ...result,
     message,
     link,
+    coverImageUrl: coverImageUrl ?? null,
     publishedAt: new Date().toISOString(),
   };
 }
@@ -104,7 +105,7 @@ export async function listRecentBroadcasts(query = {}) {
 }
 
 export async function listTeamMembers() {
-  const users = await User.find({ role: { $in: ['admin', 'mentor'] } })
+  const users = await User.find({ role: { $in: ['admin', 'creator', 'moderator'] } })
     .sort({ role: 1, name: 1 })
     .select('name email role createdAt')
     .lean();

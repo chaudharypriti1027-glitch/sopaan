@@ -10,6 +10,7 @@ import { Mentor } from '../../models/Mentor.js';
 import { subtractDays } from '../../utils/testHelpers.js';
 import { countPendingQuestionReviews } from './adminQuestionService.js';
 import { countActiveLiveClasses } from '../liveClassService.js';
+import { getAdminReports } from './adminReportsService.js';
 
 export async function getAdminStats() {
   const since = subtractDays(new Date(), 30);
@@ -28,6 +29,8 @@ export async function getAdminStats() {
     currentAffairsPublished,
     mentorsTotal,
     attemptsLast30Days,
+    reports,
+    questionsPublished,
   ] = await Promise.all([
     Attempt.distinct('userId', { createdAt: { $gte: since } }),
     FocusLog.distinct('userId', { date: { $gte: since } }),
@@ -42,6 +45,8 @@ export async function getAdminStats() {
     CurrentAffair.countDocuments({ status: 'published' }),
     Mentor.countDocuments(),
     Attempt.countDocuments({ createdAt: { $gte: since } }),
+    getAdminReports(),
+    Question.countDocuments({ status: 'published' }),
   ]);
 
   const activeIds = new Set([
@@ -64,9 +69,21 @@ export async function getAdminStats() {
     coursesPublished,
     examsTotal,
     questionsTotal,
+    questionsPublished,
     currentAffairsPublished,
     mentorsTotal,
     attemptsLast30Days,
+    proStudents: reports.proStudents,
+    signupsLast30Days: reports.signupsLast30Days,
+    aiFeedbackPending: reports.aiFeedbackPending,
+    mrrPaise: reports.revenue.mrrPaise,
+    revenue30dPaise: reports.revenue.revenue30dPaise,
+    activeSubscriptions: reports.revenue.activeSubscriptions,
+    refunds30d: reports.revenue.refunds30d,
+    attemptsDaily: reports.attemptsDaily,
+    signupsDaily: reports.signupsDaily,
+    referralsTotal: reports.referrals.total,
+    referralsConverted: reports.referrals.converted,
     assessedAt: new Date().toISOString(),
   };
 }

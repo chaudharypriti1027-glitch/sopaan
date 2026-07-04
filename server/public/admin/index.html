@@ -383,15 +383,33 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
           <div class="m"><div class="top"><div class="ic i-sage"><svg class="svg" viewBox="0 0 24 24"><path d="M22 10 12 5 2 10l10 5z"/></svg></div></div><div class="v"><span class="num" data-stat="examsTotal" data-count="0">0</span></div><div class="k">Exam catalog</div></div>
           <div class="m"><div class="top"><div class="ic i-gold"><svg class="svg" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></div></div><div class="v"><span class="num" data-stat="mentorsTotal" data-count="0">0</span></div><div class="k">Mentors</div></div>
         </div>
+        <div class="sec-t">Revenue & growth</div>
+        <div class="metrics">
+          <div class="m"><div class="top"><div class="ic i-sage"><svg class="svg" viewBox="0 0 24 24"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div></div><div class="v" data-stat="mrrPaise" data-count="0">₹0</div><div class="k">MRR</div></div>
+          <div class="m"><div class="top"><div class="ic i-gold"><svg class="svg" viewBox="0 0 24 24"><path d="M20 12V8H6a2 2 0 0 1 0-4h12v4"/><path d="M4 6v12a2 2 0 0 0 2 2h14v-4"/></svg></div></div><div class="v"><span class="num" data-stat="activeSubscriptions" data-count="0">0</span></div><div class="k">Active subscriptions</div></div>
+          <div class="m"><div class="top"><div class="ic i-navy"><svg class="svg" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="m7 14 3-3 3 3 5-6"/></svg></div></div><div class="v" data-stat="revenue30dPaise" data-count="0">₹0</div><div class="k">Revenue (30d)</div></div>
+          <div class="m"><div class="top"><div class="ic i-sage"><svg class="svg" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></div></div><div class="v"><span class="num" data-stat="proStudents" data-count="0">0</span></div><div class="k">Pro members</div></div>
+          <div class="m"><div class="top"><div class="ic i-gold"><svg class="svg" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div></div><div class="v"><span class="num" data-stat="signupsLast30Days" data-count="0">0</span></div><div class="k">New signups (30d)</div></div>
+          <div class="m"><div class="top"><div class="ic i-navy"><svg class="svg" viewBox="0 0 24 24"><path d="M9 4H5a2 2 0 0 0-2 2v3a2 2 0 0 1 0 4v3a2 2 0 0 0 2 2h4"/><path d="M9 4h10a2 2 0 0 1 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 1-2 2H9"/></svg></div></div><div class="v"><span class="num" data-stat="referralsTotal" data-count="0">0</span></div><div class="k">Referrals</div></div>
+        </div>
         <div class="cols">
-          <div class="panel"><div class="ph"><h3>Mock attempts</h3><span class="sub">Last 14 days (estimated)</span></div>
+          <div class="panel"><div class="ph"><h3>Mock attempts</h3><span class="sub">Last 14 days</span></div>
             <div class="chart" id="attemptsChart"></div>
           </div>
+          <div class="panel"><div class="ph"><h3>New signups</h3><span class="sub">Last 14 days</span></div>
+            <div class="chart" id="signupsChart"></div>
+          </div>
+        </div>
+        <div class="cols" style="margin-top:16px">
           <div class="panel"><div class="ph"><h3>Content mix</h3><span class="sub">Published catalog</span></div>
             <div class="donut-wrap" id="contentMix">
               <div class="donut" id="contentDonut"><div class="c"><span class="v" id="contentTotal">0</span><span class="l">items</span></div></div>
               <div class="dleg" id="contentLegend"></div>
             </div>
+          </div>
+          <div class="panel"><div class="ph"><h3>Export</h3><span class="sub">Download platform snapshot</span></div>
+            <p class="empty-note" style="margin:0 0 12px">Export students, revenue, and engagement metrics as CSV for reporting.</p>
+            <button class="tbtn gold" type="button" id="btnExportReport"><svg class="svg" viewBox="0 0 24 24"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg>Download report CSV</button>
           </div>
         </div>
       </section>
@@ -447,11 +465,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
       <!-- MEDIA -->
       <section class="view" id="v-media">
         <div class="toolbar"><button class="tbtn gold" type="button" style="margin-left:auto" id="btnUploadMedia"><svg class="svg" viewBox="0 0 24 24"><path d="M12 3v12M8 11l4 4 4-4M5 21h14"/></svg>Course media</button></div>
-        <div class="cgrid">
-          <div class="panel" style="padding:0;overflow:hidden"><div style="height:120px;background:linear-gradient(150deg,#D8B368,#B9822F)"></div><div style="padding:12px"><b style="font-size:13px">ssc-banner.png</b><div style="font-size:11px;color:var(--muted);font-weight:600;margin-top:3px">1.2 MB · PNG</div></div></div>
-          <div class="panel" style="padding:0;overflow:hidden"><div style="height:120px;background:linear-gradient(150deg,#2E3766,#1A1F3B)"></div><div style="padding:12px"><b style="font-size:13px">quant-lesson-1.mp4</b><div style="font-size:11px;color:var(--muted);font-weight:600;margin-top:3px">18 MB · MP4</div></div></div>
-          <div class="panel" style="padding:0;overflow:hidden"><div style="height:120px;background:linear-gradient(150deg,#6C9A8A,#4C7264)"></div><div style="padding:12px"><b style="font-size:13px">affairs-cover.jpg</b><div style="font-size:11px;color:var(--muted);font-weight:600;margin-top:3px">640 KB · JPG</div></div></div>
-        </div>
+        <p class="empty-note">Lesson videos and course assets from the published catalog.</p>
       </section>
 
       <!-- STUDENTS -->
@@ -592,18 +606,18 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 
       <!-- COUPONS -->
       <section class="view" id="v-coupons">
-        <div class="panel" style="max-width:760px;margin-bottom:18px">
-          <div class="ph"><h3>Create coupon</h3></div>
-          <div class="form">
-            <div class="fld"><label>Code</label><input placeholder="SOPAAN40"></div>
-            <div class="fld"><label>Type</label><select><option>Percentage (%)</option><option>Flat (₹)</option></select></div>
-            <div class="fld"><label>Value</label><input placeholder="40"></div>
-            <div class="fld"><label>Usage limit</label><input placeholder="500"></div>
-            <div class="fld"><label>Expires</label><input placeholder="15 Aug 2026"></div>
-            <div class="fld" style="align-self:end"><button class="tbtn gold" type="button" id="btnCreateCoupon"><svg class="svg" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Create coupon</button></div>
-          </div>
+        <div class="metrics" style="grid-template-columns:repeat(3,1fr);margin-bottom:18px">
+          <div class="m"><div class="v">0</div><div class="k">Total referrals</div></div>
+          <div class="m"><div class="v">0</div><div class="k">Rewarded</div></div>
+          <div class="m"><div class="v">0</div><div class="k">Pending</div></div>
         </div>
-        <div class="cgrid" id="couponGrid">
+        <div class="toolbar"><button class="tbtn gold" type="button" style="margin-left:auto" id="btnCreateCoupon"><svg class="svg" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Billing info</button></div>
+        <div class="sec-t">Pro plans</div>
+        <div class="cgrid" id="couponGrid"></div>
+        <div class="sec-t">Referral activity</div>
+        <table class="tbl"><thead><tr><th>Student</th><th>Code</th><th>Status</th><th>Reward</th><th>Date</th></tr></thead><tbody>
+          <tr><td colspan="5">Loading…</td></tr>
+        </tbody></table>
       </section>
 
       <!-- REVENUE -->

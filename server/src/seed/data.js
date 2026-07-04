@@ -437,7 +437,7 @@ export const seedMentorUser = {
   name: 'Priya Sharma',
   email: 'mentor@sopaan.dev',
   phone: '9888888888',
-  role: 'mentor',
+  role: 'creator',
   password: 'Password123!',
 };
 
@@ -551,9 +551,12 @@ export const liveClasses = [
     instructor: 'Sopaan Faculty',
     examTag: 'General',
     scheduledAt: now,
+    startedAt: now,
     durationMin: 40,
     thumbnailColor: '#F59E0B',
     streamingRoomId: 'sopaan-ca-rapid-fire-seed',
-    status: 'scheduled',
+    streamingProvider: 'dev',
+    status: 'live',
+    attendeeCount: 0,
   },
 ];

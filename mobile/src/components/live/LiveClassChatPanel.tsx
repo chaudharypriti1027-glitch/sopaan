@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { TextField } from '../TextField';
-import type { GroupChatMessage } from '../../realtime/events';
+import type { LiveChatMessage } from '../../realtime/events';
 import { useTheme } from '../../theme';
 
 type LiveClassChatPanelProps = {
-  messages: GroupChatMessage[];
+  messages: LiveChatMessage[];
   connected: boolean;
   currentUserId?: string;
   onSend: (text: string) => boolean;

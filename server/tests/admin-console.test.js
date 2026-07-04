@@ -101,7 +101,7 @@ describe('admin console auth', () => {
     const mentorUser = await createTestUser({
       email: `mentor-list-${Date.now()}@test.com`,
       password: 'Password123!',
-      role: 'mentor',
+      role: 'creator',
       name: 'Mentor List',
     });
     await Mentor.create({
@@ -122,5 +122,115 @@ describe('admin console auth', () => {
 
     expect(Array.isArray(res.body.items)).toBe(true);
     expect(res.body.items.some((row) => row.userId?.name === 'Mentor List')).toBe(true);
+  });
+
+  it('returns admin reports with daily series', async () => {
+    const admin = await createTestUser({
+      email: `admin-reports-${Date.now()}@test.com`,
+      password: 'Password123!',
+      role: 'admin',
+    });
+
+    const login = await request(app)
+      .post('/api/auth/login')
+      .send({ email: admin.email, password: 'Password123!' })
+      .expect(200);
+
+    const stats = await request(app)
+      .get('/api/admin/stats')
+      .set('Authorization', `Bearer ${login.body.token}`)
+      .expect(200);
+
+    expect(Array.isArray(stats.body.attemptsDaily)).toBe(true);
+    expect(stats.body.attemptsDaily).toHaveLength(14);
+    expect(typeof stats.body.mrrPaise).toBe('number');
+    expect(typeof stats.body.questionsPublished).toBe('number');
+
+    const attempts = await request(app)
+      .get('/api/admin/stats/attempts?days=14')
+      .set('Authorization', `Bearer ${login.body.token}`)
+      .expect(200);
+
+    expect(attempts.body.days).toBe(14);
+    expect(Array.isArray(attempts.body.series)).toBe(true);
+    expect(attempts.body.series).toHaveLength(14);
+
+    const reports = await request(app)
+      .get('/api/admin/reports')
+      .set('Authorization', `Bearer ${login.body.token}`)
+      .expect(200);
+
+    expect(Array.isArray(reports.body.signupsDaily)).toBe(true);
+    expect(reports.body.revenue).toBeTruthy();
+  });
+
+  it('returns student detail for admin', async () => {
+    const admin = await createTestUser({
+      email: `admin-student-detail-${Date.now()}@test.com`,
+      password: 'Password123!',
+      role: 'admin',
+    });
+    const student = await createTestUser({
+      email: `student-detail-${Date.now()}@test.com`,
+      password: 'Password123!',
+      role: 'student',
+      name: 'Detail Student',
+    });
+
+    const login = await request(app)
+      .post('/api/auth/login')
+      .send({ email: admin.email, password: 'Password123!' })
+      .expect(200);
+
+    const res = await request(app)
+      .get(`/api/admin/students/${student._id}`)
+      .set('Authorization', `Bearer ${login.body.token}`)
+      .expect(200);
+
+    expect(res.body.name).toBe('Detail Student');
+    expect(res.body.id).toBe(student._id.toString());
+  });
+
+  it('includes role in JWT access token', async () => {
+    const admin = await createTestUser({
+      email: `admin-jwt-${Date.now()}@test.com`,
+      password: 'Password123!',
+      role: 'admin',
+    });
+
+    const login = await request(app)
+      .post('/api/auth/login')
+      .send({ email: admin.email, password: 'Password123!' })
+      .expect(200);
+
+    const jwt = await import('jsonwebtoken');
+    const { env } = await import('../src/config/env.js');
+    const payload = jwt.default.verify(login.body.token, env.jwtSecret);
+
+    expect(payload.role).toBe('admin');
+    expect(payload.sub).toBe(admin._id.toString());
+  });
+
+  it('records audit log on admin mutation', async () => {
+    const { AuditLog } = await import('../src/models/AuditLog.js');
+    const admin = await createTestUser({
+      email: `admin-audit-${Date.now()}@test.com`,
+      password: 'Password123!',
+      role: 'admin',
+    });
+
+    const login = await request(app)
+      .post('/api/auth/login')
+      .send({ email: admin.email, password: 'Password123!' })
+      .expect(200);
+
+    await request(app)
+      .post('/api/admin/audit/test')
+      .set('Authorization', `Bearer ${login.body.token}`)
+      .expect(200);
+
+    const logs = await AuditLog.find({ actor: admin._id, action: 'test', resource: 'audit' }).lean();
+    expect(logs).toHaveLength(1);
+    expect(logs[0].meta?.method).toBe('POST');
   });
 });

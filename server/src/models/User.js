@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
+import { USER_ROLES, normalizeUserRole } from '../constants/userRoles.js';
 
 const SALT_ROUNDS = 12;
 
@@ -111,7 +112,7 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ['student', 'admin', 'mentor'],
+      enum: USER_ROLES,
       default: 'student',
     },
     isPremium: {
@@ -230,7 +231,7 @@ const userSchema = new mongoose.Schema(
     },
     accountStatus: {
       type: String,
-      enum: ['active', 'deleted'],
+      enum: ['active', 'suspended', 'deleted'],
       default: 'active',
       index: true,
     },
@@ -246,6 +247,12 @@ const userSchema = new mongoose.Schema(
 
 userSchema.index({ role: 1 });
 userSchema.index({ activeGoalId: 1 }, { sparse: true });
+
+userSchema.pre('save', function normalizeRoleField() {
+  if (this.isModified('role') && this.role) {
+    this.role = normalizeUserRole(this.role);
+  }
+});
 
 userSchema.pre('save', function mirrorStreakFields() {
   if (!this.isModified('streak') || !this.streak) {

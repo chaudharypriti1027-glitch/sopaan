@@ -8,6 +8,8 @@ export type LiveClass = {
   description?: string;
   instructor: string;
   examTag: string;
+  topic?: string | null;
+  startsAt?: string;
   scheduledAt?: string;
   startedAt?: string;
   endedAt?: string;
@@ -32,13 +34,18 @@ export type LiveClassesResponse = {
 };
 
 export type LiveTokenResponse = {
+  status?: 'live' | 'scheduled' | 'ended' | 'cancelled';
   liveClassId: string;
   roomName: string;
-  provider: string;
-  url: string;
-  token: string;
-  role: 'host' | 'viewer';
-  attendeeCount: number;
+  provider?: string;
+  url?: string;
+  token: string | null;
+  role?: 'host' | 'viewer' | 'student';
+  canPublish?: boolean;
+  canSubscribe?: boolean;
+  canPublishData?: boolean;
+  attendeeCount?: number;
+  message?: string;
 };
 
 /** @deprecated use LiveTokenResponse */

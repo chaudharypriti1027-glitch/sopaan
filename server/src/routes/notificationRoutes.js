@@ -11,6 +11,7 @@ import {
   pushTokenSchema,
   alertPreferencesSchema,
   notificationPreferencesSchema,
+  notificationTrackOpenSchema,
 } from '../validators/featureValidators.js';
 
 const router = Router();
@@ -18,6 +19,7 @@ const router = Router();
 router.use(requireAuth);
 
 router.get('/', validate(paginationQuerySchema, 'query'), asyncHandler(notificationController.listNotifications));
+router.post('/open', validate(notificationTrackOpenSchema), asyncHandler(notificationController.trackOpen));
 router.post(
   '/:id/read',
   validateParams(objectIdParamsSchema),

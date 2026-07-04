@@ -23,6 +23,8 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.57.0",
+    "@aws-sdk/client-s3": "^3.1079.0",
+    "@aws-sdk/s3-request-presigner": "^3.1079.0",
     "@sentry/node": "^9.47.1",
     "bcrypt": "^6.0.0",
     "bullmq": "^5.79.1",
@@ -39,6 +41,7 @@
     "mongoose": "^8.16.0",
     "morgan": "^1.10.0",
     "multer": "^2.2.0",
+    "nanoid": "^5.1.16",
     "node-cron": "^3.0.3",
     "rate-limit-redis": "^4.3.1",
     "socket.io": "^4.8.3",

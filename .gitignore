@@ -12,6 +12,7 @@ node_modules/
 
 # MongoDB logical backups (never commit)
 server/backups/
+server/uploads/
 
 # Logs
 logs/

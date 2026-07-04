@@ -61,6 +61,14 @@ export async function markNotificationRead(id: string): Promise<unknown> {
   return data;
 }
 
+export async function trackNotificationOpen(input: {
+  notificationId?: string;
+  campaignId?: string;
+}): Promise<unknown> {
+  const { data } = await apiClient.post('/notifications/open', input);
+  return data;
+}
+
 export async function registerPushToken(input: {
   token: string;
   platform?: 'ios' | 'android' | 'web';

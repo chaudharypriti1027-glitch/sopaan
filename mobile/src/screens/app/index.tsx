@@ -11,7 +11,6 @@ import { ForumScreen } from './ForumScreen';
 import { GroupChatScreen } from './GroupChatScreen';
 import { LeaderboardScreen } from './LeaderboardScreen';
 import { LiveClassesScreen } from './LiveClassesScreen';
-import { LiveClassViewerScreen } from './LiveClassViewerScreen';
 import { MentorsScreen } from './MentorsScreen';
 import { MockAnalysisScreen } from './MockAnalysisScreen';
 import { NotificationsScreen } from './NotificationsScreen';
@@ -56,7 +55,6 @@ export {
   RevisionCapsulesScreen,
   VocabularyScreen,
   LiveClassesScreen,
-  LiveClassViewerScreen,
   CommunityTestsScreen,
   CreateTestScreen,
   ForumScreen,

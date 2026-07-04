@@ -10,6 +10,11 @@ export async function markRead(req, res) {
   res.status(200).json(result);
 }
 
+export async function trackOpen(req, res) {
+  const result = await notificationService.trackNotificationOpen(req.user._id, req.body);
+  res.status(200).json(result);
+}
+
 export async function registerPushToken(req, res) {
   const result = await notificationService.registerPushToken(req.user._id, req.body);
   res.status(200).json(result);

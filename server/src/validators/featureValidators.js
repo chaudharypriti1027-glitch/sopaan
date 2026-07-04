@@ -84,6 +84,15 @@ export const pushSettingsSchema = z.object({
   enabled: z.boolean(),
 });
 
+export const notificationTrackOpenSchema = z
+  .object({
+    notificationId: z.string().trim().optional(),
+    campaignId: z.string().trim().optional(),
+  })
+  .refine((data) => Boolean(data.notificationId || data.campaignId), {
+    message: 'notificationId or campaignId is required',
+  });
+
 export const alertPreferencesSchema = z.object({
   currentAffairsAlerts: z.boolean(),
 });

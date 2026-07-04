@@ -2,7 +2,13 @@ import { createServer } from 'http';
 import app from './app.js';
 import { env } from './config/env.js';
 import { connectDatabase, registerDatabaseShutdownHandlers } from './config/db.js';
-import { initRealtimeServer } from './realtime/index.js';
+import { ensurePlatformSettings } from './services/platformSettingsService.js';
+import { ensureAdminUser, ensureDevStudentUser } from './seed/seedDatabase.js';
+import { getSeedAdminUser } from './seed/adminConfig.js';
+import { seedE2eStudentUser } from './seed/data.js';
+import { livekitStreamingProvider } from './services/streaming/livekitStreamingProvider.js';
+import { initStreamingProvider } from './services/streaming/index.js';
+import { initRealtimeServer, closeRealtimeServer } from './realtime/index.js';
 import { startJobScheduler } from './jobs/index.js';
 import { initSentry, installProcessErrorHandlers } from './observability/sentry.js';
 import { connectRedis, disconnectRedis } from './lib/redis.js';
@@ -64,6 +70,30 @@ async function listenWithRetry(httpServer, port, { retries = 5, delayMs = 1000 }
 
 async function start() {
   await connectDatabase();
+  await ensurePlatformSettings();
+
+  if (env.isDevelopment && process.env.SEED_ADMIN_EMAIL?.trim()) {
+    await ensureAdminUser();
+    console.log(`[dev] Admin account ready: ${getSeedAdminUser().email}`);
+  }
+
+  if (env.isDevelopment && !env.isTest) {
+    await ensureDevStudentUser();
+    console.log(`[dev] Student app login: ${seedE2eStudentUser.email} / ${seedE2eStudentUser.password}`);
+  }
+
+  if (
+    env.isDevelopment &&
+    !env.isTest &&
+    env.streamingProvider === 'livekit' &&
+    !livekitStreamingProvider.isConfigured()
+  ) {
+    console.warn(
+      '[streaming] LIVEKIT_API_SECRET is missing — using dev streaming. Copy the secret from https://cloud.livekit.io → Project Settings → Keys, add to server/.env, restart API.',
+    );
+  }
+
+  await initStreamingProvider();
 
   if (env.nodeEnv !== 'test') {
     await connectRedis().catch((err) => {
@@ -82,10 +112,26 @@ async function start() {
   console.log(`Sopaan API listening on http://localhost:${env.port} [${env.nodeEnv}]`);
 
   registerDatabaseShutdownHandlers(async () => {
+    await closeRealtimeServer().catch(() => {});
     await disconnectRedis().catch(() => {});
-    await new Promise((resolve, reject) => {
-      httpServer.close((err) => (err ? reject(err) : resolve()));
-    });
+
+    await Promise.race([
+      new Promise((resolve, reject) => {
+        httpServer.close((err) => (err ? reject(err) : resolve()));
+      }),
+      new Promise((resolve) => {
+        if (env.isDevelopment) {
+          setTimeout(resolve, 1500);
+          return;
+        }
+        resolve();
+      }),
+    ]);
+
+    if (typeof httpServer.closeAllConnections === 'function') {
+      httpServer.closeAllConnections();
+    }
+
     console.log('HTTP server closed');
   });
 }

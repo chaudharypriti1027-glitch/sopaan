@@ -40,7 +40,7 @@ const jobRunSchema = new mongoose.Schema(
     },
     triggeredBy: {
       type: String,
-      enum: ['scheduler', 'manual'],
+      enum: ['scheduler', 'manual', 'bullmq'],
       default: 'scheduler',
     },
   },

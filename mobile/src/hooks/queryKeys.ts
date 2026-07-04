@@ -7,6 +7,7 @@ export const queryKeys = {
   home: {
     all: ['home'] as const,
     feed: () => queryKeys.home.all,
+    banner: () => [...queryKeys.home.all, 'banner'] as const,
   },
   profile: {
     all: ['profile'] as const,

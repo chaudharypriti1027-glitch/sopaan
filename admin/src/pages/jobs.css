@@ -1,0 +1,15 @@
+.jobs-page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.jobs-note {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.jobs-section-title {
+  margin-top: 8px;
+}

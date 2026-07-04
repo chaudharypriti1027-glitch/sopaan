@@ -39,6 +39,7 @@ export const signupSchema = z
     password: passwordSchema,
     referralCode: z.string().trim().min(4).max(32).optional(),
     installId: z.string().trim().min(8).max(128).optional(),
+    inviteToken: z.string().trim().min(16).max(128).optional(),
     privacyConsent: privacyConsentInputSchema,
   })
   .refine((data) => Boolean(data.email || data.phone), {

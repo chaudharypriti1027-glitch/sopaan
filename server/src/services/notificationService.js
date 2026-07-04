@@ -2,6 +2,7 @@ import { Notification } from '../models/Notification.js';
 import { User } from '../models/User.js';
 import { AppError } from '../utils/AppError.js';
 import { buildPaginatedResult, parsePagination } from '../utils/pagination.js';
+import { recordCampaignOpen } from './admin/adminNotificationService.js';
 import { dispatchNotification } from './notifications/notificationDispatchService.js';
 import {
   resolveNotificationPreferences,
@@ -37,10 +38,32 @@ export async function markNotificationRead(userId, notificationId) {
     throw new AppError('Notification not found', 404, 'NOT_FOUND');
   }
 
-  notification.read = true;
-  await notification.save();
+  if (!notification.read) {
+    const now = new Date();
+    notification.read = true;
+    notification.readAt = now;
+    notification.openedAt = notification.openedAt ?? now;
+    await notification.save();
+
+    if (notification.campaignId) {
+      await recordCampaignOpen(notification.campaignId);
+    }
+  }
 
   return notification;
+}
+
+export async function trackNotificationOpen(userId, { notificationId, campaignId } = {}) {
+  if (notificationId) {
+    return markNotificationRead(userId, notificationId);
+  }
+
+  if (campaignId) {
+    await recordCampaignOpen(campaignId);
+    return { tracked: true, campaignId };
+  }
+
+  throw new AppError('notificationId or campaignId is required', 400, 'VALIDATION_ERROR');
 }
 
 export async function registerPushToken(userId, input) {

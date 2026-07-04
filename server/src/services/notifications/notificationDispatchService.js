@@ -6,7 +6,7 @@ import { mergeNotificationData } from './notificationTypes.js';
 
 export async function dispatchNotification(
   userId,
-  { type, title, body, data, channels = ['in_app', 'push'] },
+  { type, title, body, data, channels = ['in_app', 'push'], campaignId },
 ) {
   const includeInApp = channels.includes('in_app');
   const includePush = channels.includes('push');
@@ -23,6 +23,7 @@ export async function dispatchNotification(
       body,
       data: enrichedData,
       pushSent: false,
+      campaignId: campaignId ?? undefined,
     });
   }
 
@@ -35,11 +36,17 @@ export async function dispatchNotification(
       const decision = await evaluatePushDelivery(user, type);
 
       if (decision.allowed) {
+        const pushData = {
+          ...enrichedData,
+          ...(campaignId ? { campaignId: campaignId.toString() } : {}),
+          ...(notification ? { notificationId: notification._id.toString() } : {}),
+        };
+
         pushResult = await pushTransport.deliverPushToUser(userId, {
           type,
           title,
           body,
-          data: enrichedData,
+          data: pushData,
         });
 
         if (pushResult.sent && notification) {
@@ -53,6 +60,7 @@ export async function dispatchNotification(
             body,
             data: enrichedData,
             pushSent: true,
+            campaignId: campaignId ?? undefined,
           });
         }
       } else {
@@ -69,7 +77,7 @@ export async function dispatchNotification(
 
 export async function dispatchNotificationToUsers(
   userIds,
-  { type, title, body, data, channels = ['in_app', 'push'], limit = 500 },
+  { type, title, body, data, channels = ['in_app', 'push'], limit = 500, campaignId },
 ) {
   const targets = userIds.slice(0, limit);
   let inApp = 0;
@@ -77,7 +85,14 @@ export async function dispatchNotificationToUsers(
   let skipped = 0;
 
   for (const userId of targets) {
-    const result = await dispatchNotification(userId, { type, title, body, data, channels });
+    const result = await dispatchNotification(userId, {
+      type,
+      title,
+      body,
+      data,
+      channels,
+      campaignId,
+    });
 
     if (result.notification) {
       inApp += 1;

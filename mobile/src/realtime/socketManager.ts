@@ -35,7 +35,7 @@ export async function connectSocket(getToken: TokenProvider) {
 
   socket = io(config.apiOrigin, {
     path: '/socket.io',
-    transports: Platform.OS === 'web' ? ['polling', 'websocket'] : ['websocket'],
+    transports: ['polling', 'websocket'],
     auth: { token },
     reconnection: true,
     reconnectionAttempts: 10,

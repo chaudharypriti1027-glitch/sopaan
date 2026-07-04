@@ -16,6 +16,51 @@ function shouldRegister(definition) {
   return true;
 }
 
+export function getOrCreateJobQueue() {
+  const connection = getBullMqConnection();
+
+  if (!connection || !jobConfig.enabled) {
+    return null;
+  }
+
+  if (!queue) {
+    queue = new Queue('sopaan-jobs', { connection });
+  }
+
+  return queue;
+}
+
+export async function enqueueJob(jobName, data = {}, options = {}) {
+  const jobQueue = getOrCreateJobQueue();
+
+  if (!jobQueue) {
+    return null;
+  }
+
+  return jobQueue.add(jobName, data, {
+    removeOnComplete: 100,
+    removeOnFail: 50,
+    ...options,
+  });
+}
+
+export async function enqueueManualJob(jobName, { force = false } = {}) {
+  const jobQueue = getOrCreateJobQueue();
+
+  if (!jobQueue) {
+    return null;
+  }
+
+  return jobQueue.add(
+    jobName,
+    { force, triggeredBy: 'manual' },
+    {
+      removeOnComplete: 100,
+      removeOnFail: 50,
+    },
+  );
+}
+
 async function registerRepeatableJobs(jobQueue) {
   for (const definition of JOB_DEFINITIONS) {
     if (!shouldRegister(definition)) {
@@ -85,10 +130,10 @@ export async function startBullMqScheduler({
     return null;
   }
 
-  queue = new Queue('sopaan-jobs', { connection });
+  const jobQueue = getOrCreateJobQueue();
 
   if (registerRepeatables) {
-    await registerRepeatableJobs(queue);
+    await registerRepeatableJobs(jobQueue);
   }
 
   if (startWorker) {
@@ -101,7 +146,14 @@ export async function startBullMqScheduler({
           throw new Error(`Unknown BullMQ job: ${job.name}`);
         }
 
-        return handler({ triggeredBy: 'bullmq' });
+        const data = job.data ?? {};
+
+        return handler({
+          force: data.force ?? false,
+          date: data.date,
+          triggeredBy: data.triggeredBy ?? 'scheduler',
+          data,
+        });
       },
       { connection },
     );
@@ -109,7 +161,7 @@ export async function startBullMqScheduler({
     attachWorkerFailureLogging(worker);
   }
 
-  return { queue, worker };
+  return { queue: jobQueue, worker };
 }
 
 export async function stopBullMqScheduler() {

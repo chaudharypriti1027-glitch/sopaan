@@ -29,10 +29,12 @@
     "sentry:sourcemaps": "echo 'Source maps upload on EAS build when SENTRY_AUTH_TOKEN is set. Runtime release: sopaan-mobile@<version>'"
   },
   "dependencies": {
+    "@config-plugins/react-native-webrtc": "^12.0.0",
     "@expo-google-fonts/plus-jakarta-sans": "^0.4.2",
     "@expo-google-fonts/space-grotesk": "^0.4.1",
     "@expo/metro-runtime": "~5.0.5",
     "@livekit/react-native": "^2.11.1",
+    "@livekit/react-native-expo-plugin": "^1.0.2",
     "@livekit/react-native-webrtc": "^144.1.1",
     "@react-native-async-storage/async-storage": "2.1.2",
     "@react-native-community/datetimepicker": "8.4.1",
@@ -67,6 +69,7 @@
     "expo-splash-screen": "~0.30.10",
     "expo-status-bar": "~2.2.3",
     "expo-updates": "~0.28.18",
+    "expo-video": "~2.2.2",
     "expo-web-browser": "~14.2.0",
     "i18next": "^26.3.3",
     "livekit-client": "^2.20.0",

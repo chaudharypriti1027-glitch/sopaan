@@ -1,0 +1,34 @@
+.roles-page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.roles-invite-form {
+  display: grid;
+  grid-template-columns: 1fr 180px auto;
+  gap: 12px;
+  align-items: end;
+  margin-top: 12px;
+}
+
+.roles-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.roles-actions select {
+  min-width: 120px;
+}
+
+.roles-locked {
+  color: var(--muted, #8b93a7);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 900px) {
+  .roles-invite-form {
+    grid-template-columns: 1fr;
+  }
+}

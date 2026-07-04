@@ -319,17 +319,18 @@
   }
 
   async function loadDashboard() {
-    const [stats, aiFeedback] = await Promise.all([
-      api('/admin/stats'),
-      api('/admin/ai-feedback?limit=1').catch(() => ({ pagination: { total: 0 } })),
-    ]);
-    statsCache = { ...stats, aiFeedbackPending: aiFeedback.pagination?.total ?? 0 };
+    const stats = await api('/admin/stats');
+    statsCache = stats;
     const s = statsCache;
     const dash = document.getElementById('v-dashboard');
 
     dash.querySelectorAll('[data-stat]').forEach((el) => {
       const key = el.dataset.stat;
-      const val = s[key] ?? 0;
+      let val = s[key] ?? 0;
+      if (key === 'mrrPaise' || key === 'revenue30dPaise') {
+        el.innerHTML = `₹<span class="num">${Math.round(val / 100).toLocaleString()}</span>`;
+        return;
+      }
       el.dataset.count = String(val);
       el.textContent = '0';
       countUp(el);
@@ -353,7 +354,8 @@
       greetName.textContent = `Welcome back, ${currentUser.name.split(' ')[0]}`;
     }
 
-    updateAttemptsChart(s.attemptsLast30Days ?? 0);
+    updateAttemptsChart(s.attemptsDaily ?? []);
+    updateSignupsChart(s.signupsDaily ?? []);
     updateContentMix(s);
     updateAlertBadge(s);
 
@@ -375,19 +377,40 @@
     if (dot) dot.style.display = pending > 0 ? 'block' : 'none';
   }
 
-  function updateAttemptsChart(total) {
+  function updateAttemptsChart(series) {
     const chart = document.getElementById('attemptsChart');
     if (!chart) return;
-    const days = ['M', 'T', 'W', 'T', 'F', 'S', 'S', 'M', 'T', 'W', 'T', 'F', 'S', 'S'];
-    const base = Math.max(1, total / days.length);
-    chart.innerHTML = days
-      .map((label, i) => {
-        const variance = 0.65 + ((i * 17) % 10) / 20;
-        const height = Math.min(100, Math.round((base * variance / Math.max(base, 1)) * 80 + 12));
-        return `<div class="bar"><i style="height:${height}%"></i><span>${label}</span></div>`;
+    const rows = Array.isArray(series) ? series : [];
+    if (rows.length === 0) {
+      chart.innerHTML = `<p class="empty-note">No attempts in the last 14 days.</p>`;
+      return;
+    }
+    const peak = Math.max(...rows.map((row) => row.value), 1);
+    chart.innerHTML = rows
+      .map((row) => {
+        const height = Math.max(8, Math.round((row.value / peak) * 100));
+        return `<div class="bar"><i style="height:${height}%"></i><span>${escapeHtml(row.label || '')}</span></div>`;
       })
       .join('');
   }
+
+  function updateSignupsChart(series) {
+    const chart = document.getElementById('signupsChart');
+    if (!chart) return;
+    const rows = Array.isArray(series) ? series : [];
+    if (rows.length === 0) {
+      chart.innerHTML = `<p class="empty-note">No signups in the last 14 days.</p>`;
+      return;
+    }
+    const peak = Math.max(...rows.map((row) => row.value), 1);
+    chart.innerHTML = rows
+      .map((row) => {
+        const height = Math.max(8, Math.round((row.value / peak) * 100));
+        return `<div class="bar"><i style="height:${height}%"></i><span>${escapeHtml(row.label || '')}</span></div>`;
+      })
+      .join('');
+  }
+
 
   function updateContentMix(s) {
     const questions = s.questionsTotal ?? 0;
@@ -685,7 +708,8 @@
     await api(`/admin/ai-feedback/${id}`, {
       method: 'PATCH',
       body: JSON.stringify({
-        status: decision === 'keep' ? 'reviewed' : 'dismissed',
+        action: decision === 'keep' ? 'keep' : 'override',
+        ...(decision === 'override' ? { grade: 0, note: 'Adjusted by admin' } : {}),
       }),
     });
     toast(decision === 'keep' ? 'AI grade kept' : 'Grade overridden');
@@ -710,7 +734,7 @@
           <td>${escapeHtml(job.description || name)}</td>
           <td>${escapeHtml(job.schedule || job.defaultSchedule || '—')}</td>
           <td>${escapeHtml(last?.startedAt ? formatDate(last.startedAt) : '—')}</td>
-          <td>${pill(last?.status === 'success' ? 'published' : last?.status || 'draft')}</td>
+          <td>${pill(last?.status === 'completed' || last?.status === 'success' ? 'published' : last?.status === 'failed' ? 'rejected' : last?.status || 'draft')}</td>
           <td>${actions([btn('Run now', 'pri', `runJob('${name}')`)])}</td>
         </tr>`;
       })
@@ -718,8 +742,11 @@
   }
 
   window.runJob = async function (jobName) {
-    await api(`/admin/jobs/${encodeURIComponent(jobName)}/run`, { method: 'POST', body: '{}' });
-    toast('Job triggered');
+    const result = await api(`/admin/jobs/${encodeURIComponent(jobName)}/run`, {
+      method: 'POST',
+      body: JSON.stringify({ force: true }),
+    });
+    toast(result.queued ? 'Job queued' : 'Job triggered');
     await loadJobs();
   };
 
@@ -755,8 +782,7 @@
   }
 
   window.viewStudent = async function (id) {
-    const data = await api(`/admin/students?limit=100`);
-    const student = (data.items || []).find((row) => row.id === id);
+    const student = await api(`/admin/students/${id}`);
     if (!student) {
       toast('Student not found');
       return;
@@ -770,8 +796,11 @@
         ${detailItem('Attempts', student.attempts ?? 0)}
         ${detailItem('Accuracy', student.accuracy != null ? `${student.accuracy}%` : '—')}
         ${detailItem('Streak', student.streak ?? 0)}
+        ${detailItem('Coins', student.coins ?? 0)}
+        ${detailItem('Level', student.level ?? 1)}
         ${detailItem('Pro member', student.isPremium ? 'Yes' : 'No')}
         ${detailItem('Joined', formatDate(student.joinedAt))}
+        ${detailItem('Last attempt', student.lastAttemptAt ? formatDate(student.lastAttemptAt) : '—')}
       </div>`,
       footerHtml: `<button type="button" class="tbtn gold" id="modalCancel">Close</button>`,
     });
@@ -886,7 +915,7 @@
   }
 
   window.startLiveClass = async function (id) {
-    await api(`/live-classes/${id}/status`, {
+    await api(`/admin/live-classes/${id}/status`, {
       method: 'PATCH',
       body: JSON.stringify({ status: 'live' }),
     });
@@ -897,7 +926,7 @@
 
   window.endLiveClass = async function (id) {
     if (!confirm('End or cancel this class?')) return;
-    await api(`/live-classes/${id}/status`, {
+    await api(`/admin/live-classes/${id}/status`, {
       method: 'PATCH',
       body: JSON.stringify({ status: 'ended' }),
     });
@@ -920,7 +949,7 @@
       toast('Invalid date/time');
       return;
     }
-    await api('/live-classes', {
+    await api('/admin/live-classes', {
       method: 'POST',
       body: JSON.stringify({
         title,
@@ -1017,16 +1046,57 @@
   };
 
   async function loadCoupons() {
+    const [referrals, plans] = await Promise.all([
+      api('/admin/referrals'),
+      api('/admin/billing-plans'),
+    ]);
+
     const grid = document.getElementById('couponGrid');
+    const tbody = document.querySelector('#v-coupons table tbody');
+    const summary = referrals.summary || {};
+
     if (grid) {
-      grid.innerHTML = `<div class="empty-card"><b>Coupons not enabled</b>Use Razorpay offers or payment links for production discounts. Configure billing in server environment.</div>`;
+      grid.innerHTML = (plans.plans || [])
+        .map(
+          (plan) => `<div class="panel" style="padding:16px">
+            <b style="font-size:14px">${escapeHtml(plan.label)} plan</b>
+            <div style="font-size:22px;font-family:'Space Grotesk',sans-serif;font-weight:700;margin:8px 0">${escapeHtml(plan.displayAmount)}</div>
+            <div style="font-size:12px;color:var(--muted)">${escapeHtml(plan.description || '')}</div>
+            <div style="font-size:11px;color:var(--faint);margin-top:8px">Server-side pricing · Razorpay checkout</div>
+          </div>`,
+        )
+        .join('');
     }
+
+    if (tbody) {
+      const items = referrals.items || [];
+      if (items.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5">No referral activity yet.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = items
+        .map(
+          (row) => `<tr>
+            <td>${escapeHtml(row.referrerName)}</td>
+            <td>${escapeHtml(row.referralCode || '—')}</td>
+            <td>${pill(row.status)}</td>
+            <td>${row.rewardCoins ?? 0} coins</td>
+            <td>${formatDate(row.createdAt)}</td>
+          </tr>`,
+        )
+        .join('');
+    }
+
+    const metrics = document.querySelectorAll('#v-coupons .metrics .v');
+    if (metrics[0]) metrics[0].textContent = String(summary.total ?? 0);
+    if (metrics[1]) metrics[1].textContent = String(summary.converted ?? 0);
+    if (metrics[2]) metrics[2].textContent = String(summary.pending ?? 0);
   }
 
   window.createCoupon = function () {
     openModal({
-      title: 'Coupon management',
-      bodyHtml: `<p class="empty-note" style="margin:0">Coupon codes are not stored in this admin build. Create offers in your Razorpay dashboard and share codes with students manually.</p>`,
+      title: 'Referral & billing',
+      bodyHtml: `<p class="empty-note" style="margin:0">Student referral rewards are tracked automatically. Pro plan prices are set in server env (<code>PREMIUM_MONTHLY_AMOUNT_PAISE</code>, <code>PREMIUM_YEARLY_AMOUNT_PAISE</code>). Create Razorpay offers in the Razorpay dashboard for promo codes.</p>`,
       footerHtml: `<button type="button" class="tbtn gold" id="modalCancel">Got it</button>`,
     });
     document.getElementById('modalCancel')?.addEventListener('click', closeModal);
@@ -1094,6 +1164,8 @@
   async function loadMedia() {
     const panel = document.querySelector('#v-media');
     if (!panel) return;
+    const staticGrid = panel.querySelector('.cgrid');
+    if (staticGrid) staticGrid.remove();
     let grid = panel.querySelector('.media-grid');
     if (!grid) {
       grid = document.createElement('div');
@@ -1145,14 +1217,61 @@
   }
 
   async function loadSettings() {
-    const me = currentUser || normalizeUser(await api('/me'));
+    const [me, plans] = await Promise.all([
+      currentUser ? Promise.resolve(currentUser) : api('/me'),
+      api('/admin/billing-plans').catch(() => ({ plans: [] })),
+    ]);
 
     const nameInput = document.getElementById('settingsName');
     const emailInput = document.getElementById('settingsEmail');
     const proPriceInput = document.getElementById('settingsProPrice');
     if (nameInput) nameInput.value = me?.name || '';
     if (emailInput) emailInput.value = me?.email || '';
-    if (proPriceInput) proPriceInput.value = '299';
+    const monthly = (plans.plans || []).find((plan) => plan.id === 'monthly');
+    if (proPriceInput) proPriceInput.value = monthly?.displayAmount?.replace('₹', '') || '299';
+  }
+
+  window.exportAdminReport = async function () {
+    const [stats, reports, students, revenue] = await Promise.all([
+      api('/admin/stats'),
+      api('/admin/reports'),
+      api('/admin/students?limit=200'),
+      api('/admin/revenue'),
+    ]);
+
+    const lines = [
+      'Sopaan Admin Report',
+      `Generated,${reports.generatedAt || new Date().toISOString()}`,
+      '',
+      'Metric,Value',
+      `Active students (30d),${stats.activeStudents ?? 0}`,
+      `Total students,${stats.totalStudents ?? 0}`,
+      `Pro members,${stats.proStudents ?? 0}`,
+      `Mock attempts (30d),${stats.attemptsLast30Days ?? 0}`,
+      `MRR (INR),${Math.round((stats.mrrPaise ?? 0) / 100)}`,
+      `Revenue 30d (INR),${Math.round((stats.revenue30dPaise ?? 0) / 100)}`,
+      `Referrals,${stats.referralsTotal ?? 0}`,
+      '',
+      'Student,Name,Email,Attempts,Accuracy,Streak,Pro',
+      ...(students.items || []).map(
+        (row) =>
+          `Student,${csvCell(row.name)},${csvCell(row.email || '')},${row.attempts ?? 0},${row.accuracy ?? ''},${row.streak ?? 0},${row.isPremium ? 'yes' : 'no'}`,
+      ),
+    ];
+
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `sopaan-admin-report-${new Date().toISOString().slice(0, 10)}.csv`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+    toast('Report downloaded');
+  };
+
+  function csvCell(value) {
+    const text = String(value ?? '').replace(/"/g, '""');
+    return `"${text}"`;
   }
 
   window.saveSettings = function () {
@@ -1468,6 +1587,9 @@
     document.getElementById('btnSaveSettings')?.addEventListener('click', () => saveSettings());
     document.getElementById('btnUploadMedia')?.addEventListener('click', () => show('media'));
     document.getElementById('btnCreateCoupon')?.addEventListener('click', () => createCoupon());
+    document.getElementById('btnExportReport')?.addEventListener('click', () => {
+      void exportAdminReport().catch((err) => toast(err.message));
+    });
     document.getElementById('btnInviteMember')?.addEventListener('click', () => inviteTeamMember());
     document.getElementById('btnSendChat')?.addEventListener('click', () => sendMsg());
     document.getElementById('chatInput')?.addEventListener('keydown', (e) => {

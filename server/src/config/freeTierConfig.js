@@ -1,23 +1,18 @@
-/** Server-driven free vs Pro limits — tune via env without app redeploy. */
-export const FREE_TIER_LIMITS = Object.freeze({
-  aiGenerateTestsPerDay: Number(process.env.FREE_AI_TESTS_PER_DAY ?? 2),
-  aiDoubtsFastPerDay: Number(process.env.FREE_AI_DOUBTS_PER_DAY ?? 10),
-  aiDoubtsQualityPerDay: Number(process.env.FREE_AI_QUALITY_DOUBTS_PER_DAY ?? 2),
-  aiEvaluationsPerDay: Number(process.env.FREE_AI_EVALUATIONS_PER_DAY ?? 0),
-  mocksPerDay: Number(process.env.FREE_MOCKS_PER_DAY ?? 3),
-  showAds: process.env.FREE_SHOW_ADS !== 'false',
-  detailedAnalytics: process.env.FREE_DETAILED_ANALYTICS === 'true',
-});
+import {
+  getSettingsSnapshot,
+  getFreeTierLimitsFromSettings,
+  getProTierLimitsFromSettings,
+} from '../services/platformSettingsService.js';
 
-export const PRO_TIER_LIMITS = Object.freeze({
-  aiGenerateTestsPerDay: Number(process.env.PRO_AI_TESTS_PER_DAY ?? 999),
-  aiDoubtsFastPerDay: Number(process.env.PRO_AI_DOUBTS_PER_DAY ?? 200),
-  aiDoubtsQualityPerDay: Number(process.env.PRO_AI_QUALITY_DOUBTS_PER_DAY ?? 50),
-  aiEvaluationsPerDay: Number(process.env.PRO_AI_EVALUATIONS_PER_DAY ?? 999),
-  mocksPerDay: Number(process.env.PRO_MOCKS_PER_DAY ?? 999),
-  showAds: false,
-  detailedAnalytics: true,
-});
+/** @deprecated Prefer getTierLimits() — reads live PlatformSettings. */
+export function getFreeTierLimits() {
+  return getFreeTierLimitsFromSettings();
+}
+
+/** @deprecated Prefer getTierLimits() — reads live PlatformSettings. */
+export function getProTierLimits() {
+  return getProTierLimitsFromSettings();
+}
 
 /** Canonical feature keys used by middleware, quota service, and mobile hook. */
 export const TIER_FEATURE_KEYS = Object.freeze([
@@ -66,7 +61,10 @@ export const TIER_FEATURES = Object.freeze({
 });
 
 export function getTierLimits(isPro) {
-  return isPro ? PRO_TIER_LIMITS : FREE_TIER_LIMITS;
+  const settings = getSettingsSnapshot();
+  return isPro
+    ? getProTierLimitsFromSettings(settings)
+    : getFreeTierLimitsFromSettings(settings);
 }
 
 export function getFeaturePaywallCopy(featureKey) {

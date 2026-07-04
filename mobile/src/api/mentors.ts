@@ -8,10 +8,13 @@ export type MentorSlot = {
 
 export type Mentor = {
   id: string;
+  name?: string;
   expertise?: string[];
   rating?: number;
   sessionsCount?: number;
   bio?: string;
+  rate?: number;
+  avatarUrl?: string;
   slots?: MentorSlot[];
   availableSlots?: MentorSlot[];
   userId?: { name?: string; email?: string } | string;

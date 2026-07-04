@@ -3,6 +3,7 @@ export { useProfileSummary } from './useProfileSummary';
 export { useCompleteGame } from './useGames';
 export { useGameProgress } from './useGameProgress';
 export { useHomeFeed } from './useHomeFeed';
+export { useHomeBanner } from './useHomeBanner';
 export { useProGate, useTierStatus } from './useProGate';
 export { useExperiments } from '../experiments';
 export { queryKeys } from './queryKeys';

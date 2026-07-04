@@ -19,7 +19,7 @@ router.get('/:id', optionalAuth, asyncHandler(liveClassController.getLiveClass))
 router.post(
   '/',
   requireAuth,
-  requireRole('admin', 'mentor'),
+  requireRole('admin', 'creator'),
   validate(liveClassCreateSchema),
   asyncHandler(liveClassController.createLiveClass),
 );
@@ -27,7 +27,7 @@ router.post(
 router.patch(
   '/:id/status',
   requireAuth,
-  requireRole('admin', 'mentor'),
+  requireRole('admin', 'creator'),
   validate(liveClassStatusSchema),
   asyncHandler(liveClassController.updateLiveClassStatus),
 );

@@ -41,9 +41,13 @@ export const adminContentQuerySchema = z.object({
 });
 
 export const questionReviewSchema = z.object({
-  action: z.enum(['fix', 'merge', 'reject']),
+  action: z.enum(['fix', 'recheck', 'merge', 'reject']),
   mergeTargetId: z.string().trim().optional(),
   updates: questionUpdateSchema.optional(),
+});
+
+export const questionMergeSchema = z.object({
+  into: z.string().trim().min(1),
 });
 
 const VALID_OPTION_KEYS = ['A', 'B', 'C', 'D'];

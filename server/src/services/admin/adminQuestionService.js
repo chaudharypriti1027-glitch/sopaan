@@ -184,11 +184,21 @@ export async function setQuestionStatus(userId, id, status) {
     question.set(withAuditOnUpdate({}, userId));
 
     if (!assertCanPublish(question)) {
-      throw new AppError(
-        'Question must pass quality review before publishing',
-        400,
-        'QUALITY_GATE_FAILED',
+      const blockingIssues = (question.qualityIssues ?? []).filter(
+        (issue) => issue.severity === 'error',
       );
+      const reason =
+        question.reviewStatus !== 'approved'
+          ? `Review status is "${question.reviewStatus}" — approve or fix issues before publishing`
+          : blockingIssues.length
+            ? blockingIssues.map((issue) => issue.message).join('; ')
+            : 'Question must pass quality review before publishing';
+
+      throw new AppError(reason, 400, 'QUALITY_GATE_FAILED', {
+        qualityIssues: question.qualityIssues ?? [],
+        reviewStatus: question.reviewStatus,
+        canPublish: false,
+      });
     }
   }
 
@@ -242,7 +252,7 @@ export async function reviewQuestion(userId, id, { action, updates, mergeTargetI
     throw new AppError('Question not found', 404, 'NOT_FOUND');
   }
 
-  if (action === 'fix') {
+  if (action === 'fix' || action === 'recheck') {
     await reevaluateQuestion(question, updates ?? {});
     question.set(withAuditOnUpdate({}, userId));
     await question.save();
@@ -286,6 +296,10 @@ export async function reviewQuestion(userId, id, { action, updates, mergeTargetI
   }
 
   throw new AppError('Unsupported review action', 400, 'VALIDATION_ERROR');
+}
+
+export async function mergeQuestion(userId, id, into) {
+  return reviewQuestion(userId, id, { action: 'merge', mergeTargetId: into });
 }
 
 export async function countPendingQuestionReviews() {

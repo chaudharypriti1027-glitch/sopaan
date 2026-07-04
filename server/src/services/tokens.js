@@ -5,6 +5,8 @@ import { User } from '../models/User.js';
 import { Session } from '../models/Session.js';
 import { env } from '../config/env.js';
 import { AppError } from '../utils/AppError.js';
+import { normalizeUserRole } from '../constants/userRoles.js';
+import { isAccountSuspended } from '../utils/accountAuthPolicy.js';
 
 const ACCESS_EXPIRY = '15m';
 const REFRESH_EXPIRY = '30d';
@@ -18,13 +20,17 @@ async function resolveUserRole(userId) {
     throw new AppError('User not found', 401, 'UNAUTHORIZED');
   }
 
-  return user.role ?? 'student';
+  if (isAccountSuspended(user)) {
+    throw new AppError('Account suspended', 403, 'ACCOUNT_SUSPENDED');
+  }
+
+  return user.role ? normalizeUserRole(user.role) : 'student';
 }
 
 function accessPayload(userId, role) {
   return {
     sub: String(userId),
-    role: role ?? 'student',
+    role: normalizeUserRole(role ?? 'student'),
   };
 }
 

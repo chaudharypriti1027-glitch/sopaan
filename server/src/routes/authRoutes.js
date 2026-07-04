@@ -23,6 +23,7 @@ const router = Router();
 router.use(authRateLimiter);
 
 router.post('/signup', validate(signupSchema), asyncHandler(authController.signup));
+router.get('/team-invite/:token', asyncHandler(authController.getTeamInvite));
 router.post('/login', validate(loginSchema), asyncHandler(authController.login));
 router.post('/google', validate(googleAuthSchema), asyncHandler(authController.googleAuth));
 router.post('/set-password', requireAuth, validate(setPasswordSchema), asyncHandler(authController.setPassword));

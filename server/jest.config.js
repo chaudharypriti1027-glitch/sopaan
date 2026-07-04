@@ -12,4 +12,5 @@ export default {
   globalTeardown: '<rootDir>/tests/setup/globalTeardown.js',
   setupFilesAfterEnv: ['<rootDir>/tests/setup/afterEnv.js'],
   testTimeout: 30_000,
+  forceExit: true,
 };

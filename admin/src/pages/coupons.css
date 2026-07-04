@@ -1,0 +1,37 @@
+.coupons-page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.coupons-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.coupon-form-note {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0 0 14px;
+}
+
+.coupon-form-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.coupon-value-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+@media (max-width: 960px) {
+  .coupons-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -16,7 +16,7 @@ function profileFromLegacyUser(user: User): Profile {
     ...(streakCount != null && streakCount > 0 ? { streak: streakCount } : {}),
     rank: null,
     level: 1,
-    role: user.role ?? 'student',
+    role: (user.role ?? 'student') as Profile['role'],
     isPremium: user.isPremium ?? false,
     ...(user.premiumPlan ? { premiumPlan: user.premiumPlan } : {}),
     ...(user.premiumExpiresAt ? { premiumExpiresAt: user.premiumExpiresAt } : {}),

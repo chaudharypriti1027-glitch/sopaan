@@ -45,6 +45,32 @@ const paymentOrderSchema = new mongoose.Schema(
       default: null,
       trim: true,
     },
+    originalAmountPaise: {
+      type: Number,
+      default: null,
+      min: 1,
+    },
+    discountPaise: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    couponId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Coupon',
+      default: null,
+      index: true,
+    },
+    couponCode: {
+      type: String,
+      default: null,
+      trim: true,
+      uppercase: true,
+    },
+    couponRedeemed: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,

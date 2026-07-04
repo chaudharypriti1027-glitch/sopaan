@@ -13,10 +13,33 @@ const DEFAULT_PORT = 4000;
  * 3. Expo dev host (physical device / simulator via Metro) → host:4000
  * 4. iOS simulator fallback → localhost
  */
+function normalizeLocalhostForDevice(url: string): string {
+  const isLocal =
+    url.includes('://localhost') ||
+    url.includes('://127.0.0.1');
+
+  if (!isLocal) {
+    return url;
+  }
+
+  if (Platform.OS === 'android' && !Constants.isDevice) {
+    return url.replace(/localhost|127\.0\.0\.1/g, '10.0.2.2');
+  }
+
+  const hostUri = Constants.expoConfig?.hostUri ?? Constants.manifest2?.extra?.expoGo?.debuggerHost;
+  const host = hostUri?.split(':')[0];
+
+  if (host && host !== 'localhost' && host !== '127.0.0.1') {
+    return url.replace(/localhost|127\.0\.0\.1/g, host);
+  }
+
+  return url;
+}
+
 function resolveApiOrigin(): string {
   const envUrl = process.env.EXPO_PUBLIC_API_URL?.trim();
   if (envUrl) {
-    return envUrl.replace(/\/$/, '');
+    return normalizeLocalhostForDevice(envUrl.replace(/\/$/, ''));
   }
 
   if (Platform.OS === 'android' && !Constants.isDevice) {

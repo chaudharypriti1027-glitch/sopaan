@@ -1,4 +1,6 @@
-export type UserRole = 'student' | 'admin' | 'mentor';
+import type { Profile } from '../types/auth';
+
+export type UserRole = NonNullable<Profile['role']>;
 
 export type UserStreak = {
   count: number;

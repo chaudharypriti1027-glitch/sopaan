@@ -1,5 +1,9 @@
-import { NativeModules } from 'react-native';
+import { NativeModules, Platform } from 'react-native';
 
 export function isLiveKitNativeAvailable(): boolean {
-  return Boolean(NativeModules.WebRTCModule);
+  if (Platform.OS === 'web') {
+    return typeof globalThis.RTCPeerConnection !== 'undefined';
+  }
+
+  return NativeModules.WebRTCModule != null;
 }

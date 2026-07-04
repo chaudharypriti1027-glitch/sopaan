@@ -64,6 +64,9 @@ export const reportAiFeedbackSchema = z.object({
   userComment: z.string().trim().max(500).optional(),
   inputSummary: z.string().trim().max(2000).optional(),
   outputSnapshot: z.record(z.unknown()),
+  evaluationId: z.string().trim().min(1).optional(),
+  attemptId: z.string().trim().min(1).optional(),
+  maxMarks: z.coerce.number().int().min(1).max(100).optional(),
 });
 
 const VALID_OPTION_KEYS = ['A', 'B', 'C', 'D'];

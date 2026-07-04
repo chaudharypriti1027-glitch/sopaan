@@ -61,6 +61,12 @@ export function navigateHomeDeeplink(navigation: HomeNav, deeplink: string) {
       case 'Leaderboard':
         stackNav.navigate('Leaderboard');
         break;
+      case 'Premium':
+        stackNav.navigate('Premium');
+        break;
+      case 'LiveClasses':
+        stackNav.navigate('LiveClasses');
+        break;
       case 'Games':
         stackNav.navigate('Games');
         break;

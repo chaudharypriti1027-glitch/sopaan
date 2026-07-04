@@ -33,6 +33,16 @@ const notificationSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    campaignId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'AdminNotificationSend',
+    },
+    readAt: {
+      type: Date,
+    },
+    openedAt: {
+      type: Date,
+    },
   },
   {
     timestamps: { createdAt: true, updatedAt: false },
@@ -42,5 +52,6 @@ const notificationSchema = new mongoose.Schema(
 notificationSchema.index({ userId: 1, createdAt: -1 });
 notificationSchema.index({ userId: 1, read: 1, createdAt: -1 });
 notificationSchema.index({ userId: 1, pushSent: 1, createdAt: -1 });
+notificationSchema.index({ campaignId: 1, read: 1 });
 
 export const Notification = mongoose.model('Notification', notificationSchema);

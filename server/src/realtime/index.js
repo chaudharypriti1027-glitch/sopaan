@@ -7,7 +7,9 @@ import {
   rejoinTrackedRooms,
 } from './groupChat.js';
 import { registerLiveClassChatHandlers, rejoinLiveClassRooms } from './liveClassChat.js';
-import { setRealtimeIo } from './io.js';
+import { registerLiveNamespace } from './liveNamespace.js';
+import { registerAdminNamespace } from './adminNamespace.js';
+import { setRealtimeIo, setLiveNamespace, setAdminNamespace, getRealtimeIo } from './io.js';
 
 export function initRealtimeServer(httpServer) {
   const io = new Server(httpServer, {
@@ -38,6 +40,16 @@ export function initRealtimeServer(httpServer) {
 
   io.use(authenticateSocket);
 
+  const liveNs = io.of('/live');
+  liveNs.use(authenticateSocket);
+  registerLiveNamespace(liveNs);
+  setLiveNamespace(liveNs);
+
+  const adminNs = io.of('/admin');
+  adminNs.use(authenticateSocket);
+  registerAdminNamespace(adminNs);
+  setAdminNamespace(adminNs);
+
   io.on('connection', (socket) => {
     console.info(`[realtime] connected user=${socket.user.id}`);
 
@@ -61,6 +73,21 @@ export function initRealtimeServer(httpServer) {
 
   setRealtimeIo(io);
   return io;
+}
+
+export async function closeRealtimeServer() {
+  const io = getRealtimeIo();
+  if (!io) {
+    return;
+  }
+
+  await new Promise((resolve) => {
+    io.close(() => resolve());
+  });
+
+  setRealtimeIo(null);
+  setLiveNamespace(null);
+  setAdminNamespace(null);
 }
 
 export { broadcastLiveMockLeaderboard } from './groupChat.js';

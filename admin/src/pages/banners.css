@@ -1,0 +1,72 @@
+.banners-page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.banners-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(280px, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.banners-preview-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.home-banner-preview {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #fff8e8, #f6edd4);
+  border: 1px solid #e8d7a8;
+}
+
+.home-banner-preview-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: #232a4d;
+  color: #e3c97f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.home-banner-preview-icon .svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+  stroke: currentColor;
+}
+
+.home-banner-preview strong {
+  display: block;
+  font-size: 14px;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.home-banner-preview span {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.banner-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 960px) {
+  .banners-grid {
+    grid-template-columns: 1fr;
+  }
+}

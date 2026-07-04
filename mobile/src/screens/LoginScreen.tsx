@@ -17,7 +17,7 @@ import {
 } from '../components/auth';
 import { Text } from '../components/Text';
 import { authApi, parseApiError, privacyApi } from '../api';
-import { completeStudentLogin } from '../auth/studentSession';
+import { completeStudentLogin, isAdminAppAccessError } from '../auth/studentSession';
 import { useGoogleSignIn } from '../auth/useGoogleSignIn';
 import type { AuthStackParamList, RootStackParamList } from '../navigation/types';
 import { AUTH_UI } from '../components/auth/authTheme';
@@ -94,9 +94,21 @@ export function LoginScreen() {
         password,
       });
       const ok = await completeStudentLogin(navigation, result);
-      if (!ok) return;
+      if (!ok) {
+        setFormError(t('login.adminUseWebConsole'));
+        return;
+      }
     } catch (err) {
-      setFormError(parseApiError(err).message);
+      if (isAdminAppAccessError(err)) {
+        setFormError(t('login.adminUseWebConsole'));
+        return;
+      }
+      const parsed = parseApiError(err);
+      setFormError(
+        parsed.code === 'INVALID_CREDENTIALS'
+          ? t('login.checkEmailPassword')
+          : parsed.message,
+      );
     } finally {
       setLoginLoading(false);
     }
@@ -114,8 +126,15 @@ export function LoginScreen() {
         },
       });
       const ok = await completeStudentLogin(navigation, result);
-      if (!ok) return;
+      if (!ok) {
+        setFormError(t('login.adminUseWebConsole'));
+        return;
+      }
     } catch (err) {
+      if (isAdminAppAccessError(err)) {
+        setFormError(t('login.adminUseWebConsole'));
+        return;
+      }
       setFormError(parseApiError(err).message);
     }
   };

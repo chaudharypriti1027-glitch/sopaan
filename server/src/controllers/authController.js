@@ -62,3 +62,8 @@ export async function googleAuth(req, res) {
   const result = await authService.loginWithGoogle(req.body);
   res.status(200).json(result);
 }
+
+export async function getTeamInvite(req, res) {
+  const { getTeamInviteByToken } = await import('../services/admin/teamService.js');
+  res.status(200).json(await getTeamInviteByToken(req.params.token));
+}

@@ -1,4 +1,5 @@
 import axios, { isAxiosError } from 'axios';
+import { config } from '../config/env';
 import type { ApiErrorBody } from './types';
 
 export class ApiError extends Error {
@@ -35,7 +36,11 @@ export function parseApiError(error: unknown): ApiError {
           : error.message?.toLowerCase().includes('network')
             ? 'NETWORK_ERROR'
             : (error.code ?? 'NETWORK_ERROR');
-      return new ApiError(error.message || 'Network error', 0, code);
+      const hint =
+        __DEV__ && code === 'NETWORK_ERROR'
+          ? ` Cannot reach the API at ${config.apiBaseUrl}. Start the server (cd server && npm run dev).`
+          : '';
+      return new ApiError((error.message || 'Network error') + hint, 0, code);
     }
 
     const message = error.response.data?.error?.message ?? error.message ?? 'Request failed';

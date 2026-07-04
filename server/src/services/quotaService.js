@@ -1,12 +1,12 @@
 import { AppError } from '../utils/AppError.js';
 import { DailyQuotaUsage } from '../models/DailyQuotaUsage.js';
 import {
-  FREE_TIER_LIMITS,
   TIER_FEATURES,
   getFeaturePaywallCopy,
   getTierLimits,
   listPublicTierConfig,
 } from '../config/freeTierConfig.js';
+import { getFreeTierLimitsFromSettings } from './platformSettingsService.js';
 import { isPremiumActive } from './premiumService.js';
 import { AiDailyUsage } from '../models/AiDailyUsage.js';
 import { getUsageFieldForTier } from './ai/aiUsageLimits.js';
@@ -163,11 +163,14 @@ export async function assertAiTierAccess(user, tier = 'fast') {
   throw buildQuotaExceededError('ai_doubt', limit, current);
 }
 
+/** @deprecated use getTierLimits() */
+export function getFreeTierLimits() {
+  return getFreeTierLimitsFromSettings();
+}
+
 /** @deprecated use PRO_REQUIRED in new clients */
 export function buildPremiumRequiredError(featureKey = 'ai_evaluate') {
   const err = buildProRequiredError(featureKey);
   err.code = 'PREMIUM_REQUIRED';
   return err;
 }
-
-export { FREE_TIER_LIMITS };
