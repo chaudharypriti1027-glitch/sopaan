@@ -6,10 +6,11 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import Svg, { Circle, G } from 'react-native-svg';
+import Svg, { Circle } from 'react-native-svg';
 import { formatRingSummary } from '../a11y/chartSummary';
 import { scalableTextProps } from '../a11y/textProps';
 import { useTheme } from '../theme';
+import { noHideDescendantsA11y } from '../utils/nativeA11y';
 import { getAccentColors, type AccentVariant } from './utils/variants';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
@@ -25,6 +26,12 @@ type RankRingProps = {
   variant?: AccentVariant;
   style?: ViewStyle;
   accessibilityLabel?: string;
+  /** Overrides the unfilled track color — useful on dark/gradient backgrounds. */
+  trackColor?: string;
+  /** Overrides the filled progress + value text color — useful on dark/gradient backgrounds. */
+  accentColor?: string;
+  /** Overrides the label text color — useful on dark/gradient backgrounds. */
+  labelColor?: string;
 };
 
 export function RankRing({
@@ -37,10 +44,18 @@ export function RankRing({
   variant = 'primary',
   style,
   accessibilityLabel,
+  trackColor,
+  accentColor,
+  labelColor,
 }: RankRingProps) {
   const { theme } = useTheme();
-  const styles = useMemo(() => createStyles(theme, size), [theme, size]);
+  const styles = useMemo(
+    () => createStyles(theme, size, accentColor, labelColor),
+    [theme, size, accentColor, labelColor],
+  );
   const accent = getAccentColors(theme, variant);
+  const resolvedTrack = trackColor ?? theme.colors.border.subtle;
+  const resolvedAccent = accentColor ?? accent.main;
 
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
@@ -69,30 +84,30 @@ export function RankRing({
       accessibilityLabel={resolvedA11yLabel}
       accessibilityValue={{ min: 0, max: Math.round(max), now: Math.round(value) }}
     >
-      <Svg width={size} height={size} style={styles.svg} importantForAccessibility="no-hide-descendants">
+      <Svg width={size} height={size} style={styles.svg} {...noHideDescendantsA11y()}>
         <Circle
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke={theme.colors.border.subtle}
+          stroke={resolvedTrack}
           strokeWidth={strokeWidth}
           fill="none"
         />
-        <G rotation="-90" originX={size / 2} originY={size / 2}>
-          <AnimatedCircle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            stroke={accent.main}
-            strokeWidth={strokeWidth}
-            fill="none"
-            strokeLinecap="round"
-            strokeDasharray={`${circumference} ${circumference}`}
-            animatedProps={animatedProps}
-          />
-        </G>
+        <AnimatedCircle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke={resolvedAccent}
+          strokeWidth={strokeWidth}
+          fill="none"
+          strokeLinecap="round"
+          strokeDasharray={`${circumference} ${circumference}`}
+          animatedProps={animatedProps}
+          rotation="-90"
+          origin={`${size / 2}, ${size / 2}`}
+        />
       </Svg>
-      <View style={styles.center} importantForAccessibility="no-hide-descendants">
+      <View style={styles.center} {...noHideDescendantsA11y()}>
         <Text {...scalableTextProps} style={styles.value}>
           {displayValue ?? Math.round(value)}
         </Text>
@@ -106,7 +121,12 @@ export function RankRing({
   );
 }
 
-function createStyles(theme: ReturnType<typeof useTheme>['theme'], size: number) {
+function createStyles(
+  theme: ReturnType<typeof useTheme>['theme'],
+  size: number,
+  accentColor?: string,
+  labelColor?: string,
+) {
   return StyleSheet.create({
     container: {
       width: size,
@@ -124,11 +144,11 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme'], size: number)
     value: {
       ...theme.typography.presets.statLarge,
       fontSize: theme.typography.scale.fontSize['3xl'],
-      color: theme.colors.text.primary,
+      color: accentColor ?? theme.colors.text.primary,
     },
     label: {
       ...theme.typography.presets.caption,
-      color: theme.colors.text.secondary,
+      color: labelColor ?? theme.colors.text.secondary,
       marginTop: theme.spacing.xs,
     },
   });

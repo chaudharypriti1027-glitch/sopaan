@@ -30,7 +30,7 @@ function resolveApiOrigin(): string {
     return `http://${host}:${DEFAULT_PORT}`;
   }
 
-  if (Platform.OS === 'ios') {
+  if (Platform.OS === 'ios' || Platform.OS === 'web') {
     return `http://localhost:${DEFAULT_PORT}`;
   }
 

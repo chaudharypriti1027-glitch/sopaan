@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Button, Card, Flashcard, Screen, SectionTitle } from '../../components';
-import { useVocabularyRecent, useVocabularyToday } from '../../hooks';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Button, Card, Flashcard, QueryStateView, Screen, SectionTitle } from '../../components';
+import { useNetworkStatus, useVocabularyRecent, useVocabularyToday } from '../../hooks';
 import type { VocabularyWord } from '../../api/types';
 import { useTheme } from '../../theme';
 
@@ -18,6 +18,7 @@ export function VocabularyScreen() {
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
+  const { isOffline } = useNetworkStatus();
   const todayQuery = useVocabularyToday();
   const recentQuery = useVocabularyRecent(7);
 
@@ -70,20 +71,20 @@ export function VocabularyScreen() {
     }, 700);
   };
 
-  if (todayQuery.isLoading) {
-    return (
-      <Screen style={styles.centered}>
-        <ActivityIndicator size="large" color={theme.colors.brand.primary} />
-      </Screen>
-    );
-  }
-
   const today = todayQuery.data;
 
   return (
     <Screen scroll contentContainerStyle={styles.content}>
       <SectionTitle title="Vocabulary" subtitle="Word of the day and quick quiz" />
 
+      <QueryStateView
+        isLoading={todayQuery.isLoading}
+        isError={todayQuery.isError}
+        isFetching={todayQuery.isFetching}
+        isOffline={isOffline}
+        hasData={Boolean(today)}
+        onRetry={() => void todayQuery.refetch()}
+      >
       {today ? (
         <Flashcard
           front={today.word}
@@ -138,6 +139,7 @@ export function VocabularyScreen() {
           </Card>
         ))}
       </View>
+      </QueryStateView>
     </Screen>
   );
 }

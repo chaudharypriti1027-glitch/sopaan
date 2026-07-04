@@ -56,10 +56,10 @@ function legacySessionFromAuthResult(result) {
       name: result.profile.name,
       email: result.profile.email ?? null,
       phone: result.profile.phone,
-      role: 'student',
-      isPremium: false,
-      premiumPlan: null,
-      premiumExpiresAt: null,
+      role: result.profile.role ?? 'student',
+      isPremium: result.profile.isPremium ?? false,
+      premiumPlan: result.profile.premiumPlan ?? null,
+      premiumExpiresAt: result.profile.premiumExpiresAt ?? null,
       coins: result.profile.coins ?? 0,
       streak:
         result.profile.streak != null

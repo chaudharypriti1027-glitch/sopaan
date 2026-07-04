@@ -68,6 +68,41 @@ async function refreshAttendeeCount(liveClass) {
   return count;
 }
 
+export async function listAdminLiveClasses(query = {}) {
+  const { limit, offset } = parsePagination(query, { defaultLimit: 50, maxLimit: 100 });
+
+  const [classes, total, liveCount, scheduledCount, recordingCount] = await Promise.all([
+    LiveClass.find({}).sort({ scheduledAt: -1 }).skip(offset).limit(limit).lean(),
+    LiveClass.countDocuments({}),
+    LiveClass.countDocuments({ status: 'live' }),
+    LiveClass.countDocuments({ status: 'scheduled' }),
+    LiveClass.countDocuments({
+      status: 'ended',
+      recordingUrl: { $exists: true, $nin: [null, ''] },
+    }),
+  ]);
+
+  const items = classes.map((doc) => formatLiveClass(doc));
+
+  return {
+    items,
+    summary: {
+      liveCount,
+      scheduledCount,
+      recordingCount,
+      watchingNow: items
+        .filter((item) => item.status === 'live')
+        .reduce((sum, item) => sum + (item.viewers ?? 0), 0),
+    },
+    pagination: {
+      total,
+      limit,
+      offset,
+      hasMore: offset + items.length < total,
+    },
+  };
+}
+
 export async function listLiveClasses(userId, query = {}) {
   const { limit, offset } = parsePagination(query, { defaultLimit: 20, maxLimit: 50 });
   const now = new Date();

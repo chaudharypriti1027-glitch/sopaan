@@ -1,4 +1,4 @@
-import * as SecureStore from 'expo-secure-store';
+import { deleteSecureItem, getSecureItem, setSecureItem } from '../lib/secureStorage';
 
 const REFERRAL_CODE_KEY = 'sopaan_pending_referral_code';
 const INSTALL_ID_KEY = 'sopaan_install_id';
@@ -8,26 +8,26 @@ function createInstallId() {
 }
 
 export async function getOrCreateInstallId(): Promise<string> {
-  const existing = await SecureStore.getItemAsync(INSTALL_ID_KEY);
+  const existing = await getSecureItem(INSTALL_ID_KEY);
   if (existing) {
     return existing;
   }
 
   const installId = createInstallId();
-  await SecureStore.setItemAsync(INSTALL_ID_KEY, installId);
+  await setSecureItem(INSTALL_ID_KEY, installId);
   return installId;
 }
 
 export async function savePendingReferralCode(code: string): Promise<void> {
-  await SecureStore.setItemAsync(REFERRAL_CODE_KEY, code.trim().toUpperCase());
+  await setSecureItem(REFERRAL_CODE_KEY, code.trim().toUpperCase());
 }
 
 export async function getPendingReferralCode(): Promise<string | null> {
-  return SecureStore.getItemAsync(REFERRAL_CODE_KEY);
+  return getSecureItem(REFERRAL_CODE_KEY);
 }
 
 export async function clearPendingReferralCode(): Promise<void> {
-  await SecureStore.deleteItemAsync(REFERRAL_CODE_KEY);
+  await deleteSecureItem(REFERRAL_CODE_KEY);
 }
 
 export function parseReferralCodeFromUrl(url: string): string | null {

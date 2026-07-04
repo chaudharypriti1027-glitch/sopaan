@@ -25,6 +25,9 @@ jest.mock('../../hooks', () => ({
     mutate: mockMutate,
     isPending: false,
   }),
+  useGameProgress: () => ({
+    recordComplete: jest.fn().mockResolvedValue({}),
+  }),
 }));
 
 jest.mock('../../games/WordScrambleGame', () => {

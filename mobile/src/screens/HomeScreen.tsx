@@ -25,7 +25,6 @@ import { navigateHomeFeature } from '../navigation/navigateHomeFeature';
 import type { HomeFeatureLink } from '../navigation/homeFeatureConfig';
 import type { AppTabParamList, MainStackParamList } from '../navigation/types';
 import { useScreenPerf } from '../perf';
-import { useTheme } from '../theme';
 
 type HomeNav = CompositeNavigationProp<
   BottomTabNavigationProp<AppTabParamList, 'Home'>,
@@ -41,9 +40,12 @@ async function lightImpact() {
 }
 
 export function HomeScreen() {
+  return <HomeStudentScreen />;
+}
+
+function HomeStudentScreen() {
   const { t } = useTranslation(['app', 'common']);
   const navigation = useNavigation<HomeNav>();
-  const { theme } = useTheme();
   const styles = useMemo(() => createStyles(), []);
 
   const { data: feed, isLoading, isError, isOffline, refetch, isRefetching } = useHomeFeed();
@@ -140,8 +142,8 @@ export function HomeScreen() {
           <RefreshControl
             refreshing={isRefetching}
             onRefresh={() => void onRefresh()}
-            tintColor={theme.colors.brand.primary}
-            colors={[theme.colors.brand.primary]}
+            tintColor={HOME_UI.gold}
+            colors={[HOME_UI.gold]}
           />
         }
       >

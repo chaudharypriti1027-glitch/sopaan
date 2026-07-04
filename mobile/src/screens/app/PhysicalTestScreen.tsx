@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, Text, View } from 'react-native';
 import {
+  AIBadge,
+  AIGoldCard,
   Button,
   Card,
   ComparisonBars,
@@ -87,14 +89,14 @@ export function PhysicalTestScreen() {
           ) : null}
 
           {planTips.length > 0 ? (
-            <Card style={styles.card}>
-              <Text style={styles.cardTitle}>AI fitness plan</Text>
+            <AIGoldCard style={styles.card}>
+              <AIBadge label="AI fitness plan" />
               {planTips.map((tip, i) => (
                 <Text key={i} style={styles.tip}>
                   • {tip}
                 </Text>
               ))}
-            </Card>
+            </AIGoldCard>
           ) : null}
         </>
       )}

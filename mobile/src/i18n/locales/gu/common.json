@@ -43,5 +43,15 @@
   "languageEnglish": "અંગ્રેજી",
   "languageHindi": "હિન્દી",
   "languageGu": "ગુજરાતી",
-  "offlineBanner": "નેટવર્ક નથી — કેશ સામગ્રી ઑફલાઇન ઉપલબ્ધ છે"
+  "offlineBanner": "નેટવર્ક નથી — કેશ સામગ્રી ઑફલાઇન ઉપલબ્ધ છે",
+  "premiumDialog": {
+    "sessionExpiredTitle": "સત્ર સમાપ્ત",
+    "sessionExpiredBody": "સુરક્ષા માટે ચાલુ રાખવા ફરી સાઇન ઇન કરો.",
+    "signInAgain": "ફરી સાઇન ઇન કરો",
+    "notificationsPermissionTitle": "નોટિફિકેશન ચાલુ કરો",
+    "notificationsPermissionBody": "રેંક અપડેટ, સ્ટ્રીક રિમાઇન્ડર અને દૈનિક પ્લાન માટે અલર્ટની મંજૂરી આપો.",
+    "openSettings": "સેટિંગ્સ ખોલો",
+    "notNow": "હમણાં નહીં",
+    "gotIt": "સમજાયું"
+  }
 }

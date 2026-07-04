@@ -31,6 +31,11 @@ export interface Profile {
   coins?: number;
   /** True once name, state, and targetExam are saved via PUT /api/me. */
   onboardingComplete?: boolean;
+  /** App access level — used for admin dashboard and pro bypass. */
+  role?: 'student' | 'admin' | 'mentor';
+  isPremium?: boolean;
+  premiumPlan?: 'monthly' | 'yearly' | 'trial' | null;
+  premiumExpiresAt?: string | null;
 }
 
 export interface AuthResult {

@@ -129,7 +129,7 @@ export function useLiveClassReminder() {
   });
 }
 
-export function useLeaderboard(params?: PaginationParams) {
+export function useLeaderboard(params?: leaderboardApi.LeaderboardQueryParams) {
   const { isAuthenticated } = useAuth();
 
   return useQuery({

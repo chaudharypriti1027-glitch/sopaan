@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, View } from 'react-native';
 import { AiAvatar } from './AiAvatar';
 import { AI_UI } from './aiTheme';
+import { platformShadow } from '../../utils/platformShadow';
 
 function Dot({ delay }: { delay: number }) {
   const y = useRef(new Animated.Value(0)).current;
@@ -56,11 +57,7 @@ const styles = StyleSheet.create({
     backgroundColor: AI_UI.card,
     borderWidth: 1.5,
     borderColor: AI_UI.primaryLight,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 12,
-    elevation: 2,
+    ...platformShadow({ color: '#000', offsetY: 2, opacity: 0.04, radius: 12, elevation: 2 }),
   },
   dot: {
     width: 8,

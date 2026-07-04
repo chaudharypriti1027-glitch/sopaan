@@ -1,5 +1,5 @@
-import * as SecureStore from 'expo-secure-store';
 import { useCallback, useEffect, useState } from 'react';
+import { deleteSecureItem, getSecureItem, setSecureItem } from '../lib/secureStorage';
 
 const RECENT_SEARCHES_KEY = 'sopaan_recent_searches';
 const MAX_RECENT = 8;
@@ -11,7 +11,7 @@ export function useRecentSearches() {
   useEffect(() => {
     void (async () => {
       try {
-        const raw = await SecureStore.getItemAsync(RECENT_SEARCHES_KEY);
+        const raw = await getSecureItem(RECENT_SEARCHES_KEY);
         if (raw) {
           setRecent(JSON.parse(raw) as string[]);
         }
@@ -29,14 +29,14 @@ export function useRecentSearches() {
 
     setRecent((prev) => {
       const next = [trimmed, ...prev.filter((item) => item !== trimmed)].slice(0, MAX_RECENT);
-      void SecureStore.setItemAsync(RECENT_SEARCHES_KEY, JSON.stringify(next));
+      void setSecureItem(RECENT_SEARCHES_KEY, JSON.stringify(next));
       return next;
     });
   }, []);
 
   const clearRecent = useCallback(async () => {
     setRecent([]);
-    await SecureStore.deleteItemAsync(RECENT_SEARCHES_KEY);
+    await deleteSecureItem(RECENT_SEARCHES_KEY);
   }, []);
 
   return { recent, loaded, addRecent, clearRecent };

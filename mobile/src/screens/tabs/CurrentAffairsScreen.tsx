@@ -102,7 +102,7 @@ export function CurrentAffairsScreen() {
     void refreshSaved();
   }, [refreshSaved]);
 
-  const rawItems = affairsQuery.data?.items ?? [];
+  const rawItems = useMemo(() => affairsQuery.data?.items ?? [], [affairsQuery.data]);
   const items = useMemo(() => sortAffairs(rawItems, sortMode), [rawItems, sortMode]);
   const total = affairsQuery.data?.pagination?.total ?? rawItems.length;
   const todayCount = useMemo(() => rawItems.filter(isPublishedToday).length, [rawItems]);

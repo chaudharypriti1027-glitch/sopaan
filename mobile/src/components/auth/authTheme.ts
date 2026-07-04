@@ -19,6 +19,7 @@ export const AUTH_UI = {
   sage: '#5F8A7B',
   sageDeep: '#4C7264',
   sageSoft: 'rgba(95,138,123,0.12)',
+  accentSoft: 'rgba(35,42,77,0.08)',
   gradient: ['#2E3766', '#1F2648'] as const,
   cardRadius: 24,
   inputRadius: 16,

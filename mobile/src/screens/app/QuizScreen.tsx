@@ -57,7 +57,7 @@ export function QuizScreen() {
     isInteractive: !isLoading && Boolean(test),
   });
 
-  const questions = test?.questions ?? [];
+  const questions = useMemo(() => test?.questions ?? [], [test]);
   const totalQuestions = questions.length;
 
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -225,9 +225,9 @@ export function QuizScreen() {
 
   return (
     <Screen scroll contentContainerStyle={styles.content}>
-      <View style={styles.topBar}>
+      <Card style={styles.topBar} padded={false}>
         <View style={styles.topCenter}>
-          <Text style={styles.testTitle}>
+          <Text style={styles.testTitle} numberOfLines={1}>
             {test.title ?? currentQuestion.subject}
           </Text>
           <Text style={styles.progress}>
@@ -235,7 +235,7 @@ export function QuizScreen() {
           </Text>
         </View>
         <QuizTimer totalSec={test.durationSec ?? 0} onExpire={handleTimerExpire} />
-      </View>
+      </Card>
 
       <ProgressBar
         value={((currentIndex + 1) / totalQuestions) * 100}
@@ -246,9 +246,9 @@ export function QuizScreen() {
       />
 
       <Card style={styles.questionCard} padded>
-        <Text style={styles.questionLabel}>
-          {t('app:quiz.questionLabel', { number: currentIndex + 1 })}
-        </Text>
+        <View style={styles.questionBadge}>
+          <Text style={styles.questionBadgeText}>{currentIndex + 1}</Text>
+        </View>
         <Text style={styles.questionText}>{currentQuestion.text}</Text>
       </Card>
 
@@ -350,32 +350,45 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       alignItems: 'center',
       justifyContent: 'space-between',
       gap: theme.spacing.md,
+      paddingVertical: theme.spacing.sm,
+      paddingHorizontal: theme.spacing.md,
     },
     topCenter: {
       flex: 1,
-      alignItems: 'center',
       gap: theme.spacing.xs / 2,
     },
     testTitle: {
       ...theme.typography.presets.bodyMedium,
       fontFamily: theme.typography.fonts.ui.semibold,
       color: theme.colors.text.primary,
-      textAlign: 'center',
     },
     progress: {
       ...theme.typography.presets.caption,
       color: theme.colors.text.secondary,
     },
     questionCard: {
-      gap: theme.spacing.sm,
-      backgroundColor: theme.colors.brand.primaryMuted,
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: theme.spacing.md,
+      backgroundColor: theme.colors.accent.goldMuted,
       borderWidth: 0,
     },
-    questionLabel: {
-      ...theme.typography.presets.eyebrow,
-      color: theme.colors.brand.primary,
+    questionBadge: {
+      width: 30,
+      height: 30,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: theme.colors.accent.gold,
+      flexShrink: 0,
+    },
+    questionBadgeText: {
+      ...theme.typography.presets.label,
+      fontFamily: theme.typography.fonts.ui.bold,
+      color: theme.colors.accent.goldOn,
     },
     questionText: {
+      flex: 1,
       ...theme.typography.presets.bodyMedium,
       fontFamily: theme.typography.fonts.ui.semibold,
       color: theme.colors.text.primary,

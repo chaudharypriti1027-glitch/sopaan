@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, Sparkles } from 'lucide-react-native';
 import { Text } from '../Text';
+import { GlassSurface } from '../GlassSurface';
 import { useTheme } from '../../theme';
 import { AiAvatar } from './AiAvatar';
 import { AI_UI } from './aiTheme';
@@ -20,7 +21,7 @@ export function AiHeader({ title, badgeLabel, onBack, onBadgePress }: AiHeaderPr
   const styles = useMemo(() => createStyles(theme, insets.top), [theme, insets.top]);
 
   return (
-    <View style={styles.header}>
+    <GlassSurface tone="light" intensity={46} borderRadius={0} bordered={false} style={styles.header}>
       {onBack ? (
         <Pressable
           accessibilityRole="button"
@@ -47,7 +48,7 @@ export function AiHeader({ title, badgeLabel, onBack, onBadgePress }: AiHeaderPr
         <Sparkles size={11} color={AI_UI.primary} strokeWidth={2.5} />
         <Text style={styles.badgeText}>{badgeLabel}</Text>
       </Pressable>
-    </View>
+    </GlassSurface>
   );
 }
 
@@ -60,7 +61,6 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme'], topInset: num
       paddingTop: topInset + 8,
       paddingHorizontal: theme.spacing.lg,
       paddingBottom: theme.spacing.md,
-      backgroundColor: 'rgba(246,245,250,0.92)',
       borderBottomWidth: 1,
       borderBottomColor: 'rgba(79,53,210,0.09)',
     },

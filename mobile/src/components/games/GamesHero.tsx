@@ -1,136 +1,280 @@
 import { LinearGradient } from 'expo-linear-gradient';
+import { ChevronLeft, ChevronRight, Flame, Gamepad2 } from 'lucide-react-native';
 import { useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { GlassSurface } from '../GlassSurface';
 import { NumText } from '../NumText';
 import { Text } from '../Text';
 import { GAMES_UI } from './gamesTheme';
+import { premiumGlowShadow } from '../premium/premiumStyles';
 
 type GamesHeroProps = {
+  greeting: string;
+  screenTitle: string;
   coins: number;
   streak: number;
   gamesDone: number;
+  rank?: number | null;
   title: string;
   subtitle: string;
   badgeLabel: string;
   streakLabel: string;
   gamesDoneLabel: string;
   rankLabel: string;
+  onBack?: () => void;
+  onRankPress?: () => void;
 };
 
 export function GamesHero({
+  greeting,
+  screenTitle,
   coins,
   streak,
   gamesDone,
+  rank,
   title,
   subtitle,
   badgeLabel,
   streakLabel,
   gamesDoneLabel,
   rankLabel,
+  onBack,
+  onRankPress,
 }: GamesHeroProps) {
-  const styles = useMemo(() => createStyles(), []);
+  const insets = useSafeAreaInsets();
+  const styles = useMemo(() => createStyles(insets.top), [insets.top]);
 
   return (
     <LinearGradient
-      colors={[GAMES_UI.accent, '#8B5CF6', GAMES_UI.accent2]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
+      colors={[...GAMES_UI.heroGradient]}
+      start={{ x: 0.1, y: 0 }}
+      end={{ x: 0.9, y: 1 }}
       style={styles.hero}
     >
-      <View style={styles.decorA} />
-      <View style={styles.decorB} />
+      <View style={[styles.blob, styles.blobA]} />
+      <View style={[styles.blob, styles.blobB]} />
+      <View style={[styles.blob, styles.blobC]} />
 
-      <View style={styles.badge}>
-        <Text style={styles.badgeText}>{badgeLabel.replace('{{coins}}', String(coins))}</Text>
+      <View style={styles.greetRow}>
+        {onBack ? (
+          <Pressable
+            onPress={onBack}
+            accessibilityRole="button"
+            accessibilityLabel="Back"
+            style={({ pressed }) => [styles.backBtn, pressed && styles.pressed]}
+          >
+            <GlassSurface tone="dark" intensity={22} borderRadius={14} style={styles.backGlass}>
+              <ChevronLeft size={20} color="#FFFFFF" strokeWidth={2.5} />
+            </GlassSurface>
+          </Pressable>
+        ) : (
+          <View style={styles.backSpacer} />
+        )}
+
+        <View style={styles.greetText}>
+          <Text style={styles.greetSub}>{greeting}</Text>
+          <Text style={styles.greetName}>{screenTitle}</Text>
+        </View>
+
+        <GlassSurface tone="dark" intensity={22} borderRadius={100} style={styles.coinPill}>
+          <Text style={styles.coinEmoji}>🪙</Text>
+          <NumText style={styles.coinValue}>{coins}</NumText>
+        </GlassSurface>
       </View>
 
-      <Text style={styles.title}>{title}</Text>
-      <Text style={styles.subtitle}>{subtitle}</Text>
+      <GlassSurface tone="dark" intensity={22} borderRadius={100} style={styles.streakPill}>
+        <Flame size={14} color={GAMES_UI.gold} fill={GAMES_UI.gold} />
+        <Text style={styles.streakText}>{badgeLabel}</Text>
+      </GlassSurface>
 
-      <View style={styles.stats}>
-        <View style={styles.stat}>
-          <Text style={styles.statVal}>🔥 {streak}</Text>
-          <Text style={styles.statLbl}>{streakLabel}</Text>
+      <GlassSurface tone="dark" intensity={26} borderRadius={22} style={styles.statsCard}>
+        <View style={styles.goalRow}>
+          <LinearGradient
+            colors={['#D8B368', '#C29A4E']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.goalIcon}
+          >
+            <Gamepad2 size={20} color="#FFFFFF" strokeWidth={2.2} />
+          </LinearGradient>
+          <View style={styles.goalCopy}>
+            <Text style={styles.heroTitle}>{title}</Text>
+            <Text style={styles.heroSubtitle}>{subtitle}</Text>
+          </View>
         </View>
-        <View style={styles.stat}>
-          <NumText style={styles.statVal}>{gamesDone}</NumText>
-          <Text style={styles.statLbl}>{gamesDoneLabel}</Text>
+
+        <View style={styles.stats}>
+          <View style={styles.stat}>
+            <Text style={styles.statVal}>🔥 {streak}</Text>
+            <Text style={styles.statLbl}>{streakLabel}</Text>
+          </View>
+          <View style={styles.stat}>
+            <NumText style={styles.statVal}>{gamesDone}</NumText>
+            <Text style={styles.statLbl}>{gamesDoneLabel}</Text>
+          </View>
+          <Pressable
+            accessibilityRole="button"
+            onPress={onRankPress}
+            disabled={!onRankPress}
+            style={({ pressed }) => [
+              styles.stat,
+              onRankPress && styles.statTappable,
+              pressed && onRankPress && styles.pressed,
+            ]}
+          >
+            <View style={styles.statRankRow}>
+              <Text style={styles.statVal}>{rank != null ? `#${rank}` : '—'}</Text>
+              {onRankPress ? (
+                <ChevronRight size={12} color="rgba(255,255,255,0.55)" strokeWidth={2.5} />
+              ) : null}
+            </View>
+            <Text style={styles.statLbl}>{rankLabel}</Text>
+          </Pressable>
         </View>
-        <View style={styles.stat}>
-          <Text style={styles.statVal}>🏆 —</Text>
-          <Text style={styles.statLbl}>{rankLabel}</Text>
-        </View>
-      </View>
+      </GlassSurface>
     </LinearGradient>
   );
 }
 
-function createStyles() {
+function createStyles(topInset: number) {
   return StyleSheet.create({
     hero: {
-      marginHorizontal: 16,
-      borderRadius: 28,
-      padding: 24,
-      minHeight: 155,
+      paddingTop: topInset + 12,
+      paddingHorizontal: 20,
+      paddingBottom: 28,
       overflow: 'hidden',
     },
-    decorA: {
+    blob: {
       position: 'absolute',
-      width: 220,
-      height: 220,
-      borderRadius: 110,
-      backgroundColor: 'rgba(255,255,255,0.08)',
-      right: -60,
-      top: -70,
+      borderRadius: 999,
+      backgroundColor: 'rgba(194,154,78,0.18)',
     },
-    decorB: {
-      position: 'absolute',
-      width: 140,
-      height: 140,
-      borderRadius: 70,
-      backgroundColor: 'rgba(255,255,255,0.05)',
-      right: 30,
-      bottom: -50,
+    blobA: { top: -80, right: -60, width: 260, height: 260 },
+    blobB: { top: 50, right: 55, width: 90, height: 90, opacity: 0.5 },
+    blobC: { bottom: -40, left: -30, width: 180, height: 180 },
+    greetRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      marginBottom: 18,
+      zIndex: 2,
     },
-    badge: {
-      alignSelf: 'flex-start',
-      backgroundColor: 'rgba(0,0,0,0.2)',
-      borderRadius: 20,
-      paddingHorizontal: 14,
-      paddingVertical: 6,
-      borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.2)',
-      marginBottom: 14,
+    backBtn: {
+      width: 40,
+      height: 40,
     },
-    badgeText: {
-      fontSize: 14,
+    backGlass: {
+      width: 40,
+      height: 40,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    backSpacer: {
+      width: 40,
+    },
+    greetText: { flex: 1 },
+    greetSub: {
+      fontSize: 11,
+      color: 'rgba(255,255,255,0.5)',
+      letterSpacing: 0.5,
+      marginBottom: 1,
+      fontWeight: '500',
+    },
+    greetName: {
+      fontSize: 20,
       fontWeight: '800',
       color: '#FFFFFF',
+      letterSpacing: -0.5,
     },
-    title: {
-      fontSize: 28,
-      fontWeight: '900',
-      color: '#FFFFFF',
-      lineHeight: 32,
+    coinPill: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      paddingHorizontal: 12,
+      paddingVertical: 7,
     },
-    subtitle: {
+    coinEmoji: { fontSize: 13 },
+    coinValue: {
       fontSize: 13,
-      color: 'rgba(255,255,255,0.75)',
-      marginTop: 6,
+      fontWeight: '800',
+      color: '#E3C97F',
+    },
+    streakPill: {
+      alignSelf: 'flex-start',
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 7,
+      paddingVertical: 5,
+      paddingHorizontal: 13,
+      paddingLeft: 10,
+      marginBottom: 16,
+      zIndex: 2,
+    },
+    streakText: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: '#E3C97F',
+    },
+    statsCard: {
+      zIndex: 2,
+      paddingHorizontal: 18,
+      paddingTop: 18,
+      paddingBottom: 16,
+    },
+    goalRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      marginBottom: 14,
+    },
+    goalIcon: {
+      width: 48,
+      height: 48,
+      borderRadius: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexShrink: 0,
+      ...premiumGlowShadow(GAMES_UI.gold),
+    },
+    goalCopy: {
+      flex: 1,
+      minWidth: 0,
+    },
+    heroTitle: {
+      fontSize: 17,
+      fontWeight: '800',
+      color: '#FFFFFF',
+      letterSpacing: -0.3,
+    },
+    heroSubtitle: {
+      fontSize: 12,
+      color: 'rgba(255,255,255,0.55)',
+      marginTop: 4,
     },
     stats: {
       flexDirection: 'row',
       gap: 10,
-      marginTop: 16,
     },
     stat: {
       flex: 1,
-      backgroundColor: 'rgba(255,255,255,0.15)',
+      backgroundColor: 'rgba(255,255,255,0.1)',
       borderRadius: 14,
-      paddingVertical: 9,
+      paddingVertical: 10,
       paddingHorizontal: 10,
-      borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.2)',
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: 'rgba(255,255,255,0.14)',
+    },
+    statTappable: {
+      backgroundColor: 'rgba(255,255,255,0.14)',
+    },
+    statRankRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 2,
+    },
+    pressed: {
+      opacity: 0.88,
     },
     statVal: {
       fontSize: 15,
@@ -139,7 +283,7 @@ function createStyles() {
     },
     statLbl: {
       fontSize: 9,
-      color: 'rgba(255,255,255,0.65)',
+      color: 'rgba(255,255,255,0.55)',
       marginTop: 2,
       textTransform: 'uppercase',
       letterSpacing: 0.5,

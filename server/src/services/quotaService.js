@@ -43,7 +43,7 @@ function buildQuotaExceededError(featureKey, limit, usage) {
 }
 
 export async function resolveTierAccess(user) {
-  const isPro = user ? await isPremiumActive(user) : false;
+  const isPro = user?.role === 'admin' || (user ? await isPremiumActive(user) : false);
   return {
     isPro,
     limits: getTierLimits(isPro),

@@ -6,30 +6,10 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button, Text } from '../../components';
-import { GamePlayHeader, GameResultCard, GAMES_UI } from '../../components/games';
-import {
-  CODE_QUESTIONS,
-  FLAG_QUESTIONS,
-  GRAMMAR_QUESTIONS,
-  SCIENCE_QUESTIONS,
-  TRIVIA_QUESTIONS,
-  WORLD_QUESTIONS,
-} from '../../games/banks';
-import { CrosswordMiniGame } from '../../games/CrosswordMiniGame';
-import { GK_QUESTIONS, MAP_QUESTIONS, getGameById } from '../../games/content';
-import { GKBingoGame } from '../../games/GKBingoGame';
-import { HistoryLineGame } from '../../games/HistoryLineGame';
-import { LogicPuzzleGame } from '../../games/LogicPuzzleGame';
-import { MathBlitzGame } from '../../games/MathBlitzGame';
-import { McqSequenceGame } from '../../games/McqSequenceGame';
-import { McqTimedGame } from '../../games/McqTimedGame';
-import { MemoryMatchGame } from '../../games/MemoryMatchGame';
-import { SpellingBeeGame } from '../../games/SpellingBeeGame';
-import { StoryBuilderGame } from '../../games/StoryBuilderGame';
-import { WordChainGame } from '../../games/WordChainGame';
-import { WordScrambleGame } from '../../games/WordScrambleGame';
-import { useCompleteGame } from '../../hooks';
-import type { GameId } from '../../games/types';
+import { GamePlayHeader, GameResultCard, GamesPlayCard, GAMES_UI } from '../../components/games';
+import { getGameById } from '../../games/content';
+import { renderGameById } from '../../games/registry';
+import { useCompleteGame, useGameProgress } from '../../hooks';
 import type { MainStackParamList } from '../../navigation/types';
 
 type GamePlayRoute = RouteProp<MainStackParamList, 'GamePlay'>;
@@ -43,11 +23,13 @@ export function GamePlayScreen() {
   const styles = useMemo(() => createStyles(insets.bottom), [insets.bottom]);
   const { gameId, sessionId = 0 } = route.params;
   const completeGame = useCompleteGame();
+  const { recordComplete } = useGameProgress();
 
   const game = getGameById(gameId);
   const [finished, setFinished] = useState(false);
   const [score, setScore] = useState(0);
   const [coinsAwarded, setCoinsAwarded] = useState<number | null>(null);
+  const [xpAwarded, setXpAwarded] = useState<number | null>(null);
   const [rewardFailed, setRewardFailed] = useState(false);
 
   const handleComplete = useCallback(
@@ -56,12 +38,15 @@ export function GamePlayScreen() {
       setFinished(true);
       setRewardFailed(false);
       setCoinsAwarded(null);
+      setXpAwarded(null);
+      void recordComplete(gameId, finalScore);
 
       completeGame.mutate(
         { gameId, score: finalScore },
         {
           onSuccess: (data) => {
             setCoinsAwarded(data.coinsAwarded);
+            setXpAwarded(data.xpAwarded);
           },
           onError: () => {
             setRewardFailed(true);
@@ -69,7 +54,7 @@ export function GamePlayScreen() {
         },
       );
     },
-    [completeGame, gameId],
+    [completeGame, gameId, recordComplete],
   );
 
   const playAgain = () => {
@@ -82,6 +67,7 @@ export function GamePlayScreen() {
       {
         onSuccess: (data) => {
           setCoinsAwarded(data.coinsAwarded);
+          setXpAwarded(data.xpAwarded);
           setRewardFailed(false);
         },
       },
@@ -117,6 +103,8 @@ export function GamePlayScreen() {
           scoreLabel={t('games.score')}
           coinsLabel={t('games.coins')}
           coinsValue={coinsAwarded ?? (rewardFailed ? localCoinsEstimate : 0)}
+          xpLabel={t('games.xp')}
+          xpValue={xpAwarded ?? undefined}
           coinsLoading={completeGame.isPending && coinsAwarded === null && !rewardFailed}
           rewardHint={rewardFailed ? t('games.rewardHint') : undefined}
           playAgainLabel={t('games.playAgain')}
@@ -132,120 +120,27 @@ export function GamePlayScreen() {
     );
   }
 
-  const renderGame = (id: GameId) => {
-    switch (id) {
-      case 'memory-match':
-        return <MemoryMatchGame key={sessionKey} onComplete={handleComplete} />;
-      case 'word-scramble':
-        return <WordScrambleGame key={sessionKey} onComplete={handleComplete} />;
-      case 'gk-bingo':
-        return <GKBingoGame key={sessionKey} onComplete={handleComplete} />;
-      case 'rapid-fire':
-        return (
-          <McqTimedGame
-            key={sessionKey}
-            questions={GK_QUESTIONS}
-            durationSec={60}
-            label="⚡ RAPID FIRE"
-            onComplete={handleComplete}
-          />
-        );
-      case 'crossword':
-        return <CrosswordMiniGame key={sessionKey} onComplete={handleComplete} />;
-      case 'map-quiz':
-        return (
-          <McqTimedGame
-            key={sessionKey}
-            questions={MAP_QUESTIONS}
-            durationSec={45}
-            label="🗺️ MAP QUIZ"
-            onComplete={handleComplete}
-          />
-        );
-      case 'math-blitz':
-        return (
-          <MathBlitzGame key={sessionKey} rounds={10} durationSec={120} onComplete={handleComplete} />
-        );
-      case 'number-ninja':
-        return (
-          <MathBlitzGame key={sessionKey} rounds={8} durationSec={60} onComplete={handleComplete} />
-        );
-      case 'grammar-fix':
-        return (
-          <McqSequenceGame
-            key={sessionKey}
-            questions={GRAMMAR_QUESTIONS}
-            label="✏️ Grammar"
-            onComplete={handleComplete}
-          />
-        );
-      case 'science-lab':
-        return (
-          <McqSequenceGame
-            key={sessionKey}
-            questions={SCIENCE_QUESTIONS}
-            onComplete={handleComplete}
-          />
-        );
-      case 'history-line':
-        return <HistoryLineGame key={sessionKey} onComplete={handleComplete} />;
-      case 'spelling-bee':
-        return <SpellingBeeGame key={sessionKey} onComplete={handleComplete} />;
-      case 'flag-master':
-        return (
-          <McqSequenceGame key={sessionKey} questions={FLAG_QUESTIONS} onComplete={handleComplete} />
-        );
-      case 'logic-puzzle':
-        return <LogicPuzzleGame key={sessionKey} onComplete={handleComplete} />;
-      case 'word-chain':
-        return <WordChainGame key={sessionKey} onComplete={handleComplete} />;
-      case 'world-quiz':
-        return (
-          <McqSequenceGame
-            key={sessionKey}
-            questions={WORLD_QUESTIONS}
-            label="🌍 World"
-            onComplete={handleComplete}
-          />
-        );
-      case 'trivia-blitz':
-        return (
-          <McqTimedGame
-            key={sessionKey}
-            questions={TRIVIA_QUESTIONS}
-            durationSec={75}
-            label="🎲 TRIVIA BLITZ"
-            onComplete={handleComplete}
-          />
-        );
-      case 'code-breaker':
-        return (
-          <McqSequenceGame
-            key={sessionKey}
-            questions={CODE_QUESTIONS}
-            label="💻 Code Breaker"
-            onComplete={handleComplete}
-          />
-        );
-      case 'story-builder':
-        return <StoryBuilderGame key={sessionKey} onComplete={handleComplete} />;
-      default:
-        return null;
-    }
-  };
+  const gameView = renderGameById(gameId, { sessionKey, onComplete: handleComplete });
 
   return (
     <View style={styles.root}>
       <GamePlayHeader
         title={game.title}
         subtitle={game.description}
+        coinReward={game.coinReward}
         onBack={() => navigation.goBack()}
       />
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.playContent}
       >
-        {renderGame(gameId)}
+        <GamesPlayCard>
+          {gameView ?? (
+            <View style={styles.centered}>
+              <Text>{t('games.notFound')}</Text>
+            </View>
+          )}
+        </GamesPlayCard>
       </ScrollView>
     </View>
   );
@@ -263,9 +158,11 @@ function createStyles(bottomInset: number) {
       justifyContent: 'center',
       gap: 16,
       padding: 24,
+      minHeight: 200,
     },
     playContent: {
       paddingHorizontal: 16,
+      paddingTop: 12,
       paddingBottom: 24 + bottomInset,
       gap: 12,
     },

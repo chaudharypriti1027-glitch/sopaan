@@ -7,6 +7,13 @@ export type AdminStats = {
   testsPublished: number;
   liveClasses: number;
   pendingReviews: number;
+  pendingQuestionReviews: number;
+  coursesPublished: number;
+  examsTotal: number;
+  questionsTotal: number;
+  currentAffairsPublished: number;
+  mentorsTotal: number;
+  attemptsLast30Days: number;
   assessedAt: string;
 };
 
@@ -37,8 +44,22 @@ export type GenerateExamInput = {
 type RawPendingTest = PendingTest & { _id?: string };
 
 export async function getStats(): Promise<AdminStats> {
-  const { data } = await apiClient.get<AdminStats>('/admin/stats');
-  return data;
+  const { data } = await apiClient.get<Partial<AdminStats>>('/admin/stats');
+  return {
+    activeStudents: data.activeStudents ?? 0,
+    totalStudents: data.totalStudents ?? 0,
+    testsPublished: data.testsPublished ?? 0,
+    liveClasses: data.liveClasses ?? 0,
+    pendingReviews: data.pendingReviews ?? 0,
+    pendingQuestionReviews: data.pendingQuestionReviews ?? 0,
+    coursesPublished: data.coursesPublished ?? 0,
+    examsTotal: data.examsTotal ?? 0,
+    questionsTotal: data.questionsTotal ?? 0,
+    currentAffairsPublished: data.currentAffairsPublished ?? 0,
+    mentorsTotal: data.mentorsTotal ?? 0,
+    attemptsLast30Days: data.attemptsLast30Days ?? 0,
+    assessedAt: data.assessedAt ?? new Date().toISOString(),
+  };
 }
 
 export async function listPendingTests(

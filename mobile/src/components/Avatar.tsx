@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
-import { StyleSheet, Text, View, type ImageSourcePropType, type ImageStyle, type ViewStyle } from 'react-native';
+import { StyleSheet, Text, type ImageSourcePropType, type ImageStyle, type ViewStyle } from 'react-native';
 import { OptimizedImage } from './OptimizedImage';
 import { useTheme } from '../theme';
 

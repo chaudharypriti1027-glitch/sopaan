@@ -1,33 +1,33 @@
 import { useMemo } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
-import { Card, Screen, SectionTitle } from '../../components';
-import { useSuccessStories } from '../../hooks';
+import { StyleSheet, Text, View } from 'react-native';
+import { Avatar, Card, QueryStateView, Screen, SectionTitle } from '../../components';
+import { useNetworkStatus, useSuccessStories } from '../../hooks';
 import { useTheme } from '../../theme';
 
 export function SuccessStoriesScreen() {
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
+  const { isOffline } = useNetworkStatus();
 
   const storiesQuery = useSuccessStories();
+  const stories = storiesQuery.data?.items ?? [];
 
   return (
     <Screen scroll contentContainerStyle={styles.content}>
       <SectionTitle title="Success stories" subtitle="Real journeys from Sopaan learners" />
 
-      {storiesQuery.isLoading ? (
-        <ActivityIndicator color={theme.colors.brand.primary} />
-      ) : (
+      <QueryStateView
+        isLoading={storiesQuery.isLoading}
+        isError={storiesQuery.isError}
+        isFetching={storiesQuery.isFetching}
+        isOffline={isOffline}
+        hasData={stories.length > 0}
+        onRetry={() => void storiesQuery.refetch()}
+      >
         <View style={styles.list}>
-          {(storiesQuery.data?.items ?? []).map((story) => (
+          {stories.map((story) => (
             <Card key={story.id} style={styles.card}>
-              <View
-                style={[
-                  styles.avatar,
-                  { backgroundColor: story.imageColor ?? theme.colors.brand.primaryMuted },
-                ]}
-              >
-                <Text style={styles.initial}>{story.name.charAt(0)}</Text>
-              </View>
+              <Avatar name={story.name} size="md" />
               <View style={styles.body}>
                 <Text style={styles.name}>{story.name}</Text>
                 <Text style={styles.exam}>
@@ -38,7 +38,7 @@ export function SuccessStoriesScreen() {
             </Card>
           ))}
         </View>
-      )}
+      </QueryStateView>
     </Screen>
   );
 }
@@ -48,18 +48,6 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     content: { gap: theme.spacing.lg, paddingBottom: theme.spacing['3xl'] },
     list: { gap: theme.spacing.md },
     card: { flexDirection: 'row', gap: theme.spacing.md },
-    avatar: {
-      width: 48,
-      height: 48,
-      borderRadius: 24,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    initial: {
-      ...theme.typography.presets.bodyMedium,
-      fontFamily: theme.typography.fonts.ui.semibold,
-      color: theme.colors.brand.primary,
-    },
     body: { flex: 1, gap: theme.spacing.xs },
     name: {
       ...theme.typography.presets.bodyMedium,

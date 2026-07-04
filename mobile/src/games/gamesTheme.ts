@@ -1,17 +1,31 @@
-/** Tokens from learning-games-light.html — navy/gold "Classic Premium" accent. */
+import { FLOATING_TAB_BAR_BOTTOM_PADDING } from '../navigation/tabBarConstants';
+
+/** Tokens aligned with HOME_UI — navy/gold "Classic Premium". */
 export const GAMES_UI = {
   bg: '#F4F1E9',
   surface: '#FFFFFF',
   card2: '#FAFAF7',
+  tileBg: '#FAFAF7',
   border: 'rgba(35,42,77,0.12)',
+  borderSoft: '#ECE8DD',
   text: '#1C1E2E',
+  ink: '#1C1E2E',
   text2: '#41435A',
   muted: '#87889A',
   accent: '#232A4D',
   accent2: '#2E3766',
+  accentSoft: '#E9EBF3',
   gold: '#C29A4E',
+  goldDeep: '#A67C33',
+  goldSoft: '#F4EBD8',
   green: '#5F8A7B',
+  sage: '#5F8A7B',
+  sageSoft: '#E4EDE9',
   red: '#C4634F',
+  shadow: '#232A4D',
+  heroGradient: ['#2E3766', '#232A4D', '#1A1F3B'] as const,
+  forYouLift: -22,
+  tabBottomPad: FLOATING_TAB_BAR_BOTTOM_PADDING + 24,
 } as const;
 
 export const GAME_GRADIENTS = {

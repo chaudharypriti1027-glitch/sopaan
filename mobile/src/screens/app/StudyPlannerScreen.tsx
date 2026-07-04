@@ -9,6 +9,8 @@ import {
   View,
 } from 'react-native';
 import {
+  AIBadge,
+  AIGoldCard,
   Button,
   Card,
   DateChip,
@@ -170,9 +172,10 @@ export function StudyPlannerScreen() {
       ) : null}
 
       {generatePlan.data?.summary ? (
-        <Card style={styles.summaryCard}>
+        <AIGoldCard style={styles.summaryCard}>
+          <AIBadge label="AI plan" />
           <Text style={styles.summary}>{generatePlan.data.summary}</Text>
-        </Card>
+        </AIGoldCard>
       ) : null}
 
       {sessionsQuery.isLoading ? (
@@ -225,7 +228,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     addCard: { gap: theme.spacing.md },
     row: { flexDirection: 'row', gap: theme.spacing.md },
     half: { flex: 1 },
-    summaryCard: { backgroundColor: theme.colors.brand.primaryMuted },
+    summaryCard: { gap: theme.spacing.sm },
     summary: { ...theme.typography.presets.body, color: theme.colors.text.primary },
     timelineCard: { gap: theme.spacing.sm },
     taskRow: { marginLeft: theme.spacing['2xl'] },

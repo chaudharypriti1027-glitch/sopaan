@@ -2,6 +2,7 @@ import { fireEvent } from '@testing-library/react-native';
 import { ResultScreen } from '../app/ResultScreen';
 import { renderWithProviders } from '../../test/render';
 import { createMockSubmitResult } from '../../test/fixtures/stackScreens';
+import { useAuthStore } from '../../store/auth';
 
 const mockNavigate = jest.fn();
 const mockResult = createMockSubmitResult();
@@ -20,12 +21,6 @@ jest.mock('@react-navigation/native', () => ({
   }),
 }));
 
-jest.mock('../../auth', () => ({
-  useAuth: () => ({
-    user: { name: 'Arjun Patel' },
-  }),
-}));
-
 jest.mock('../../components/RelatedQuestions', () => ({
   RelatedQuestions: () => null,
 }));
@@ -33,6 +28,22 @@ jest.mock('../../components/RelatedQuestions', () => ({
 describe('ResultScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    useAuthStore.setState({
+      profile: {
+        id: 'user_1',
+        name: 'Arjun Patel',
+        phone: '+919876543210',
+        state: 'Gujarat',
+        targetExam: 'SSC CGL',
+        language: 'en',
+        createdAt: '2026-01-01T00:00:00.000Z',
+        rank: null,
+        level: 1,
+        coins: 0,
+        onboardingComplete: true,
+      },
+      status: 'authed',
+    });
   });
 
   it('renders score, AI coach feedback, and topic breakdown', () => {

@@ -308,6 +308,12 @@ userSchema.methods.toProfile = function toProfile() {
     level: this.level ?? 1,
     coins: this.coins ?? 0,
     onboardingComplete: Boolean(this.onboardingComplete),
+    role: this.role ?? 'student',
+    isPremium: Boolean(this.isPremium),
+    ...(this.premiumPlan ? { premiumPlan: this.premiumPlan } : {}),
+    ...(this.premiumExpiresAt
+      ? { premiumExpiresAt: this.premiumExpiresAt.toISOString() }
+      : {}),
   };
 };
 

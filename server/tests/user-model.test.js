@@ -41,6 +41,8 @@ describe('User model', () => {
       level: 5,
       coins: 120,
       onboardingComplete: false,
+      role: 'student',
+      isPremium: false,
     });
     expect(profile.passwordHash).toBeUndefined();
   });
@@ -63,6 +65,8 @@ describe('User model', () => {
     expect(profile.targetExam).toBe('');
     expect(profile.language).toBe('en');
     expect(profile.rank).toBeNull();
+    expect(profile.role).toBe('student');
+    expect(profile.isPremium).toBe(false);
   });
 });
 

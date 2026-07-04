@@ -45,5 +45,15 @@
   "languageEnglish": "English",
   "languageHindi": "हिंदी",
   "languageGu": "गुजराती",
-  "offlineBanner": "नेटवर्क नहीं — ऑफ़लाइन सेव सामग्री उपलब्ध है"
+  "offlineBanner": "नेटवर्क नहीं — ऑफ़लाइन सेव सामग्री उपलब्ध है",
+  "premiumDialog": {
+    "sessionExpiredTitle": "सत्र समाप्त",
+    "sessionExpiredBody": "सुरक्षा के लिए जारी रखने हेतु फिर साइन इन करें।",
+    "signInAgain": "फिर साइन इन करें",
+    "notificationsPermissionTitle": "नोटिफिकेशन चालू करें",
+    "notificationsPermissionBody": "रैंक अपडेट, स्ट्रीक रिमाइंडर और दैनिक प्लान के लिए अलर्ट की अनुमति दें।",
+    "openSettings": "सेटिंग्स खोलें",
+    "notNow": "अभी नहीं",
+    "gotIt": "समझ गया"
+  }
 }

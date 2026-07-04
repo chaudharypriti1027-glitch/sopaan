@@ -10,6 +10,7 @@
     "start:worker": "node src/worker.js",
     "dev": "node --watch src/index.js",
     "seed": "node src/seed/index.js",
+    "ensure-admin": "node src/seed/ensureAdmin.js",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --runInBand",
     "lint": "eslint src tests",
     "verify:indexes": "node scripts/verify-indexes.js",

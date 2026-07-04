@@ -17,7 +17,7 @@ export function PremiumIcon({
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(), []);
   const dims = PREMIUM_ICON_SIZES[size];
-  const palette = PREMIUM_ICON_TONES[tone];
+  const palette = PREMIUM_ICON_TONES[tone] ?? PREMIUM_ICON_TONES.lavender;
 
   const backgroundColor = active || filled ? palette.bg : 'transparent';
   const iconColor = active || filled ? palette.fg : theme.colors.tabBar.inactive;

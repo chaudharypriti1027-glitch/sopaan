@@ -2,9 +2,10 @@ import { Award, Coins } from 'lucide-react-native';
 import { useMemo } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { Button, Card, Pill, Screen, SectionTitle } from '../../components';
+import { Button, Card, Pill, PremiumHeroCard, Screen, SectionTitle } from '../../components';
 import { useBadges, useProfile, useRedeemReward, useRewardsList } from '../../hooks';
 import { useFormat } from '../../i18n/useFormat';
+import { toneColors, toneForIndex } from '../../utils/iconTone';
 import { useTheme } from '../../theme';
 
 export function RewardsScreen() {
@@ -44,13 +45,11 @@ export function RewardsScreen() {
     <Screen scroll contentContainerStyle={styles.content}>
       <SectionTitle title={t('rewards.title')} testID="rewards-screen" subtitle={t('rewards.subtitle')} />
 
-      <Card style={styles.balanceCard}>
-        <Coins size={28} color={theme.colors.accent.gold} />
-        <View>
-          <Text style={styles.balanceLabel}>{t('rewards.balance')}</Text>
-          <Text style={styles.balanceValue}>{formatNumber(coins)}</Text>
-        </View>
-      </Card>
+      <PremiumHeroCard
+        icon={<Coins size={24} color="#FFFFFF" strokeWidth={1.8} />}
+        eyebrow={t('rewards.balance')}
+        title={formatNumber(coins)}
+      />
 
       <Text style={styles.sectionLabel}>{t('rewards.badges')}</Text>
       {badgesQuery.isLoading ? (
@@ -61,12 +60,15 @@ export function RewardsScreen() {
         </Card>
       ) : (
         <View style={styles.badgeRow}>
-          {badges.map((badge) => (
-            <View key={badge.id ?? badge.key} style={styles.badgeTile}>
-              <Award size={24} color={theme.colors.accent.gold} />
-              <Text style={styles.badgeKey}>{badge.key.replace(/_/g, ' ')}</Text>
-            </View>
-          ))}
+          {badges.map((badge, index) => {
+            const tone = toneColors(toneForIndex(index));
+            return (
+              <View key={badge.id ?? badge.key} style={[styles.badgeTile, { backgroundColor: tone.bg, borderColor: tone.ring }]}>
+                <Award size={24} color={tone.fg} />
+                <Text style={[styles.badgeKey, { color: tone.fg }]}>{badge.key.replace(/_/g, ' ')}</Text>
+              </View>
+            );
+          })}
         </View>
       )}
 
@@ -108,18 +110,6 @@ export function RewardsScreen() {
 function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
     content: { gap: theme.spacing.lg, paddingBottom: theme.spacing['3xl'] },
-    balanceCard: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: theme.spacing.lg,
-      backgroundColor: theme.colors.accent.goldMuted,
-    },
-    balanceLabel: { ...theme.typography.presets.caption, color: theme.colors.text.secondary },
-    balanceValue: {
-      ...theme.typography.presets.h2,
-      fontFamily: theme.typography.fonts.stat.semibold,
-      color: theme.colors.text.primary,
-    },
     sectionLabel: {
       ...theme.typography.presets.bodyMedium,
       fontFamily: theme.typography.fonts.ui.semibold,
@@ -131,14 +121,12 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       gap: theme.spacing.xs,
       padding: theme.spacing.md,
       borderRadius: theme.radii.card,
-      backgroundColor: theme.colors.surface.default,
       borderWidth: 1,
-      borderColor: theme.colors.border.subtle,
       minWidth: 88,
     },
     badgeKey: {
       ...theme.typography.presets.caption,
-      color: theme.colors.text.secondary,
+      fontFamily: theme.typography.fonts.ui.semibold,
       textTransform: 'capitalize',
       textAlign: 'center',
     },

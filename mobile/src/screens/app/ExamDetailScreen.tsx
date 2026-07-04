@@ -4,11 +4,13 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { BookOpen, Map } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import {
   AIBadge,
+  AIGoldCard,
   Button,
   Card,
-  ProgressBar,
+  PremiumHeroCard,
   Screen,
   SectionTitle,
   SegTabs,
@@ -22,12 +24,6 @@ type ExamDetailNav = NativeStackNavigationProp<MainStackParamList, 'ExamDetail'>
 
 type PrepareTab = 'overview' | 'syllabus' | 'strategy';
 
-const TAB_OPTIONS = [
-  { key: 'overview' as const, label: 'Overview' },
-  { key: 'syllabus' as const, label: 'Syllabus' },
-  { key: 'strategy' as const, label: 'Strategy' },
-];
-
 function buildNinetyDayPlan(stages: { name: string }[]) {
   const phaseCount = Math.max(stages.length, 3);
   const weeksPerPhase = Math.floor(13 / phaseCount);
@@ -40,7 +36,6 @@ function buildNinetyDayPlan(stages: { name: string }[]) {
     return {
       week: index + 1,
       phase: stage.name,
-      focus: `Complete ${stage.name} milestones and weekly targets`,
       dayRange: `${start}-${end}`,
     };
   });
@@ -50,7 +45,17 @@ export function ExamDetailScreen() {
   const route = useRoute<ExamDetailRoute>();
   const navigation = useNavigation<ExamDetailNav>();
   const { theme } = useTheme();
+  const { t } = useTranslation('app');
   const styles = useMemo(() => createStyles(theme), [theme]);
+
+  const TAB_OPTIONS = useMemo(
+    () => [
+      { key: 'overview' as const, label: t('examDetail.tabOverview') },
+      { key: 'syllabus' as const, label: t('examDetail.tabSyllabus') },
+      { key: 'strategy' as const, label: t('examDetail.tabStrategy') },
+    ],
+    [t],
+  );
 
   const [tab, setTab] = useState<PrepareTab>('overview');
   const profileQuery = useProfile();
@@ -67,9 +72,13 @@ export function ExamDetailScreen() {
   const planBlocks = useMemo(() => {
     const stages = roadmap?.stages?.length
       ? roadmap.stages.map((s) => ({ name: s.name }))
-      : [{ name: 'Foundation' }, { name: 'Practice' }, { name: 'Revision' }];
+      : [
+          { name: t('examDetail.foundation') },
+          { name: t('examDetail.practice') },
+          { name: t('examDetail.revision') },
+        ];
     return buildNinetyDayPlan(stages);
-  }, [roadmap?.stages]);
+  }, [roadmap?.stages, t]);
 
   if (examQuery.isLoading || goalQuery.isLoading) {
     return (
@@ -82,7 +91,7 @@ export function ExamDetailScreen() {
   if (!exam) {
     return (
       <Screen style={styles.centered}>
-        <Text style={styles.empty}>Exam not found</Text>
+        <Text style={styles.empty}>{t('examDetail.notFound')}</Text>
         <Button label="Back" variant="ghost" onPress={() => navigation.goBack()} />
       </Screen>
     );
@@ -98,22 +107,24 @@ export function ExamDetailScreen() {
 
       {tab === 'overview' ? (
         <Card style={styles.block}>
-          <Text style={styles.body}>{exam.description ?? 'No description available.'}</Text>
+          <Text style={styles.body}>{exam.description ?? t('examDetail.noDescription')}</Text>
           {exam.eligibility ? (
             <View style={styles.eligibility}>
-              <Text style={styles.subheading}>Eligibility</Text>
+              <Text style={styles.subheading}>{t('examDetail.eligibility')}</Text>
               {exam.eligibility.education ? (
-                <Text style={styles.meta}>Education: {exam.eligibility.education}</Text>
+                <Text style={styles.meta}>{t('examDetail.education', { value: exam.eligibility.education })}</Text>
               ) : null}
               {exam.eligibility.ageMin != null ? (
                 <Text style={styles.meta}>
-                  Age: {exam.eligibility.ageMin}–{exam.eligibility.ageMax} years
+                  {t('examDetail.age', { min: exam.eligibility.ageMin, max: exam.eligibility.ageMax })}
                 </Text>
               ) : null}
             </View>
           ) : null}
           {exam.vacancies != null ? (
-            <Text style={styles.meta}>Vacancies: {exam.vacancies.toLocaleString('en-IN')}</Text>
+            <Text style={styles.meta}>
+              {t('examDetail.vacancies', { count: exam.vacancies.toLocaleString('en-IN') })}
+            </Text>
           ) : null}
         </Card>
       ) : null}
@@ -128,7 +139,7 @@ export function ExamDetailScreen() {
               </View>
             ))
           ) : (
-            <Text style={styles.body}>Stage-wise syllabus will be updated soon.</Text>
+            <Text style={styles.body}>{t('examDetail.syllabusSoon')}</Text>
           )}
         </Card>
       ) : null}
@@ -148,23 +159,23 @@ export function ExamDetailScreen() {
 
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <SectionTitle title="90-day AI plan" />
-          <AIBadge label="Plan" />
+          <SectionTitle title={t('examDetail.ninetyDayPlan')} />
+          <AIBadge label={t('examDetail.planBadge')} />
         </View>
-        <Card style={styles.planCard}>
+        <AIGoldCard style={styles.planCard}>
           {planBlocks.map((block) => (
             <View key={`${block.phase}-${block.week}`} style={styles.planRow}>
-              <Text style={styles.planDays}>Days {block.dayRange}</Text>
-              <Text style={styles.planPhase}>{block.phase} · Week {block.week}</Text>
-              <Text style={styles.planFocus}>{block.focus}</Text>
+              <Text style={styles.planDays}>{t('examDetail.daysRange', { range: block.dayRange })}</Text>
+              <Text style={styles.planPhase}>{t('examDetail.weekPhase', { phase: block.phase, week: block.week })}</Text>
+              <Text style={styles.planFocus}>{t('examDetail.phaseFocus', { phase: block.phase })}</Text>
             </View>
           ))}
-        </Card>
+        </AIGoldCard>
       </View>
 
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <SectionTitle title="Recommended books" />
+          <SectionTitle title={t('examDetail.recommendedBooks')} />
           <BookOpen size={18} color={theme.colors.text.tertiary} />
         </View>
         <Card style={styles.block}>
@@ -180,10 +191,10 @@ export function ExamDetailScreen() {
               </View>
             ))
           ) : (
-            <Text style={styles.body}>No books listed yet.</Text>
+            <Text style={styles.body}>{t('examDetail.noBooks')}</Text>
           )}
           <Button
-            label="Browse all books"
+            label={t('examDetail.browseBooks')}
             variant="ghost"
             onPress={() => navigation.navigate('Books', { examId: exam.id })}
           />
@@ -191,19 +202,18 @@ export function ExamDetailScreen() {
       </View>
 
       {roadmap ? (
-        <Card style={styles.roadmapCta}>
-          <View style={styles.roadmapCopy}>
-            <Map size={20} color={theme.colors.brand.primary} />
-            <View style={styles.roadmapText}>
-              <Text style={styles.roadmapTitle}>Goal roadmap</Text>
-              <Text style={styles.roadmapSubtitle}>
-                {roadmap.overallProgress ?? 0}% complete · {roadmap.currentStage}
-              </Text>
-            </View>
-          </View>
-          <ProgressBar value={roadmap.overallProgress ?? 0} showValue variant="teal" />
-          <Button label="View milestone journey" onPress={() => navigation.navigate('Roadmap')} />
-        </Card>
+        <PremiumHeroCard
+          icon={<Map size={24} color="#FFFFFF" strokeWidth={1.8} />}
+          eyebrow={t('examDetail.roadmapTitle')}
+          title={roadmap.currentStage ?? '—'}
+          stats={[{ label: t('examDetail.roadmapTitle'), value: `${roadmap.overallProgress ?? 0}%` }]}
+        >
+          <Button
+            label={t('examDetail.viewJourney')}
+            variant="gold"
+            onPress={() => navigation.navigate('Roadmap')}
+          />
+        </PremiumHeroCard>
       ) : null}
     </Screen>
   );
@@ -264,14 +274,5 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       fontFamily: theme.typography.fonts.ui.semibold,
       color: theme.colors.text.primary,
     },
-    roadmapCta: { gap: theme.spacing.md },
-    roadmapCopy: { flexDirection: 'row', gap: theme.spacing.md, alignItems: 'center' },
-    roadmapText: { flex: 1, gap: theme.spacing.xs },
-    roadmapTitle: {
-      ...theme.typography.presets.bodyMedium,
-      fontFamily: theme.typography.fonts.ui.semibold,
-      color: theme.colors.text.primary,
-    },
-    roadmapSubtitle: { ...theme.typography.presets.caption, color: theme.colors.text.secondary },
   });
 }

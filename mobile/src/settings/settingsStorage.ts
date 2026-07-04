@@ -1,4 +1,4 @@
-import * as SecureStore from 'expo-secure-store';
+import { getSecureItem, setSecureItem } from '../lib/secureStorage';
 
 const SETTINGS_KEY = 'sopaan_settings';
 
@@ -13,7 +13,7 @@ const DEFAULTS: AppSettings = {
 };
 
 export async function loadSettings(): Promise<AppSettings> {
-  const raw = await SecureStore.getItemAsync(SETTINGS_KEY);
+  const raw = await getSecureItem(SETTINGS_KEY);
   if (!raw) return { ...DEFAULTS };
   try {
     return { ...DEFAULTS, ...(JSON.parse(raw) as Partial<AppSettings>) };
@@ -25,6 +25,6 @@ export async function loadSettings(): Promise<AppSettings> {
 export async function saveSettings(patch: Partial<AppSettings>): Promise<AppSettings> {
   const current = await loadSettings();
   const next = { ...current, ...patch };
-  await SecureStore.setItemAsync(SETTINGS_KEY, JSON.stringify(next));
+  await setSecureItem(SETTINGS_KEY, JSON.stringify(next));
   return next;
 }

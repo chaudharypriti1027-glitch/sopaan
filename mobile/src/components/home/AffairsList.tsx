@@ -1,28 +1,19 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import { useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { ChevronRight, Clock } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { OptimizedImage } from '../OptimizedImage';
 import { Text } from '../Text';
-import { useTheme } from '../../theme';
+import { toneColors, toneForIndex } from '../../utils/iconTone';
 import type { AffairCard } from '../../types/home';
+import { resolveAffairIcon } from './homeUtils';
 import { HOME_UI } from './homeTheme';
+import { platformShadow } from '../../utils/platformShadow';
 
 type AffairsListProps = {
   items: AffairCard[];
   onItemPress?: (affairId: string) => void;
 };
-
-const SOURCE_COLORS = [HOME_UI.goldDeep, HOME_UI.accent, HOME_UI.sageDeep, HOME_UI.accent, HOME_UI.goldDeep];
-const THUMB_EMOJI = ['🏛️', '📈', '🏠', '🌐', '⚖️'];
-const THUMB_GRADIENTS = [
-  ['#C29A4E', '#A67C33'],
-  ['#2E3766', '#1A1F3B'],
-  ['#6C9A8A', '#4C7264'],
-  ['#2E3766', '#1A1F3B'],
-  ['#C29A4E', '#A67C33'],
-];
 
 function AffairThumb({
   item,
@@ -32,7 +23,7 @@ function AffairThumb({
   index: number;
 }) {
   const styles = useMemo(() => createThumbStyles(), []);
-  const gradient = THUMB_GRADIENTS[index % THUMB_GRADIENTS.length];
+  const tone = toneColors(toneForIndex(index));
 
   if (item.imageUrl) {
     return (
@@ -42,37 +33,20 @@ function AffairThumb({
     );
   }
 
-  if (item.imageColor) {
-    return (
-      <View style={styles.thumbWrap}>
-        <LinearGradient
-          colors={[item.imageColor, `${item.imageColor}CC`]}
-          style={styles.thumbImage}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-        />
-      </View>
-    );
-  }
+  const Icon = resolveAffairIcon(index);
+  const bg = item.imageColor ?? tone.bg;
+  const fg = item.imageColor ? '#FFFFFF' : tone.fg;
 
   return (
-    <View style={styles.thumbWrap}>
-      <LinearGradient
-        colors={gradient as [string, string]}
-        style={styles.thumbImage}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-      >
-        <Text style={styles.thumbEmoji}>{THUMB_EMOJI[index % THUMB_EMOJI.length]}</Text>
-      </LinearGradient>
+    <View style={[styles.thumbWrap, { backgroundColor: bg }]}>
+      <Icon size={21} color={fg} strokeWidth={2} />
     </View>
   );
 }
 
 export function AffairsList({ items, onItemPress }: AffairsListProps) {
   const { t } = useTranslation('app');
-  const { theme } = useTheme();
-  const styles = useMemo(() => createStyles(theme), [theme]);
+  const styles = useMemo(() => createStyles(), []);
 
   if (!items.length) {
     return null;
@@ -81,7 +55,7 @@ export function AffairsList({ items, onItemPress }: AffairsListProps) {
   return (
     <View style={styles.card}>
       {items.slice(0, 3).map((item, index) => {
-        const sourceColor = SOURCE_COLORS[index % SOURCE_COLORS.length];
+        const tone = toneColors(toneForIndex(index));
 
         return (
           <View key={item.id}>
@@ -93,7 +67,7 @@ export function AffairsList({ items, onItemPress }: AffairsListProps) {
             >
               <AffairThumb item={item} index={index} />
               <View style={styles.content}>
-                <Text style={[styles.source, { color: sourceColor }]}>{item.source}</Text>
+                <Text style={[styles.source, { color: tone.fg }]}>{item.source}</Text>
                 <Text style={styles.headline} numberOfLines={2}>
                   {item.headline}
                 </Text>
@@ -102,7 +76,7 @@ export function AffairsList({ items, onItemPress }: AffairsListProps) {
                   <Text style={styles.readTime}>{t('home.readMin', { count: item.readMin })}</Text>
                 </View>
               </View>
-              <ChevronRight size={15} color={HOME_UI.muted} strokeWidth={2.2} style={styles.chev} />
+              <ChevronRight size={17} color={HOME_UI.muted} strokeWidth={2.2} style={styles.chev} />
             </Pressable>
           </View>
         );
@@ -126,64 +100,59 @@ function createThumbStyles() {
       width: '100%',
       height: '100%',
       borderRadius: 15,
-      alignItems: 'center',
-      justifyContent: 'center',
     },
-    thumbEmoji: { fontSize: 21 },
   });
 }
 
-function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
+function createStyles() {
   return StyleSheet.create({
     card: {
       backgroundColor: HOME_UI.surface,
       borderRadius: 22,
-      borderWidth: 1.5,
+      borderWidth: 1,
       borderColor: HOME_UI.border,
       overflow: 'hidden',
-      shadowColor: HOME_UI.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.08,
-      shadowRadius: 12,
-      elevation: 2,
+      paddingVertical: 6,
+      ...platformShadow({ color: HOME_UI.shadow, offsetY: 8, opacity: 0.08, radius: 16, elevation: 2 }),
     },
     row: {
       flexDirection: 'row',
       alignItems: 'flex-start',
-      gap: 13,
-      paddingVertical: 15,
+      gap: 12,
+      paddingVertical: 12,
       paddingHorizontal: 16,
     },
     pressed: { opacity: 0.96 },
     divider: {
-      height: 1,
+      height: StyleSheet.hairlineWidth,
       backgroundColor: HOME_UI.border,
-      marginLeft: 79,
+      marginLeft: 78,
     },
     content: { flex: 1, minWidth: 0 },
     source: {
-      fontSize: 10,
+      fontSize: 9.5,
       fontWeight: '800',
-      letterSpacing: 0.8,
+      letterSpacing: 0.6,
       textTransform: 'uppercase',
-      marginBottom: 4,
+      marginBottom: 3,
     },
     headline: {
-      fontSize: 13,
-      fontWeight: '600',
+      fontSize: 12.5,
+      fontWeight: '700',
       color: HOME_UI.ink,
-      lineHeight: 19,
-      marginBottom: 6,
+      lineHeight: 17,
+      marginBottom: 4,
+      letterSpacing: -0.1,
     },
     timeRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 5,
+      gap: 4,
     },
     readTime: {
-      fontSize: 11,
+      fontSize: 10.5,
       color: HOME_UI.muted,
-      fontWeight: '500',
+      fontWeight: '600',
     },
     chev: { marginTop: 2, flexShrink: 0 },
   });

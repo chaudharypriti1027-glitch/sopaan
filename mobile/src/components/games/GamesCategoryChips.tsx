@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet } from 'react-native';
 import { Text } from '../Text';
+import { useTheme } from '../../theme';
 import { GAMES_UI } from './gamesTheme';
 import type { GameCategory } from '../../games/types';
 
@@ -11,7 +12,8 @@ type GamesCategoryChipsProps = {
 };
 
 export function GamesCategoryChips({ options, active, onChange }: GamesCategoryChipsProps) {
-  const styles = useMemo(() => createStyles(), []);
+  const { theme } = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
   return (
     <ScrollView
@@ -24,6 +26,8 @@ export function GamesCategoryChips({ options, active, onChange }: GamesCategoryC
         return (
           <Pressable
             key={option.key}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: isActive }}
             onPress={() => onChange(option.key)}
             style={[styles.chip, isActive && styles.chipActive]}
           >
@@ -35,35 +39,33 @@ export function GamesCategoryChips({ options, active, onChange }: GamesCategoryC
   );
 }
 
-function createStyles() {
+function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
     row: {
-      paddingHorizontal: 16,
-      paddingVertical: 12,
+      paddingVertical: 10,
+      paddingBottom: 4,
       gap: 8,
     },
     chip: {
       paddingHorizontal: 16,
-      paddingVertical: 7,
+      paddingVertical: 8,
       borderRadius: 20,
-      borderWidth: 1.5,
-      borderColor: GAMES_UI.border,
+      borderWidth: 1,
+      borderColor: GAMES_UI.borderSoft,
       backgroundColor: GAMES_UI.surface,
-      shadowColor: GAMES_UI.accent,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.06,
-      shadowRadius: 8,
-      elevation: 1,
     },
     chipActive: {
       backgroundColor: GAMES_UI.accent,
       borderColor: 'transparent',
       shadowColor: GAMES_UI.accent,
-      shadowOpacity: 0.35,
-      shadowRadius: 12,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.28,
+      shadowRadius: 10,
+      elevation: 3,
     },
     label: {
       fontSize: 12,
+      fontFamily: theme.typography.fonts.ui.semibold,
       fontWeight: '700',
       color: GAMES_UI.muted,
     },

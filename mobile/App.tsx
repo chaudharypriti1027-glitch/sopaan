@@ -6,11 +6,14 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Platform, StyleSheet, View } from 'react-native';
 import './src/i18n';
+import { WebAppShell } from './src/layout/WebAppShell';
+import { bootstrapWebDocument } from './src/layout/webBootstrap';
 import { AuthProvider } from './src/auth';
 import { ExperimentsProvider } from './src/experiments';
 import { OfflineBanner } from './src/components/OfflineBanner';
+import { PremiumDialogProvider } from './src/components/premium/PremiumDialogProvider';
 import { usePushNotifications } from './src/hooks/usePushNotifications';
 import { useNotificationDeepLink } from './src/hooks/useNotificationDeepLink';
 import { useReferralDeepLink } from './src/hooks/useReferralDeepLink';
@@ -20,6 +23,8 @@ import { LanguageProvider } from './src/language/LanguageContext';
 import { AppErrorBoundary } from './src/errors/AppErrorBoundary';
 import { ReleaseGate } from './src/updates/ReleaseGate';
 import { RootNavigator } from './src/navigation/RootNavigator';
+import { AuthNavigationGuard } from './src/navigation/AuthNavigationGuard';
+import { navigationRef } from './src/navigation/navigationRef';
 import { createPersistedQueryClient, persistOptions } from './src/query/persistClient';
 import {
   ThemeProvider,
@@ -39,6 +44,7 @@ function NavigationShell() {
 
   return (
     <>
+      <AuthNavigationGuard />
       <OfflineBanner />
       <RootNavigator />
     </>
@@ -49,7 +55,7 @@ function AppNavigation() {
   const { theme } = useTheme();
 
   return (
-    <NavigationContainer theme={buildNavigationTheme(theme)}>
+    <NavigationContainer ref={navigationRef} theme={buildNavigationTheme(theme)}>
       <NavigationShell />
       <StatusBar style={theme.mode === 'dark' ? 'light' : 'dark'} />
     </NavigationContainer>
@@ -63,13 +69,17 @@ function AppProviders() {
     <PersistQueryClientProvider client={queryClient} persistOptions={persistOptions}>
       <ThemeProvider>
         <ReleaseGate>
-          <AuthProvider>
-            <ExperimentsProvider>
-              <LanguageProvider>
-                <AppNavigation />
-              </LanguageProvider>
-            </ExperimentsProvider>
-          </AuthProvider>
+          <PremiumDialogProvider>
+            <AppErrorBoundary>
+              <AuthProvider>
+                <LanguageProvider>
+                  <ExperimentsProvider>
+                    <AppNavigation />
+                  </ExperimentsProvider>
+                </LanguageProvider>
+              </AuthProvider>
+            </AppErrorBoundary>
+          </PremiumDialogProvider>
         </ReleaseGate>
       </ThemeProvider>
     </PersistQueryClientProvider>
@@ -79,6 +89,10 @@ function AppProviders() {
 export default function App() {
   const [criticalLoaded, criticalError] = useFonts(criticalFontAssets);
   useFonts(statFontAssets);
+
+  useEffect(() => {
+    bootstrapWebDocument();
+  }, []);
 
   useEffect(() => {
     void bootstrapReferralInstallTracking();
@@ -101,9 +115,9 @@ export default function App() {
   return (
     <GestureHandlerRootView style={styles.root}>
       <SafeAreaProvider>
-        <AppErrorBoundary>
+        <WebAppShell>
           <AppProviders />
-        </AppErrorBoundary>
+        </WebAppShell>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
@@ -112,6 +126,7 @@ export default function App() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
+    ...(Platform.OS === 'web' ? { minHeight: '100vh' as unknown as number } : null),
   },
   boot: {
     flex: 1,

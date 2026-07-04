@@ -1,6 +1,6 @@
 import { useRoute } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
-import { BarChart2, Sparkles } from 'lucide-react-native';
+import { BarChart2, Medal, Sparkles } from 'lucide-react-native';
 import { useMemo } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import {
@@ -8,6 +8,7 @@ import {
   BarChart,
   Card,
   ComparisonBars,
+  PremiumHeroCard,
   RankRing,
   Screen,
   SectionTitle,
@@ -86,29 +87,29 @@ export function MockAnalysisScreen() {
         subtitle={attempt.test?.title ?? 'Performance breakdown'}
       />
 
-      <Card style={styles.hero}>
-        <RankRing
-          value={attempt.percentile ?? 0}
-          max={100}
-          label="Percentile"
-          size={128}
-          variant="gold"
-        />
-        <View style={styles.heroStats}>
-          <View style={styles.stat}>
-            <Text style={styles.statValue}>#{attempt.rank ?? '—'}</Text>
-            <Text style={styles.statLabel}>Rank</Text>
-          </View>
-          <View style={styles.stat}>
-            <Text style={styles.statValue}>{attempt.accuracy ?? 0}%</Text>
-            <Text style={styles.statLabel}>Accuracy</Text>
-          </View>
-          <View style={styles.stat}>
-            <Text style={styles.statValue}>{formatMinutes(attempt.totalTimeSec ?? 0)}</Text>
-            <Text style={styles.statLabel}>Time</Text>
-          </View>
+      <PremiumHeroCard
+        icon={<Medal size={24} color="#FFFFFF" strokeWidth={1.8} />}
+        eyebrow="Overall percentile"
+        title={`${attempt.percentile ?? 0}th percentile`}
+        stats={[
+          { label: 'Rank', value: `#${attempt.rank ?? '—'}` },
+          { label: 'Accuracy', value: `${attempt.accuracy ?? 0}%` },
+          { label: 'Time', value: formatMinutes(attempt.totalTimeSec ?? 0) },
+        ]}
+      >
+        <View style={styles.heroRingWrap}>
+          <RankRing
+            value={attempt.percentile ?? 0}
+            max={100}
+            label="Percentile"
+            size={104}
+            variant="gold"
+            trackColor="rgba(255,255,255,0.15)"
+            accentColor="#F4D58D"
+            labelColor="rgba(255,255,255,0.6)"
+          />
         </View>
-      </Card>
+      </PremiumHeroCard>
 
       {comparisonMetrics.length > 0 ? (
         <View style={styles.section}>
@@ -178,25 +179,9 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       textAlign: 'center',
       marginTop: theme.spacing.sm,
     },
-    hero: {
-      flexDirection: 'row',
+    heroRingWrap: {
       alignItems: 'center',
-      gap: theme.spacing.lg,
-    },
-    heroStats: {
-      flex: 1,
-      gap: theme.spacing.md,
-    },
-    stat: {
-      gap: theme.spacing.xs,
-    },
-    statValue: {
-      ...theme.typography.presets.h3,
-      color: theme.colors.text.primary,
-    },
-    statLabel: {
-      ...theme.typography.presets.caption,
-      color: theme.colors.text.tertiary,
+      zIndex: 1,
     },
     section: {
       gap: theme.spacing.md,

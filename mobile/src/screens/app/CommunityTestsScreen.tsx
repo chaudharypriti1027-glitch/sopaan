@@ -2,11 +2,13 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Plus } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Button, Card, Pill, Screen, SectionTitle, SegTabs } from '../../components';
-import { useCommunityTests } from '../../hooks';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Button, Card, Pill, QueryStateView, Screen, SectionTitle, SegTabs } from '../../components';
+import { resolveTestSubjectIcon } from '../../components/home/homeUtils';
+import { useCommunityTests, useNetworkStatus } from '../../hooks';
 import type { MainStackParamList } from '../../navigation/types';
 import type { TestSummary } from '../../api/types';
+import { toneColors, toneForText } from '../../utils/iconTone';
 import { useTheme } from '../../theme';
 
 type CommunityNav = NativeStackNavigationProp<MainStackParamList, 'CommunityTests'>;
@@ -21,23 +23,30 @@ const TABS = [
 function TestCard({ test, onPress }: { test: TestSummary; onPress?: () => void }) {
   const { theme } = useTheme();
   const styles = useMemo(() => createCardStyles(theme), [theme]);
+  const Icon = resolveTestSubjectIcon(test.subject, test.title);
+  const tone = toneColors(toneForText(test.subject ?? test.title));
 
   return (
     <Pressable onPress={onPress}>
       <Card style={styles.card}>
-        <View style={styles.row}>
-          <Text style={styles.title}>{test.title}</Text>
-          <Pill
-            label={test.status ?? 'draft'}
-            variant={test.status === 'published' ? 'teal' : 'muted'}
-          />
+        <View style={[styles.iconTile, { backgroundColor: tone.bg }]}>
+          <Icon size={20} color={tone.fg} strokeWidth={2} />
         </View>
-        <Text style={styles.meta}>
-          {test.subject} · {test.questionCount ?? 0} Q · {test.difficulty}
-        </Text>
-        {test.stats?.attempts != null ? (
-          <Text style={styles.stats}>{test.stats.attempts} attempts</Text>
-        ) : null}
+        <View style={styles.info}>
+          <View style={styles.row}>
+            <Text style={styles.title} numberOfLines={1}>{test.title}</Text>
+            <Pill
+              label={test.status ?? 'draft'}
+              variant={test.status === 'published' ? 'teal' : 'muted'}
+            />
+          </View>
+          <Text style={styles.meta}>
+            {test.subject} · {test.questionCount ?? 0} Q · {test.difficulty}
+          </Text>
+          {test.stats?.attempts != null ? (
+            <Text style={styles.stats}>{test.stats.attempts} attempts</Text>
+          ) : null}
+        </View>
       </Card>
     </Pressable>
   );
@@ -49,6 +58,7 @@ export function CommunityTestsScreen() {
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   const [tab, setTab] = useState<CommunityTab>('browse');
+  const { isOffline } = useNetworkStatus();
 
   const publishedQuery = useCommunityTests({ published: true, limit: 30 });
   const mineQuery = useCommunityTests({ mine: true, limit: 30 });
@@ -69,9 +79,14 @@ export function CommunityTestsScreen() {
 
       <SegTabs options={TABS} value={tab} onChange={setTab} />
 
-      {activeQuery.isLoading ? (
-        <ActivityIndicator color={theme.colors.brand.primary} />
-      ) : (
+      <QueryStateView
+        isLoading={activeQuery.isLoading}
+        isError={activeQuery.isError}
+        isFetching={activeQuery.isFetching}
+        isOffline={isOffline}
+        hasData={(activeQuery.data?.items.length ?? 0) > 0}
+        onRetry={() => void activeQuery.refetch()}
+      >
         <View style={styles.list}>
           {(activeQuery.data?.items ?? []).map((test) => (
             <TestCard
@@ -90,7 +105,7 @@ export function CommunityTestsScreen() {
             </Text>
           ) : null}
         </View>
-      )}
+      </QueryStateView>
     </Screen>
   );
 }
@@ -111,7 +126,16 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
 
 function createCardStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
-    card: { gap: theme.spacing.sm },
+    card: { flexDirection: 'row', gap: theme.spacing.md, alignItems: 'flex-start' },
+    iconTile: {
+      width: 40,
+      height: 40,
+      borderRadius: theme.radii.md,
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexShrink: 0,
+    },
+    info: { flex: 1, gap: theme.spacing.sm },
     row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: theme.spacing.sm },
     title: {
       ...theme.typography.presets.bodyMedium,

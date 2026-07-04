@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { StyleSheet, TextInput, View } from 'react-native';
 import { Button } from '../components';
 import { Text } from '../components/Text';
 import { GAMES_UI } from './gamesTheme';

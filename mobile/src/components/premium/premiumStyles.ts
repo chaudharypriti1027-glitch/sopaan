@@ -1,5 +1,6 @@
 import type { ViewStyle } from 'react-native';
 import type { Theme } from '../../theme/types';
+import { platformShadow } from '../../utils/platformShadow';
 
 /** Premium v4 — "Classic Premium" navy/gold/sage design tokens (reference UI). */
 export const PREMIUM = {
@@ -33,11 +34,13 @@ export function premiumCard(theme: Theme): ViewStyle {
     borderRadius: PREMIUM.cardRadius,
     borderWidth: 1,
     borderColor: 'rgba(236,232,221,0.9)',
-    shadowColor: theme.colors.shadow.color,
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.1,
-    shadowRadius: 26,
-    elevation: 5,
+    ...platformShadow({
+      color: theme.colors.shadow.color,
+      offsetY: 12,
+      opacity: 0.1,
+      radius: 26,
+      elevation: 5,
+    }),
   };
 }
 
@@ -46,13 +49,13 @@ export const homePremiumCard = premiumCard;
 
 /** Soft tile shadow for action squares. */
 export function premiumTileShadow(theme: Theme): ViewStyle {
-  return {
-    shadowColor: theme.colors.shadow.color,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.09,
-    shadowRadius: 16,
+  return platformShadow({
+    color: theme.colors.shadow.color,
+    offsetY: 6,
+    opacity: 0.09,
+    radius: 16,
     elevation: 3,
-  };
+  });
 }
 
 /** @deprecated use premiumTileShadow */
@@ -60,13 +63,13 @@ export const homeTileShadow = premiumTileShadow;
 
 /** Colored glow for FAB / avatar on gradient headers. */
 export function premiumGlowShadow(color: string): ViewStyle {
-  return {
-    shadowColor: color,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.35,
-    shadowRadius: 14,
+  return platformShadow({
+    color,
+    offsetY: 6,
+    opacity: 0.35,
+    radius: 14,
     elevation: 6,
-  };
+  });
 }
 
 /** @deprecated use premiumGlowShadow */
@@ -74,13 +77,13 @@ export const homeGlowShadow = premiumGlowShadow;
 
 /** Floating tab bar pill shadow. */
 export function premiumNavShadow(theme: Theme): ViewStyle {
-  return {
-    shadowColor: theme.colors.shadow.color,
-    shadowOffset: { width: 0, height: 16 },
-    shadowOpacity: 0.16,
-    shadowRadius: 32,
+  return platformShadow({
+    color: theme.colors.shadow.color,
+    offsetY: 16,
+    opacity: 0.16,
+    radius: 32,
     elevation: 10,
-  };
+  });
 }
 
 /** @deprecated use premiumNavShadow */

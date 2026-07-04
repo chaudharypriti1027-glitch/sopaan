@@ -6,8 +6,9 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
-import Svg, { Circle, G } from 'react-native-svg';
+import Svg, { Circle } from 'react-native-svg';
 import { denseTextProps } from '../a11y/textProps';
+import { noA11yA11y, noHideDescendantsA11y } from '../utils/nativeA11y';
 import { useTheme } from '../theme';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
@@ -68,7 +69,7 @@ export function TimerRing({
       accessibilityLabel={resolvedA11yLabel}
       accessibilityLiveRegion="polite"
     >
-      <Svg width={size} height={size} importantForAccessibility="no-hide-descendants">
+      <Svg width={size} height={size} {...noHideDescendantsA11y()}>
         <Circle
           cx={size / 2}
           cy={size / 2}
@@ -77,24 +78,24 @@ export function TimerRing({
           strokeWidth={strokeWidth}
           fill="none"
         />
-        <G rotation="-90" originX={size / 2} originY={size / 2}>
-          <AnimatedCircle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            stroke={urgent ? theme.colors.semantic.error : theme.colors.brand.primary}
-            strokeWidth={strokeWidth}
-            fill="none"
-            strokeLinecap="round"
-            strokeDasharray={`${circumference} ${circumference}`}
-            animatedProps={animatedProps}
-          />
-        </G>
+        <AnimatedCircle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke={urgent ? theme.colors.semantic.error : theme.colors.brand.primary}
+          strokeWidth={strokeWidth}
+          fill="none"
+          strokeLinecap="round"
+          strokeDasharray={`${circumference} ${circumference}`}
+          animatedProps={animatedProps}
+          rotation="-90"
+          origin={`${size / 2}, ${size / 2}`}
+        />
       </Svg>
       <Text
         {...denseTextProps}
         style={[styles.time, urgent && styles.timeUrgent]}
-        importantForAccessibility="no"
+        {...noA11yA11y()}
       >
         {timeLabel}
       </Text>

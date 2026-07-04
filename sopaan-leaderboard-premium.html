@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sopaan — Leaderboard (Premium+)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#232A4D; --navy-2:#2E3766; --navy-deep:#1A1F3B; --navy-soft:#E9EBF3;
+  --gold:#C29A4E; --gold-lt:#E3C97F; --gold-deep:#A67C33; --gold-soft:#F4EBD8;
+  --sage:#5F8A7B; --sage-deep:#4C7264; --sage-soft:#E4EDE9;
+  --bronze:#B87333; --bronze-soft:#F1E2D2;
+  --bg:#F4F1E9; --surface:#FFFFFF; --ink:#1C1E2E; --ink-2:#41435A; --muted:#87889A; --faint:#B3B4C2;
+  --line:#ECE8DD; --hair:#F3F0E8;
+  --sh:0 16px 40px -26px rgba(35,42,77,.4);
+  --sh-sm:0 10px 24px -16px rgba(35,42,77,.3);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:radial-gradient(120% 55% at 50% 0%,#efeade,#e4dfd0);display:flex;justify-content:center;align-items:flex-start;min-height:100vh;padding:30px 16px;color:var(--ink);-webkit-font-smoothing:antialiased;letter-spacing:-.1px}
+.num{font-family:'Space Grotesk',sans-serif;font-variant-numeric:tabular-nums;letter-spacing:0}
+.svg{fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+
+.phone{width:394px;height:854px;background:var(--bg);border-radius:50px;position:relative;overflow:hidden;box-shadow:0 54px 110px -34px rgba(35,42,77,.55),0 0 0 11px #0c0d15,0 0 0 13px #23252f}
+.notch{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:118px;height:31px;background:#0c0d15;border-radius:0 0 18px 18px;z-index:60}
+.notch::after{content:"";position:absolute;top:9px;right:24px;width:11px;height:11px;border-radius:50%;background:#15161f;box-shadow:inset 0 0 0 2px #2a2c38}
+.statusbar{position:absolute;top:0;left:0;right:0;height:54px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 26px 7px;font-size:13px;font-weight:600;z-index:50;color:#fff}
+.statusbar .r{display:flex;align-items:center;gap:6px}
+.statusbar svg{width:17px;height:17px;fill:#fff}
+.screen{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding-bottom:30px}
+.screen::-webkit-scrollbar{display:none}
+
+/* ============ HERO (filled top) ============ */
+.hero{background:linear-gradient(160deg,#313B6E 0%,#232A4D 52%,#161B34 100%);padding:58px 20px 46px;position:relative;overflow:hidden;border-radius:0 0 30px 30px}
+.hero::before{content:"";position:absolute;top:-70px;right:-50px;width:230px;height:230px;border-radius:50%;background:radial-gradient(circle,rgba(194,154,78,.24),transparent 66%)}
+.hero::after{content:"";position:absolute;bottom:-50px;left:-50px;width:190px;height:190px;border-radius:50%;background:radial-gradient(circle,rgba(95,138,123,.2),transparent 70%)}
+.spark{position:absolute;color:var(--gold-lt);opacity:0;animation:tw 3.2s ease-in-out infinite}
+.spark svg{width:100%;height:100%;fill:currentColor}
+@keyframes tw{0%,100%{opacity:0;transform:scale(.6) translateY(0)}50%{opacity:.9;transform:scale(1) translateY(-6px)}}
+
+.htop{display:flex;align-items:center;gap:14px;position:relative;z-index:3}
+.iconbtn{width:40px;height:40px;border-radius:13px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;color:#fff}
+.iconbtn svg{width:19px;height:19px}
+.htop h2{flex:1;color:#fff;font-size:18px;font-weight:800;letter-spacing:-.3px}
+
+.season{display:flex;align-items:center;gap:8px;margin-top:18px;position:relative;z-index:3}
+.spill{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:800;letter-spacing:.5px;color:#3a2c10;background:linear-gradient(135deg,#E3C97F,#C29A4E);border-radius:99px;padding:5px 11px}
+.spill svg{width:12px;height:12px;stroke:#3a2c10}
+.live{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:800;letter-spacing:.4px;color:#fff;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);border-radius:99px;padding:5px 11px}
+.live .d{width:7px;height:7px;border-radius:50%;background:#6FCF97;box-shadow:0 0 0 0 rgba(111,207,151,.7);animation:pulse 1.8s ease-out infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(111,207,151,.6)}70%{box-shadow:0 0 0 7px rgba(111,207,151,0)}100%{box-shadow:0 0 0 0 rgba(111,207,151,0)}}
+
+.hstats{display:flex;gap:10px;margin-top:16px;position:relative;z-index:3}
+.hs{flex:1;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.09);border-radius:15px;padding:12px 10px;text-align:center;animation:fadeUp .5s ease both}
+.hs:nth-child(2){animation-delay:.08s}.hs:nth-child(3){animation-delay:.16s}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.hs .v{color:#fff;font-size:15px;font-weight:700;font-family:'Space Grotesk'}
+.hs .k{color:rgba(255,255,255,.6);font-size:9.5px;font-weight:700;margin-top:3px;letter-spacing:.3px}
+.hs .v .u{font-size:10px;opacity:.7;margin-left:1px}
+
+.filters{display:flex;gap:5px;margin-top:16px;background:rgba(0,0,0,.18);border-radius:14px;padding:5px;position:relative;z-index:3}
+.filters .f{flex:1;text-align:center;font-size:12px;font-weight:700;color:rgba(255,255,255,.65);padding:9px 0;border-radius:10px;transition:.2s}
+.filters .f.on{background:#fff;color:var(--navy)}
+
+/* ============ BODY ============ */
+.body{padding:0 20px;margin-top:-24px;position:relative;z-index:5}
+
+/* your rank */
+.you{border-radius:22px;background:linear-gradient(150deg,#2E3766,#1A1F3B);color:#fff;padding:17px;position:relative;overflow:hidden;box-shadow:0 24px 44px -22px rgba(26,31,59,.85);border:1px solid rgba(226,201,127,.18);animation:pop .5s ease both}
+@keyframes pop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+.you::after{content:"";position:absolute;top:0;left:-60%;width:50%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.1),transparent);transform:skewX(-18deg);animation:shimmer 3.8s ease-in-out 1.2s infinite}
+@keyframes shimmer{0%{left:-60%}55%,100%{left:130%}}
+.you .hd{display:flex;align-items:center;gap:13px;position:relative;z-index:2}
+.you .tro{width:50px;height:50px;border-radius:15px;background:linear-gradient(150deg,#E3C97F,#C29A4E);display:flex;align-items:center;justify-content:center;flex:none;box-shadow:0 8px 18px -6px rgba(194,154,78,.6)}
+.you .tro svg{width:25px;height:25px;stroke:#fff}
+.you .who{flex:1}
+.you .who .l{font-size:10.5px;font-weight:800;letter-spacing:.6px;color:rgba(255,255,255,.6)}
+.you .who .n{font-size:18px;font-weight:800;letter-spacing:-.3px;margin-top:2px}
+.you .rk{width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;color:var(--gold-lt);font-weight:800;font-family:'Space Grotesk'}
+.you .stats{display:flex;margin-top:15px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:15px;padding:13px 4px;position:relative;z-index:2}
+.you .stats .s{flex:1;text-align:center;position:relative}
+.you .stats .s+.s::before{content:"";position:absolute;left:0;top:12%;height:76%;width:1px;background:rgba(255,255,255,.1)}
+.you .stats .s .v{font-size:16px;font-weight:700;font-family:'Space Grotesk'}
+.you .stats .s .k{font-size:9.5px;color:rgba(255,255,255,.6);font-weight:600;margin-top:3px}
+.you .cta{display:flex;align-items:center;justify-content:center;gap:7px;font-size:12px;font-weight:800;color:#3a2c10;background:linear-gradient(135deg,#E3C97F,#C29A4E);margin-top:14px;padding:11px;border-radius:13px;position:relative;z-index:2}
+.you .cta svg{width:15px;height:15px;stroke:#3a2c10}
+
+/* podium */
+.podium{display:flex;align-items:flex-end;justify-content:center;gap:10px;margin:26px 0 6px;padding:0 4px;position:relative}
+.confetti{position:absolute;top:-6px;left:50%;width:2px;height:2px;z-index:1}
+.confetti i{position:absolute;width:6px;height:9px;border-radius:2px;opacity:0;animation:fall 2.4s ease-in infinite}
+@keyframes fall{0%{opacity:0;transform:translate(0,-10px) rotate(0)}15%{opacity:1}100%{opacity:0;transform:translate(var(--x),120px) rotate(220deg)}}
+.col{flex:1;display:flex;flex-direction:column;align-items:center;opacity:0;animation:rise .6s cubic-bezier(.2,.8,.3,1) forwards}
+.col.c1{animation-delay:.25s}.col.c2{animation-delay:.05s}.col.c3{animation-delay:.15s}
+@keyframes rise{from{opacity:0;transform:translateY(34px)}to{opacity:1;transform:translateY(0)}}
+.crown{color:var(--gold);margin-bottom:2px;animation:bob 2.4s ease-in-out infinite}
+.crown svg{width:26px;height:26px;fill:var(--gold);stroke:var(--gold-deep);stroke-width:1}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+.medal{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:-13px;z-index:3;position:relative;box-shadow:0 4px 10px -4px rgba(0,0,0,.3)}
+.medal svg{width:15px;height:15px;stroke:#fff}
+.m-silver{background:linear-gradient(150deg,#9AA6B2,#79838F)}
+.m-bronze{background:linear-gradient(150deg,#C98A54,#A9652F)}
+.pav{border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-family:'Space Grotesk';position:relative;box-shadow:0 12px 26px -10px rgba(35,42,77,.5)}
+.pav.big{width:90px;height:90px;font-size:29px;border:3px solid var(--gold);background:linear-gradient(150deg,#D8B368,#B9822F)}
+.pav.big::after{content:"";position:absolute;inset:-3px;border-radius:50%;border:2px solid rgba(226,201,127,.5);animation:halo 2.6s ease-in-out infinite}
+@keyframes halo{0%,100%{transform:scale(1);opacity:.6}50%{transform:scale(1.08);opacity:0}}
+.pav.sm{width:72px;height:72px;font-size:23px;border:3px solid #fff}
+.pav.s2{background:linear-gradient(150deg,#2E3766,#1A1F3B)}
+.pav.s3{background:linear-gradient(150deg,#6C9A8A,#4C7264)}
+.pname{font-size:13px;font-weight:800;margin-top:10px;text-align:center;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ppct{margin-top:8px;font-size:12px;font-weight:800;font-family:'Space Grotesk';color:#fff;border-radius:99px;padding:4px 13px}
+.p1{background:linear-gradient(135deg,#C29A4E,#A67C33)}
+.p2{background:#8A93A0}
+.p3{background:linear-gradient(135deg,#C98A54,#A9652F)}
+
+/* rankings */
+.rank-h{display:flex;align-items:center;justify-content:space-between;margin:22px 2px 12px}
+.rank-h h3{font-size:16px;font-weight:800;letter-spacing:-.3px}
+.rank-h .cnt{font-size:11px;font-weight:700;color:var(--muted);background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:4px 10px}
+.list{background:var(--surface);border:1px solid var(--line);border-radius:22px;box-shadow:var(--sh);overflow:hidden}
+.row{display:flex;align-items:center;gap:12px;padding:14px 14px;opacity:0;animation:rowin .5s ease forwards}
+.row+.row{border-top:1px solid var(--hair)}
+.row.r1{animation-delay:.35s}.row.r2{animation-delay:.45s}.row.r3{animation-delay:.55s}.row.r4{animation-delay:.65s}
+@keyframes rowin{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.pos{width:28px;height:28px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12.5px;font-family:'Space Grotesk';flex:none}
+.pos.g1{background:var(--gold-soft);color:var(--gold-deep)}
+.pos.g2{background:var(--sage-soft);color:var(--sage-deep)}
+.pos.g3{background:var(--bronze-soft);color:var(--bronze)}
+.pos.gn{background:var(--navy-soft);color:var(--navy)}
+.rav{width:40px;height:40px;border-radius:13px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:14px;font-family:'Space Grotesk';flex:none;position:relative}
+.rav.a1{background:linear-gradient(150deg,#D8B368,#B9822F)}
+.rav.a2{background:linear-gradient(150deg,#2E3766,#1A1F3B)}
+.rav.a3{background:linear-gradient(150deg,#6C9A8A,#4C7264)}
+.rav.a4{background:linear-gradient(150deg,#C98A54,#A9652F)}
+.rav .coin{position:absolute;bottom:-5px;right:-5px;width:19px;height:19px;border-radius:50%;background:linear-gradient(150deg,#E3C97F,#C29A4E);border:2px solid #fff;display:flex;align-items:center;justify-content:center;font-size:8px;color:#3a2c10}
+.rav .coin svg{width:10px;height:10px;stroke:#3a2c10;fill:none}
+.rmid{flex:1;min-width:0}
+.rmid .rn{font-size:14px;font-weight:800;letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rmid .rm{font-size:11.5px;color:var(--muted);font-weight:600;margin-top:2px}
+.rmid .bar{height:5px;border-radius:99px;background:var(--hair);margin-top:8px;overflow:hidden}
+.rmid .bar i{display:block;height:100%;border-radius:99px;transform:scaleX(0);transform-origin:left;animation:grow 1.1s cubic-bezier(.2,.8,.3,1) forwards}
+.rmid .bar i.f1{background:linear-gradient(90deg,#D8B368,#C29A4E);animation-delay:.5s}
+.rmid .bar i.f2{background:linear-gradient(90deg,#3A4680,#232A4D);animation-delay:.6s}
+.rmid .bar i.f3{background:linear-gradient(90deg,#6C9A8A,#4C7264);animation-delay:.7s}
+.rmid .bar i.f4{background:linear-gradient(90deg,#C98A54,#A9652F);animation-delay:.8s}
+@keyframes grow{to{transform:scaleX(1)}}
+.rright{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex:none}
+.rpct{font-size:16px;font-weight:800;font-family:'Space Grotesk';color:var(--ink)}
+.trend{display:inline-flex;align-items:center;gap:2px;font-size:10px;font-weight:800;font-family:'Space Grotesk';border-radius:99px;padding:2px 6px}
+.trend svg{width:10px;height:10px}
+.t-up{color:var(--sage-deep);background:var(--sage-soft)}
+.t-dn{color:var(--muted);background:var(--navy-soft)}
+.t-eq{color:var(--faint);background:var(--hair)}
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="notch"></div>
+  <div class="statusbar"><span class="num">9:41</span>
+    <div class="r">
+      <svg viewBox="0 0 24 24"><path d="M2 17h2v3H2zM7 13h2v7H7zM12 9h2v11h-2zM17 5h2v15h-2z" stroke="none"/></svg>
+      <svg viewBox="0 0 24 24"><path d="M12 4C7 4 2.7 6 0 9l12 13L24 9c-2.7-3-7-5-12-5z" stroke="none"/></svg>
+      <svg viewBox="0 0 26 24"><rect x="1" y="7" width="20" height="11" rx="3" fill="none" stroke="#fff" stroke-width="1.6"/><rect x="3" y="9" width="16" height="7" rx="1.5" fill="#fff"/><rect x="22.5" y="10.5" width="2" height="4" rx="1" fill="#fff"/></svg>
+    </div>
+  </div>
+
+  <div class="screen">
+    <!-- ===== FILLED HERO TOP ===== -->
+    <div class="hero">
+      <span class="spark" style="top:70px;left:40px;width:12px;height:12px;animation-delay:.2s"><svg viewBox="0 0 24 24"><path d="M12 2l2 8 8 2-8 2-2 8-2-8-8-2 8-2z"/></svg></span>
+      <span class="spark" style="top:120px;right:56px;width:9px;height:9px;animation-delay:1.1s"><svg viewBox="0 0 24 24"><path d="M12 2l2 8 8 2-8 2-2 8-2-8-8-2 8-2z"/></svg></span>
+      <span class="spark" style="top:180px;left:80px;width:7px;height:7px;animation-delay:1.9s"><svg viewBox="0 0 24 24"><path d="M12 2l2 8 8 2-8 2-2 8-2-8-8-2 8-2z"/></svg></span>
+      <span class="spark" style="top:96px;right:110px;width:8px;height:8px;animation-delay:2.6s"><svg viewBox="0 0 24 24"><path d="M12 2l2 8 8 2-8 2-2 8-2-8-8-2 8-2z"/></svg></span>
+
+      <div class="htop">
+        <div class="iconbtn"><svg class="svg" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></div>
+        <h2>Leaderboard</h2>
+        <div class="iconbtn"><svg class="svg" viewBox="0 0 24 24"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 2v13"/></svg></div>
+      </div>
+
+      <div class="season">
+        <span class="spill"><svg class="svg" viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M18 2H6v7a6 6 0 0 0 12 0z"/></svg>SEASON 3 · MOCK MASTERS</span>
+        <span class="live"><span class="d"></span>LIVE</span>
+      </div>
+
+      <div class="hstats">
+        <div class="hs"><div class="v"><span class="num" data-count="1248">0</span></div><div class="k">PLAYERS</div></div>
+        <div class="hs"><div class="v"><span class="num" data-count="213">0</span></div><div class="k">ONLINE NOW</div></div>
+        <div class="hs"><div class="v"><span class="num" id="cd">—</span></div><div class="k">SEASON ENDS</div></div>
+      </div>
+
+      <div class="filters"><div class="f">Daily</div><div class="f">Weekly</div><div class="f on">All-time</div></div>
+    </div>
+
+    <div class="body">
+      <!-- YOUR RANK -->
+      <div class="you">
+        <div class="hd">
+          <div class="tro"><svg class="svg" viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14.7V17c0 .6-.5 1-1 1.2C7.8 18.8 7 20.2 7 22M14 14.7V17c0 .6.5 1 1 1.2 1.2.6 2 2 2 3.8M18 2H6v7a6 6 0 0 0 12 0z"/></svg></div>
+          <div class="who"><div class="l">YOUR RANK</div><div class="n">Sopaan Admin</div></div>
+          <div class="rk">—</div>
+        </div>
+        <div class="stats">
+          <div class="s"><div class="v"><span class="num" data-count="0" data-suffix="%">0%</span></div><div class="k">Accuracy</div></div>
+          <div class="s"><div class="v"><span class="num" data-count="0">0</span></div><div class="k">Attempts</div></div>
+          <div class="s"><div class="v">—</div><div class="k">Best rank</div></div>
+        </div>
+        <div class="cta"><svg class="svg" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>Take a mock test to get ranked</div>
+      </div>
+
+      <!-- PODIUM -->
+      <div class="podium">
+        <div class="confetti" id="conf"></div>
+        <div class="col c2">
+          <div class="medal m-silver"><svg class="svg" viewBox="0 0 24 24"><circle cx="12" cy="14" r="6"/><path d="M9 3l3 5 3-5"/></svg></div>
+          <div class="pav sm s2">AP</div>
+          <div class="pname">Alpesh Praj…</div>
+          <div class="ppct p2"><span class="num" data-count="23" data-suffix="%">0%</span></div>
+        </div>
+        <div class="col c1">
+          <div class="crown"><svg viewBox="0 0 24 24"><path d="M3 8l4.5 3L12 5l4.5 6L21 8l-1.5 10h-15z"/></svg></div>
+          <div class="pav big">KC</div>
+          <div class="pname">Kuldip cha…</div>
+          <div class="ppct p1"><span class="num" data-count="38" data-suffix="%">0%</span></div>
+        </div>
+        <div class="col c3">
+          <div class="medal m-bronze"><svg class="svg" viewBox="0 0 24 24"><circle cx="12" cy="14" r="6"/><path d="M9 3l3 5 3-5"/></svg></div>
+          <div class="pav sm s3">DC</div>
+          <div class="pname">Deploy Ch…</div>
+          <div class="ppct p3"><span class="num" data-count="20" data-suffix="%">0%</span></div>
+        </div>
+      </div>
+
+      <!-- RANKINGS -->
+      <div class="rank-h"><h3>Rankings</h3><span class="cnt">1,248 students</span></div>
+      <div class="list">
+        <div class="row r1">
+          <div class="pos g1">1</div>
+          <div class="rav a1">KC<span class="coin"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg></span></div>
+          <div class="rmid"><div class="rn">Kuldip chaudhary</div><div class="rm">38% avg · 4 attempts</div><div class="bar"><i class="f1" style="width:38%"></i></div></div>
+          <div class="rright"><span class="rpct"><span class="num" data-count="38" data-suffix="%">0%</span></span><span class="trend t-up"><svg class="svg" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></svg>2</span></div>
+        </div>
+        <div class="row r2">
+          <div class="pos g2">2</div>
+          <div class="rav a2">AP<span class="coin"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg></span></div>
+          <div class="rmid"><div class="rn">Alpesh Prajapati</div><div class="rm">23% avg · 4 attempts</div><div class="bar"><i class="f2" style="width:23%"></i></div></div>
+          <div class="rright"><span class="rpct"><span class="num" data-count="23" data-suffix="%">0%</span></span><span class="trend t-dn"><svg class="svg" viewBox="0 0 24 24"><path d="M12 5v14M6 13l6 6 6-6"/></svg>1</span></div>
+        </div>
+        <div class="row r3">
+          <div class="pos g3">3</div>
+          <div class="rav a3">DC<span class="coin"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></svg></span></div>
+          <div class="rmid"><div class="rn">Deploy Check2</div><div class="rm">20% avg · 1 attempt</div><div class="bar"><i class="f3" style="width:20%"></i></div></div>
+          <div class="rright"><span class="rpct"><span class="num" data-count="20" data-suffix="%">0%</span></span><span class="trend t-up"><svg class="svg" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></svg>1</span></div>
+        </div>
+        <div class="row r4">
+          <div class="pos gn">4</div>
+          <div class="rav a4">DC</div>
+          <div class="rmid"><div class="rn">Dixit Chaudhary</div><div class="rm">10% avg · 1 attempt</div><div class="bar"><i class="f4" style="width:10%"></i></div></div>
+          <div class="rright"><span class="rpct"><span class="num" data-count="10" data-suffix="%">0%</span></span><span class="trend t-eq">–</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// count-up
+function countUp(el){
+  const target=parseFloat(el.dataset.count||"0"), suffix=el.dataset.suffix||"";
+  const dur=1200, start=performance.now();
+  function tick(now){
+    const p=Math.min((now-start)/dur,1), eased=1-Math.pow(1-p,3);
+    el.textContent=Math.round(target*eased).toLocaleString()+suffix;
+    if(p<1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+// season countdown (6d from load)
+function fmt(ms){
+  if(ms<0) ms=0;
+  const d=Math.floor(ms/864e5), h=Math.floor(ms%864e5/36e5), m=Math.floor(ms%36e5/6e4);
+  return d+'d '+h+'h '+m+'m';
+}
+// confetti pieces
+function confetti(){
+  const c=document.getElementById('conf'); if(!c) return;
+  const cols=['#C29A4E','#E3C97F','#5F8A7B','#2E3766'];
+  for(let i=0;i<14;i++){
+    const s=document.createElement('i');
+    s.style.background=cols[i%cols.length];
+    s.style.left=(Math.random()*70-35)+'px';
+    s.style.setProperty('--x',(Math.random()*80-40)+'px');
+    s.style.animationDelay=(Math.random()*2)+'s';
+    c.appendChild(s);
+  }
+}
+window.addEventListener('load',()=>{
+  setTimeout(()=>document.querySelectorAll('[data-count]').forEach(countUp),350);
+  confetti();
+  const end=Date.now()+6*864e5+4*36e5;
+  const cd=document.getElementById('cd');
+  const upd=()=>{ if(cd) cd.textContent=fmt(end-Date.now()); };
+  upd(); setInterval(upd,60000);
+});
+</script>
+</body>
+</html>

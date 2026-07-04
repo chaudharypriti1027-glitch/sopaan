@@ -9,10 +9,12 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Play, BookOpen, Video } from 'lucide-react-native';
 import { Card } from '../Card';
+import { PremiumIcon } from '../premium/PremiumIcon';
 import { Text } from '../Text';
 import { useTheme } from '../../theme';
 import type { ContinueItem } from '../../types/home';
-import { CONTINUE_CARD_WIDTH, resolveContinueAccent } from './homeUtils';
+import { continueAccentTone } from './homeIconTone';
+import { CONTINUE_CARD_WIDTH } from './homeUtils';
 import { homePremiumCard } from './homeStyles';
 import { HOME_UI } from './homeTheme';
 
@@ -27,21 +29,8 @@ function continueIcon(kind: ContinueItem['kind']) {
   return Play;
 }
 
-function accentBg(accent: ContinueItem['accent'], theme: ReturnType<typeof useTheme>['theme']) {
-  switch (accent) {
-    case 'teal':
-      return theme.colors.accent.tealMuted;
-    case 'gold':
-      return theme.colors.accent.goldMuted;
-    case 'coral':
-      return theme.colors.accent.coralMuted;
-    default:
-      return theme.colors.brand.primaryMuted;
-  }
-}
-
 function progressGradient(accent: ContinueItem['accent']): [string, string] {
-  if (accent === 'teal') return ['#6C9A8A', '#4C7264'];
+  if (accent === 'teal') return ['#6C9A8A', '#5F8A7B'];
   if (accent === 'gold') return ['#E3C97F', '#C29A4E'];
   if (accent === 'coral') return ['#D4A08C', '#A8503E'];
   return [...HOME_UI.accentGradient];
@@ -92,7 +81,7 @@ export function ContinueRow({ items, onItemPress }: ContinueRowProps) {
   const renderItem = useCallback<ListRenderItem<ContinueItem>>(
     ({ item }) => {
       const Icon = continueIcon(item.kind);
-      const accentColor = resolveContinueAccent(item.accent, theme.colors);
+      const iconTone = continueAccentTone(item.accent);
 
       return (
         <Pressable
@@ -102,9 +91,7 @@ export function ContinueRow({ items, onItemPress }: ContinueRowProps) {
         >
           <Card padded={false} style={styles.card}>
             <View style={styles.top}>
-              <View style={[styles.iconWrap, { backgroundColor: accentBg(item.accent, theme) }]}>
-                <Icon size={20} color={accentColor} strokeWidth={1.8} />
-              </View>
+              <PremiumIcon Icon={Icon} tone={iconTone} size="sm" filled />
               <View style={styles.copy}>
                 <Text style={styles.title} numberOfLines={2}>
                   {item.title}
@@ -119,7 +106,7 @@ export function ContinueRow({ items, onItemPress }: ContinueRowProps) {
         </Pressable>
       );
     },
-    [onItemPress, styles, theme],
+    [onItemPress, styles],
   );
 
   if (!items.length) {
@@ -153,38 +140,31 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       width: CONTINUE_CARD_WIDTH,
     },
     card: {
-      padding: 15,
+      padding: 16,
       gap: 12,
-      borderRadius: 26,
+      borderRadius: 22,
       ...homePremiumCard(theme),
-      borderWidth: 0,
+      borderWidth: 1,
+      borderColor: HOME_UI.border,
     },
     top: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 11,
     },
-    iconWrap: {
-      width: 40,
-      height: 40,
-      borderRadius: 12,
-      alignItems: 'center',
-      justifyContent: 'center',
-      flexShrink: 0,
-    },
     copy: {
       flex: 1,
       gap: 2,
     },
     title: {
-      fontSize: 13,
-      lineHeight: 16,
+      fontSize: 15,
+      lineHeight: 18,
       fontFamily: theme.typography.fonts.ui.bold,
       fontWeight: '800',
       color: theme.colors.text.primary,
     },
     subtitle: {
-      fontSize: 11,
+      fontSize: 11.5,
       lineHeight: 14,
       fontFamily: theme.typography.fonts.ui.semibold,
       fontWeight: '600',

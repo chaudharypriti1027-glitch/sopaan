@@ -100,7 +100,6 @@ function wait(ms: number) {
 
 export function ProfileSetupScreen() {
   const { t } = useTranslation(['auth', 'common']);
-  const { formatDate } = useFormat();
   const navigation = useNavigation<ProfileSetupNav>();
   const profile = useAuthStore((state) => state.profile);
   const setProfile = useAuthStore((state) => state.setProfile);

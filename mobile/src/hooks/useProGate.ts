@@ -46,7 +46,8 @@ export function useProGate() {
   const { user } = useAuth();
   const tierQuery = useTierStatus();
 
-  const isPro = tierQuery.data?.isPro ?? user?.isPremium ?? false;
+  const isPro =
+    user?.role === 'admin' || tierQuery.data?.isPro || user?.isPremium || false;
   const showAds = tierQuery.data?.showAds ?? !isPro;
   const tier = tierQuery.data;
 

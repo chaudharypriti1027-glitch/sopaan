@@ -4,6 +4,7 @@ import { AppState, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Button, Card, IconButton, Screen, SectionTitle, TimerRing } from '../../components';
 import { useLogFocus } from '../../hooks';
+import { toneColors, toneForIndex } from '../../utils/iconTone';
 import { useTheme } from '../../theme';
 
 const FOCUS_SEC = 25 * 60;
@@ -82,6 +83,10 @@ export function FocusTimerScreen() {
     }, 250);
 
     return clearTimer;
+    // `remaining` is intentionally excluded — it's read once to seed
+    // `endAtRef` and updated by the interval itself; including it would
+    // restart the countdown on every tick.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [running, clearTimer, onPhaseComplete]);
 
   useEffect(() => {
@@ -151,12 +156,15 @@ export function FocusTimerScreen() {
         <View style={styles.breakSection}>
           <Text style={styles.breakTitle}>On your break, try</Text>
           <View style={styles.tipGrid}>
-            {BREAK_TIPS.map(({ id, label, icon: Icon }) => (
-              <View key={id} style={styles.tipTile}>
-                <Icon size={22} color={theme.colors.brand.primary} />
-                <Text style={styles.tipLabel}>{label}</Text>
-              </View>
-            ))}
+            {BREAK_TIPS.map(({ id, label, icon: Icon }, index) => {
+              const tone = toneColors(toneForIndex(index));
+              return (
+                <View key={id} style={[styles.tipTile, { backgroundColor: tone.bg }]}>
+                  <Icon size={22} color={tone.fg} />
+                  <Text style={[styles.tipLabel, { color: tone.fg }]}>{label}</Text>
+                </View>
+              );
+            })}
           </View>
         </View>
       ) : null}

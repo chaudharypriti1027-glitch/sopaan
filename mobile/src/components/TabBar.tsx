@@ -5,8 +5,10 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { denseTextProps } from '../a11y/textProps';
+import { useResponsiveLayout } from '../layout/responsive';
 import { useTheme } from '../theme';
 import { PremiumIcon } from './premium/PremiumIcon';
+import { GlassSurface } from './GlassSurface';
 import { homeNavShadow } from './home/homeStyles';
 import { FLOATING_TAB_BAR_HEIGHT } from '../navigation/tabBarConstants';
 import { isAskAiScreenOpen, navigateToAskAI } from '../navigation/askAiNavigation';
@@ -35,9 +37,13 @@ const TAB_LABEL_KEYS: Record<TabRoute, string> = {
 type TabBarProps = BottomTabBarProps;
 
 export function TabBar({ state, navigation }: TabBarProps) {
-  const insets = useSafeAreaInsets();
   const { theme } = useTheme();
-  const styles = useMemo(() => createStyles(theme), [theme]);
+  const insets = useSafeAreaInsets();
+  const { isWeb, contentPadding } = useResponsiveLayout();
+  const styles = useMemo(
+    () => createStyles(theme, isWeb ? (contentPadding ?? 14) : 14),
+    [theme, isWeb, contentPadding],
+  );
   const { t } = useTranslation('navigation');
 
   const aiFocused = isAskAiScreenOpen(navigation);
@@ -76,24 +82,26 @@ export function TabBar({ state, navigation }: TabBarProps) {
 
   return (
     <View style={[styles.outer, { paddingBottom: Math.max(insets.bottom, 8) }]}>
-      <View style={[styles.floatingBar, homeNavShadow(theme)]}>
-        <View style={styles.sideGroup}>{LEFT_TABS.map(renderTab)}</View>
+      <View style={[styles.shadowWrap, homeNavShadow(theme)]}>
+        <GlassSurface tone="light" intensity={54} borderRadius={30} style={styles.floatingBar}>
+          <View style={styles.sideGroup}>{LEFT_TABS.map(renderTab)}</View>
 
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t('fabAskAi')}
-          accessibilityState={{ selected: aiFocused }}
-          onPress={openAskAi}
-          style={({ pressed }) => [styles.aiTab, pressed && styles.tabPressed]}
-        >
-          <PremiumIcon Icon={Sparkles} size="sm" tone="gold" active={aiFocused} filled={aiFocused} />
-          <Text {...denseTextProps} style={[styles.tabLabel, aiFocused && styles.tabLabelFocused]}>
-            {t('askAi')}
-          </Text>
-          {aiFocused ? <View style={styles.activeDot} /> : <View style={styles.dotSpacer} />}
-        </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('fabAskAi')}
+            accessibilityState={{ selected: aiFocused }}
+            onPress={openAskAi}
+            style={({ pressed }) => [styles.aiTab, pressed && styles.tabPressed]}
+          >
+            <PremiumIcon Icon={Sparkles} size="sm" tone="gold" active={aiFocused} filled={aiFocused} />
+            <Text {...denseTextProps} style={[styles.tabLabel, aiFocused && styles.tabLabelFocused]}>
+              {t('askAi')}
+            </Text>
+            {aiFocused ? <View style={styles.activeDot} /> : <View style={styles.dotSpacer} />}
+          </Pressable>
 
-        <View style={styles.sideGroup}>{RIGHT_TABS.map(renderTab)}</View>
+          <View style={styles.sideGroup}>{RIGHT_TABS.map(renderTab)}</View>
+        </GlassSurface>
       </View>
     </View>
   );
@@ -101,26 +109,25 @@ export function TabBar({ state, navigation }: TabBarProps) {
 
 export { FLOATING_TAB_BAR_HEIGHT };
 
-function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
+function createStyles(theme: ReturnType<typeof useTheme>['theme'], horizontalPad: number) {
   return StyleSheet.create({
     outer: {
       position: 'absolute',
       left: 0,
       right: 0,
       bottom: 0,
-      paddingHorizontal: 14,
+      paddingHorizontal: horizontalPad,
       backgroundColor: 'transparent',
       pointerEvents: 'box-none',
+    },
+    shadowWrap: {
+      borderRadius: 30,
     },
     floatingBar: {
       flexDirection: 'row',
       alignItems: 'flex-end',
       justifyContent: 'space-between',
       minHeight: FLOATING_TAB_BAR_HEIGHT,
-      borderRadius: 30,
-      backgroundColor: 'rgba(255,255,255,0.96)',
-      borderWidth: 1,
-      borderColor: 'rgba(236,232,221,0.95)',
       paddingHorizontal: 6,
       paddingBottom: 8,
       paddingTop: 10,

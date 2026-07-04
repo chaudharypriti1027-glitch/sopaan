@@ -5,6 +5,7 @@ import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import {
   Button,
   Card,
+  PremiumHeroCard,
   ProgressBar,
   RankRing,
   Screen,
@@ -52,12 +53,27 @@ export function ReadinessScreen() {
         subtitle={`${data.examTrack}${data.targetYear ? ` · ${data.targetYear}` : ''}`}
       />
 
-      <Card style={styles.hero}>
-        <RankRing value={data.score} max={100} label="Goal ready" size={128} variant="gold" />
+      <PremiumHeroCard
+        icon={<Target size={24} color="#FFFFFF" strokeWidth={1.8} />}
+        eyebrow="Goal readiness"
+        title={`${data.score}% ready`}
+      >
+        <View style={styles.heroRingWrap}>
+          <RankRing
+            value={data.score}
+            max={100}
+            label="Goal ready"
+            size={110}
+            variant="gold"
+            trackColor="rgba(255,255,255,0.15)"
+            accentColor="#F4D58D"
+            labelColor="rgba(255,255,255,0.6)"
+          />
+        </View>
         <Text style={styles.assessed}>
           Updated {new Date(data.assessedAt).toLocaleDateString('en-IN')}
         </Text>
-      </Card>
+      </PremiumHeroCard>
 
       <ShareMilestoneButton
         fullWidth
@@ -142,8 +158,13 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     content: { gap: theme.spacing.lg, paddingBottom: theme.spacing['3xl'] },
     centered: { alignItems: 'center', justifyContent: 'center', padding: theme.spacing.xl, gap: theme.spacing.md },
     empty: { ...theme.typography.presets.body, color: theme.colors.text.secondary, textAlign: 'center' },
-    hero: { alignItems: 'center', paddingVertical: theme.spacing.xl, gap: theme.spacing.sm },
-    assessed: { ...theme.typography.presets.caption, color: theme.colors.text.tertiary },
+    heroRingWrap: { alignItems: 'center', zIndex: 1 },
+    assessed: {
+      ...theme.typography.presets.caption,
+      color: 'rgba(255,255,255,0.6)',
+      textAlign: 'center',
+      zIndex: 1,
+    },
     areas: { gap: theme.spacing.md },
     section: { gap: theme.spacing.md },
     cutoffCard: { gap: theme.spacing.md },

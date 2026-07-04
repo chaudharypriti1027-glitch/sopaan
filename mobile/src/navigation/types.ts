@@ -25,6 +25,7 @@ export type AuthStackParamList = {
     };
   };
   OtpLogin: undefined;
+  AdminPortal: undefined;
 };
 
 export type AppTabParamList = {
@@ -85,8 +86,6 @@ export type MainStackParamList = {
   Games: undefined;
   GamePlay: { gameId: GameId; sessionId?: number };
   CurrentAffairReader: { affairId: string };
-  AdminDashboard: undefined;
-  AdminContent: undefined;
 };
 
 export type RootStackParamList = {
@@ -97,6 +96,7 @@ export type RootStackParamList = {
 
 declare global {
   namespace ReactNavigation {
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type -- required by react-navigation's global typing pattern
     interface RootParamList extends RootStackParamList {}
   }
 }

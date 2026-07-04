@@ -23,6 +23,7 @@ import { queryKeys } from '../hooks/queryKeys';
 import type { RootStackParamList } from '../navigation/types';
 import { useAuthStore, type BootstrapResult } from '../store/auth';
 import { PREMIUM } from '../components/premium/premiumStyles';
+import { platformShadow } from '../utils/platformShadow';
 
 type SplashNav = NativeStackNavigationProp<RootStackParamList, 'Splash'>;
 
@@ -85,7 +86,27 @@ function resetToHome(navigation: SplashNav) {
   });
 }
 
+function resetToAdminPortal(navigation: SplashNav) {
+  navigation.reset({
+    index: 0,
+    routes: [
+      {
+        name: 'Auth',
+        state: {
+          index: 0,
+          routes: [{ name: 'AdminPortal' }],
+        },
+      },
+    ],
+  });
+}
+
 function routeAfterBootstrap(navigation: SplashNav, result: BootstrapResult) {
+  if (result.kind === 'admin_portal') {
+    resetToAdminPortal(navigation);
+    return;
+  }
+
   if (result.kind === 'guest') {
     resetToWelcome(navigation);
     return;
@@ -233,7 +254,7 @@ export function SplashScreen() {
     >
       <View style={styles.center}>
         {!reducedMotion ? (
-          <View style={styles.ringsWrap} pointerEvents="none">
+          <View style={[styles.ringsWrap, styles.pointerNone]}>
             <Animated.View style={[styles.ring, styles.ringOuter, ringStyle]} />
             <Animated.View style={[styles.ring, styles.ringMid, ringStyle]} />
             <Animated.View style={[styles.ring, styles.ringInner, ringStyle]} />
@@ -313,11 +334,7 @@ function createStyles() {
       alignItems: 'center',
       justifyContent: 'center',
       marginBottom: 30,
-      shadowColor: '#C29A4E',
-      shadowOffset: { width: 0, height: 18 },
-      shadowOpacity: 0.45,
-      shadowRadius: 24,
-      elevation: 10,
+      ...platformShadow({ color: '#C29A4E', offsetY: 18, opacity: 0.45, radius: 24, elevation: 10 }),
     },
     wordmarkWrap: {
       alignItems: 'center',
@@ -369,6 +386,9 @@ function createStyles() {
       letterSpacing: 1,
       color: 'rgba(255,255,255,0.4)',
       textAlign: 'center',
+    },
+    pointerNone: {
+      pointerEvents: 'none',
     },
   });
 }

@@ -5,8 +5,7 @@ import { renderWithProviders } from '../../test/render';
 const mockGoBack = jest.fn();
 const mockVerifyOtp = jest.fn();
 const mockRequestOtp = jest.fn();
-const mockSetSession = jest.fn();
-const mockRouteAfterAuthResult = jest.fn();
+const mockCompleteStudentLogin = jest.fn();
 
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({
@@ -29,13 +28,8 @@ jest.mock('../../api', () => ({
       : { message: 'Error', code: 'UNKNOWN', status: 0 },
 }));
 
-jest.mock('../../store/auth', () => ({
-  useAuthStore: (selector: (state: { setSession: typeof mockSetSession }) => unknown) =>
-    selector({ setSession: mockSetSession }),
-}));
-
-jest.mock('../../auth/routeAfterSession', () => ({
-  routeAfterAuthResult: (...args: unknown[]) => mockRouteAfterAuthResult(...args),
+jest.mock('../../auth/studentSession', () => ({
+  completeStudentLogin: (...args: unknown[]) => mockCompleteStudentLogin(...args),
 }));
 
 jest.mock('../../hooks/useResendCountdown', () => ({
@@ -64,7 +58,7 @@ describe('OtpScreen', () => {
         createdAt: '',
       },
     });
-    mockSetSession.mockResolvedValue(undefined);
+    mockCompleteStudentLogin.mockResolvedValue(true);
   });
 
   afterEach(() => {
@@ -90,8 +84,7 @@ describe('OtpScreen', () => {
         phone: '+919876543210',
         code: '123456',
       });
-      expect(mockSetSession).toHaveBeenCalled();
-      expect(mockRouteAfterAuthResult).toHaveBeenCalled();
+      expect(mockCompleteStudentLogin).toHaveBeenCalled();
     });
   });
 });

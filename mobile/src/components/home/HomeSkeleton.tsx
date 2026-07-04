@@ -4,9 +4,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Skeleton } from '../Skeleton';
 import { HOME_V2 } from './homeStyles';
-import { CONTINUE_CARD_WIDTH } from './homeUtils';
+import { HOME_UI } from './homeTheme';
 
-/** Shimmer placeholder mirroring premium v2 home layout. */
+/** Shimmer placeholder mirroring premium home layout. */
 export function HomeSkeleton() {
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => createStyles(insets.top), [insets.top]);
@@ -16,34 +16,29 @@ export function HomeSkeleton() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <LinearGradient colors={[...HOME_V2.headerGradient]} style={styles.header}>
           <View style={styles.greetingRow}>
-            <Skeleton width={51} height={51} borderRadius={17} />
+            <Skeleton width={54} height={54} borderRadius={18} />
             <View style={styles.greetingText}>
               <Skeleton width="50%" height={12} />
-              <Skeleton width="65%" height={22} />
+              <Skeleton width="65%" height={21} />
             </View>
-            <Skeleton width={43} height={43} borderRadius={14} />
+            <Skeleton width={44} height={44} borderRadius={15} />
           </View>
-          <View style={styles.chipRow}>
-            <Skeleton width={120} height={34} borderRadius={99} />
-            <Skeleton width={140} height={34} borderRadius={99} />
+          <View style={styles.weekRow}>
+            {Array.from({ length: 7 }).map((_, i) => (
+              <Skeleton key={i} width="12%" height={58} borderRadius={15} />
+            ))}
           </View>
         </LinearGradient>
 
         <View style={styles.heroOverlap}>
-          <Skeleton height={160} borderRadius={HOME_V2.cardRadius} />
+          <Skeleton height={168} borderRadius={22} />
         </View>
 
-        <Skeleton height={88} borderRadius={20} />
-        <View style={styles.quickGrid}>
-          {[0, 1, 2, 3].map((i) => (
-            <View key={i} style={styles.quickTile}>
-              <Skeleton width="100%" height={72} borderRadius={19} />
-              <Skeleton width={56} height={12} />
-            </View>
-          ))}
-        </View>
-        <Skeleton width={CONTINUE_CARD_WIDTH} height={120} borderRadius={HOME_V2.cardRadius} />
-        <Skeleton height={82} borderRadius={HOME_V2.cardRadius} />
+        <Skeleton height={92} borderRadius={20} style={styles.block} />
+        <Skeleton height={280} borderRadius={22} style={styles.block} />
+        <Skeleton height={180} borderRadius={22} style={styles.block} />
+        <Skeleton height={140} borderRadius={22} style={styles.block} />
+        <Skeleton height={120} borderRadius={22} style={styles.block} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -57,7 +52,7 @@ function createStyles(topInset: number) {
     },
     content: {
       paddingHorizontal: 16,
-      paddingBottom: 120,
+      paddingBottom: HOME_UI.tabBottomPad,
     },
     header: {
       marginHorizontal: -16,
@@ -75,23 +70,17 @@ function createStyles(topInset: number) {
       flex: 1,
       gap: 8,
     },
-    chipRow: {
+    weekRow: {
       flexDirection: 'row',
-      gap: 9,
+      justifyContent: 'space-between',
+      gap: 6,
     },
     heroOverlap: {
       marginTop: HOME_V2.bodyLift,
       marginBottom: 16,
     },
-    quickGrid: {
-      flexDirection: 'row',
-      gap: 11,
+    block: {
       marginBottom: 16,
-    },
-    quickTile: {
-      flex: 1,
-      alignItems: 'center',
-      gap: 9,
     },
   });
 }

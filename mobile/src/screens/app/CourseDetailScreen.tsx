@@ -1,9 +1,9 @@
 import { useRoute } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
-import { CheckCircle2, Circle, Download, FileText, Trash2 } from 'lucide-react-native';
+import { CheckCircle2, Circle, Download, FileText, GraduationCap, Trash2 } from 'lucide-react-native';
 import { useMemo } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Button, Card, ProgressBar, QueryStateView, Screen, SectionTitle } from '../../components';
+import { Button, Card, PremiumHeroCard, QueryStateView, Screen, SectionTitle } from '../../components';
 import { useCourse, useLessonDownloads, useNetworkStatus, useUpdateCourseProgress } from '../../hooks';
 import type { MainStackParamList } from '../../navigation/types';
 import { useTheme } from '../../theme';
@@ -92,19 +92,18 @@ export function CourseDetailScreen() {
       >
         {course ? (
           <>
-            <SectionTitle title={course.title} subtitle={course.subject} />
-
-            <Card style={styles.hero}>
-              <ProgressBar
-                value={course.progress?.progressPercent ?? course.progressPercent ?? 0}
-                label="Course progress"
-                showValue
-                variant="primary"
-              />
-              <Text style={styles.lessonCount}>
-                {completed.size}/{(course.lessons ?? []).length} lessons completed
-              </Text>
-            </Card>
+            <PremiumHeroCard
+              icon={<GraduationCap size={24} color="#FFFFFF" strokeWidth={1.8} />}
+              eyebrow={course.subject ?? 'Course'}
+              title={course.title}
+              stats={[
+                {
+                  label: 'Progress',
+                  value: `${Math.round(course.progress?.progressPercent ?? course.progressPercent ?? 0)}%`,
+                },
+                { label: 'Completed', value: `${completed.size}/${(course.lessons ?? []).length}` },
+              ]}
+            />
 
             <SectionTitle title="Lessons" subtitle="Download videos and notes for offline study" />
             <Card style={styles.lessons}>
@@ -203,8 +202,6 @@ export function CourseDetailScreen() {
 function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
     content: { gap: theme.spacing.lg, paddingBottom: theme.spacing['3xl'] },
-    hero: { gap: theme.spacing.sm },
-    lessonCount: { ...theme.typography.presets.caption, color: theme.colors.text.secondary },
     lessons: { gap: theme.spacing.md },
     lessonRow: {
       flexDirection: 'row',

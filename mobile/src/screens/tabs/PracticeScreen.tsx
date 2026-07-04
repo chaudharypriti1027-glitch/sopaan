@@ -123,6 +123,9 @@ export function PracticeScreen() {
         string,
         string
       >,
+    // `difficultyLabel` is a plain function recreated each render, but its
+    // output only depends on `t`, which is already listed.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [t],
   );
 
@@ -155,7 +158,7 @@ export function PracticeScreen() {
   const activeQuery =
     activeTab === 'sectional' ? sectionalQuery : activeTab === 'mock' ? mockQuery : pyqQuery;
 
-  const activeItems = activeQuery.data?.items ?? [];
+  const activeItems = useMemo(() => activeQuery.data?.items ?? [], [activeQuery.data]);
   const activeTotal = activeQuery.data?.pagination?.total ?? activeItems.length;
 
   const testRows = useMemo(
@@ -171,7 +174,7 @@ export function PracticeScreen() {
     [activeItems, activeTab, t],
   );
 
-  const attempts = attemptsQuery.data?.items ?? [];
+  const attempts = useMemo(() => attemptsQuery.data?.items ?? [], [attemptsQuery.data]);
   const avgScore = useMemo(() => {
     const scored = attempts.filter((item) => item.accuracy != null || item.score != null);
     if (!scored.length) return 0;

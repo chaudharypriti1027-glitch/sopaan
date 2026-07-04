@@ -1,4 +1,4 @@
-import * as SecureStore from 'expo-secure-store';
+import { getSecureItem, setSecureItem } from '../lib/secureStorage';
 
 const REMINDERS_KEY = 'sopaan_calendar_reminders';
 
@@ -7,7 +7,7 @@ function reminderKey(examId: string, date: string): string {
 }
 
 export async function listReminderKeys(): Promise<string[]> {
-  const raw = await SecureStore.getItemAsync(REMINDERS_KEY);
+  const raw = await getSecureItem(REMINDERS_KEY);
   if (!raw) {
     return [];
   }
@@ -29,6 +29,6 @@ export async function toggleReminder(examId: string, date: string): Promise<bool
   const keys = await listReminderKeys();
   const exists = keys.includes(key);
   const next = exists ? keys.filter((item) => item !== key) : [...keys, key];
-  await SecureStore.setItemAsync(REMINDERS_KEY, JSON.stringify(next));
+  await setSecureItem(REMINDERS_KEY, JSON.stringify(next));
   return !exists;
 }

@@ -4,7 +4,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useMemo, useState, useEffect, useRef } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { Button, Card, Pill, Screen, SectionTitle } from '../../components';
+import { Button, Card, Pill, PremiumHeroCard, Screen, SectionTitle } from '../../components';
 import { useAuth } from '../../auth';
 import { useExperiments } from '../../experiments';
 import { usePremiumPlans, useSubscriptionEntitlement } from '../../hooks';
@@ -111,32 +111,36 @@ export function PremiumScreen() {
 
     return (
       <Screen scroll contentContainerStyle={styles.content}>
-        <Card style={styles.heroPro}>
-          <Crown size={40} color={theme.colors.accent.gold} />
-          <Text style={styles.heroTitle}>{t('premium.proActive')}</Text>
-          <Text style={styles.heroSub}>
-            {entitlement?.status === 'trialing' || user?.premiumPlan === 'trial'
+        <PremiumHeroCard
+          icon={<Crown size={24} color="#FFFFFF" strokeWidth={1.8} />}
+          eyebrow={t('premium.proActive')}
+          title={
+            entitlement?.status === 'trialing' || user?.premiumPlan === 'trial'
               ? t('premium.trialActive')
               : entitlement?.plan ?? user?.premiumPlan
                 ? t('premium.planSuffix', { plan: entitlement?.plan ?? user?.premiumPlan })
-                : t('premium.premiumActive')}
-            {(entitlement?.currentPeriodEnd ?? user?.premiumExpiresAt)
+                : t('premium.premiumActive')
+          }
+          trailing={
+            entitlement ? (
+              <Pill
+                label={
+                  entitlement.status === 'cancelled'
+                    ? t('premium.cancelsAtPeriodEnd')
+                    : entitlement.status.replace('_', ' ')
+                }
+                variant="gold"
+              />
+            ) : undefined
+          }
+          hint={
+            (entitlement?.currentPeriodEnd ?? user?.premiumExpiresAt)
               ? t('premium.until', {
                   date: formatDate(entitlement?.currentPeriodEnd ?? user?.premiumExpiresAt!),
                 })
-              : ''}
-          </Text>
-          {entitlement ? (
-            <Pill
-              label={
-                entitlement.status === 'cancelled'
-                  ? t('premium.cancelsAtPeriodEnd')
-                  : entitlement.status.replace('_', ' ')
-              }
-              variant="gold"
-            />
-          ) : null}
-        </Card>
+              : undefined
+          }
+        />
         <Button
           label={t('premium.manage')}
           variant="ghost"
@@ -149,11 +153,12 @@ export function PremiumScreen() {
 
   return (
     <Screen scroll contentContainerStyle={styles.content}>
-      <Card style={styles.hero}>
-        <Crown size={36} color={theme.colors.accent.gold} />
-        <Text style={styles.heroTitle}>{heroTitle}</Text>
-        <Text style={styles.heroSub}>{heroSub}</Text>
-      </Card>
+      <PremiumHeroCard
+        icon={<Crown size={24} color="#FFFFFF" strokeWidth={1.8} />}
+        eyebrow="Go Premium"
+        title={heroTitle}
+        hint={heroSub}
+      />
 
       <SectionTitle title={copy.benefitsTitle} />
       <Card style={styles.benefits}>
@@ -218,28 +223,6 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
     content: { gap: theme.spacing.lg, paddingBottom: theme.spacing['3xl'] },
     centered: { alignItems: 'center', justifyContent: 'center' },
-    hero: {
-      alignItems: 'center',
-      gap: theme.spacing.md,
-      paddingVertical: theme.spacing.xl,
-      backgroundColor: theme.colors.accent.goldMuted,
-    },
-    heroPro: {
-      alignItems: 'center',
-      gap: theme.spacing.md,
-      paddingVertical: theme.spacing['2xl'],
-      backgroundColor: theme.colors.accent.goldMuted,
-    },
-    heroTitle: {
-      ...theme.typography.presets.h2,
-      color: theme.colors.text.primary,
-      textAlign: 'center',
-    },
-    heroSub: {
-      ...theme.typography.presets.body,
-      color: theme.colors.text.secondary,
-      textAlign: 'center',
-    },
     benefits: { gap: theme.spacing.md },
     benefitRow: { flexDirection: 'row', gap: theme.spacing.sm, alignItems: 'flex-start' },
     benefitText: { ...theme.typography.presets.body, color: theme.colors.text.primary, flex: 1 },

@@ -22,6 +22,7 @@ import {
   Zap,
 } from 'lucide-react-native';
 import type { TierFeatureKey } from '../api/tier';
+import { MENU_TONE_STYLES } from '../components/premium/premiumIconTokens';
 import type { AppTabParamList, MainStackParamList } from './types';
 import type { FeatureLinkTone, ProfileFeatureSection } from './profileFeatureLinks';
 
@@ -132,8 +133,8 @@ export const HOME_FEATURE_TONE_COLORS: Record<
   FeatureLinkTone,
   { bg: string; fg: string }
 > = {
-  primary: { bg: '#E9EBF3', fg: '#232A4D' },
-  gold: { bg: '#F4EBD8', fg: '#A67C33' },
-  teal: { bg: '#E4EDE9', fg: '#4C7264' },
-  coral: { bg: '#F5E2DC', fg: '#A8503E' },
+  primary: { bg: MENU_TONE_STYLES.indigo.bg, fg: MENU_TONE_STYLES.indigo.fg },
+  gold: { bg: MENU_TONE_STYLES.gold.bg, fg: MENU_TONE_STYLES.gold.fg },
+  teal: { bg: MENU_TONE_STYLES.teal.bg, fg: MENU_TONE_STYLES.teal.fg },
+  coral: { bg: MENU_TONE_STYLES.coral.bg, fg: MENU_TONE_STYLES.coral.fg },
 };

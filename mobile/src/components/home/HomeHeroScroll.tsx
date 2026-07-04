@@ -5,12 +5,15 @@ import { ArrowRight, Bell, Calendar, Flame } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { Avatar } from '../Avatar';
+import { GlassSurface } from '../GlassSurface';
 import { NumText } from '../NumText';
+import { RankRing } from '../RankRing';
 import { Text } from '../Text';
 import { useTheme } from '../../theme';
 import type { HomeFeed } from '../../types/home';
 import { GoalDots } from './GoalDots';
 import { HOME_UI } from './homeTheme';
+import { platformShadow } from '../../utils/platformShadow';
 import { WeekStrip } from './WeekStrip';
 
 const DAILY_GOAL_TOTAL = 3;
@@ -81,7 +84,10 @@ export function HomeHeroScroll({
         </LinearGradient>
 
         <View style={styles.greetText}>
-          <Text style={styles.greetSub}>{greeting.message}</Text>
+          <Text style={styles.greetSub}>
+            {greeting.message}
+            {greeting.dateLabel ? ` · ${greeting.dateLabel}` : ''}
+          </Text>
           <Text style={styles.greetName}>{firstName(greeting.name)}</Text>
         </View>
 
@@ -90,84 +96,104 @@ export function HomeHeroScroll({
             accessibilityRole="button"
             accessibilityLabel={t('home.notificationsA11y')}
             onPress={onNotificationsPress}
-            style={({ pressed }) => [styles.bellBtn, pressed && styles.pressed]}
+            style={({ pressed }) => [pressed && styles.pressed]}
           >
-            <Bell size={20} color="rgba(255,255,255,0.9)" strokeWidth={1.9} />
-            {greeting.unreadCount > 0 ? <View style={styles.bellDot} /> : null}
+            <GlassSurface tone="dark" intensity={30} borderRadius={14} style={styles.bellBtn}>
+              <Bell size={20} color="rgba(255,255,255,0.9)" strokeWidth={1.9} />
+              {greeting.unreadCount > 0 ? <View style={styles.bellDot} /> : null}
+            </GlassSurface>
           </Pressable>
         ) : null}
       </View>
 
       <WeekStrip streakDays={streak.current} />
 
-      <View style={styles.streakPill}>
+      <GlassSurface tone="dark" intensity={22} borderRadius={100} style={styles.streakPill}>
         <Flame size={14} color="#C29A4E" fill="#C29A4E" />
         <NumText style={styles.streakText}>
           {streak.current <= 0
             ? t('home.startStreak')
             : t('home.streakDays', { count: streak.current })}
         </NumText>
-      </View>
+      </GlassSurface>
 
       {countdown ? (
-        <View style={styles.countdownChip} testID="home-section-countdown">
+        <GlassSurface
+          tone="dark"
+          intensity={22}
+          borderRadius={100}
+          style={styles.countdownChip}
+          testID="home-section-countdown"
+        >
           <Calendar size={13} color="#E3C97F" strokeWidth={2} />
           <NumText style={styles.countdownNum}>{countdown.daysLeft}</NumText>
           <Text style={styles.countdownLabel}>
             {t('home.daysToExamSuffix', { examName: countdown.examName })}
           </Text>
-        </View>
+        </GlassSurface>
       ) : null}
 
-      <Pressable
-        accessibilityRole="button"
-        onPress={onGoalPress}
-        disabled={!onGoalPress}
-        style={({ pressed }) => [styles.goalCard, pressed && onGoalPress && styles.pressed]}
-        testID="home-section-streak"
-      >
-        <View style={styles.goalInner}>
-          <View style={styles.goalRow}>
-            <LinearGradient
-              colors={['#D8B368', '#C29A4E']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.goalFlame}
-            >
-              <Flame size={22} color="#FFFFFF" strokeWidth={2} fill="#FFFFFF" />
-            </LinearGradient>
+      <View testID="home-section-streak">
+        <GlassSurface tone="dark" intensity={26} borderRadius={22} style={styles.goalCard}>
+          <Pressable
+            accessibilityRole="button"
+            onPress={onGoalPress}
+            disabled={!onGoalPress}
+            style={({ pressed }) => [pressed && onGoalPress && styles.pressed]}
+          >
+            <View style={styles.goalInner}>
+              <View style={styles.goalRow}>
+                <LinearGradient
+                  colors={['#D8B368', '#C29A4E']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.goalFlame}
+                >
+                  <Flame size={17} color="#FFFFFF" strokeWidth={2} fill="#FFFFFF" />
+                  <NumText style={styles.goalFlameNum}>{streak.current}</NumText>
+                </LinearGradient>
 
-            <View style={styles.goalMid}>
-  <Text style={styles.goalLabel}>{t('home.todaysGoal')}</Text>
-              <Text style={styles.goalTitle}>
-                {t('home.goalProgress', { done: goal.done, total: goal.total })}
-              </Text>
-              <GoalDots done={goal.done} total={goal.total} variant="hero" />
-            </View>
+                <View style={styles.goalMid}>
+                  <Text style={styles.goalLabel}>{t('home.todaysGoal')}</Text>
+                  <Text style={styles.goalTitle}>
+                    {t('home.goalProgress', { done: goal.done, total: goal.total })}
+                  </Text>
+                  <GoalDots done={goal.done} total={goal.total} variant="hero" />
+                </View>
 
-            <View style={styles.airBox}>
-              <Text style={styles.airLabel}>{t('home.airAbbrev')}</Text>
-              <Text style={styles.airValue}>{airLabel}</Text>
+                <RankRing
+                  value={rank.ringPct}
+                  max={100}
+                  label={t('home.airAbbrev')}
+                  displayValue={airLabel}
+                  size={80}
+                  strokeWidth={6}
+                  trackColor="rgba(255,255,255,0.14)"
+                  accentColor="#E3C97F"
+                  labelColor="rgba(255,255,255,0.45)"
+                  style={styles.airRing}
+                />
+              </View>
             </View>
+          </Pressable>
+
+          <View style={styles.goalFooter}>
+            <Text style={styles.rankHint}>
+              {hasRank ? t('home.allIndiaRankNumber', { rank: rank.air }) : t('home.noRankYet')}
+            </Text>
+            {!hasRank && onRankCtaPress ? (
+              <Pressable
+                accessibilityRole="button"
+                onPress={onRankCtaPress}
+                style={({ pressed }) => [styles.goalCta, pressed && styles.pressed]}
+              >
+                <Text style={styles.goalCtaText}>{t('home.takeTestToRank')}</Text>
+                <ArrowRight size={14} color="#E3C97F" strokeWidth={2.2} />
+              </Pressable>
+            ) : null}
           </View>
-        </View>
-
-        <View style={styles.goalFooter}>
-          <Text style={styles.rankHint}>
-            {hasRank ? t('home.allIndiaRankNumber', { rank: rank.air }) : t('home.noRankYet')}
-          </Text>
-          {!hasRank && onRankCtaPress ? (
-            <Pressable
-              accessibilityRole="button"
-              onPress={onRankCtaPress}
-              style={({ pressed }) => [styles.goalCta, pressed && styles.pressed]}
-            >
-              <Text style={styles.goalCtaText}>{t('home.takeTestToRank')}</Text>
-              <ArrowRight size={14} color="#E3C97F" strokeWidth={2.2} />
-            </Pressable>
-          ) : null}
-        </View>
-      </Pressable>
+        </GlassSurface>
+      </View>
     </LinearGradient>
   );
 }
@@ -223,10 +249,6 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme'], topInset: num
     bellBtn: {
       width: 42,
       height: 42,
-      borderRadius: 14,
-      backgroundColor: 'rgba(255,255,255,0.1)',
-      borderWidth: 1.5,
-      borderColor: 'rgba(255,255,255,0.15)',
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -246,10 +268,6 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme'], topInset: num
       flexDirection: 'row',
       alignItems: 'center',
       gap: 7,
-      backgroundColor: 'rgba(255,255,255,0.1)',
-      borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.14)',
-      borderRadius: 100,
       paddingVertical: 5,
       paddingHorizontal: 13,
       paddingLeft: 10,
@@ -270,10 +288,6 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme'], topInset: num
       marginBottom: 16,
       paddingHorizontal: 12,
       paddingVertical: 6,
-      borderRadius: 100,
-      backgroundColor: 'rgba(255,255,255,0.08)',
-      borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.12)',
       zIndex: 2,
     },
     countdownNum: {
@@ -287,11 +301,6 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme'], topInset: num
       color: 'rgba(255,255,255,0.65)',
     },
     goalCard: {
-      backgroundColor: 'rgba(255,255,255,0.09)',
-      borderWidth: 1.5,
-      borderColor: 'rgba(255,255,255,0.14)',
-      borderRadius: 24,
-      overflow: 'hidden',
       zIndex: 2,
     },
     goalInner: { paddingHorizontal: 18, paddingTop: 18 },
@@ -302,11 +311,19 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme'], topInset: num
       marginBottom: 16,
     },
     goalFlame: {
-      width: 52,
-      height: 52,
-      borderRadius: 17,
+      width: 60,
+      height: 60,
+      borderRadius: 18,
       alignItems: 'center',
       justifyContent: 'center',
+      gap: 1,
+      ...platformShadow({ color: '#C29A4E', offsetY: 10, opacity: 0.6, radius: 20, elevation: 4 }),
+    },
+    goalFlameNum: {
+      fontSize: 20,
+      fontWeight: '700',
+      color: '#FFFFFF',
+      lineHeight: 22,
     },
     goalMid: { flex: 1 },
     goalLabel: {
@@ -316,38 +333,19 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme'], topInset: num
       marginBottom: 3,
     },
     goalTitle: {
-      fontSize: 18,
+      fontSize: 17,
       fontWeight: '800',
       color: '#FFFFFF',
-      letterSpacing: -0.4,
+      letterSpacing: -0.3,
       marginBottom: 10,
     },
-    airBox: {
-      width: 50,
-      height: 50,
-      borderRadius: 15,
-      borderWidth: 1.5,
-      borderColor: 'rgba(255,255,255,0.18)',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 1,
-    },
-    airLabel: {
-      fontSize: 8,
-      fontWeight: '800',
-      color: 'rgba(255,255,255,0.3)',
-      letterSpacing: 2,
-    },
-    airValue: {
-      fontSize: 20,
-      fontWeight: '900',
-      color: 'rgba(255,255,255,0.85)',
-      lineHeight: 22,
+    airRing: {
+      flexShrink: 0,
     },
     goalFooter: {
-      borderTopWidth: 1,
-      borderTopColor: 'rgba(255,255,255,0.08)',
-      paddingVertical: 11,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: 'rgba(255,255,255,0.1)',
+      paddingVertical: 14,
       paddingHorizontal: 18,
       flexDirection: 'row',
       alignItems: 'center',

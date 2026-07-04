@@ -23,7 +23,6 @@ import {
   testQuestions,
   tests,
   testSeries,
-  seedAdminUser,
   seedMentorUser,
   seedE2eStudentUser,
   seedE2ePaywallStudentUser,
@@ -31,6 +30,66 @@ import {
   mentorProfile,
   liveClasses,
 } from './data.js';
+import { getSeedAdminUser } from './adminConfig.js';
+
+async function resolveAdminPhone(seedAdmin, excludeUserId) {
+  const candidates = [
+    seedAdmin.phone,
+    `9${seedAdmin.email.replace(/\D/g, '').slice(-9).padStart(9, '0')}`.slice(0, 10),
+    `9${Date.now().toString().slice(-9)}`,
+  ];
+
+  for (const phone of candidates) {
+    const query = { phone };
+    if (excludeUserId) {
+      query._id = { $ne: excludeUserId };
+    }
+    const taken = await User.findOne(query).select('_id').lean();
+    if (!taken) {
+      return phone;
+    }
+  }
+
+  throw new Error('Could not allocate a unique phone for the admin user');
+}
+
+export async function ensureAdminUser() {
+  const seedAdmin = getSeedAdminUser();
+  let adminUser = await User.findOne({ email: seedAdmin.email });
+
+  if (!adminUser) {
+    const phone = await resolveAdminPhone(seedAdmin);
+
+    adminUser = new User({
+      name: seedAdmin.name,
+      email: seedAdmin.email,
+      phone,
+      role: seedAdmin.role,
+      isPremium: true,
+      premiumPlan: 'yearly',
+    });
+  } else {
+    adminUser.name = seedAdmin.name;
+    adminUser.role = seedAdmin.role;
+    adminUser.isPremium = true;
+    adminUser.premiumPlan = adminUser.premiumPlan ?? 'yearly';
+
+    const phoneTaken = await User.findOne({
+      phone: seedAdmin.phone,
+      _id: { $ne: adminUser._id },
+    })
+      .select('_id')
+      .lean();
+
+    if (!phoneTaken) {
+      adminUser.phone = seedAdmin.phone;
+    }
+  }
+
+  await adminUser.setPassword(seedAdmin.password);
+  await adminUser.save();
+  return adminUser;
+}
 
 async function ensureSeedUser(seedUser, { coins, premiumTrialUsed, privacyConsent } = {}) {
   let user = await User.findOne({ email: seedUser.email });
@@ -83,18 +142,8 @@ export async function seedDatabase() {
   ]);
 
   console.log('[seed] Ensuring seed admin user...');
-  let adminUser = await User.findOne({ email: seedAdminUser.email });
-
-  if (!adminUser) {
-    adminUser = new User({
-      name: seedAdminUser.name,
-      email: seedAdminUser.email,
-      phone: seedAdminUser.phone,
-      role: seedAdminUser.role,
-    });
-    await adminUser.setPassword(seedAdminUser.password);
-    await adminUser.save();
-  }
+  const seedAdmin = getSeedAdminUser();
+  const adminUser = await ensureAdminUser();
 
   console.log('[seed] Inserting exams...');
   const insertedExams = await Exam.insertMany(exams);
@@ -204,7 +253,7 @@ export async function seedDatabase() {
     rewards: insertedRewards.length,
     mentors: 1,
     liveClasses: insertedLiveClasses.length,
-    adminEmail: seedAdminUser.email,
+    adminEmail: seedAdmin.email,
     mentorEmail: seedMentorUser.email,
     e2eStudentEmail: e2eStudent.email,
     e2ePaywallStudentEmail: e2ePaywallStudent.email,

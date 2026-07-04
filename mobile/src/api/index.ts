@@ -53,7 +53,7 @@ export type { DoubtPost, CreateDoubtInput } from './doubts';
 export type { StudyGroup, CreateGroupInput } from './groups';
 export type { Mentor, MentorSlot } from './mentors';
 export type { LiveClass, LiveClassesResponse } from './liveClasses';
-export type { LeaderboardEntry, LeaderboardResponse } from './leaderboard';
+export type { LeaderboardEntry, LeaderboardMeta, LeaderboardPeriod, LeaderboardQueryParams, LeaderboardResponse } from './leaderboard';
 export type { SuccessStory } from './successStories';
 export type { FocusLogInput } from './focus';
 export type { CompleteGameInput, CompleteGameResponse } from './games';

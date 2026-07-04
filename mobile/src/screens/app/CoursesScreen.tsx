@@ -4,11 +4,55 @@ import { Play } from 'lucide-react-native';
 import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Card, Pill, ProgressBar, QueryStateView, Screen, SectionTitle } from '../../components';
+import type { Course } from '../../api/types';
 import { useCourses, useNetworkStatus } from '../../hooks';
 import type { MainStackParamList } from '../../navigation/types';
+import { toneColors, toneForText } from '../../utils/iconTone';
 import { useTheme } from '../../theme';
 
 type CoursesNav = NativeStackNavigationProp<MainStackParamList, 'Courses'>;
+
+type CourseCardProps = {
+  course: Course;
+  styles: ReturnType<typeof createStyles>;
+  primaryColor: string;
+  onPress: () => void;
+};
+
+function CourseCard({ course, styles, primaryColor, onPress }: CourseCardProps) {
+  const tone = toneColors(toneForText(course.subject ?? course.title));
+
+  return (
+    <Pressable onPress={onPress}>
+      <Card style={styles.card}>
+        <View
+          style={[
+            styles.thumb,
+            { backgroundColor: course.thumbnailColor ?? tone.bg },
+          ]}
+        >
+          <Play
+            size={20}
+            color={course.thumbnailColor ? primaryColor : tone.fg}
+          />
+        </View>
+        <View style={styles.info}>
+          <Text style={styles.title}>{course.title}</Text>
+          <Text style={styles.meta}>
+            {course.subject} · {course.lessonCount ?? 0} lessons
+          </Text>
+          <ProgressBar
+            value={course.progressPercent ?? 0}
+            label="Progress"
+            showValue
+            variant="teal"
+          />
+        </View>
+        <Pill label="Free" variant="teal" />
+      </Card>
+    </Pressable>
+  );
+}
 
 export function CoursesScreen() {
   const navigation = useNavigation<CoursesNav>();
@@ -34,34 +78,13 @@ export function CoursesScreen() {
       >
         <View style={styles.list}>
           {freeCourses.map((course) => (
-            <Pressable
+            <CourseCard
               key={course.id}
+              course={course}
+              styles={styles}
+              primaryColor={theme.colors.brand.primary}
               onPress={() => navigation.navigate('CourseDetail', { courseId: course.id })}
-            >
-              <Card style={styles.card}>
-                <View
-                  style={[
-                    styles.thumb,
-                    { backgroundColor: course.thumbnailColor ?? theme.colors.brand.primaryMuted },
-                  ]}
-                >
-                  <Play size={20} color={theme.colors.brand.primary} />
-                </View>
-                <View style={styles.info}>
-                  <Text style={styles.title}>{course.title}</Text>
-                  <Text style={styles.meta}>
-                    {course.subject} · {course.lessonCount ?? 0} lessons
-                  </Text>
-                  <ProgressBar
-                    value={course.progressPercent ?? 0}
-                    label="Progress"
-                    showValue
-                    variant="teal"
-                  />
-                </View>
-                <Pill label="Free" variant="teal" />
-              </Card>
-            </Pressable>
+            />
           ))}
         </View>
       </QueryStateView>

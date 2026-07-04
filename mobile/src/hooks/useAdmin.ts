@@ -9,7 +9,7 @@ export function useAdminStats() {
   return useQuery({
     queryKey: queryKeys.admin.stats(),
     queryFn: adminApi.getStats,
-    enabled: user?.role === 'admin',
+    enabled: false,
   });
 }
 
@@ -19,7 +19,7 @@ export function usePendingTests(params?: PaginationParams) {
   return useQuery({
     queryKey: queryKeys.admin.pendingTests(params),
     queryFn: () => adminApi.listPendingTests(params),
-    enabled: user?.role === 'admin',
+    enabled: false,
   });
 }
 

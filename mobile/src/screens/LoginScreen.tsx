@@ -17,11 +17,9 @@ import {
 } from '../components/auth';
 import { Text } from '../components/Text';
 import { authApi, parseApiError, privacyApi } from '../api';
-import { normalizeAuthResult } from '../auth/normalizeAuthResult';
-import { routeAfterSession } from '../auth/routeAfterSession';
+import { completeStudentLogin } from '../auth/studentSession';
 import { useGoogleSignIn } from '../auth/useGoogleSignIn';
 import type { AuthStackParamList, RootStackParamList } from '../navigation/types';
-import { useAuthStore } from '../store/auth';
 import { AUTH_UI } from '../components/auth/authTheme';
 
 type LoginNav = CompositeNavigationProp<
@@ -35,7 +33,6 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export function LoginScreen() {
   const { t } = useTranslation('auth');
   const navigation = useNavigation<LoginNav>();
-  const setSession = useAuthStore((state) => state.setSession);
   const styles = useMemo(() => createStyles(), []);
 
   const [email, setEmail] = useState('');
@@ -96,8 +93,8 @@ export function LoginScreen() {
         email: email.trim().toLowerCase(),
         password,
       });
-      await setSession(normalizeAuthResult(result));
-      routeAfterSession(navigation, useAuthStore.getState().profile);
+      const ok = await completeStudentLogin(navigation, result);
+      if (!ok) return;
     } catch (err) {
       setFormError(parseApiError(err).message);
     } finally {
@@ -116,8 +113,8 @@ export function LoginScreen() {
           marketing: false,
         },
       });
-      await setSession(normalizeAuthResult(result));
-      routeAfterSession(navigation, useAuthStore.getState().profile);
+      const ok = await completeStudentLogin(navigation, result);
+      if (!ok) return;
     } catch (err) {
       setFormError(parseApiError(err).message);
     }
@@ -237,19 +234,28 @@ function createStyles() {
     footerLink: {
       flexDirection: 'row',
       justifyContent: 'center',
+      alignSelf: 'center',
       alignItems: 'center',
       marginTop: 16,
-      minHeight: 44,
+      minHeight: 46,
+      paddingVertical: 10,
+      paddingHorizontal: 18,
+      borderRadius: 23,
+      backgroundColor: AUTH_UI.card,
+      borderWidth: 1.5,
+      borderColor: AUTH_UI.borderHover,
     },
-    pressed: { opacity: 0.88 },
+    pressed: { opacity: 0.75, backgroundColor: AUTH_UI.bg },
     footerMuted: {
-      fontSize: 12,
-      color: AUTH_UI.muted,
+      fontSize: 13,
+      color: AUTH_UI.label,
+      fontWeight: '600',
     },
     footerStrong: {
-      fontSize: 12,
-      fontWeight: '700',
+      fontSize: 13,
+      fontWeight: '800',
       color: AUTH_UI.accent,
+      textDecorationLine: 'underline',
     },
     tiny: {
       fontSize: 10,

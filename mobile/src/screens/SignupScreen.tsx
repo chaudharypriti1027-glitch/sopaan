@@ -22,8 +22,7 @@ import {
 import { Text } from '../components/Text';
 import { meApi, parseApiError, privacyApi } from '../api';
 import { useAuth } from '../auth';
-import { normalizeAuthResult } from '../auth/normalizeAuthResult';
-import { routeAfterSession } from '../auth/routeAfterSession';
+import { completeStudentLogin, isAdminAppAccessError } from '../auth/studentSession';
 import { useGoogleSignIn } from '../auth/useGoogleSignIn';
 import { useOnboarding } from '../auth/OnboardingContext';
 import { isStrongPassword } from '../lib/passwordPolicy';
@@ -172,7 +171,6 @@ function SignupRegistration() {
   const { completeOnboarding } = useOnboarding();
   const { t } = useTranslation('auth');
   const styles = useMemo(() => createRegistrationStyles(), []);
-  const setSession = useAuthStore((state) => state.setSession);
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -212,6 +210,10 @@ function SignupRegistration() {
       });
       await completeOnboarding();
     } catch (err) {
+      if (isAdminAppAccessError(err)) {
+        navigation.navigate('AdminPortal');
+        return;
+      }
       const message = parseApiError(err).message;
       setError(message);
       Alert.alert(t('signup.failedTitle'), message);
@@ -235,9 +237,13 @@ function SignupRegistration() {
           marketing: false,
         },
       });
-      await setSession(normalizeAuthResult(result));
-      routeAfterSession(navigation, useAuthStore.getState().profile);
+      const ok = await completeStudentLogin(navigation, result);
+      if (!ok) return;
     } catch (err) {
+      if (isAdminAppAccessError(err)) {
+        navigation.navigate('AdminPortal');
+        return;
+      }
       const message = parseApiError(err).message;
       setError(message);
       Alert.alert(t('signup.failedTitle'), message);
@@ -248,7 +254,12 @@ function SignupRegistration() {
     <AuthScreen
       header={<AuthBrandHeader title={t('signup.title')} subtitle={t('signup.subtitle')} />}
       footer={
-        <Pressable onPress={() => navigation.navigate('Login')} style={styles.footerLink}>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => navigation.navigate('Login')}
+          style={({ pressed }) => [styles.footerLink, pressed && styles.footerLinkPressed]}
+          testID="signup-go-to-login"
+        >
           <Text style={styles.footerMuted}>{t('signup.loginPrompt')} </Text>
           <Text style={styles.footerStrong}>{t('signup.loginLink')}</Text>
         </Pressable>
@@ -305,7 +316,7 @@ function SignupRegistration() {
       <AuthDivider label={t('signup.orContinueWith')} />
 
       <AuthSocialButton
-        label="Google"
+        label="Google" // i18n-ok: brand name, not translatable copy
         variant="google"
         disabled={!isGoogleConfigured || loading || googleLoading}
         onPress={() => void handleGoogleSignIn()}
@@ -318,7 +329,9 @@ function SignupRegistration() {
         style={({ pressed }) => [styles.otpNote, pressed && styles.otpNotePressed]}
         testID="signup-continue-with-otp"
       >
-        <Smartphone size={12} color={AUTH_UI.accent} strokeWidth={2} />
+        <View style={styles.otpNoteIcon}>
+          <Smartphone size={13} color={AUTH_UI.sageDeep} strokeWidth={2.2} />
+        </View>
         <Text style={styles.otpNoteText}>{t('signup.continueWithOtp')}</Text>
       </Pressable>
     </AuthScreen>
@@ -354,17 +367,30 @@ function createRegistrationStyles() {
     footerLink: {
       flexDirection: 'row',
       justifyContent: 'center',
-      minHeight: 44,
+      alignSelf: 'center',
+      minHeight: 46,
       alignItems: 'center',
+      paddingVertical: 10,
+      paddingHorizontal: 18,
+      borderRadius: 23,
+      backgroundColor: AUTH_UI.card,
+      borderWidth: 1.5,
+      borderColor: AUTH_UI.borderHover,
+    },
+    footerLinkPressed: {
+      opacity: 0.75,
+      backgroundColor: AUTH_UI.bg,
     },
     footerMuted: {
-      fontSize: 12,
-      color: AUTH_UI.muted,
+      fontSize: 13,
+      color: AUTH_UI.label,
+      fontWeight: '600',
     },
     footerStrong: {
-      fontSize: 12,
-      fontWeight: '700',
+      fontSize: 13,
+      fontWeight: '800',
       color: AUTH_UI.accent,
+      textDecorationLine: 'underline',
     },
     error: {
       fontSize: 12,
@@ -376,12 +402,28 @@ function createRegistrationStyles() {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: 6,
-      marginTop: 16,
-      minHeight: 32,
+      alignSelf: 'center',
+      gap: 8,
+      marginTop: 18,
+      minHeight: 36,
+      paddingVertical: 6,
+      paddingHorizontal: 14,
+      borderRadius: 20,
+      backgroundColor: AUTH_UI.card,
+      borderWidth: 1,
+      borderColor: AUTH_UI.border,
     },
     otpNotePressed: {
       opacity: 0.7,
+      backgroundColor: AUTH_UI.bg,
+    },
+    otpNoteIcon: {
+      width: 22,
+      height: 22,
+      borderRadius: 7,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: AUTH_UI.sageSoft,
     },
     otpNoteText: {
       fontSize: 12,

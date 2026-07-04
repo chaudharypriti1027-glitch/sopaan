@@ -6,6 +6,10 @@ import { questionImportBodySchema } from '../validators/questionImportValidators
 import { AppError } from '../utils/AppError.js';
 import { generateMultiSectionExam } from '../services/ai/testGenerator.js';
 import * as aiFeedbackService from '../services/ai/aiFeedbackService.js';
+import * as adminStudentService from '../services/admin/adminStudentService.js';
+import * as adminRevenueService from '../services/admin/adminRevenueService.js';
+import * as adminEngagementService from '../services/admin/adminEngagementService.js';
+import * as liveClassService from '../services/liveClassService.js';
 import { getValidatedQuery } from '../middleware/validate.js';
 
 export async function getStats(_req, res) {
@@ -226,4 +230,40 @@ export async function reviewAiFeedback(req, res) {
     req.user._id,
   );
   res.status(200).json(result);
+}
+
+export async function listStudents(req, res) {
+  res.status(200).json(await adminStudentService.listStudents(getValidatedQuery(req)));
+}
+
+export async function getRevenueSummary(req, res) {
+  res.status(200).json(await adminRevenueService.getRevenueSummary());
+}
+
+export async function listPayments(req, res) {
+  res.status(200).json(await adminRevenueService.listRecentPayments(getValidatedQuery(req)));
+}
+
+export async function broadcastNotification(req, res) {
+  res.status(201).json(await adminEngagementService.broadcastNotification(req.body));
+}
+
+export async function publishAnnouncement(req, res) {
+  res.status(201).json(await adminEngagementService.publishAnnouncement(req.body));
+}
+
+export async function listRecentBroadcasts(req, res) {
+  res.status(200).json(await adminEngagementService.listRecentBroadcasts(getValidatedQuery(req)));
+}
+
+export async function listTeamMembers(_req, res) {
+  res.status(200).json(await adminEngagementService.listTeamMembers());
+}
+
+export async function listMediaAssets(req, res) {
+  res.status(200).json(await adminEngagementService.listMediaAssets(getValidatedQuery(req)));
+}
+
+export async function listAdminLiveClasses(req, res) {
+  res.status(200).json(await liveClassService.listAdminLiveClasses(getValidatedQuery(req)));
 }

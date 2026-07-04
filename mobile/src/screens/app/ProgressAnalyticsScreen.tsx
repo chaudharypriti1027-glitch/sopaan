@@ -1,4 +1,4 @@
-import { BarChart2, BookOpen, Target, TrendingUp } from 'lucide-react-native';
+import { BarChart2, TrendingUp } from 'lucide-react-native';
 import { memo, useMemo, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
@@ -6,11 +6,11 @@ import {
   Button,
   Card,
   LineChart,
+  PremiumHeroCard,
   ProgressBar,
   Screen,
   SectionTitle,
   SegTabs,
-  StatTile,
 } from '../../components';
 import type { AnalyticsRange } from '../../api/analytics';
 import { useAnalyticsProgress, useProGate } from '../../hooks';
@@ -130,23 +130,16 @@ export function ProgressAnalyticsScreen() {
 
       <SegTabs options={rangeOptions} value={range} onChange={setRange} />
 
-      <View style={styles.tiles}>
-        <StatTile
-          label={t('progressAnalytics.attempts')}
-          value={formatNumber(data?.summary.totalAttempts ?? 0)}
-          icon={<BookOpen size={16} color={theme.colors.brand.primary} />}
-        />
-        <StatTile
-          label={t('progressAnalytics.avgAccuracy')}
-          value={formatPercent(data?.summary.avgAccuracy ?? 0)}
-          icon={<Target size={16} color={theme.colors.brand.primary} />}
-        />
-        <StatTile
-          label={t('progressAnalytics.studyHours')}
-          value={formatNumber(data?.summary.totalStudyHours ?? 0)}
-          icon={<TrendingUp size={16} color={theme.colors.brand.primary} />}
-        />
-      </View>
+      <PremiumHeroCard
+        icon={<TrendingUp size={24} color="#FFFFFF" strokeWidth={1.8} />}
+        eyebrow={t('progressAnalytics.title')}
+        title={formatPercent(data?.summary.avgAccuracy ?? 0)}
+        stats={[
+          { label: t('progressAnalytics.attempts'), value: formatNumber(data?.summary.totalAttempts ?? 0) },
+          { label: t('progressAnalytics.avgAccuracy'), value: formatPercent(data?.summary.avgAccuracy ?? 0) },
+          { label: t('progressAnalytics.studyHours'), value: formatNumber(data?.summary.totalStudyHours ?? 0) },
+        ]}
+      />
 
       <View style={styles.section}>
         <SectionTitle title={t('progressAnalytics.accuracyTrend')} />
@@ -198,11 +191,6 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     centered: {
       alignItems: 'center',
       justifyContent: 'center',
-    },
-    tiles: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: theme.spacing.sm,
     },
     section: {
       gap: theme.spacing.md,

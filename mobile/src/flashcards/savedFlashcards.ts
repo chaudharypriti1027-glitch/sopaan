@@ -1,4 +1,4 @@
-import * as SecureStore from 'expo-secure-store';
+import { getSecureItem, setSecureItem } from '../lib/secureStorage';
 
 const SAVED_FLASHCARDS_KEY = 'sopaan_saved_flashcards';
 
@@ -11,7 +11,7 @@ export type SavedFlashcard = {
 };
 
 export async function listSavedFlashcards(): Promise<SavedFlashcard[]> {
-  const raw = await SecureStore.getItemAsync(SAVED_FLASHCARDS_KEY);
+  const raw = await getSecureItem(SAVED_FLASHCARDS_KEY);
   if (!raw) return [];
   try {
     return JSON.parse(raw) as SavedFlashcard[];
@@ -29,7 +29,7 @@ export async function saveFlashcardBookmark(
     savedAt: card.savedAt ?? new Date().toISOString(),
   };
   const without = existing.filter((item) => item.id !== card.id);
-  await SecureStore.setItemAsync(
+  await setSecureItem(
     SAVED_FLASHCARDS_KEY,
     JSON.stringify([entry, ...without].slice(0, 100)),
   );
@@ -38,7 +38,7 @@ export async function saveFlashcardBookmark(
 
 export async function removeFlashcardBookmark(id: string): Promise<void> {
   const existing = await listSavedFlashcards();
-  await SecureStore.setItemAsync(
+  await setSecureItem(
     SAVED_FLASHCARDS_KEY,
     JSON.stringify(existing.filter((item) => item.id !== id)),
   );

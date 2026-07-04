@@ -1,5 +1,6 @@
-import { act, renderHook, waitFor } from '@testing-library/react-native';
+import { act, renderHook } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { PremiumDialogProvider } from '../../components/premium/PremiumDialogProvider';
 import { AuthProvider } from '../AuthContext';
 import { useAuth } from '../useAuth';
 import * as authApi from '../../api/auth';
@@ -60,7 +61,9 @@ describe('AuthProvider', () => {
     const { result } = renderHook(() => useAuth(), {
       wrapper: ({ children }) => (
         <QueryClientProvider client={queryClient}>
-          <AuthProvider>{children}</AuthProvider>
+          <PremiumDialogProvider>
+            <AuthProvider>{children}</AuthProvider>
+          </PremiumDialogProvider>
         </QueryClientProvider>
       ),
     });
@@ -98,7 +101,9 @@ describe('AuthProvider', () => {
     const { result } = renderHook(() => useAuth(), {
       wrapper: ({ children }) => (
         <QueryClientProvider client={queryClient}>
-          <AuthProvider>{children}</AuthProvider>
+          <PremiumDialogProvider>
+            <AuthProvider>{children}</AuthProvider>
+          </PremiumDialogProvider>
         </QueryClientProvider>
       ),
     });

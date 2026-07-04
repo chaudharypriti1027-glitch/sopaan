@@ -10,7 +10,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import { Button, Screen, SectionTitle, TextField } from '../../components';
+import { BackButton, Button, Screen, SectionTitle, TextField } from '../../components';
 import { useGroupChat } from '../../hooks/useSocket';
 import type { MainStackParamList } from '../../navigation/types';
 import { useTheme } from '../../theme';
@@ -53,9 +53,7 @@ export function GroupChatScreen() {
   return (
     <Screen style={styles.screen} padded={false}>
       <View style={styles.header}>
-        <Pressable onPress={() => navigation.goBack()} hitSlop={12}>
-          <Text style={styles.back}>← Back</Text>
-        </Pressable>
+        <BackButton onPress={() => navigation.goBack()} />
         <SectionTitle title={groupName} subtitle={connected ? 'Connected' : 'Reconnecting…'} />
       </View>
 

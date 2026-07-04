@@ -45,5 +45,15 @@
   "languageEnglish": "English",
   "languageHindi": "Hindi",
   "languageGu": "Gujarati",
-  "offlineBanner": "No network — cached content is available offline"
+  "offlineBanner": "No network — cached content is available offline",
+  "premiumDialog": {
+    "sessionExpiredTitle": "Session ended",
+    "sessionExpiredBody": "For your security, sign in again to continue your prep.",
+    "signInAgain": "Sign in again",
+    "notificationsPermissionTitle": "Enable notifications",
+    "notificationsPermissionBody": "Allow alerts for rank updates, streak reminders, and daily study plans.",
+    "openSettings": "Open settings",
+    "notNow": "Not now",
+    "gotIt": "Got it"
+  }
 }

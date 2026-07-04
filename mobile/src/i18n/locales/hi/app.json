@@ -131,6 +131,9 @@
   "games": {
     "title": "लर्निंग गेम्स",
     "greeting": "सुप्रभात 👋",
+    "greetingMorning": "सुप्रभात 👋",
+    "greetingAfternoon": "नमस्कार 👋",
+    "greetingEvening": "शुभ संध्या 👋",
     "heroTitle": "खेलो। सीखो।\nआगे बढ़ो।",
     "heroSubtitle": "हर गेम में सिक्के और XP कमाएँ",
     "coinBadge": "🪙 {{coins}} सिक्के",
@@ -138,13 +141,19 @@
     "gamesDone": "गेम पूरे",
     "rankStat": "रैंक",
     "dailyChallenge": "आज की चुनौती",
-    "dailyChallengeSub": "आज Rapid Fire पूरा करें",
+    "dailyChallengeSub": "आज {{title}} खेलें",
+    "dailyDone": "पूरा ✓",
     "go": "जाएँ →",
+    "playNow": "अभी खेलें",
+    "playSubtitle": "🪙 {{reward}} तक · {{description}}",
     "continuePlaying": "जारी रखें",
     "popular": "🔥 लोकप्रिय",
     "seeAll": "सभी {{count}} देखें",
     "searchPlaceholder": "{{count}} गेम खोजें…",
     "noResults": "कोई गेम नहीं मिला।",
+    "emptyTitle": "कोई गेम नहीं मिला",
+    "emptyHint": "कोई और खोज या श्रेणी आज़माएँ।",
+    "clearFilters": "फ़िल्टर हटाएँ",
     "categories": {
       "all": "सभी",
       "language": "भाषा",
@@ -159,6 +168,7 @@
     "resultSubtitle": "आपने {{title}} पूरा किया",
     "score": "स्कोर",
     "coins": "सिक्के",
+    "xp": "XP",
     "playAgain": "फिर खेलें",
     "allGames": "सभी गेम",
     "retrySync": "रिवॉर्ड सिंक दोबारा",
@@ -406,7 +416,9 @@
       "privacy": "गोपनीयता और सुरक्षा",
       "help": "सहायता और समर्थन",
       "whatsappCommunity": "WhatsApp समुदाय में शामिल हों",
-      "rate": "रेट करें और ऐप शेयर करें"
+      "rate": "रेट करें और ऐप शेयर करें",
+      "admin": "एडमिन",
+      "adminDashboard": "एडमिन डैशबोर्ड"
     }
   },
   "currentAffairs": {
@@ -873,7 +885,26 @@
     "subtitle": "मॉक सटीकता के शीर्ष प्रदर्शनकर्ता",
     "yourRank": "आपकी रैंक",
     "avgAttempts": "{{accuracy}}% औसत · {{attempts}} प्रयास",
-    "rankings": "रैंकिंग"
+    "rankings": "रैंकिंग",
+    "you": "आप",
+    "unranked": "रैंक पाने के लिए एक मॉक टेस्ट लें",
+    "emptyTitle": "अभी तक कोई रैंकिंग नहीं",
+    "emptyBody": "लीडरबोर्ड में सबसे पहले आने के लिए एक मॉक टेस्ट पूरा करें।",
+    "accuracyLabel": "सटीकता",
+    "attemptsLabel": "प्रयास",
+    "bestRankLabel": "सर्वश्रेष्ठ रैंक",
+    "players": "खिलाड़ी",
+    "onlineNow": "अभी ऑनलाइन",
+    "seasonEnds": "सीज़न समाप्त",
+    "live": "लाइव",
+    "seasonFallback": "सीज़न · मॉक मास्टर्स",
+    "studentCount": "{{count}} छात्र",
+    "shareMessage": "Sopaan लीडरबोर्ड देखें — {{season}}!",
+    "period": {
+      "daily": "दैनिक",
+      "weekly": "साप्ताहिक",
+      "all-time": "सर्वकालिक"
+    }
   },
   "successStories": {
     "title": "सफलता की कहानियाँ",

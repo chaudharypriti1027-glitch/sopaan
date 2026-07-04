@@ -45,6 +45,20 @@ function resolveIcon(variant: AuthPremiumFieldVariant): LucideIcon {
   }
 }
 
+/** Soft tinted icon tile per field type — "Classic Premium" icon treatment. */
+function resolveIconTint(variant: AuthPremiumFieldVariant) {
+  switch (variant) {
+    case 'email':
+      return { bg: AUTH_UI.accentSoft, fg: AUTH_UI.accent };
+    case 'password':
+      return { bg: AUTH_UI.goldSoft, fg: AUTH_UI.goldDeep };
+    case 'phone':
+      return { bg: AUTH_UI.sageSoft, fg: AUTH_UI.sageDeep };
+    default:
+      return { bg: AUTH_UI.sageSoft, fg: AUTH_UI.sageDeep };
+  }
+}
+
 export const AuthPremiumField = forwardRef<TextInput, AuthPremiumFieldProps>(
   function AuthPremiumField(
     {
@@ -70,6 +84,7 @@ export const AuthPremiumField = forwardRef<TextInput, AuthPremiumFieldProps>(
     const isPhone = variant === 'phone';
     const isPassword = variant === 'password';
     const Icon = icon ?? resolveIcon(variant);
+    const iconTint = resolveIconTint(variant);
     const styles = useMemo(
       () => createStyles({ focused, hasError: Boolean(error), dense }),
       [focused, error, dense],
@@ -88,7 +103,9 @@ export const AuthPremiumField = forwardRef<TextInput, AuthPremiumFieldProps>(
         <View style={styles.inputWrap}>
           {dense ? (
             <View style={styles.denseIcon} pointerEvents="none">
-              <Icon size={19} color={AUTH_UI.muted} strokeWidth={1.8} />
+              <View style={[styles.denseIconTile, { backgroundColor: iconTint.bg }]}>
+                <Icon size={16} color={iconTint.fg} strokeWidth={2} />
+              </View>
             </View>
           ) : isPhone ? (
             <View style={styles.prefix} pointerEvents="none">
@@ -127,12 +144,13 @@ export const AuthPremiumField = forwardRef<TextInput, AuthPremiumFieldProps>(
               accessibilityRole="button"
               accessibilityLabel={passwordVisible ? 'Hide password' : 'Show password'}
               onPress={() => setPasswordVisible((v) => !v)}
-              style={styles.eyeBtn}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              style={({ pressed }) => [styles.eyeBtn, pressed && styles.eyeBtnPressed]}
             >
               {passwordVisible ? (
-                <EyeOff size={18} color={AUTH_UI.faint} />
+                <EyeOff size={18} color={AUTH_UI.accent} strokeWidth={2} />
               ) : (
-                <Eye size={18} color={AUTH_UI.faint} />
+                <Eye size={18} color={AUTH_UI.label} strokeWidth={2} />
               )}
             </Pressable>
           ) : null}
@@ -166,11 +184,18 @@ function createStyles(state: { focused: boolean; hasError: boolean; dense: boole
     },
     denseIcon: {
       position: 'absolute',
-      left: 15,
+      left: 8,
       top: 0,
       bottom: 0,
       justifyContent: 'center',
       zIndex: 1,
+    },
+    denseIconTile: {
+      width: 30,
+      height: 30,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     prefix: {
       position: 'absolute',
@@ -211,7 +236,7 @@ function createStyles(state: { focused: boolean; hasError: boolean; dense: boole
         : {}),
     },
     inputDense: {
-      paddingLeft: 46,
+      paddingLeft: 50,
       paddingVertical: 15,
       borderWidth: 1,
       shadowColor: AUTH_UI.shadowSm,
@@ -228,10 +253,15 @@ function createStyles(state: { focused: boolean; hasError: boolean; dense: boole
     },
     eyeBtn: {
       position: 'absolute',
-      right: 14,
+      right: 10,
       top: 0,
       bottom: 0,
+      width: 34,
+      alignItems: 'center',
       justifyContent: 'center',
+    },
+    eyeBtnPressed: {
+      opacity: 0.6,
     },
     error: {
       fontSize: 11,

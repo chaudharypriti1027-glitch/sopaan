@@ -1,6 +1,7 @@
 import { act, fireEvent, waitFor } from '@testing-library/react-native';
 import { ProfileSetupScreen } from '../ProfileSetupScreen';
 import { renderWithProviders } from '../../test/render';
+import type { Profile } from '../../types/auth';
 
 const mockDispatch = jest.fn();
 const mockSetAppLanguage = jest.fn();
@@ -46,8 +47,6 @@ jest.mock('../../api', () => ({
     status: 400,
   }),
 }));
-
-import type { Profile } from '../../types/auth';
 
 const mockProfileState: {
   profile: Profile;

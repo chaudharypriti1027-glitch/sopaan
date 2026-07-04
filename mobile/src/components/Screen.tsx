@@ -1,6 +1,7 @@
 import { useMemo, type ReactNode } from 'react';
 import { ScrollView, StyleSheet, View, type ScrollViewProps, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useResponsiveLayout } from '../layout/responsive';
 import { PREMIUM } from './premium/premiumStyles';
 import { useTheme } from '../theme';
 
@@ -38,9 +39,19 @@ export function Screen({
 }: ScreenProps) {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
+  const { isWeb, contentPadding, contentMaxWidth, topChromeHeight } = useResponsiveLayout();
   const styles = useMemo(
-    () => createStyles(theme, insets, padded, bottomInset),
-    [theme, insets, padded, bottomInset],
+    () =>
+      createStyles(
+        theme,
+        insets,
+        padded,
+        bottomInset,
+        isWeb ? contentPadding : undefined,
+        isWeb ? contentMaxWidth : undefined,
+        topChromeHeight,
+      ),
+    [theme, insets, padded, bottomInset, isWeb, contentPadding, contentMaxWidth, topChromeHeight],
   );
 
   if (scroll) {
@@ -64,7 +75,12 @@ function createStyles(
   insets: { top: number; bottom: number; left: number; right: number },
   padded: boolean,
   bottomInset: BottomInset,
+  webPadding?: number,
+  webMaxWidth?: number,
+  topChrome = 0,
 ) {
+  const horizontalPad = padded ? (webPadding ?? theme.spacing.lg) : 0;
+
   return StyleSheet.create({
     screen: {
       flex: 1,
@@ -72,10 +88,13 @@ function createStyles(
     },
     content: {
       flexGrow: 1,
-      paddingTop: insets.top,
+      paddingTop: insets.top + topChrome,
       paddingBottom: bottomPadding(bottomInset, insets.bottom),
-      paddingLeft: padded ? theme.spacing.lg + insets.left : insets.left,
-      paddingRight: padded ? theme.spacing.lg + insets.right : insets.right,
+      paddingLeft: horizontalPad + insets.left,
+      paddingRight: horizontalPad + insets.right,
+      width: '100%',
+      maxWidth: webMaxWidth ?? '100%',
+      alignSelf: 'center',
     },
   });
 }

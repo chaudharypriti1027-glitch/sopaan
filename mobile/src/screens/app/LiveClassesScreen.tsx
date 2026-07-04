@@ -3,7 +3,6 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Bell, BellOff, PlayCircle, Radio, Sparkles } from 'lucide-react-native';
 import { useMemo } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   Linking,
   Pressable,
@@ -11,8 +10,8 @@ import {
   Text,
   View,
 } from 'react-native';
-import { Button, Card, Eyebrow, Pill, Screen, SectionTitle } from '../../components';
-import { useLiveClassReminder, useLiveClasses } from '../../hooks';
+import { Button, Card, Eyebrow, Pill, QueryStateView, Screen, SectionTitle } from '../../components';
+import { useLiveClassReminder, useLiveClasses, useNetworkStatus } from '../../hooks';
 import type { MainStackParamList } from '../../navigation/types';
 import type { LiveClass } from '../../api/liveClasses';
 import { useTheme } from '../../theme';
@@ -115,6 +114,7 @@ export function LiveClassesScreen() {
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
+  const { isOffline } = useNetworkStatus();
   const liveQuery = useLiveClasses();
   const data = liveQuery.data;
 
@@ -155,9 +155,14 @@ export function LiveClassesScreen() {
         </Card>
       ) : null}
 
-      {liveQuery.isLoading ? (
-        <ActivityIndicator color={theme.colors.brand.primary} />
-      ) : (
+      <QueryStateView
+        isLoading={liveQuery.isLoading}
+        isError={liveQuery.isError}
+        isFetching={liveQuery.isFetching}
+        isOffline={isOffline}
+        hasData={Boolean(data)}
+        onRetry={() => void liveQuery.refetch()}
+      >
         <>
           {data?.liveNow ? (
             <View style={styles.section}>
@@ -205,7 +210,7 @@ export function LiveClassesScreen() {
             </View>
           ) : null}
         </>
-      )}
+      </QueryStateView>
     </Screen>
   );
 }

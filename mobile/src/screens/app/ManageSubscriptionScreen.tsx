@@ -9,11 +9,12 @@ import {
   XCircle,
 } from 'lucide-react-native';
 import { useMemo } from 'react';
-import { ActivityIndicator, Alert, StyleSheet, Text, View } from 'react-native';
-import { Button, Card, Pill, Screen, SectionTitle } from '../../components';
+import { Alert, StyleSheet, Text, View } from 'react-native';
+import { Button, Card, Pill, PremiumHeroCard, QueryStateView, Screen, SectionTitle } from '../../components';
 import { useAuth } from '../../auth';
 import {
   useCancelSubscription,
+  useNetworkStatus,
   useRestorePurchases,
   useSubscriptionEntitlement,
 } from '../../hooks';
@@ -59,6 +60,7 @@ export function ManageSubscriptionScreen() {
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
+  const { isOffline } = useNetworkStatus();
   const entitlementQuery = useSubscriptionEntitlement();
   const restoreMutation = useRestorePurchases();
   const cancelMutation = useCancelSubscription();
@@ -116,32 +118,29 @@ export function ManageSubscriptionScreen() {
     );
   };
 
-  if (entitlementQuery.isLoading) {
-    return (
-      <Screen style={styles.centered}>
-        <ActivityIndicator size="large" color={theme.colors.brand.primary} />
-      </Screen>
-    );
-  }
-
   const hasAccess = entitlement?.hasAccess ?? user?.isPremium;
 
   return (
     <Screen scroll contentContainerStyle={styles.content}>
-      <Card style={styles.hero}>
-        <Crown size={36} color={theme.colors.accent.gold} />
-        <Text style={styles.heroTitle}>Sopaan Pro</Text>
-        {entitlement ? (
-          <View style={styles.statusRow}>
+      <QueryStateView
+        isLoading={entitlementQuery.isLoading}
+        isError={entitlementQuery.isError}
+        isFetching={entitlementQuery.isFetching}
+        isOffline={isOffline}
+        hasData={Boolean(entitlementQuery.data)}
+        onRetry={() => void entitlementQuery.refetch()}
+      >
+      <PremiumHeroCard
+        icon={<Crown size={24} color="#FFFFFF" strokeWidth={1.8} />}
+        eyebrow={entitlement ? (entitlement.plan === 'trial' ? 'Trial' : `${entitlement.plan} plan`) : 'Sopaan Pro'}
+        title="Sopaan Pro"
+        trailing={
+          entitlement ? (
             <Pill label={statusLabel(entitlement.status)} variant={statusVariant(entitlement.status)} />
-            <Text style={styles.planText}>
-              {entitlement.plan === 'trial' ? 'Trial' : `${entitlement.plan} plan`}
-            </Text>
-          </View>
-        ) : (
-          <Text style={styles.heroSub}>No active entitlement on file.</Text>
-        )}
-      </Card>
+          ) : undefined
+        }
+        hint={!entitlement ? 'No active entitlement on file.' : undefined}
+      />
 
       {entitlement ? (
         <Card style={styles.details}>
@@ -244,6 +243,7 @@ export function ManageSubscriptionScreen() {
         All purchases are verified on our servers. The app never grants Pro access from client-side
         receipts alone.
       </Text>
+      </QueryStateView>
     </Screen>
   );
 }
@@ -253,34 +253,6 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     content: {
       gap: theme.spacing.lg,
       paddingBottom: theme.spacing['3xl'],
-    },
-    centered: {
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    hero: {
-      alignItems: 'center',
-      gap: theme.spacing.md,
-      paddingVertical: theme.spacing.xl,
-      backgroundColor: theme.colors.accent.goldMuted,
-    },
-    heroTitle: {
-      ...theme.typography.presets.h2,
-      color: theme.colors.text.primary,
-    },
-    heroSub: {
-      ...theme.typography.presets.body,
-      color: theme.colors.text.secondary,
-      textAlign: 'center',
-    },
-    statusRow: {
-      alignItems: 'center',
-      gap: theme.spacing.sm,
-    },
-    planText: {
-      ...theme.typography.presets.caption,
-      color: theme.colors.text.secondary,
-      textTransform: 'capitalize',
     },
     details: {
       gap: theme.spacing.lg,

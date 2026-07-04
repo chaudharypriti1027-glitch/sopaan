@@ -11,7 +11,7 @@ import {
   View,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { Button, Card, Eyebrow, Pill, Screen, SectionTitle } from '../../components';
+import { Button, Card, Eyebrow, Pill, PremiumHeroCard, Screen, SectionTitle } from '../../components';
 import { useExams, useExam, useGoalRoadmap, useProfile } from '../../hooks';
 import type { MainStackParamList } from '../../navigation/types';
 import type { Exam } from '../../api/types';
@@ -83,27 +83,24 @@ export function CutoffsFormsScreen() {
       />
 
       {exam ? (
-        <Card style={styles.examHero}>
-          <View style={styles.examHeroRow}>
-            <TrendingUp size={22} color={theme.colors.brand.primary} />
-            <View style={styles.examHeroText}>
-              <Text style={styles.examName}>{exam.name}</Text>
-              <Text style={styles.examMeta}>
-                {exam.category}
-                {exam.vacancies != null
-                  ? ` · ${t('cutoffsForms.vacancies', { count: formatNumber(exam.vacancies) })}`
-                  : ''}
-              </Text>
-            </View>
-            <Pill label={category} variant="primary" />
-          </View>
+        <PremiumHeroCard
+          icon={<TrendingUp size={24} color="#FFFFFF" strokeWidth={1.8} />}
+          eyebrow={exam.category ?? t('cutoffsForms.eyebrow')}
+          title={exam.name}
+          trailing={<Pill label={category} variant="primary" />}
+          hint={
+            exam.vacancies != null
+              ? t('cutoffsForms.vacancies', { count: formatNumber(exam.vacancies) })
+              : undefined
+          }
+        >
           <Button
             label={t('cutoffsForms.viewExamDetail')}
-            variant="ghost"
+            variant="gold"
             size="sm"
             onPress={() => navigation.navigate('ExamDetail', { examId: exam.id })}
           />
-        </Card>
+        </PremiumHeroCard>
       ) : null}
 
       <View style={styles.section}>
@@ -186,27 +183,6 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     },
     section: {
       gap: theme.spacing.md,
-    },
-    examHero: {
-      gap: theme.spacing.md,
-    },
-    examHeroRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: theme.spacing.md,
-    },
-    examHeroText: {
-      flex: 1,
-      gap: theme.spacing.xs / 2,
-    },
-    examName: {
-      ...theme.typography.presets.bodyMedium,
-      fontFamily: theme.typography.fonts.ui.semibold,
-      color: theme.colors.text.primary,
-    },
-    examMeta: {
-      ...theme.typography.presets.caption,
-      color: theme.colors.text.secondary,
     },
     cutoffRow: {
       flexDirection: 'row',

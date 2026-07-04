@@ -1,6 +1,5 @@
 import { type ReactNode } from 'react';
-import Animated, { FadeInDown, ReduceMotion } from 'react-native-reanimated';
-import { useReducedMotion } from 'react-native-reanimated';
+import Animated, { FadeInDown, ReduceMotion, useReducedMotion } from 'react-native-reanimated';
 
 type AuthAnimatedSectionProps = {
   index: number;

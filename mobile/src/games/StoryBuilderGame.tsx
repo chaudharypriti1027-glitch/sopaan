@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { Button } from '../components';
 import { Text } from '../components/Text';
 import { STORY_ROUNDS } from './banks';
 import { GAMES_UI } from './gamesTheme';

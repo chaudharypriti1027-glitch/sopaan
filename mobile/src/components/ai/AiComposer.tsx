@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Camera, ImagePlus, Mic, Send } from 'lucide-react-native';
 import { scalableTextProps } from '../../a11y/textProps';
+import { GlassSurface } from '../GlassSurface';
 import { useTheme } from '../../theme';
 import { AI_UI } from './aiTheme';
 
@@ -38,50 +39,52 @@ export function AiComposer({
 
   return (
     <View style={styles.wrap}>
-      <View style={styles.bar}>
-        <IconBtn onPress={onCamera} accessibilityLabel={cameraA11y}>
-          <Camera size={18} color={AI_UI.primaryMuted} strokeWidth={1.8} />
-        </IconBtn>
-        <IconBtn onPress={onGallery} accessibilityLabel={galleryA11y}>
-          <ImagePlus size={18} color={AI_UI.primaryMuted} strokeWidth={1.8} />
-        </IconBtn>
+      <View style={styles.shadowWrap}>
+        <GlassSurface tone="light" intensity={50} borderRadius={16} style={styles.bar}>
+          <IconBtn onPress={onCamera} accessibilityLabel={cameraA11y}>
+            <Camera size={18} color={AI_UI.primaryMuted} strokeWidth={1.8} />
+          </IconBtn>
+          <IconBtn onPress={onGallery} accessibilityLabel={galleryA11y}>
+            <ImagePlus size={18} color={AI_UI.primaryMuted} strokeWidth={1.8} />
+          </IconBtn>
 
-        <TextInput
-          testID="ask-ai-input"
-          style={styles.input}
-          placeholder={placeholder}
-          placeholderTextColor={AI_UI.sub}
-          accessibilityLabel={placeholder}
-          value={value}
-          onChangeText={onChangeText}
-          multiline
-          maxLength={2000}
-          editable={!disabled}
-          {...scalableTextProps}
-        />
+          <TextInput
+            testID="ask-ai-input"
+            style={styles.input}
+            placeholder={placeholder}
+            placeholderTextColor={AI_UI.sub}
+            accessibilityLabel={placeholder}
+            value={value}
+            onChangeText={onChangeText}
+            multiline
+            maxLength={2000}
+            editable={!disabled}
+            {...scalableTextProps}
+          />
 
-        {canSend ? (
-          <Pressable
-            testID="ask-ai-send"
-            accessibilityRole="button"
-            accessibilityLabel={sendA11y}
-            onPress={onSend}
-            style={({ pressed }) => [pressed && styles.pressed]}
-          >
-            <LinearGradient
-              colors={[AI_UI.primary, AI_UI.gradientEnd]}
-              start={{ x: 0.15, y: 0 }}
-              end={{ x: 0.9, y: 1 }}
-              style={styles.sendBtn}
+          {canSend ? (
+            <Pressable
+              testID="ask-ai-send"
+              accessibilityRole="button"
+              accessibilityLabel={sendA11y}
+              onPress={onSend}
+              style={({ pressed }) => [pressed && styles.pressed]}
             >
-              <Send size={15} color="#FFFFFF" strokeWidth={2.2} />
-            </LinearGradient>
-          </Pressable>
-        ) : (
-          <View style={styles.micBtn}>
-            <Mic size={18} color={AI_UI.primaryMuted} strokeWidth={1.8} />
-          </View>
-        )}
+              <LinearGradient
+                colors={[AI_UI.primary, AI_UI.gradientEnd]}
+                start={{ x: 0.15, y: 0 }}
+                end={{ x: 0.9, y: 1 }}
+                style={styles.sendBtn}
+              >
+                <Send size={15} color="#FFFFFF" strokeWidth={2.2} />
+              </LinearGradient>
+            </Pressable>
+          ) : (
+            <View style={styles.micBtn}>
+              <Mic size={18} color={AI_UI.primaryMuted} strokeWidth={1.8} />
+            </View>
+          )}
+        </GlassSurface>
       </View>
     </View>
   );
@@ -129,21 +132,20 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       paddingBottom: theme.spacing.xl,
       backgroundColor: 'transparent',
     },
+    shadowWrap: {
+      borderRadius: 16,
+      shadowColor: AI_UI.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.08,
+      shadowRadius: 24,
+      elevation: 4,
+    },
     bar: {
       flexDirection: 'row',
       alignItems: 'flex-end',
       gap: 2,
       paddingHorizontal: 8,
       paddingVertical: 8,
-      borderRadius: 16,
-      backgroundColor: AI_UI.card,
-      borderWidth: 1.5,
-      borderColor: AI_UI.borderStrong,
-      shadowColor: AI_UI.primary,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.08,
-      shadowRadius: 24,
-      elevation: 4,
     },
     input: {
       flex: 1,

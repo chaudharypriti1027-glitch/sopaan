@@ -3,7 +3,6 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Bell, BellOff } from 'lucide-react-native';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   Pressable,
   RefreshControl,
   StyleSheet,
@@ -11,9 +10,9 @@ import {
   View,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { Card, DateChip, Screen, SectionTitle } from '../../components';
+import { Card, DateChip, QueryStateView, Screen, SectionTitle } from '../../components';
 import { listReminderKeys, toggleReminder } from '../../calendar/reminders';
-import { useExamCalendar } from '../../hooks';
+import { useExamCalendar, useNetworkStatus } from '../../hooks';
 import type { ExamCalendarEntry } from '../../api/types';
 import type { MainStackParamList } from '../../navigation/types';
 import { useTheme } from '../../theme';
@@ -83,6 +82,7 @@ export function ExamCalendarScreen() {
   const { t } = useTranslation('app');
   const styles = useMemo(() => createStyles(theme), [theme]);
 
+  const { isOffline } = useNetworkStatus();
   const calendarQuery = useExamCalendar({ limit: 50 });
   const [reminderKeys, setReminderKeys] = useState<string[]>([]);
 
@@ -139,10 +139,15 @@ export function ExamCalendarScreen() {
     >
       <SectionTitle title={t('examCalendar.title')} subtitle={t('examCalendar.subtitle')} />
 
-      {calendarQuery.isLoading ? (
-        <ActivityIndicator color={theme.colors.brand.primary} />
-      ) : (
-        GROUP_ORDER.map((group) => {
+      <QueryStateView
+        isLoading={calendarQuery.isLoading}
+        isError={calendarQuery.isError}
+        isFetching={calendarQuery.isFetching}
+        isOffline={isOffline}
+        hasData={(calendarQuery.data?.items.length ?? 0) > 0}
+        onRetry={() => void calendarQuery.refetch()}
+      >
+        {GROUP_ORDER.map((group) => {
           const items = grouped[group];
           if (!items.length) return null;
 
@@ -167,8 +172,8 @@ export function ExamCalendarScreen() {
               </Card>
             </View>
           );
-        })
-      )}
+        })}
+      </QueryStateView>
     </Screen>
   );
 }

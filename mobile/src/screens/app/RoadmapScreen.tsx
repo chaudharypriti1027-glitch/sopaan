@@ -1,9 +1,10 @@
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { Compass } from 'lucide-react-native';
 import { useMemo } from 'react';
 import {
   Card,
   MilestoneNode,
-  ProgressBar,
+  PremiumHeroCard,
   RankRing,
   Screen,
   SectionTitle,
@@ -42,20 +43,25 @@ export function RoadmapScreen() {
         subtitle={`${roadmap.examName} · Target ${roadmap.targetYear}`}
       />
 
-      <Card style={styles.hero}>
-        <RankRing
-          value={roadmap.overallProgress ?? 0}
-          max={100}
-          label="Progress"
-          size={110}
-          variant="teal"
-        />
-        <View style={styles.heroText}>
-          <Text style={styles.currentLabel}>Current stage</Text>
-          <Text style={styles.currentStage}>{roadmap.currentStage}</Text>
-          <ProgressBar value={roadmap.overallProgress ?? 0} variant="primary" showValue />
+      <PremiumHeroCard
+        icon={<Compass size={24} color="#FFFFFF" strokeWidth={1.8} />}
+        eyebrow="Current stage"
+        title={roadmap.currentStage ?? 'In progress'}
+        stats={[{ label: 'Overall progress', value: `${roadmap.overallProgress ?? 0}%` }]}
+      >
+        <View style={styles.heroRingWrap}>
+          <RankRing
+            value={roadmap.overallProgress ?? 0}
+            max={100}
+            label="Progress"
+            size={100}
+            variant="teal"
+            trackColor="rgba(255,255,255,0.15)"
+            accentColor="#F4D58D"
+            labelColor="rgba(255,255,255,0.6)"
+          />
         </View>
-      </Card>
+      </PremiumHeroCard>
 
       <SectionTitle title="Milestone journey" />
       <Card style={styles.journey}>
@@ -98,17 +104,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     content: { gap: theme.spacing.lg, paddingBottom: theme.spacing['3xl'] },
     centered: { alignItems: 'center', justifyContent: 'center', padding: theme.spacing.xl },
     empty: { ...theme.typography.presets.body, color: theme.colors.text.secondary, textAlign: 'center' },
-    hero: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.lg },
-    heroText: { flex: 1, gap: theme.spacing.sm },
-    currentLabel: {
-      ...theme.typography.presets.label,
-      color: theme.colors.text.tertiary,
-      textTransform: 'uppercase',
-    },
-    currentStage: {
-      ...theme.typography.presets.h3,
-      color: theme.colors.text.primary,
-    },
+    heroRingWrap: { alignItems: 'center', zIndex: 1 },
     journey: { gap: theme.spacing.sm },
     section: { gap: theme.spacing.md },
     dates: { gap: theme.spacing.md },

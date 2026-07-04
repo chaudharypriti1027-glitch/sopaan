@@ -9,7 +9,6 @@ import {
 } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { useQueryClient } from '@tanstack/react-query';
-import { useAuth } from '../auth';
 import { useAuthStore } from '../store/auth';
 import { useProfile, useUpdateProfile } from '../hooks/useProfile';
 import { useUpdateMe } from '../hooks/useMe';
@@ -35,7 +34,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const updateProfile = useUpdateProfile();
   const updateMe = useUpdateMe();
-  const { isAuthenticated } = useAuth();
+  const isAuthenticated = useAuthStore((state) => state.status === 'authed');
   const { data: profileData } = useProfile();
   const authProfileLanguage = useAuthStore((state) => state.profile?.language);
   const { theme } = useTheme();

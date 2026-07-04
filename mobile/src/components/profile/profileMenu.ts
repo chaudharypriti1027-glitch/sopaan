@@ -33,7 +33,7 @@ function languageMeta(profile: Profile): ProfileMenuItem['metaKey'] {
 }
 
 export function buildProfileMenuSections(profile: Profile): ProfileMenuSection[] {
-  return [
+  const sections: ProfileMenuSection[] = [
     {
       id: 'learning',
       titleKey: 'learning',
@@ -115,6 +115,8 @@ export function buildProfileMenuSections(profile: Profile): ProfileMenuSection[]
       ],
     },
   ];
+
+  return sections;
 }
 
 export function formatProfileSummaryCount(value: number | undefined) {

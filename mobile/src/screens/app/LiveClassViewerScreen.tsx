@@ -5,12 +5,11 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Pressable,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
-import { Card, Pill, Screen, SectionTitle } from '../../components';
+import { BackButton, Card, Pill, Screen, SectionTitle } from '../../components';
 import { LiveClassChatPanel } from '../../components/live/LiveClassChatPanel';
 import { LiveClassComingSoon } from '../../components/live/LiveClassComingSoon';
 import { LiveClassReactionsBar } from '../../components/live/LiveClassReactionsBar';
@@ -58,9 +57,7 @@ export function LiveClassViewerScreen() {
     return (
       <Screen scroll={false} padded={false} style={styles.screen}>
         <View style={styles.header}>
-          <Pressable onPress={() => navigation.goBack()} hitSlop={12}>
-            <Text style={styles.back}>← Back</Text>
-          </Pressable>
+          <BackButton onPress={() => navigation.goBack()} />
           <Text style={styles.title} numberOfLines={2}>
             {liveClass?.title ?? 'Live class'}
           </Text>
@@ -73,9 +70,7 @@ export function LiveClassViewerScreen() {
   return (
     <Screen scroll={false} padded={false} style={styles.screen}>
       <View style={styles.header}>
-        <Pressable onPress={() => navigation.goBack()} hitSlop={12}>
-          <Text style={styles.back}>← Back</Text>
-        </Pressable>
+        <BackButton onPress={() => navigation.goBack()} />
         <View style={styles.headerMeta}>
           <Pill label="LIVE" variant="coral" />
           <View style={styles.viewers}>

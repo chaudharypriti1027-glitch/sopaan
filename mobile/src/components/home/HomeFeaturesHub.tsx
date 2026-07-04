@@ -2,19 +2,23 @@ import { Crown } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { GlassSurface } from '../GlassSurface';
+import { PremiumIcon } from '../premium/PremiumIcon';
 import { SegTabs } from '../SegTabs';
 import { Text } from '../Text';
 import { useProGate } from '../../hooks/useProGate';
 import {
   HOME_FEATURE_SECTION_KEYS,
   HOME_FEATURE_SECTIONS,
-  HOME_FEATURE_TONE_COLORS,
   type HomeFeatureLink,
   type HomeFeatureSectionKey,
 } from '../../navigation/homeFeatureConfig';
+import { toneForText } from '../../utils/iconTone';
 import { useTheme } from '../../theme';
 import type { HomeFeed } from '../../types/home';
+import { featureLinkPremiumTone } from './homeIconTone';
 import { resolveHomeIcon } from './homeUtils';
+import { homeNavShadow } from './homeStyles';
 import { HOME_UI } from './homeTheme';
 
 const GRID_COLUMNS = 5;
@@ -71,25 +75,25 @@ export function HomeFeaturesHub({
   };
 
   return (
-    <View style={styles.wrap} testID="home-section-features">
+    <View style={styles.wrap}>
       {!isPro ? (
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => openPaywall()}
-          style={({ pressed }) => [styles.proStrip, pressed && styles.pressed]}
-          testID="home-explore-premium"
-        >
-          <View style={styles.proIcon}>
-            <Crown size={14} color={HOME_UI.goldDeep} strokeWidth={2.2} />
-          </View>
-          <View style={styles.proCopy}>
-            <Text style={styles.proTitle}>{t('app:home.premiumStripTitle')}</Text>
-            <Text style={styles.proSubtitle} numberOfLines={1}>
-              {t('app:home.premiumStripSubtitle')}
-            </Text>
-          </View>
-          <Text style={styles.proCta}>{t('app:home.premiumStripCta')}</Text>
-        </Pressable>
+        <GlassSurface tone="gold" intensity={40} borderRadius={14} style={styles.proStripGlass}>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => openPaywall()}
+            style={({ pressed }) => [styles.proStrip, pressed && styles.pressed]}
+            testID="home-explore-premium"
+          >
+            <PremiumIcon Icon={Crown} tone="gold" size="sm" filled />
+            <View style={styles.proCopy}>
+              <Text style={styles.proTitle}>{t('app:home.premiumStripTitle')}</Text>
+              <Text style={styles.proSubtitle} numberOfLines={1}>
+                {t('app:home.premiumStripSubtitle')}
+              </Text>
+            </View>
+            <Text style={styles.proCta}>{t('app:home.premiumStripCta')}</Text>
+          </Pressable>
+        </GlassSurface>
       ) : null}
 
       {quickActions.length > 0 ? (
@@ -101,62 +105,72 @@ export function HomeFeaturesHub({
         >
           {quickActions.map((action) => {
             const Icon = resolveHomeIcon(action.icon);
+            const tone = toneForText(action.key);
             return (
-              <Pressable
+              <GlassSurface
                 key={action.key}
-                accessibilityRole="button"
-                onPress={() => onShortcutPress(action.deeplink)}
-                style={({ pressed }) => [styles.shortcut, pressed && styles.pressed]}
+                tone="light"
+                intensity={48}
+                borderRadius={999}
+                style={styles.shortcutGlass}
               >
-                <Icon size={16} color={HOME_UI.accent} strokeWidth={2} />
-                <Text style={styles.shortcutLabel} numberOfLines={1}>
-                  {action.label}
-                </Text>
-              </Pressable>
+                <Pressable
+                  accessibilityRole="button"
+                  onPress={() => onShortcutPress(action.deeplink)}
+                  style={({ pressed }) => [styles.shortcut, pressed && styles.pressed]}
+                >
+                  <PremiumIcon Icon={Icon} tone={tone} size="sm" filled />
+                  <Text style={styles.shortcutLabel} numberOfLines={1}>
+                    {action.label}
+                  </Text>
+                </Pressable>
+              </GlassSurface>
             );
           })}
         </ScrollView>
       ) : null}
 
-      <View style={styles.card}>
-        <SegTabs
-          options={tabOptions}
-          value={activeSection}
-          onChange={setActiveSection}
-          style={styles.tabs}
-        />
+      <GlassSurface tone="light" intensity={52} borderRadius={22} style={[styles.cardGlass, homeNavShadow(theme)]}>
+        <View style={styles.cardInner}>
+          <SegTabs
+            options={tabOptions}
+            value={activeSection}
+            onChange={setActiveSection}
+            style={styles.tabs}
+          />
 
-        <View style={styles.grid}>
-          {section?.links.map((link) => {
-            const Icon = link.icon;
-            const colors = HOME_FEATURE_TONE_COLORS[link.tone];
-            const label = t(`navigation:${link.labelKey}`);
-            const showPro = !isPro && link.proHighlight;
+          <View style={styles.grid}>
+            {section?.links.map((link) => {
+              const Icon = link.icon;
+              const iconTone = featureLinkPremiumTone(link.tone);
+              const label = t(`navigation:${link.labelKey}`);
+              const showPro = !isPro && link.proHighlight;
 
-            return (
-              <Pressable
-                key={`${activeSection}-${link.route}`}
-                accessibilityRole="button"
-                accessibilityLabel={label}
-                onPress={() => handleFeatureTap(link)}
-                style={({ pressed }) => [styles.tile, { width: tileWidth }, pressed && styles.pressed]}
-              >
-                <View style={[styles.iconWrap, { backgroundColor: colors.bg }]}>
-                  <Icon size={17} color={colors.fg} strokeWidth={2} />
-                  {showPro ? (
-                    <View style={styles.proBadge}>
-                      <Crown size={8} color={HOME_UI.goldDeep} strokeWidth={2.5} />
-                    </View>
-                  ) : null}
-                </View>
-                <Text style={styles.tileLabel} numberOfLines={2}>
-                  {label}
-                </Text>
-              </Pressable>
-            );
-          })}
+              return (
+                <Pressable
+                  key={`${activeSection}-${link.route}`}
+                  accessibilityRole="button"
+                  accessibilityLabel={label}
+                  onPress={() => handleFeatureTap(link)}
+                  style={({ pressed }) => [styles.tile, { width: tileWidth }, pressed && styles.pressed]}
+                >
+                  <View style={styles.iconWrap}>
+                    <PremiumIcon Icon={Icon} tone={iconTone} size="sm" filled />
+                    {showPro ? (
+                      <View style={styles.proBadge}>
+                        <Crown size={8} color={HOME_UI.goldDeep} strokeWidth={2.5} />
+                      </View>
+                    ) : null}
+                  </View>
+                  <Text style={styles.tileLabel} numberOfLines={2}>
+                    {label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
         </View>
-      </View>
+      </GlassSurface>
     </View>
   );
 }
@@ -165,6 +179,9 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
     wrap: {
       gap: 8,
+    },
+    proStripGlass: {
+      overflow: 'hidden',
     },
     proStrip: {
       flexDirection: 'row',
@@ -176,14 +193,6 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       borderColor: '#EADFC4',
       paddingHorizontal: 12,
       paddingVertical: 10,
-    },
-    proIcon: {
-      width: 28,
-      height: 28,
-      borderRadius: 9,
-      backgroundColor: '#FFFFFF',
-      alignItems: 'center',
-      justifyContent: 'center',
     },
     proCopy: {
       flex: 1,
@@ -211,14 +220,13 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       gap: 8,
       paddingVertical: 2,
     },
+    shortcutGlass: {
+      overflow: 'hidden',
+    },
     shortcut: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 6,
-      backgroundColor: HOME_UI.surface,
-      borderRadius: 999,
-      borderWidth: 1,
-      borderColor: HOME_UI.border,
       paddingHorizontal: 12,
       paddingVertical: 8,
     },
@@ -229,18 +237,12 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       color: HOME_UI.ink,
       maxWidth: 96,
     },
-    card: {
-      backgroundColor: HOME_UI.surface,
-      borderRadius: 22,
-      borderWidth: 1,
-      borderColor: HOME_UI.border,
+    cardGlass: {
+      overflow: 'hidden',
+    },
+    cardInner: {
       padding: CARD_PAD,
       gap: 10,
-      shadowColor: HOME_UI.shadow,
-      shadowOffset: { width: 0, height: 6 },
-      shadowOpacity: 0.08,
-      shadowRadius: 16,
-      elevation: 2,
     },
     tabs: {
       marginBottom: 2,
@@ -256,11 +258,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       paddingVertical: 4,
     },
     iconWrap: {
-      width: 34,
-      height: 34,
-      borderRadius: 11,
-      alignItems: 'center',
-      justifyContent: 'center',
+      position: 'relative',
     },
     proBadge: {
       position: 'absolute',
@@ -276,13 +274,13 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       justifyContent: 'center',
     },
     tileLabel: {
-      fontSize: 9,
-      lineHeight: 11,
+      fontSize: 10,
+      lineHeight: 12,
       textAlign: 'center',
       fontFamily: theme.typography.fonts.ui.semibold,
       fontWeight: '600',
-      color: HOME_UI.muted,
-      minHeight: 22,
+      color: HOME_UI.ink,
+      minHeight: 24,
     },
     pressed: {
       opacity: 0.88,

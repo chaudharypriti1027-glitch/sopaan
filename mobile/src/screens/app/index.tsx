@@ -34,8 +34,6 @@ import { SettingsScreen } from './SettingsScreen';
 import { PrivacyPolicyScreen } from './PrivacyPolicyScreen';
 import { DeleteAccountScreen } from './DeleteAccountScreen';
 import { NotesScreen } from './NotesScreen';
-import { AdminDashboardScreen } from './AdminDashboardScreen';
-import { AdminContentScreen } from './AdminContentScreen';
 import { StudyPlannerScreen } from './StudyPlannerScreen';
 import { FlashcardsScreen } from './FlashcardsScreen';
 import { FocusTimerScreen } from './FocusTimerScreen';
@@ -79,8 +77,6 @@ export {
   PrivacyPolicyScreen,
   DeleteAccountScreen,
   NotesScreen,
-  AdminDashboardScreen,
-  AdminContentScreen,
 };
 export { QuizScreen, ResultScreen };
 export { NotificationsScreen };

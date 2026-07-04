@@ -22,7 +22,7 @@ export function GoalDots({ done, total, variant = 'default' }: GoalDotsProps) {
           return (
             <LinearGradient
               key={index}
-              colors={variant === 'hero' ? ['#E3C97F', '#C29A4E'] : ['#5F8A7B', '#4C7264']}
+              colors={variant === 'hero' ? ['#6C9A8A', '#5F8A7B'] : ['#5F8A7B', '#4C7264']}
               start={{ x: 0, y: 0.5 }}
               end={{ x: 1, y: 0.5 }}
               style={[styles.dot, styles.dotFilled]}

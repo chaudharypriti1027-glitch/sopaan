@@ -15,6 +15,8 @@ import { profileToUser, userFromProfile } from './profileToUser';
 import { getAuthStore, useAuthStore } from '../store/auth';
 import type { Profile } from '../types/auth';
 import type { User } from '../api/types';
+import { isAdminAppAccessError, openAdminConsole } from './adminPortal';
+import { triggerSessionExpiredDialog } from '../components/premium/sessionExpiredDialog';
 import {
   clearReferralAttribution,
   consumeReferralAttribution,
@@ -72,6 +74,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       void (async () => {
         await getAuthStore().signOut();
         queryClient.clear();
+        triggerSessionExpiredDialog();
       })();
     });
   }, [queryClient]);
@@ -80,7 +83,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
     async (input: SignupInput) => {
       const attribution = await consumeReferralAttribution();
       const session = await authApi.signup({ ...input, ...attribution });
-      await setSession(normalizeAuthResult(session));
+      try {
+        await setSession(normalizeAuthResult(session));
+      } catch (error) {
+        if (isAdminAppAccessError(error)) {
+          openAdminConsole(error.adminConsoleUrl);
+          throw error;
+        }
+        throw error;
+      }
       await clearReferralAttribution();
     },
     [setSession],
@@ -89,7 +100,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const login = useCallback(
     async (input: LoginInput) => {
       const session = await authApi.login(input);
-      await setSession(normalizeAuthResult(session));
+      try {
+        await setSession(normalizeAuthResult(session));
+      } catch (error) {
+        if (isAdminAppAccessError(error)) {
+          openAdminConsole(error.adminConsoleUrl);
+          throw error;
+        }
+        throw error;
+      }
     },
     [setSession],
   );
@@ -102,7 +121,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
     async (input: OtpVerifyInput) => {
       const attribution = await consumeReferralAttribution();
       const session = await authApi.verifyOtp({ ...input, ...attribution });
-      await setSession(normalizeAuthResult(session));
+      try {
+        await setSession(normalizeAuthResult(session));
+      } catch (error) {
+        if (isAdminAppAccessError(error)) {
+          openAdminConsole(error.adminConsoleUrl);
+          throw error;
+        }
+        throw error;
+      }
       await clearReferralAttribution();
     },
     [setSession],

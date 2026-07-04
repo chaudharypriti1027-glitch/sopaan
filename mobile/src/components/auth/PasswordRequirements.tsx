@@ -14,20 +14,39 @@ export function PasswordRequirements({ password }: PasswordRequirementsProps) {
   const { t } = useTranslation('auth');
   const styles = useMemo(() => createStyles(), []);
 
+  if (!password) {
+    return null;
+  }
+
+  const metCount = PASSWORD_RULES.filter((rule) => rule.test(password)).length;
+  const allMet = metCount === PASSWORD_RULES.length;
+
   return (
     <View style={styles.root} accessibilityRole="text">
-      <Text style={styles.title}>{t('passwordRules.title')}</Text>
-      {PASSWORD_RULES.map((rule) => {
-        const met = rule.test(password);
-        return (
-          <View key={rule.id} style={styles.row}>
-            <View style={[styles.dot, met && styles.dotMet]}>
-              {met ? <Check size={10} color="#FFFFFF" strokeWidth={3} /> : null}
-            </View>
-            <Text style={[styles.label, met && styles.labelMet]}>{t(rule.labelKey)}</Text>
+      {!allMet ? (
+        <View style={styles.grid}>
+          {PASSWORD_RULES.map((rule) => {
+            const met = rule.test(password);
+            return (
+              <View key={rule.id} style={styles.row}>
+                <View style={[styles.dot, met && styles.dotMet]}>
+                  {met ? <Check size={9} color="#FFFFFF" strokeWidth={3} /> : null}
+                </View>
+                <Text style={[styles.label, met && styles.labelMet]} numberOfLines={1}>
+                  {t(rule.labelKey)}
+                </Text>
+              </View>
+            );
+          })}
+        </View>
+      ) : (
+        <View style={styles.successRow}>
+          <View style={[styles.dot, styles.dotMet]}>
+            <Check size={9} color="#FFFFFF" strokeWidth={3} />
           </View>
-        );
-      })}
+          <Text style={styles.labelMet}>{t('passwordRules.allMet')}</Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -35,48 +54,55 @@ export function PasswordRequirements({ password }: PasswordRequirementsProps) {
 function createStyles() {
   return StyleSheet.create({
     root: {
-      gap: 6,
-      marginTop: 4,
-      marginBottom: 8,
-      padding: 12,
-      borderRadius: 14,
+      marginTop: 2,
+      marginBottom: 10,
+      padding: 10,
+      borderRadius: 12,
       backgroundColor: AUTH_UI.bg,
       borderWidth: 1,
       borderColor: AUTH_UI.border,
     },
-    title: {
-      fontSize: 11,
-      fontWeight: '700',
-      color: AUTH_UI.muted,
-      marginBottom: 2,
+    grid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      rowGap: 6,
+      columnGap: 10,
     },
     row: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 8,
+      gap: 6,
+      width: '47%',
+    },
+    successRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
     },
     dot: {
-      width: 18,
-      height: 18,
-      borderRadius: 9,
+      width: 16,
+      height: 16,
+      borderRadius: 8,
       borderWidth: 1.5,
       borderColor: AUTH_UI.border,
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: '#FFFFFF',
+      flexShrink: 0,
     },
     dotMet: {
       borderColor: AUTH_UI.sage,
       backgroundColor: AUTH_UI.sage,
     },
     label: {
-      fontSize: 12,
+      fontSize: 11,
       color: AUTH_UI.muted,
-      flex: 1,
+      flexShrink: 1,
     },
     labelMet: {
+      fontSize: 11,
       color: AUTH_UI.sageDeep,
-      fontWeight: '600',
+      fontWeight: '700',
     },
   });
 }

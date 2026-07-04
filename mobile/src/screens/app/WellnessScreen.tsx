@@ -1,14 +1,15 @@
 import { Pause, Play } from 'lucide-react-native';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Card, Pill, Screen, SectionTitle, TimerRing } from '../../components';
-import { useWellnessSessions } from '../../hooks';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Card, Pill, QueryStateView, Screen, SectionTitle, TimerRing } from '../../components';
+import { useNetworkStatus, useWellnessSessions } from '../../hooks';
 import type { WellnessSession } from '../../api/wellness';
 import { useTheme } from '../../theme';
 
 export function WellnessScreen() {
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
+  const { isOffline } = useNetworkStatus();
   const sessionsQuery = useWellnessSessions();
 
   const [active, setActive] = useState<WellnessSession | null>(null);
@@ -43,6 +44,10 @@ export function WellnessScreen() {
       }
     }, 500);
     return clearTimer;
+    // `remainingSec` is intentionally excluded — it's read once to seed
+    // `endAtRef` and updated by the interval itself; including it would
+    // restart the countdown on every tick.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [playing, active]);
 
   const startSession = (session: WellnessSession) => {
@@ -83,9 +88,14 @@ export function WellnessScreen() {
         </Card>
       ) : null}
 
-      {sessionsQuery.isLoading ? (
-        <ActivityIndicator color={theme.colors.brand.primary} />
-      ) : (
+      <QueryStateView
+        isLoading={sessionsQuery.isLoading}
+        isError={sessionsQuery.isError}
+        isFetching={sessionsQuery.isFetching}
+        isOffline={isOffline}
+        hasData={(sessionsQuery.data?.items.length ?? 0) > 0}
+        onRetry={() => void sessionsQuery.refetch()}
+      >
         <View style={styles.list}>
           {(sessionsQuery.data?.items ?? []).map((session) => (
             <Card key={session.id} style={styles.sessionCard}>
@@ -102,7 +112,7 @@ export function WellnessScreen() {
             </Card>
           ))}
         </View>
-      )}
+      </QueryStateView>
     </Screen>
   );
 }

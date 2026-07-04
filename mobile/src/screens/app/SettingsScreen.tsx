@@ -14,13 +14,14 @@ import {
   Trash2,
   User,
   Volume2,
+  type LucideIcon,
 } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
-  Alert,
   Linking,
+  Platform,
   Pressable,
   Share,
   StyleSheet,
@@ -31,6 +32,8 @@ import {
 import { useTranslation } from 'react-i18next';
 import * as FileSystem from 'expo-file-system';
 import { Button, Card, ChipSelect, Screen, SectionTitle } from '../../components';
+import { usePremiumDialog } from '../../components/premium/PremiumDialogProvider';
+import { MENU_TONE_STYLES } from '../../components/premium/premiumIconTokens';
 import { parseApiError, privacyApi } from '../../api';
 import { useAuth } from '../../auth';
 import { CAREER_GOALS, getTargetYearOptions } from '../../auth/onboardingData';
@@ -62,18 +65,34 @@ import {
 
 type SettingsNav = NativeStackNavigationProp<MainStackParamList, 'Settings'>;
 
+type MenuTone = keyof typeof MENU_TONE_STYLES;
+
 type SettingsRowProps = {
-  icon: React.ReactNode;
+  icon: LucideIcon;
+  tone?: MenuTone;
+  danger?: boolean;
   label: string;
   description?: string;
   value?: string;
   onPress?: () => void;
-  trailing?: React.ReactNode;
+  trailing?: ReactNode;
 };
 
-function SettingsRow({ icon, label, description, value, onPress, trailing }: SettingsRowProps) {
+function SettingsRow({
+  icon: Icon,
+  tone = 'indigo',
+  danger = false,
+  label,
+  description,
+  value,
+  onPress,
+  trailing,
+}: SettingsRowProps) {
   const { theme } = useTheme();
   const styles = useMemo(() => createRowStyles(theme), [theme]);
+  const palette = MENU_TONE_STYLES[tone];
+  const iconBg = danger ? theme.colors.semantic.errorMuted : palette.bg;
+  const iconFg = danger ? theme.colors.semantic.error : palette.fg;
 
   return (
     <Pressable
@@ -83,7 +102,9 @@ function SettingsRow({ icon, label, description, value, onPress, trailing }: Set
       disabled={!onPress && !trailing}
       style={styles.row}
     >
-      <View style={styles.iconWrap}>{icon}</View>
+      <View style={[styles.iconWrap, { backgroundColor: iconBg }]}>
+        <Icon size={18} color={iconFg} strokeWidth={1.9} />
+      </View>
       <View style={styles.textWrap}>
         <Text style={styles.label}>{label}</Text>
         {description ? <Text style={styles.description}>{description}</Text> : null}
@@ -142,6 +163,8 @@ export function SettingsScreen() {
   const { language, setLanguage } = useLanguage();
   const { t } = useTranslation(['settings', 'common']);
   const styles = useMemo(() => createStyles(theme), [theme]);
+
+  const { confirm, alert, show } = usePremiumDialog();
 
   const profileQuery = useProfile();
   const updateGoal = useUpdateGoal();
@@ -203,14 +226,48 @@ export function SettingsScreen() {
 
   const handlePushToggle = async (enabled: boolean) => {
     if (enabled && !isPushNotificationsSupported()) {
-      Alert.alert(t('settings:devBuildRequired'), pushUnavailableReason() ?? t('settings:pushDevBuild'));
+      alert({
+        title: t('settings:devBuildRequired'),
+        message: pushUnavailableReason() ?? t('settings:pushDevBuild'),
+        icon: 'bell',
+        iconTone: 'navy',
+        confirmLabel: t('common:premiumDialog.gotIt'),
+      });
       return;
     }
 
     if (enabled) {
       const ok = await enablePushNotifications();
       if (!ok) {
-        Alert.alert(t('settings:notificationsBlocked'), t('settings:notificationsBlockedBody'));
+        show({
+          title: t('common:premiumDialog.notificationsPermissionTitle'),
+          message: t('settings:notificationsBlockedBody'),
+          icon: 'bell',
+          iconTone: 'sage',
+          testID: 'premium-notifications-permission-dialog',
+          actions: [
+            {
+              label: t('common:premiumDialog.notNow'),
+              variant: 'ghost',
+            },
+            ...(Platform.OS !== 'web'
+              ? [
+                  {
+                    label: t('common:premiumDialog.openSettings'),
+                    variant: 'gold' as const,
+                    onPress: () => {
+                      void Linking.openSettings();
+                    },
+                  },
+                ]
+              : [
+                  {
+                    label: t('common:premiumDialog.gotIt'),
+                    variant: 'gold' as const,
+                  },
+                ]),
+          ],
+        });
         return;
       }
     } else {
@@ -227,7 +284,12 @@ export function SettingsScreen() {
     try {
       await patchNotificationPrefs({ types: { [key]: enabled } });
     } catch (err) {
-      Alert.alert(t('settings:notificationPrefFailed'), String(err));
+      alert({
+        title: t('settings:notificationPrefFailed'),
+        message: String(err),
+        icon: 'info',
+        iconTone: 'coral',
+      });
     }
   };
 
@@ -235,7 +297,12 @@ export function SettingsScreen() {
     try {
       await patchNotificationPrefs({ quietHours: { enabled } });
     } catch (err) {
-      Alert.alert(t('settings:quietHoursFailed'), String(err));
+      alert({
+        title: t('settings:quietHoursFailed'),
+        message: String(err),
+        icon: 'info',
+        iconTone: 'coral',
+      });
     }
   };
 
@@ -244,7 +311,12 @@ export function SettingsScreen() {
       await privacyApi.updateMarketingConsent(enabled);
       setMarketingConsent(enabled);
     } catch (err) {
-      Alert.alert(t('settings:marketingFailed'), parseApiError(err).message);
+      alert({
+        title: t('settings:marketingFailed'),
+        message: parseApiError(err).message,
+        icon: 'shield',
+        iconTone: 'navy',
+      });
     }
   };
 
@@ -260,23 +332,28 @@ export function SettingsScreen() {
         url: path,
       });
     } catch (err) {
-      Alert.alert(t('settings:exportFailed'), parseApiError(err).message);
+      alert({
+        title: t('settings:exportFailed'),
+        message: parseApiError(err).message,
+        icon: 'info',
+        iconTone: 'coral',
+      });
     } finally {
       setExporting(false);
     }
   };
 
   const handleLogout = () => {
-    Alert.alert(t('settings:logoutTitle'), t('settings:logoutBody'), [
-      { text: t('common:cancel'), style: 'cancel' },
-      {
-        text: t('settings:logout'),
-        style: 'destructive',
-        onPress: () => {
-          void logout();
-        },
+    confirm({
+      title: t('settings:logoutConfirm'),
+      message: t('settings:logoutBody'),
+      confirmLabel: t('settings:logout'),
+      icon: 'logout',
+      tone: 'danger',
+      onConfirm: () => {
+        void logout();
       },
-    ]);
+    });
   };
 
   const handleSaveGoal = () => {
@@ -285,9 +362,20 @@ export function SettingsScreen() {
       {
         onSuccess: () => {
           setShowGoalPicker(false);
-          Alert.alert(t('settings:goalUpdated'), t('settings:goalUpdatedBody', { track: selectedTrack }));
+          alert({
+            title: t('settings:goalUpdated'),
+            message: t('settings:goalUpdatedBody', { track: selectedTrack }),
+            icon: 'sparkles',
+            iconTone: 'gold',
+          });
         },
-        onError: (err) => Alert.alert(t('settings:goalSaveFailed'), String(err)),
+        onError: (err) =>
+          alert({
+            title: t('settings:goalSaveFailed'),
+            message: String(err),
+            icon: 'info',
+            iconTone: 'coral',
+          }),
       },
     );
   };
@@ -303,17 +391,20 @@ export function SettingsScreen() {
       <Text style={styles.groupLabel}>{t('settings:account')}</Text>
       <Card style={styles.group}>
         <SettingsRow
-          icon={<User size={18} color={theme.colors.brand.primary} />}
+          icon={User}
+          tone="indigo"
           label={t('settings:name')}
           value={user?.name}
         />
         <SettingsRow
-          icon={<User size={18} color={theme.colors.brand.primary} />}
+          icon={User}
+          tone="indigo"
           label={t('settings:emailPhone')}
           value={user?.email ?? user?.phone ?? '—'}
         />
         <SettingsRow
-          icon={<Target size={18} color={theme.colors.brand.primary} />}
+          icon={Target}
+          tone="gold"
           label={t('settings:goal')}
           value={profileQuery.data?.profile.goal?.examTrack ?? t('settings:notSet')}
           onPress={() => setShowGoalPicker((v) => !v)}
@@ -351,7 +442,8 @@ export function SettingsScreen() {
       <Text style={styles.groupLabel}>{t('settings:study')}</Text>
       <Card style={styles.group}>
         <SettingsRow
-          icon={<Languages size={18} color={theme.colors.brand.primary} />}
+          icon={Languages}
+          tone="teal"
           label={t('settings:language')}
           value={LANGUAGE_LABELS[language]}
         />
@@ -373,7 +465,8 @@ export function SettingsScreen() {
           />
         </View>
         <SettingsRow
-          icon={<Volume2 size={18} color={theme.colors.brand.primary} />}
+          icon={Volume2}
+          tone="coral"
           label={t('settings:focusSounds')}
           trailing={
             <Switch
@@ -388,7 +481,8 @@ export function SettingsScreen() {
       <Text style={styles.groupLabel}>{t('settings:notifications')}</Text>
       <Card style={styles.group}>
         <SettingsRow
-          icon={<Bell size={18} color={theme.colors.brand.primary} />}
+          icon={Bell}
+          tone="gold"
           label={t('settings:pushNotifications')}
           description={
             isPushNotificationsSupported()
@@ -405,7 +499,8 @@ export function SettingsScreen() {
           }
         />
         <SettingsRow
-          icon={<Moon size={18} color={theme.colors.brand.primary} />}
+          icon={Moon}
+          tone="indigo"
           label={t('settings:quietHours')}
           description={
             quietHours
@@ -442,20 +537,23 @@ export function SettingsScreen() {
       <Text style={styles.groupLabel}>{t('settings:privacyData')}</Text>
       <Card style={styles.group}>
         <SettingsRow
-          icon={<Shield size={18} color={theme.colors.brand.primary} />}
+          icon={Shield}
+          tone="teal"
           label={t('settings:privacyPolicy')}
           description={t('settings:privacyPolicyDesc')}
           onPress={() => navigation.navigate('PrivacyPolicy')}
         />
         <SettingsRow
-          icon={<Download size={18} color={theme.colors.brand.primary} />}
+          icon={Download}
+          tone="indigo"
           label={t('settings:downloadData')}
           description={t('settings:downloadDataDesc')}
           onPress={() => void handleExportData()}
           trailing={exporting ? <Text style={styles.exportingLabel}>…</Text> : undefined}
         />
         <SettingsRow
-          icon={<Bell size={18} color={theme.colors.brand.primary} />}
+          icon={Bell}
+          tone="gold"
           label={t('settings:marketingEmails')}
           description={t('settings:marketingDesc')}
           trailing={
@@ -467,7 +565,8 @@ export function SettingsScreen() {
           }
         />
         <SettingsRow
-          icon={<Trash2 size={18} color={theme.colors.semantic.error} />}
+          icon={Trash2}
+          danger
           label={t('settings:deleteAccount')}
           description={t('settings:deleteAccountDesc')}
           onPress={() => navigation.navigate('DeleteAccount')}
@@ -477,23 +576,27 @@ export function SettingsScreen() {
       <Text style={styles.groupLabel}>{t('settings:support')}</Text>
       <Card style={styles.group}>
         <SettingsRow
-          icon={<MessageCircle size={18} color={theme.colors.brand.primary} />}
+          icon={MessageCircle}
+          tone="teal"
           label={t('settings:whatsappCommunity')}
           description={t('settings:whatsappCommunityDesc')}
           onPress={() => void Linking.openURL(WHATSAPP_COMMUNITY_URL)}
         />
         <SettingsRow
-          icon={<HelpCircle size={18} color={theme.colors.brand.primary} />}
+          icon={HelpCircle}
+          tone="indigo"
           label={t('settings:helpCentre')}
           onPress={() => void Linking.openURL(HELP_CENTER_URL)}
         />
         <SettingsRow
-          icon={<Headphones size={18} color={theme.colors.brand.primary} />}
+          icon={Headphones}
+          tone="gold"
           label={t('settings:contactSupport')}
           onPress={() => void Linking.openURL(SUPPORT_EMAIL)}
         />
         <SettingsRow
-          icon={<BookOpen size={18} color={theme.colors.brand.primary} />}
+          icon={BookOpen}
+          tone="coral"
           label={t('settings:privacyPolicyWeb')}
           onPress={() => void Linking.openURL(PRIVACY_POLICY_URL)}
         />
@@ -502,14 +605,19 @@ export function SettingsScreen() {
       {__DEV__ && process.env.EXPO_PUBLIC_SENTRY_DSN ? (
         <Card style={styles.group}>
           <SettingsRow
-            icon={<HelpCircle size={18} color={theme.colors.brand.primary} />}
+            icon={HelpCircle}
+            tone="indigo"
             label="Send Sentry test error"
             description="Throws a test error to verify release tags and source maps."
             onPress={() => {
               try {
                 captureSentryTestError();
               } catch {
-                Alert.alert('Sentry test error sent', 'Check your Sentry project for the event.');
+                alert({
+                  title: 'Sentry test error sent',
+                  message: 'Check your Sentry project for the event.',
+                  icon: 'info',
+                });
               }
             }}
           />
@@ -541,7 +649,6 @@ function createRowStyles(theme: ReturnType<typeof useTheme>['theme']) {
       width: 36,
       height: 36,
       borderRadius: theme.radii.md,
-      backgroundColor: theme.colors.brand.primaryMuted,
       alignItems: 'center',
       justifyContent: 'center',
     },

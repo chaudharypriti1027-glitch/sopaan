@@ -25,12 +25,11 @@ import {
 import { Text } from '../components/Text';
 import { authApi, parseApiError } from '../api';
 import { formatOtpError } from '../auth/otpErrors';
-import { normalizeAuthResult } from '../auth/normalizeAuthResult';
+import { completeStudentLogin } from '../auth/studentSession';
 import { routeAfterAuthResult } from '../auth/routeAfterSession';
 import { useResendCountdown } from '../hooks/useResendCountdown';
 import { maskIndianPhone } from '../lib/phone';
 import type { AuthStackParamList, RootStackParamList } from '../navigation/types';
-import { useAuthStore } from '../store/auth';
 
 type OtpNav = CompositeNavigationProp<
   NativeStackNavigationProp<AuthStackParamList, 'Otp'>,
@@ -72,7 +71,6 @@ export function OtpScreen() {
   const navigation = useNavigation<OtpNav>();
   const route = useRoute<OtpRoute>();
   const { phone, privacyConsent } = route.params;
-  const setSession = useAuthStore((state) => state.setSession);
   const reducedMotion = useReducedMotion();
 
   const [code, setCode] = useState('');
@@ -104,8 +102,13 @@ export function OtpScreen() {
         setTimeout(resolve, holdMs);
       });
 
-      await setSession(normalizeAuthResult(result));
-      routeAfterAuthResult(navigation, result);
+      const ok = await completeStudentLogin(navigation, result, {
+        afterSession: (session) => routeAfterAuthResult(navigation, session),
+      });
+      if (!ok) {
+        submittingRef.current = false;
+        return;
+      }
     } catch (err) {
       const parsed = parseApiError(err);
       setError(formatOtpError(parsed));
@@ -114,7 +117,7 @@ export function OtpScreen() {
     } finally {
       setVerifying(false);
     }
-  }, [code, verifying, success, phone, privacyConsent, reducedMotion, setSession, navigation]);
+  }, [code, verifying, success, phone, privacyConsent, reducedMotion, navigation]);
 
   useEffect(() => {
     if (code.length === 6) {

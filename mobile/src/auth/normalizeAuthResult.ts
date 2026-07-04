@@ -16,6 +16,10 @@ function profileFromLegacyUser(user: User): Profile {
     ...(streakCount != null && streakCount > 0 ? { streak: streakCount } : {}),
     rank: null,
     level: 1,
+    role: user.role ?? 'student',
+    isPremium: user.isPremium ?? false,
+    ...(user.premiumPlan ? { premiumPlan: user.premiumPlan } : {}),
+    ...(user.premiumExpiresAt ? { premiumExpiresAt: user.premiumExpiresAt } : {}),
     coins: user.coins ?? 0,
   };
 }

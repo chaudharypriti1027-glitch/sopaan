@@ -64,9 +64,9 @@ const styles = StyleSheet.create({
   cell: {
     flex: 1,
     alignItems: 'center',
-    gap: 6,
+    gap: 7,
     paddingVertical: 9,
-    borderRadius: 14,
+    borderRadius: 15,
     backgroundColor: 'rgba(255,255,255,0.07)',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.08)',

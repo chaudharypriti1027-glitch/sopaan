@@ -1,12 +1,13 @@
 import { Bookmark } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Button, Card, Flashcard, Screen, SectionTitle } from '../../components';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Button, Card, Flashcard, QueryStateView, Screen, SectionTitle } from '../../components';
 import {
   useDeckDueCounts,
   useFlashcardDecks,
   useFlashcardsDue,
   useFlashcardsDueCount,
+  useNetworkStatus,
   useReviewFlashcard,
   type SrRating,
 } from '../../hooks';
@@ -24,6 +25,7 @@ const SR_BUTTONS: { rating: SrRating; label: string; color: string }[] = [
 export function FlashcardsScreen() {
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
+  const { isOffline } = useNetworkStatus();
   const decksQuery = useFlashcardDecks();
   const dueQuery = useFlashcardsDue();
   const dueCountQuery = useFlashcardsDueCount();
@@ -88,14 +90,6 @@ export function FlashcardsScreen() {
     );
   };
 
-  if (decksQuery.isLoading) {
-    return (
-      <Screen style={styles.centered}>
-        <ActivityIndicator size="large" color={theme.colors.brand.primary} />
-      </Screen>
-    );
-  }
-
   if (selectedDeck && currentCard) {
     return (
       <Screen scroll contentContainerStyle={styles.content}>
@@ -150,26 +144,35 @@ export function FlashcardsScreen() {
         title="Flashcards"
         subtitle={`Spaced repetition · ${totalDue} due today`}
       />
-      <View style={styles.list}>
-        {decks.map((deck) => {
-          const due = deckDueCounts[deck.id] ?? deck.cardCount;
-          return (
-            <Pressable key={deck.id} onPress={() => openDeck(deck)}>
-              <Card style={styles.deckCard}>
-                <Text style={styles.deckTitle}>{deck.title}</Text>
-                <Text style={styles.deckMeta}>
-                  {deck.cardCount} cards · {due} due
-                </Text>
-              </Card>
-            </Pressable>
-          );
-        })}
-        {decks.length === 0 ? (
-          <Card>
-            <Text style={styles.empty}>No decks yet. Add revision capsules or vocabulary first.</Text>
-          </Card>
-        ) : null}
-      </View>
+      <QueryStateView
+        isLoading={decksQuery.isLoading}
+        isError={decksQuery.isError}
+        isFetching={decksQuery.isFetching}
+        isOffline={isOffline}
+        hasData={decks.length > 0}
+        onRetry={() => void decksQuery.refetch()}
+      >
+        <View style={styles.list}>
+          {decks.map((deck) => {
+            const due = deckDueCounts[deck.id] ?? deck.cardCount;
+            return (
+              <Pressable key={deck.id} onPress={() => openDeck(deck)}>
+                <Card style={styles.deckCard}>
+                  <Text style={styles.deckTitle}>{deck.title}</Text>
+                  <Text style={styles.deckMeta}>
+                    {deck.cardCount} cards · {due} due
+                  </Text>
+                </Card>
+              </Pressable>
+            );
+          })}
+          {decks.length === 0 ? (
+            <Card>
+              <Text style={styles.empty}>No decks yet. Add revision capsules or vocabulary first.</Text>
+            </Card>
+          ) : null}
+        </View>
+      </QueryStateView>
     </Screen>
   );
 }

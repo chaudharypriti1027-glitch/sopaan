@@ -2,15 +2,14 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useMemo } from 'react';
 import {
-  ActivityIndicator,
   Pressable,
   RefreshControl,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
-import { Card, Screen } from '../../components';
-import { useGroupedNotifications, useMarkNotificationRead } from '../../hooks';
+import { Card, QueryStateView, Screen } from '../../components';
+import { useGroupedNotifications, useMarkNotificationRead, useNetworkStatus } from '../../hooks';
 import { openInAppNotification } from '../../hooks/useNotificationDeepLink';
 import type { MainStackParamList } from '../../navigation/types';
 import { useTheme } from '../../theme';
@@ -24,8 +23,10 @@ export function NotificationsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
-  const { grouped, isLoading, isRefetching, refetch, unreadCount } = useGroupedNotifications();
+  const { grouped, isLoading, isError, isFetching, isRefetching, refetch, unreadCount } =
+    useGroupedNotifications();
   const markRead = useMarkNotificationRead();
+  const { isOffline } = useNetworkStatus();
 
   const handlePress = (item: (typeof grouped.today)[number]) => {
     if (!item.read) {
@@ -82,17 +83,20 @@ export function NotificationsScreen() {
         <Text style={styles.unreadBanner}>{unreadCount} unread</Text>
       ) : null}
 
-      {isLoading ? (
-        <ActivityIndicator color={theme.colors.brand.primary} />
-      ) : (
-        <>
-          {renderGroup('Today', grouped.today)}
-          {renderGroup('Earlier', grouped.earlier)}
-          {!grouped.today.length && !grouped.earlier.length ? (
-            <Text style={styles.empty}>You’re all caught up — no notifications yet.</Text>
-          ) : null}
-        </>
-      )}
+      <QueryStateView
+        isLoading={isLoading}
+        isError={isError}
+        isFetching={isFetching}
+        isOffline={isOffline}
+        hasData={grouped.today.length > 0 || grouped.earlier.length > 0}
+        onRetry={() => void refetch()}
+      >
+        {renderGroup('Today', grouped.today)}
+        {renderGroup('Earlier', grouped.earlier)}
+        {!grouped.today.length && !grouped.earlier.length ? (
+          <Text style={styles.empty}>You’re all caught up — no notifications yet.</Text>
+        ) : null}
+      </QueryStateView>
     </Screen>
   );
 }

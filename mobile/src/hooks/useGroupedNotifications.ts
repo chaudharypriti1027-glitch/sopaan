@@ -25,6 +25,9 @@ export function useGroupedNotifications() {
     }
 
     return { today, earlier };
+    // Depend on `query.data` only — `query` itself is a new object on every
+    // react-query render, so including it would defeat this memoization.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query.data]);
 
   const unreadCount = useMemo(

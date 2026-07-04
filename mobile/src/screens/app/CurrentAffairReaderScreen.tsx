@@ -1,11 +1,11 @@
 import { useMemo } from 'react';
-import { Linking, ScrollView, StyleSheet, View } from 'react-native';
+import { Linking, StyleSheet, View } from 'react-native';
 import { useRoute, type RouteProp } from '@react-navigation/native';
 import { ExternalLink } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { Button, OptimizedImage, Text } from '../../components';
+import { Button, OptimizedImage, QueryStateView, Text } from '../../components';
 import { PremiumScreen } from '../../components/premium';
-import { useCurrentAffair } from '../../hooks';
+import { useCurrentAffair, useNetworkStatus } from '../../hooks';
 import { useFormat } from '../../i18n/useFormat';
 import type { MainStackParamList } from '../../navigation/types';
 import { useTheme } from '../../theme';
@@ -32,6 +32,7 @@ export function CurrentAffairReaderScreen() {
   const { formatDate } = useFormat();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
+  const { isOffline } = useNetworkStatus();
   const affairQuery = useCurrentAffair(route.params.affairId);
   const affair = affairQuery.data;
 
@@ -49,14 +50,15 @@ export function CurrentAffairReaderScreen() {
 
   return (
     <PremiumScreen scroll bottomInset="stack">
-      {affairQuery.isLoading ? (
-        <Text style={styles.muted}>{t('currentAffairs.loadingArticle')}</Text>
-      ) : affairQuery.isError || !affair ? (
-        <View style={styles.errorBox}>
-          <Text style={styles.errorTitle}>{t('currentAffairs.loadFailed')}</Text>
-          <Button label="Retry" onPress={() => void affairQuery.refetch()} />
-        </View>
-      ) : (
+      <QueryStateView
+        isLoading={affairQuery.isLoading}
+        isError={affairQuery.isError}
+        isFetching={affairQuery.isFetching}
+        isOffline={isOffline}
+        hasData={Boolean(affair)}
+        onRetry={() => void affairQuery.refetch()}
+      >
+        {affair ? (
         <View style={styles.article}>
           {affair.imageUrl ? (
             <OptimizedImage uri={affair.imageUrl} style={styles.hero} contentFit="cover" />
@@ -91,7 +93,8 @@ export function CurrentAffairReaderScreen() {
             />
           ) : null}
         </View>
-      )}
+        ) : null}
+      </QueryStateView>
     </PremiumScreen>
   );
 }

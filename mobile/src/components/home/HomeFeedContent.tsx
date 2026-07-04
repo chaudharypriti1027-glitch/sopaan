@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import type { CompositeNavigationProp } from '@react-navigation/native';
@@ -10,10 +10,15 @@ import { ContinueRow } from './ContinueRow';
 import { DailyChallengeCard } from './DailyChallengeCard';
 import { HomeFeaturesHub } from './HomeFeaturesHub';
 import { HomeAnimatedSection } from './HomeAnimatedSection';
+import { HomeSection } from './HomeSection';
 import { HomeSectionHeader } from './HomeSectionHeader';
 import { LeagueSnapshot } from './LeagueSnapshot';
 import { RecommendedRow } from './RecommendedRow';
-import { HOME_UI } from './homeTheme';
+import {
+  HOME_SECTION_META,
+  visibleHomeSections,
+  type HomeSectionKey,
+} from './homeSectionConfig';
 import type { HomeFeatureLink } from '../../navigation/homeFeatureConfig';
 import type { AppTabParamList, MainStackParamList } from '../../navigation/types';
 import type { HomeFeed } from '../../types/home';
@@ -46,121 +51,120 @@ export function HomeFeedContent({
 }: HomeFeedContentProps) {
   const { t } = useTranslation('app');
   const styles = useMemo(() => createStyles(), []);
+  const sections = useMemo(() => visibleHomeSections(feed), [feed]);
 
-  const primaryNudge = feed.aiNudges[0];
-  const extraNudges = feed.aiNudges.slice(1);
+  const sectionAction = useCallback(
+    (key: HomeSectionKey) => {
+      switch (key) {
+        case 'continue':
+        case 'recommended':
+          return () => navigation.navigate('Practice');
+        case 'affairs':
+          return () => navigation.navigate('CurrentAffairs');
+        default:
+          return undefined;
+      }
+    },
+    [navigation],
+  );
 
-  let sectionIndex = 0;
+  const renderSectionBody = useCallback(
+    (key: HomeSectionKey) => {
+      switch (key) {
+        case 'nudges': {
+          const [primaryNudge, ...extraNudges] = feed.aiNudges;
+          if (!primaryNudge) return null;
+          return (
+            <View style={styles.nudgesStack}>
+              <View testID={`home-section-nudge-${primaryNudge.id}`}>
+                <AINudgeCard nudge={primaryNudge} onPress={onDeeplinkWithHaptic} />
+              </View>
+              {extraNudges.map((nudge) => (
+                <View key={nudge.id} style={styles.extraNudge} testID={`home-section-nudge-${nudge.id}`}>
+                  <AINudgeCard nudge={nudge} onPress={onDeeplinkWithHaptic} showForYouHeader={false} />
+                </View>
+              ))}
+            </View>
+          );
+        }
+        case 'features':
+          return (
+            <HomeFeaturesHub
+              quickActions={feed.quickActions}
+              onFeaturePress={onFeaturePress}
+              onShortcutPress={onDeeplinkWithHaptic}
+            />
+          );
+        case 'dailyChallenge':
+          return feed.dailyChallenge ? (
+            <DailyChallengeCard challenge={feed.dailyChallenge} onPress={onDeeplink} />
+          ) : null;
+        case 'continue':
+          return <ContinueRow items={feed.continue} onItemPress={onDeeplink} />;
+        case 'recommended':
+          return <RecommendedRow tests={feed.recommendedTests} onTestPress={onTestPress} />;
+        case 'affairs':
+          return <AffairsList items={feed.currentAffairs} onItemPress={onAffairPress} />;
+        case 'league':
+          return feed.league ? <LeagueSnapshot league={feed.league} onPress={onLeaguePress} /> : null;
+        default:
+          return null;
+      }
+    },
+    [
+      feed,
+      onAffairPress,
+      onDeeplink,
+      onDeeplinkWithHaptic,
+      onFeaturePress,
+      onLeaguePress,
+      onTestPress,
+      styles.extraNudge,
+      styles.nudgesStack,
+    ],
+  );
 
   return (
     <>
-      {primaryNudge ? (
-        <HomeAnimatedSection index={sectionIndex++}>
-          <View style={styles.forYouWrap} testID="home-section-nudges">
-            <View testID={`home-section-nudge-${primaryNudge.id}`}>
-              <AINudgeCard nudge={primaryNudge} onPress={onDeeplinkWithHaptic} />
-            </View>
-            {extraNudges.map((nudge) => (
-              <View key={nudge.id} style={styles.extraNudge} testID={`home-section-nudge-${nudge.id}`}>
-                <AINudgeCard
-                  nudge={nudge}
-                  onPress={onDeeplinkWithHaptic}
-                  showForYouHeader={false}
+      {sections.map((key, index) => {
+        const meta = HOME_SECTION_META[key];
+        const isFirst = index === 0;
+        const title = meta.titleKey ? t(`home.${meta.titleKey}`) : undefined;
+        const actionLabel = meta.actionKey ? t(`home.${meta.actionKey}`) : undefined;
+        const onAction = sectionAction(key);
+
+        return (
+          <HomeAnimatedSection key={key} index={index}>
+            <HomeSection
+              testID={meta.testId}
+              overlapHero={meta.overlapHero && isFirst}
+              isFirst={isFirst}
+              padded={meta.padded}
+            >
+              {title ? (
+                <HomeSectionHeader
+                  title={title}
+                  actionLabel={actionLabel}
+                  onActionPress={onAction}
+                  compact={isFirst && meta.compactWhenFirst}
                 />
-              </View>
-            ))}
-          </View>
-        </HomeAnimatedSection>
-      ) : null}
-
-      <HomeAnimatedSection index={sectionIndex++}>
-        <View style={styles.section}>
-          <HomeSectionHeader title={t('home.explore')} compact={!primaryNudge} />
-          <HomeFeaturesHub
-            quickActions={feed.quickActions}
-            onFeaturePress={onFeaturePress}
-            onShortcutPress={onDeeplinkWithHaptic}
-          />
-        </View>
-      </HomeAnimatedSection>
-
-      {feed.dailyChallenge?.status === 'todo' ? (
-        <HomeAnimatedSection index={sectionIndex++}>
-          <View style={styles.section} testID="home-section-daily-challenge">
-            <HomeSectionHeader title={t('home.dailyChallenge')} />
-            <DailyChallengeCard challenge={feed.dailyChallenge} onPress={onDeeplink} />
-          </View>
-        </HomeAnimatedSection>
-      ) : null}
-
-      {feed.continue.length > 0 ? (
-        <HomeAnimatedSection index={sectionIndex++}>
-          <View style={styles.section} testID="home-section-continue">
-            <HomeSectionHeader
-              title={t('home.continueLearning')}
-              actionLabel={t('home.seeAll')}
-              onActionPress={() => navigation.navigate('Practice')}
-            />
-            <ContinueRow items={feed.continue} onItemPress={onDeeplink} />
-          </View>
-        </HomeAnimatedSection>
-      ) : null}
-
-      {feed.recommendedTests.length > 0 ? (
-        <HomeAnimatedSection index={sectionIndex++}>
-          <View testID="home-section-recommended">
-            <View style={styles.testsHead}>
-              <HomeSectionHeader
-                title={t('home.recommendedTests')}
-                actionLabel={t('home.seeAll')}
-                onActionPress={() => navigation.navigate('Practice')}
-              />
-            </View>
-            <RecommendedRow tests={feed.recommendedTests} onTestPress={onTestPress} />
-          </View>
-        </HomeAnimatedSection>
-      ) : null}
-
-      {feed.currentAffairs.length > 0 ? (
-        <HomeAnimatedSection index={sectionIndex++}>
-          <View style={styles.section} testID="home-section-affairs">
-            <HomeSectionHeader
-              title={t('home.todaysAffairs')}
-              actionLabel={t('home.allAffairs')}
-              onActionPress={() => navigation.navigate('CurrentAffairs')}
-            />
-            <AffairsList items={feed.currentAffairs} onItemPress={onAffairPress} />
-          </View>
-        </HomeAnimatedSection>
-      ) : null}
-
-      {feed.league ? (
-        <HomeAnimatedSection index={sectionIndex++}>
-          <View style={styles.section} testID="home-section-league">
-            <HomeSectionHeader title={t('home.yourLeague')} />
-            <LeagueSnapshot league={feed.league} onPress={onLeaguePress} />
-          </View>
-        </HomeAnimatedSection>
-      ) : null}
+              ) : null}
+              {renderSectionBody(key)}
+            </HomeSection>
+          </HomeAnimatedSection>
+        );
+      })}
     </>
   );
 }
 
 function createStyles() {
   return StyleSheet.create({
-    forYouWrap: {
-      marginTop: HOME_UI.forYouLift,
-      paddingHorizontal: 16,
+    nudgesStack: {
       gap: 10,
     },
     extraNudge: {
       marginTop: 4,
-    },
-    section: {
-      paddingHorizontal: 16,
-    },
-    testsHead: {
-      paddingHorizontal: 16,
     },
   });
 }

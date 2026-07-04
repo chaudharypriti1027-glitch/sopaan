@@ -1,6 +1,7 @@
 export { useMe, useUpdateMe } from './useMe';
 export { useProfileSummary } from './useProfileSummary';
 export { useCompleteGame } from './useGames';
+export { useGameProgress } from './useGameProgress';
 export { useHomeFeed } from './useHomeFeed';
 export { useProGate, useTierStatus } from './useProGate';
 export { useExperiments } from '../experiments';
@@ -29,17 +30,6 @@ export {
 } from './useSocial';
 export { useGenerateTest } from './useGenerateTest';
 export { useAskDoubt, useAiDoubtHistory, useEvaluateAnswer, useReportAiFeedback } from './useAi';
-export {
-  useAdminQuestions,
-  useAdminReviewQueue,
-  useReviewQuestion,
-  useAdminExams,
-  useAdminCourses,
-  useAdminCurrentAffairs,
-  useImportQuestions,
-  useSetContentStatus,
-  useDeleteContent,
-} from './useAdminContent';
 export { useAttempts, useAttempt } from './useAttempts';
 export { useCourses, useCourse, useEnrollCourse, useUpdateCourseProgress } from './useCourses';
 export { useCurrentAffairs, useCurrentAffair } from './useCurrentAffairs';
@@ -95,12 +85,6 @@ export {
   useTestSeries,
   useEnrollTestSeries,
 } from './useContent';
-export {
-  useAdminStats,
-  usePendingTests,
-  useReviewTest,
-  useGenerateExam,
-} from './useAdmin';
 export {
   usePremiumPlans,
   useSubscriptionEntitlement,

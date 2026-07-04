@@ -1,11 +1,11 @@
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Lock, Radio, PlayCircle } from 'lucide-react-native';
+import { Lock, Radio, PlayCircle, Trophy } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Button, Card, Pill, Screen, SectionTitle } from '../../components';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Button, Card, Pill, PremiumHeroCard, QueryStateView, Screen, SectionTitle } from '../../components';
 import { LiveMockLeaderboard } from '../../components/LiveMockLeaderboard';
-import { useEnrollTestSeries, useTestSeriesList } from '../../hooks';
+import { useEnrollTestSeries, useNetworkStatus, useTestSeriesList } from '../../hooks';
 import type { MockScheduleState, TestSeriesMock } from '../../api/testSeries';
 import type { MainStackParamList } from '../../navigation/types';
 import { useTheme } from '../../theme';
@@ -67,6 +67,7 @@ export function TestSeriesScreen() {
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
+  const { isOffline } = useNetworkStatus();
   const seriesQuery = useTestSeriesList({ limit: 20 });
   const enrollMutation = useEnrollTestSeries();
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -86,50 +87,61 @@ export function TestSeriesScreen() {
     <Screen scroll contentContainerStyle={styles.content}>
       <SectionTitle title="Test series" subtitle="Enroll and follow the mock schedule" />
 
-      {seriesQuery.isLoading ? (
-        <ActivityIndicator color={theme.colors.brand.primary} />
-      ) : (
-        <>
-          <View style={styles.seriesList}>
-            {(seriesQuery.data?.items ?? []).map((series) => (
-              <Pressable
-                key={series.id}
-                onPress={() => setActiveId(series.id)}
-                style={({ pressed }) => [
-                  styles.seriesChip,
-                  activeSeries?.id === series.id && styles.seriesChipActive,
-                  pressed && styles.pressed,
+      <QueryStateView
+        isLoading={seriesQuery.isLoading}
+        isError={seriesQuery.isError}
+        isFetching={seriesQuery.isFetching}
+        isOffline={isOffline}
+        hasData={(seriesQuery.data?.items.length ?? 0) > 0}
+        onRetry={() => void seriesQuery.refetch()}
+      >
+        <View style={styles.seriesList}>
+          {(seriesQuery.data?.items ?? []).map((series) => (
+            <Pressable
+              key={series.id}
+              onPress={() => setActiveId(series.id)}
+              style={({ pressed }) => [
+                styles.seriesChip,
+                activeSeries?.id === series.id && styles.seriesChipActive,
+                pressed && styles.pressed,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.seriesChipText,
+                  activeSeries?.id === series.id && styles.seriesChipTextActive,
                 ]}
               >
-                <Text
-                  style={[
-                    styles.seriesChipText,
-                    activeSeries?.id === series.id && styles.seriesChipTextActive,
-                  ]}
-                >
-                  {series.title}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-
-          {activeSeries ? (
-            <Card style={styles.detail}>
-              <Text style={styles.seriesTitle}>{activeSeries.title}</Text>
-              <Text style={styles.seriesMeta}>
-                {activeSeries.examTag} · {activeSeries.mockCount} mocks
+                {series.title}
               </Text>
+            </Pressable>
+          ))}
+        </View>
 
+        {activeSeries ? (
+          <View style={styles.detail}>
+            <PremiumHeroCard
+              icon={<Trophy size={24} color="#FFFFFF" strokeWidth={1.8} />}
+              eyebrow={activeSeries.examTag}
+              title={activeSeries.title}
+              trailing={
+                activeSeries.enrolled ? (
+                  <Pill label="Enrolled" variant="teal" />
+                ) : undefined
+              }
+              stats={[{ label: 'Mocks', value: String(activeSeries.mockCount) }]}
+            >
               {!activeSeries.enrolled ? (
                 <Button
                   label={enrollMutation.isPending ? 'Enrolling…' : 'Enroll free'}
+                  variant="gold"
                   onPress={() => handleEnroll(activeSeries.id)}
                   disabled={enrollMutation.isPending}
                 />
-              ) : (
-                <Text style={styles.enrolled}>✓ Enrolled</Text>
-              )}
+              ) : null}
+            </PremiumHeroCard>
 
+            <Card style={styles.scheduleCard}>
               <SectionTitle title="Mock schedule" />
               <View style={styles.schedule}>
                 {activeSeries.mocks.map((mock) => (
@@ -154,11 +166,11 @@ export function TestSeriesScreen() {
                 />
               ) : null}
             </Card>
-          ) : (
-            <Text style={styles.empty}>No test series available yet.</Text>
-          )}
-        </>
-      )}
+          </View>
+        ) : (
+          <Text style={styles.empty}>No test series available yet.</Text>
+        )}
+      </QueryStateView>
     </Screen>
   );
 }
@@ -186,16 +198,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     },
     pressed: { opacity: 0.92 },
     detail: { gap: theme.spacing.md },
-    seriesTitle: {
-      ...theme.typography.presets.h3,
-      color: theme.colors.text.primary,
-    },
-    seriesMeta: { ...theme.typography.presets.caption, color: theme.colors.text.secondary },
-    enrolled: {
-      ...theme.typography.presets.bodyMedium,
-      color: theme.colors.semantic.success,
-      fontFamily: theme.typography.fonts.ui.semibold,
-    },
+    scheduleCard: { gap: theme.spacing.md },
     schedule: { gap: theme.spacing.sm },
     empty: { ...theme.typography.presets.body, color: theme.colors.text.secondary },
   });

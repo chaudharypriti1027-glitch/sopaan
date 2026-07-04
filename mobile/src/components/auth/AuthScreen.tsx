@@ -9,6 +9,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useResponsiveLayout } from '../../layout/responsive';
 import { AUTH_UI } from './authTheme';
 
 type AuthScreenProps = {
@@ -30,7 +31,11 @@ export function AuthScreen({
   scrollProps,
 }: AuthScreenProps) {
   const insets = useSafeAreaInsets();
-  const styles = useMemo(() => createStyles(insets), [insets]);
+  const { isWeb, contentPadding, isWideWeb } = useResponsiveLayout();
+  const styles = useMemo(
+    () => createStyles(insets, isWeb ? (contentPadding ?? 24) : 24, isWideWeb),
+    [insets, isWeb, contentPadding, isWideWeb],
+  );
 
   const card = (
     <View style={styles.card}>
@@ -46,8 +51,8 @@ export function AuthScreen({
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
     >
-      <View style={[styles.decoGold]} pointerEvents="none" />
-      <View style={[styles.decoSage]} pointerEvents="none" />
+      <View style={[styles.decoGold, styles.pointerNone]} />
+      <View style={[styles.decoSage, styles.pointerNone]} />
 
       {scroll ? (
         <ScrollView
@@ -66,7 +71,11 @@ export function AuthScreen({
   );
 }
 
-function createStyles(insets: { top: number; bottom: number; left: number; right: number }) {
+function createStyles(
+  insets: { top: number; bottom: number; left: number; right: number },
+  horizontalPad: number,
+  wideWeb: boolean,
+) {
   return StyleSheet.create({
     root: {
       flex: 1,
@@ -75,19 +84,19 @@ function createStyles(insets: { top: number; bottom: number; left: number; right
     decoGold: {
       position: 'absolute',
       top: -70,
-      right: -60,
-      width: 220,
-      height: 220,
-      borderRadius: 110,
+      right: wideWeb ? '10%' : -60,
+      width: wideWeb ? 280 : 220,
+      height: wideWeb ? 280 : 220,
+      borderRadius: 140,
       backgroundColor: AUTH_UI.goldSoft,
     },
     decoSage: {
       position: 'absolute',
       bottom: 120,
-      left: -70,
-      width: 200,
-      height: 200,
-      borderRadius: 100,
+      left: wideWeb ? '8%' : -70,
+      width: wideWeb ? 240 : 200,
+      height: wideWeb ? 240 : 200,
+      borderRadius: 120,
       backgroundColor: AUTH_UI.sageSoft,
     },
     scroll: {
@@ -98,8 +107,11 @@ function createStyles(insets: { top: number; bottom: number; left: number; right
       justifyContent: 'center',
       paddingTop: insets.top + 24,
       paddingBottom: insets.bottom + 24,
-      paddingHorizontal: 24 + insets.left,
-      paddingRight: 24 + insets.right,
+      paddingLeft: horizontalPad + insets.left,
+      paddingRight: horizontalPad + insets.right,
+      width: '100%',
+      maxWidth: wideWeb ? 480 : '100%',
+      alignSelf: 'center',
     },
     staticContent: {
       flex: 1,
@@ -107,6 +119,9 @@ function createStyles(insets: { top: number; bottom: number; left: number; right
     },
     card: {
       zIndex: 2,
+      width: '100%',
+      maxWidth: wideWeb ? 440 : undefined,
+      alignSelf: 'center',
     },
     body: {
       gap: 0,
@@ -114,6 +129,9 @@ function createStyles(insets: { top: number; bottom: number; left: number; right
     footer: {
       marginTop: 20,
       gap: 10,
+    },
+    pointerNone: {
+      pointerEvents: 'none',
     },
   });
 }

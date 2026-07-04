@@ -4,6 +4,7 @@ import { useMemo, useRef, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 import { getMyReferrals } from '../api/referrals';
 import { queryKeys } from '../hooks/queryKeys';
+import { useAuthStore } from '../store/auth';
 import { captureAndShareCard } from '../share/captureAndShareCard';
 import { ShareMilestoneCard } from '../share/ShareMilestoneCard';
 import type { ShareCardData } from '../share/types';
@@ -29,12 +30,14 @@ export function ShareMilestoneButton({
   const cardRef = useRef<View>(null);
   const [sharing, setSharing] = useState(false);
   const { theme } = useTheme();
+  const isAuthenticated = useAuthStore((state) => state.status === 'authed');
   const styles = useMemo(() => createStyles(), []);
 
   const referralQuery = useQuery({
     queryKey: queryKeys.referrals.me(),
     queryFn: getMyReferrals,
     staleTime: 5 * 60 * 1000,
+    enabled: isAuthenticated,
   });
 
   const iconColor =

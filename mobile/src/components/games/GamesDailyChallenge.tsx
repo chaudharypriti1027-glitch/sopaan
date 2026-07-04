@@ -1,6 +1,9 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+import { ChevronRight, Target } from 'lucide-react-native';
+import { GlassSurface } from '../GlassSurface';
+import { PremiumIcon } from '../premium/PremiumIcon';
 import { Text } from '../Text';
 import { GAMES_UI } from './gamesTheme';
 
@@ -20,6 +23,7 @@ export function GamesDailyChallenge({
   onPress,
 }: GamesDailyChallengeProps) {
   const styles = useMemo(() => createStyles(), []);
+  const pct = Math.min(100, Math.max(0, progress));
 
   return (
     <Pressable
@@ -27,17 +31,43 @@ export function GamesDailyChallenge({
       style={({ pressed }) => [styles.wrap, pressed && styles.pressed]}
       accessibilityRole="button"
     >
-      <Text style={styles.emoji}>🎯</Text>
-      <View style={styles.copy}>
-        <Text style={styles.title}>{title}</Text>
-        <Text style={styles.subtitle}>{subtitle}</Text>
-        <View style={styles.track}>
-          <View style={[styles.fill, { width: `${Math.min(100, Math.max(0, progress))}%` }]} />
+      <GlassSurface tone="gold" intensity={36} borderRadius={20} style={styles.glassWrap}>
+        <View style={styles.card}>
+          <View style={styles.iconTile}>
+            <PremiumIcon Icon={Target} tone="gold" size="md" filled />
+          </View>
+
+          <View style={styles.copy}>
+            <View style={styles.titleRow}>
+              <Text style={styles.challengeLabel}>{title}</Text>
+              <View style={styles.sparkBadge}>
+                <Text style={styles.sparkBadgeText}>
+                  <Text style={styles.spark}>✦ </Text>
+                  DAILY
+                </Text>
+              </View>
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{cta}</Text>
+              </View>
+            </View>
+            <Text style={styles.subtitle} numberOfLines={2}>
+              {subtitle}
+            </Text>
+            <View style={styles.track}>
+              <LinearGradient
+                colors={['#E3C97F', '#C29A4E']}
+                start={{ x: 0, y: 0.5 }}
+                end={{ x: 1, y: 0.5 }}
+                style={[styles.fill, { width: `${pct}%` }]}
+              />
+            </View>
+          </View>
+
+          <View style={styles.arrow}>
+            <ChevronRight size={18} color={GAMES_UI.goldDeep} strokeWidth={2.2} />
+          </View>
         </View>
-      </View>
-      <LinearGradient colors={['#F97316', '#FBBF24']} style={styles.cta}>
-        <Text style={styles.ctaText}>{cta}</Text>
-      </LinearGradient>
+      </GlassSurface>
     </Pressable>
   );
 }
@@ -45,42 +75,94 @@ export function GamesDailyChallenge({
 function createStyles() {
   return StyleSheet.create({
     wrap: {
-      marginHorizontal: 16,
-      backgroundColor: '#FFF7ED',
-      borderWidth: 1.5,
-      borderColor: 'rgba(249,115,22,0.2)',
       borderRadius: 20,
-      padding: 14,
+    },
+    pressed: { opacity: 0.96 },
+    glassWrap: {
+      overflow: 'hidden',
+    },
+    card: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 14,
+      gap: 13,
+      backgroundColor: GAMES_UI.goldSoft,
+      borderRadius: 20,
+      paddingVertical: 15,
+      paddingHorizontal: 15,
+      borderWidth: 1,
+      borderColor: '#EADFC4',
+      shadowColor: GAMES_UI.shadow,
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 0.1,
+      shadowRadius: 20,
+      elevation: 3,
     },
-    pressed: { opacity: 0.94 },
-    emoji: { fontSize: 32 },
-    copy: { flex: 1, gap: 2 },
-    title: { fontSize: 13, fontWeight: '800', color: GAMES_UI.text },
-    subtitle: { fontSize: 11, color: GAMES_UI.muted },
+    iconTile: {
+      flexShrink: 0,
+    },
+    copy: { flex: 1, minWidth: 0 },
+    titleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flexWrap: 'wrap',
+      gap: 6,
+      marginBottom: 5,
+    },
+    challengeLabel: {
+      fontSize: 14,
+      fontWeight: '800',
+      color: GAMES_UI.accent,
+    },
+    sparkBadge: {
+      borderRadius: 99,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+      backgroundColor: GAMES_UI.surface,
+      borderWidth: 1,
+      borderColor: '#EADFC4',
+    },
+    sparkBadgeText: {
+      fontSize: 9,
+      fontWeight: '800',
+      color: GAMES_UI.accent,
+      letterSpacing: 0.5,
+    },
+    spark: {
+      color: GAMES_UI.goldDeep,
+    },
+    badge: {
+      borderRadius: 99,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      backgroundColor: GAMES_UI.surface,
+      borderWidth: 1,
+      borderColor: '#EADFC4',
+    },
+    badgeText: {
+      fontSize: 10,
+      fontWeight: '800',
+      color: GAMES_UI.goldDeep,
+      letterSpacing: 0.4,
+    },
+    subtitle: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: GAMES_UI.goldDeep,
+      lineHeight: 16,
+      marginBottom: 8,
+    },
     track: {
-      height: 5,
-      borderRadius: 5,
-      backgroundColor: 'rgba(249,115,22,0.15)',
-      marginTop: 6,
+      height: 6,
+      borderRadius: 99,
+      backgroundColor: 'rgba(194,154,78,0.2)',
       overflow: 'hidden',
     },
     fill: {
       height: '100%',
-      borderRadius: 5,
-      backgroundColor: '#F97316',
+      borderRadius: 99,
     },
-    cta: {
-      borderRadius: 12,
-      paddingHorizontal: 12,
-      paddingVertical: 7,
-    },
-    ctaText: {
-      fontSize: 12,
-      fontWeight: '800',
-      color: '#FFFFFF',
+    arrow: {
+      opacity: 0.65,
     },
   });
 }

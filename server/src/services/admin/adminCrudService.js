@@ -11,27 +11,30 @@ const auditPopulate = [
   { path: 'updatedBy', select: 'name email' },
 ];
 
-function buildAdminFilters(query, extraFilter) {
+function buildAdminFilters(query, extraFilter, { textSearch = true } = {}) {
   const filters = extraFilter?.(query) ?? {};
 
   if (query.status) {
     filters.status = query.status;
   }
 
-  if (query.q) {
+  if (textSearch && query.q) {
     filters.$text = { $search: query.q };
   }
 
   return filters;
 }
 
-function crudHandlers(Model, { populate, searchFilter, useTextSort = true } = {}) {
-  const populates = [...auditPopulate, ...(populate ? [populate] : [])];
+function crudHandlers(
+  Model,
+  { populate, searchFilter, useTextSort = true, withAudit = true, textSearch = true } = {},
+) {
+  const populates = [...(withAudit ? auditPopulate : []), ...(populate ? [populate] : [])];
 
   return {
     async list(query) {
       const { limit, offset } = parsePagination(query);
-      const filters = buildAdminFilters(query, searchFilter);
+      const filters = buildAdminFilters(query, searchFilter, { textSearch });
 
       let finder = Model.find(filters)
         .sort(query.q && useTextSort ? { score: { $meta: 'textScore' } } : { updatedAt: -1 })
@@ -114,4 +117,13 @@ export const currentAffairAdmin = crudHandlers(CurrentAffair, {
 export const mentorAdmin = crudHandlers(Mentor, {
   populate: { path: 'userId', select: 'name email phone' },
   useTextSort: false,
+  withAudit: false,
+  textSearch: false,
+  searchFilter: (query) => {
+    if (!query.q) {
+      return {};
+    }
+    const regex = new RegExp(query.q.trim(), 'i');
+    return { $or: [{ expertise: regex }, { bio: regex }] };
+  },
 });

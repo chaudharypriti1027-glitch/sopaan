@@ -85,7 +85,7 @@ export function OtpInput({
   autoFocus = false,
   testID = 'otp-input',
 }: OtpInputProps) {
-  const refs = useRef<Array<TextInput | null>>([]);
+  const refs = useRef<(TextInput | null)[]>([]);
   const digits = useMemo(() => sanitizeDigits(value, length).split(''), [value, length]);
   const activeIndex = Math.min(digits.length, length - 1);
 

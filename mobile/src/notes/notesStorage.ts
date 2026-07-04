@@ -1,4 +1,4 @@
-import * as SecureStore from 'expo-secure-store';
+import { getSecureItem, setSecureItem } from '../lib/secureStorage';
 
 const NOTES_KEY = 'sopaan_saved_notes';
 
@@ -10,7 +10,7 @@ export type SavedNote = {
 };
 
 export async function listNotes(): Promise<SavedNote[]> {
-  const raw = await SecureStore.getItemAsync(NOTES_KEY);
+  const raw = await getSecureItem(NOTES_KEY);
   if (!raw) {
     return [];
   }
@@ -30,11 +30,11 @@ export async function saveNote(note: Omit<SavedNote, 'id' | 'createdAt'>): Promi
     ...note,
   };
 
-  await SecureStore.setItemAsync(NOTES_KEY, JSON.stringify([entry, ...existing].slice(0, 50)));
+  await setSecureItem(NOTES_KEY, JSON.stringify([entry, ...existing].slice(0, 50)));
   return entry;
 }
 
 export async function deleteNote(id: string): Promise<void> {
   const existing = await listNotes();
-  await SecureStore.setItemAsync(NOTES_KEY, JSON.stringify(existing.filter((n) => n.id !== id)));
+  await setSecureItem(NOTES_KEY, JSON.stringify(existing.filter((n) => n.id !== id)));
 }

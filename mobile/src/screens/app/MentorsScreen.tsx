@@ -1,8 +1,8 @@
-import { Star } from 'lucide-react-native';
+import { GraduationCap } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Button, Card, Screen, SectionTitle } from '../../components';
-import { useBookMentor, useMentors } from '../../hooks';
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Button, Card, PremiumHeroCard, QueryStateView, Screen, SectionTitle } from '../../components';
+import { useBookMentor, useMentors, useNetworkStatus } from '../../hooks';
 import type { Mentor } from '../../api/mentors';
 import { useTheme } from '../../theme';
 
@@ -27,6 +27,7 @@ export function MentorsScreen() {
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
+  const { isOffline } = useNetworkStatus();
   const mentorsQuery = useMentors({ limit: 20 });
   const bookMentor = useBookMentor();
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -50,22 +51,28 @@ export function MentorsScreen() {
     <Screen scroll contentContainerStyle={styles.content}>
       <SectionTitle title="Mentors" subtitle="Book 1:1 guidance from toppers" />
 
-      {mentorsQuery.isLoading ? (
-        <ActivityIndicator color={theme.colors.brand.primary} />
-      ) : (
+      <QueryStateView
+        isLoading={mentorsQuery.isLoading}
+        isError={mentorsQuery.isError}
+        isFetching={mentorsQuery.isFetching}
+        isOffline={isOffline}
+        hasData={mentors.length > 0}
+        onRetry={() => void mentorsQuery.refetch()}
+      >
         <>
           {featured ? (
-            <Card style={styles.featured}>
-              <Text style={styles.featuredLabel}>Featured mentor</Text>
-              <Text style={styles.featuredName}>{mentorName(featured)}</Text>
-              <View style={styles.ratingRow}>
-                <Star size={16} color={theme.colors.accent.gold} fill={theme.colors.accent.gold} />
-                <Text style={styles.rating}>{featured.rating ?? 0}</Text>
-                <Text style={styles.sessions}>{featured.sessionsCount ?? 0} sessions</Text>
-              </View>
+            <PremiumHeroCard
+              icon={<GraduationCap size={24} color="#FFFFFF" strokeWidth={1.8} />}
+              eyebrow="Featured mentor"
+              title={mentorName(featured)}
+              stats={[
+                { label: 'Rating', value: `★ ${featured.rating ?? 0}` },
+                { label: 'Sessions', value: String(featured.sessionsCount ?? 0) },
+              ]}
+            >
               {featured.bio ? <Text style={styles.bio}>{featured.bio}</Text> : null}
               <Text style={styles.expertise}>{(featured.expertise ?? []).join(' · ')}</Text>
-            </Card>
+            </PremiumHeroCard>
           ) : null}
 
           <SectionTitle title="All mentors" />
@@ -109,7 +116,7 @@ export function MentorsScreen() {
             </View>
           ) : null}
         </>
-      )}
+      </QueryStateView>
     </Screen>
   );
 }
@@ -117,22 +124,8 @@ export function MentorsScreen() {
 function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
     content: { gap: theme.spacing.lg, paddingBottom: theme.spacing['3xl'] },
-    featured: { gap: theme.spacing.sm, backgroundColor: theme.colors.brand.primaryMuted },
-    featuredLabel: {
-      ...theme.typography.presets.label,
-      color: theme.colors.brand.primary,
-      textTransform: 'uppercase',
-    },
-    featuredName: { ...theme.typography.presets.h3, color: theme.colors.text.primary },
-    ratingRow: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm },
-    rating: {
-      ...theme.typography.presets.bodyMedium,
-      fontFamily: theme.typography.fonts.ui.semibold,
-      color: theme.colors.text.primary,
-    },
-    sessions: { ...theme.typography.presets.caption, color: theme.colors.text.secondary },
-    bio: { ...theme.typography.presets.body, color: theme.colors.text.primary },
-    expertise: { ...theme.typography.presets.caption, color: theme.colors.text.tertiary },
+    bio: { ...theme.typography.presets.body, color: 'rgba(255,255,255,0.85)', zIndex: 1 },
+    expertise: { ...theme.typography.presets.caption, color: 'rgba(255,255,255,0.55)', zIndex: 1 },
     list: { gap: theme.spacing.sm },
     mentorCard: { gap: theme.spacing.xs },
     mentorCardActive: { borderWidth: 2, borderColor: theme.colors.brand.primary },

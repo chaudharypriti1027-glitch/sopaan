@@ -3,6 +3,8 @@ import { create } from 'zustand';
 import { getMe } from '../api/me';
 import type { AuthResult, Profile } from '../types/auth';
 import { clearTokens, getTokens, saveTokens } from '../lib/secure';
+import { enrichProfileFromAccessToken } from '../lib/jwtPayload';
+import { assertStudentProfile, isAdminProfile } from '../auth/adminPortal';
 import { clearMobileUser, setMobileUser } from '../observability/sentry';
 import { registerSignOutHandler } from './sessionActions';
 
@@ -12,7 +14,8 @@ export type AuthStatus = 'loading' | 'authed' | 'guest';
 
 export type BootstrapResult =
   | { kind: 'guest' }
-  | { kind: 'authed'; profile: Profile; optimistic: boolean };
+  | { kind: 'authed'; profile: Profile; optimistic: boolean }
+  | { kind: 'admin_portal' };
 
 type AuthStoreState = {
   profile: Profile | null;
@@ -52,11 +55,14 @@ async function removeCachedProfile(): Promise<void> {
 }
 
 function refreshProfileInBackground(set: (partial: Partial<AuthStoreState>) => void) {
-  void getMe()
-    .then(async (profile) => {
-      await writeCachedProfile(profile);
-      setMobileUser({ id: profile.id });
-      set({ profile });
+  void Promise.all([getMe(), getTokens()])
+    .then(async ([profile, tokens]) => {
+      const enriched = tokens?.token
+        ? enrichProfileFromAccessToken(profile, tokens.token)
+        : profile;
+      await writeCachedProfile(enriched);
+      setMobileUser({ id: enriched.id });
+      set({ profile: enriched });
     })
     .catch(() => {
       // Keep optimistic cached profile when background refresh fails.
@@ -68,10 +74,12 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   status: 'loading',
 
   setSession: async (result) => {
+    const profile = enrichProfileFromAccessToken(result.profile, result.token);
+    assertStudentProfile(profile);
     await saveTokens({ token: result.token, refreshToken: result.refreshToken });
-    await writeCachedProfile(result.profile);
-    setMobileUser({ id: result.profile.id });
-    set({ profile: result.profile, status: 'authed' });
+    await writeCachedProfile(profile);
+    setMobileUser({ id: profile.id });
+    set({ profile, status: 'authed' });
   },
 
   setProfile: async (profile) => {
@@ -103,21 +111,38 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     }
 
     if (cached) {
-      set({ profile: cached, status: 'authed' });
-      setMobileUser({ id: cached.id });
+      const optimisticProfile = enrichProfileFromAccessToken(cached, tokens.token);
+      if (isAdminProfile(optimisticProfile)) {
+        await get().signOut();
+        return { kind: 'admin_portal' };
+      }
+      set({ profile: optimisticProfile, status: 'authed' });
+      setMobileUser({ id: optimisticProfile.id });
     }
 
     try {
-      const profile = await getMe();
+      const profile = enrichProfileFromAccessToken(
+        await getMe(),
+        tokens.token,
+      );
+      if (isAdminProfile(profile)) {
+        await get().signOut();
+        return { kind: 'admin_portal' };
+      }
       await writeCachedProfile(profile);
       setMobileUser({ id: profile.id });
       set({ profile, status: 'authed' });
       return { kind: 'authed', profile, optimistic: false };
     } catch {
       if (cached) {
-        set({ profile: cached, status: 'authed' });
+        const profile = enrichProfileFromAccessToken(cached, tokens.token);
+        if (isAdminProfile(profile)) {
+          await get().signOut();
+          return { kind: 'admin_portal' };
+        }
+        set({ profile, status: 'authed' });
         get().refreshProfileInBackground();
-        return { kind: 'authed', profile: cached, optimistic: true };
+        return { kind: 'authed', profile, optimistic: true };
       }
 
       await get().signOut();

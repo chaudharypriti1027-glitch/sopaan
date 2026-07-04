@@ -243,7 +243,7 @@ export function MainStack() {
       <Stack.Screen
         name="Leaderboard"
         getComponent={lazyScreen(() => require('../screens/app/LeaderboardScreen'), 'LeaderboardScreen')}
-        options={{ title: t('leaderboard') }}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="Search"
@@ -267,19 +267,6 @@ export function MainStack() {
           'CurrentAffairReaderScreen',
         )}
         options={{ title: t('currentAffairReader') }}
-      />
-      <Stack.Screen
-        name="AdminDashboard"
-        getComponent={lazyScreen(
-          () => require('../screens/app/AdminDashboardScreen'),
-          'AdminDashboardScreen',
-        )}
-        options={{ title: t('admin') }}
-      />
-      <Stack.Screen
-        name="AdminContent"
-        getComponent={lazyScreen(() => require('../screens/app/AdminContentScreen'), 'AdminContentScreen')}
-        options={{ title: t('contentManager') }}
       />
     </Stack.Navigator>
   );

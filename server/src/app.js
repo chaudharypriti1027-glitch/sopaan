@@ -1,8 +1,11 @@
+import path from 'path';
+import { fileURLToPath } from 'url';
 import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 import compression from 'compression';
 import { env } from './config/env.js';
+import { getSeedAdminUser } from './seed/adminConfig.js';
 import { securityConfig } from './config/securityConfig.js';
 import apiRoutes from './routes/index.js';
 import metricsRoutes from './routes/metricsRoutes.js';
@@ -29,7 +32,18 @@ if (securityConfig.trustProxy) {
 app.use(httpsRedirectMiddleware);
 app.use(
   helmet({
-    contentSecurityPolicy: env.isProduction ? undefined : false,
+    contentSecurityPolicy: env.isProduction
+      ? {
+          directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'"],
+            styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+            fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+            imgSrc: ["'self'", 'data:'],
+            connectSrc: ["'self'"],
+          },
+        }
+      : false,
     crossOriginEmbedderPolicy: false,
     hsts: env.isProduction
       ? { maxAge: 31_536_000, includeSubDomains: true, preload: true }
@@ -96,6 +110,24 @@ app.use(compression());
 
 app.use(metricsRoutes);
 app.use('/api', apiRateLimiter, apiRoutes);
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const adminPublicDir = path.join(__dirname, '../public/admin');
+const adminIndexHtml = path.join(adminPublicDir, 'index.html');
+
+app.get('/admin/login-hint.json', (_req, res) => {
+  if (env.isProduction) {
+    res.status(404).json({ email: null });
+    return;
+  }
+  const { email } = getSeedAdminUser();
+  res.json({ email });
+});
+
+app.get(['/admin', '/admin/'], (_req, res) => {
+  res.sendFile(adminIndexHtml);
+});
+app.use('/admin', express.static(adminPublicDir, { index: 'index.html' }));
 
 app.use(notFound);
 setupSentryExpressErrorHandler(app);

@@ -1,6 +1,6 @@
 import { describe, expect, it } from '@jest/globals';
 import { createMockHomeFeed } from '../../../test/fixtures/homeFeed';
-import { resolveHomeSectionVisibility, visibleHomeSections } from '../homeSectionConfig';
+import { resolveHomeSectionVisibility, visibleHomeSections, HOME_SECTION_META } from '../homeSectionConfig';
 
 describe('homeSectionConfig', () => {
   it('orders visible sections and hides completed daily challenge', () => {
@@ -42,5 +42,11 @@ describe('homeSectionConfig', () => {
 
     expect(resolveHomeSectionVisibility(feed).dailyChallenge).toBe(true);
     expect(visibleHomeSections(feed)).toContain('dailyChallenge');
+  });
+
+  it('exposes section metadata for feed rendering', () => {
+    expect(HOME_SECTION_META.nudges.overlapHero).toBe(true);
+    expect(HOME_SECTION_META.features.titleKey).toBe('explore');
+    expect(HOME_SECTION_META.continue.actionKey).toBe('seeAll');
   });
 });

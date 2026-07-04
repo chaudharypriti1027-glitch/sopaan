@@ -8,8 +8,10 @@ export function profileToUser(profile: Profile): User {
     name: profile.name,
     email: profile.email ?? null,
     phone: profile.phone,
-    role: 'student',
-    isPremium: false,
+    role: profile.role ?? 'student',
+    isPremium: profile.isPremium ?? false,
+    premiumPlan: profile.premiumPlan ?? null,
+    premiumExpiresAt: profile.premiumExpiresAt ?? null,
     coins: profile.coins ?? 0,
     ...(profile.streak != null && profile.streak > 0
       ? { streak: { count: profile.streak, lastActiveDate: null } }

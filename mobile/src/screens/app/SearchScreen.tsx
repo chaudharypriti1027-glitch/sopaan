@@ -16,6 +16,7 @@ import {
   Sparkles,
 } from 'lucide-react-native';
 import { Card, ChipSelect, Screen, TextField } from '../../components';
+import { MENU_TONE_STYLES } from '../../components/premium/premiumIconTokens';
 import type { SearchResult, SearchResultGroup } from '../../api/search';
 import { useRecentSearches, useSearch } from '../../hooks';
 import type { MainStackParamList } from '../../navigation/types';
@@ -32,6 +33,14 @@ const GROUP_LABELS: Record<SearchResultGroup, string> = {
 };
 
 const GROUP_ORDER: SearchResultGroup[] = ['exams', 'courses', 'tests', 'ai'];
+
+/** Matches each result group to the same tone Home/Profile use for that feature. */
+const GROUP_TONES: Record<SearchResultGroup, keyof typeof MENU_TONE_STYLES> = {
+  exams: 'coral',
+  courses: 'indigo',
+  tests: 'teal',
+  ai: 'gold',
+};
 
 function GroupIcon({ group, color }: { group: SearchResultGroup; color: string }) {
   const size = 18;
@@ -139,6 +148,8 @@ export function SearchScreen() {
         const items = searchQuery.data?.results[group] ?? [];
         if (!items.length) return null;
 
+        const tone = MENU_TONE_STYLES[GROUP_TONES[group]];
+
         return (
           <View key={group} style={styles.section}>
             <Text style={styles.sectionTitle}>{GROUP_LABELS[group]}</Text>
@@ -153,8 +164,8 @@ export function SearchScreen() {
                     pressed && styles.pressed,
                   ]}
                 >
-                  <View style={styles.resultIcon}>
-                    <GroupIcon group={group} color={theme.colors.brand.primary} />
+                  <View style={[styles.resultIcon, { backgroundColor: tone.bg }]}>
+                    <GroupIcon group={group} color={tone.fg} />
                   </View>
                   <View style={styles.resultText}>
                     <Text style={styles.resultTitle}>{item.title}</Text>
@@ -226,7 +237,6 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       width: 36,
       height: 36,
       borderRadius: theme.radii.md,
-      backgroundColor: theme.colors.brand.primaryMuted,
       alignItems: 'center',
       justifyContent: 'center',
     },

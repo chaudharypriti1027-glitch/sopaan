@@ -1,16 +1,17 @@
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Trophy } from 'lucide-react-native';
 import { memo, useCallback, useMemo } from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { useAuth } from '../../auth';
+import { useAuthStore } from '../../store/auth';
 import {
   AIBadge,
   AIGoldCard,
   Button,
   Card,
-  Eyebrow,
   Pill,
+  PremiumHeroCard,
   ProgressBar,
   QuizOption,
   RankRing,
@@ -91,7 +92,7 @@ function ResultUnavailable() {
 
 function ResultScreenContent({ params }: { params: MainStackParamList['Result'] }) {
   const navigation = useNavigation<ResultNav>();
-  const { user } = useAuth();
+  const profileName = useAuthStore((state) => state.profile?.name);
   const { theme } = useTheme();
   const { t } = useTranslation('app');
   const { formatNumber, formatPercent, formatOrdinal } = useFormat();
@@ -129,48 +130,53 @@ function ResultScreenContent({ params }: { params: MainStackParamList['Result'] 
   const listHeader = useMemo(
     () => (
       <View style={styles.content}>
-        <View style={styles.heroHeader}>
-          <Eyebrow>{t('result.completeEyebrow')}</Eyebrow>
-          <Text style={styles.heroTitle}>{t('result.title')}</Text>
+        <PremiumHeroCard
+          icon={<Trophy size={24} color="#FFFFFF" strokeWidth={1.8} />}
+          eyebrow={t('result.completeEyebrow')}
+          title={t('result.title')}
+        >
           <Text style={styles.heroSubtitle}>
             {t('result.scoreSubtitle', { score: attempt.score, total: totalQuestions })}
           </Text>
-        </View>
 
-        <View style={styles.heroRingWrap}>
-          <RankRing
-            value={attempt.accuracy}
-            max={100}
-            label={t('result.accuracy')}
-            size={120}
-            variant="teal"
-          />
-        </View>
-
-        <View style={styles.statPills}>
-          {rankChange != null && rankChange !== 0 ? (
-            <Pill
-              label={
-                rankChange > 0
-                  ? t('result.placesUp', { count: Math.abs(rankChange) })
-                  : t('result.placesDown', { count: Math.abs(rankChange) })
-              }
+          <View style={styles.heroRingWrap}>
+            <RankRing
+              value={attempt.accuracy}
+              max={100}
+              label={t('result.accuracy')}
+              size={120}
               variant="teal"
+              trackColor="rgba(255,255,255,0.15)"
+              accentColor="#F4D58D"
+              labelColor="rgba(255,255,255,0.6)"
             />
-          ) : null}
-          <Pill
-            label={t('result.percentile', { value: attempt.percentile ?? 0 })}
-            variant="gold"
-          />
-          <Pill label={t('result.xpEarned', { count: attempt.score * 5 })} variant="primary" />
-        </View>
+          </View>
+
+          <View style={styles.statPills}>
+            {rankChange != null && rankChange !== 0 ? (
+              <Pill
+                label={
+                  rankChange > 0
+                    ? t('result.placesUp', { count: Math.abs(rankChange) })
+                    : t('result.placesDown', { count: Math.abs(rankChange) })
+                }
+                variant="teal"
+              />
+            ) : null}
+            <Pill
+              label={t('result.percentile', { value: attempt.percentile ?? 0 })}
+              variant="gold"
+            />
+            <Pill label={t('result.xpEarned', { count: attempt.score * 5 })} variant="primary" />
+          </View>
+        </PremiumHeroCard>
 
         <ShareMilestoneButton
           fullWidth
           variant="gold"
           data={{
             kind: 'rank',
-            userName: user?.name ?? t('result.sopaanStudent'),
+            userName: profileName ?? t('result.sopaanStudent'),
             headline: attempt.rank ? `#${attempt.rank}` : formatPercent(attempt.accuracy, 0),
             subtitle: t('result.accuracyMetric', {
               value: attempt.accuracy,
@@ -241,12 +247,13 @@ function ResultScreenContent({ params }: { params: MainStackParamList['Result'] 
     [
       attempt,
       coaching,
+      formatOrdinal,
       navigation,
       rankChange,
       styles,
       topicStats,
       totalQuestions,
-      user?.name,
+      profileName,
       t,
       formatNumber,
       formatPercent,
@@ -319,28 +326,23 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       gap: theme.spacing.xl,
       paddingBottom: theme.spacing['4xl'],
     },
-    heroHeader: {
-      alignItems: 'center',
-      gap: theme.spacing.xs,
-    },
-    heroTitle: {
-      ...theme.typography.presets.h2,
-      color: theme.colors.text.primary,
-      textAlign: 'center',
-    },
     heroSubtitle: {
       ...theme.typography.presets.body,
-      color: theme.colors.text.secondary,
+      color: 'rgba(255,255,255,0.7)',
       textAlign: 'center',
+      zIndex: 1,
     },
     heroRingWrap: {
       alignItems: 'center',
+      zIndex: 1,
+      paddingVertical: theme.spacing.xs,
     },
     statPills: {
       flexDirection: 'row',
       flexWrap: 'wrap',
       justifyContent: 'center',
       gap: theme.spacing.sm,
+      zIndex: 1,
     },
     section: {
       gap: theme.spacing.md,

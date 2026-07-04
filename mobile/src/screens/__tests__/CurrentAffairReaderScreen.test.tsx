@@ -15,6 +15,7 @@ jest.mock('@react-navigation/native', () => ({
 
 jest.mock('../../hooks', () => ({
   useCurrentAffair: (...args: unknown[]) => mockUseCurrentAffair(...args),
+  useNetworkStatus: () => ({ isOffline: false }),
 }));
 
 describe('CurrentAffairReaderScreen', () => {
@@ -25,6 +26,7 @@ describe('CurrentAffairReaderScreen', () => {
       data: createMockCurrentAffair(),
       isLoading: false,
       isError: false,
+      isFetching: false,
       refetch: mockRefetch,
     });
   });
@@ -34,12 +36,14 @@ describe('CurrentAffairReaderScreen', () => {
       data: undefined,
       isLoading: true,
       isError: false,
+      isFetching: true,
       refetch: mockRefetch,
     });
 
-    const { getByText } = renderWithProviders(<CurrentAffairReaderScreen />);
+    const { UNSAFE_getByType } = renderWithProviders(<CurrentAffairReaderScreen />);
+    const { ActivityIndicator } = require('react-native');
 
-    expect(getByText('Loading article…')).toBeTruthy();
+    expect(UNSAFE_getByType(ActivityIndicator)).toBeTruthy();
   });
 
   it('shows error state and retries fetch', async () => {
@@ -47,13 +51,14 @@ describe('CurrentAffairReaderScreen', () => {
       data: undefined,
       isLoading: false,
       isError: true,
+      isFetching: false,
       refetch: mockRefetch,
     });
 
-    const { getByText } = renderWithProviders(<CurrentAffairReaderScreen />);
+    const { getByText, getByTestId } = renderWithProviders(<CurrentAffairReaderScreen />);
 
-    expect(getByText('Could not load current affairs')).toBeTruthy();
-    fireEvent.press(getByText('Retry'));
+    expect(getByText('Could not load content')).toBeTruthy();
+    fireEvent.press(getByTestId('button-retry'));
 
     await waitFor(() => {
       expect(mockRefetch).toHaveBeenCalled();

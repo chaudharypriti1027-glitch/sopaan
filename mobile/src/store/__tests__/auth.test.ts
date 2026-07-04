@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import { getMe } from '../../api/me';
+import { AdminAppAccessError } from '../../auth/adminPortal';
 import { getAuthStore, useAuthStore } from '../../store/auth';
 import type { Profile } from '../../types/auth';
 
@@ -89,6 +90,20 @@ describe('useAuthStore', () => {
 
     expect(result).toEqual({ kind: 'authed', profile, optimistic: true });
     expect(getAuthStore().status).toBe('authed');
+  });
+
+  it('setSession rejects admin accounts', async () => {
+    await expect(
+      getAuthStore().setSession({
+        token: 'access-token',
+        refreshToken: 'refresh-token',
+        profile: { ...profile, role: 'admin' },
+        isNewUser: false,
+      }),
+    ).rejects.toBeInstanceOf(AdminAppAccessError);
+
+    expect(getAuthStore().status).toBe('guest');
+    expect(SecureStore.setItemAsync).not.toHaveBeenCalled();
   });
 
   it('signOut clears tokens and cached profile', async () => {

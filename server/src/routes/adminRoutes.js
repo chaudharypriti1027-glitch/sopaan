@@ -21,6 +21,9 @@ import {
   questionReviewSchema,
   jobRunsQuerySchema,
   triggerJobSchema,
+  adminBroadcastSchema,
+  adminAnnouncementSchema,
+  adminStudentQuerySchema,
 } from '../validators/adminValidators.js';
 import {
   questionCreateSchema,
@@ -153,6 +156,47 @@ router.post(
   '/jobs/:jobName/run',
   validate(triggerJobSchema),
   asyncHandler(jobAdminController.runJobNow),
+);
+
+router.get(
+  '/students',
+  validate(adminStudentQuerySchema, 'query'),
+  asyncHandler(adminController.listStudents),
+);
+
+router.get('/revenue', asyncHandler(adminController.getRevenueSummary));
+router.get(
+  '/payments',
+  validate(paginationQuerySchema, 'query'),
+  asyncHandler(adminController.listPayments),
+);
+
+router.post(
+  '/notifications/broadcast',
+  validate(adminBroadcastSchema),
+  asyncHandler(adminController.broadcastNotification),
+);
+router.post(
+  '/announcements',
+  validate(adminAnnouncementSchema),
+  asyncHandler(adminController.publishAnnouncement),
+);
+router.get(
+  '/notifications/recent',
+  validate(paginationQuerySchema, 'query'),
+  asyncHandler(adminController.listRecentBroadcasts),
+);
+
+router.get('/team', asyncHandler(adminController.listTeamMembers));
+router.get(
+  '/media',
+  validate(paginationQuerySchema, 'query'),
+  asyncHandler(adminController.listMediaAssets),
+);
+router.get(
+  '/live-classes',
+  validate(paginationQuerySchema, 'query'),
+  asyncHandler(adminController.listAdminLiveClasses),
 );
 
 export default router;

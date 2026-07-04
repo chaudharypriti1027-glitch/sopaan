@@ -26,11 +26,11 @@ import { ProfileSectionLabel } from '../components/profile/ProfileSectionLabel';
 import { ProfileStatsCard } from '../components/profile/ProfileStatsCard';
 import { buildProfileMenuSections } from '../components/profile/profileMenu';
 import { HOME_V2 } from '../components/home/homeStyles';
+import { usePremiumDialog } from '../components/premium/PremiumDialogProvider';
 import { useAuth } from '../auth';
-import { resetToLogin } from '../auth/routeAfterSession';
 import { useMe, useProfileSummary, useUpdateMe } from '../hooks';
 import { queryKeys } from '../hooks/queryKeys';
-import type { AppTabParamList, MainStackParamList, RootStackParamList } from '../navigation/types';
+import type { AppTabParamList, MainStackParamList } from '../navigation/types';
 import { useTheme } from '../theme';
 import { parseApiError } from '../api';
 import { uploadAvatar } from '../api/me';
@@ -43,8 +43,6 @@ type ProfileNav = CompositeNavigationProp<
   BottomTabNavigationProp<AppTabParamList, 'Profile'>,
   NativeStackNavigationProp<MainStackParamList>
 >;
-
-type RootNav = NativeStackNavigationProp<RootStackParamList>;
 
 export function ProfileScreen() {
   const { t } = useTranslation(['app', 'common', 'settings']);
@@ -74,29 +72,27 @@ export function ProfileScreen() {
       if (profile) {
         void summaryQuery.refetch();
       }
+      // `summaryQuery.refetch` is a stable react-query function reference;
+      // depending on the whole query object would re-run this every render.
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [profile, summaryQuery.refetch]),
   );
 
   const mainNav = () => navigation.getParent<NativeStackNavigationProp<MainStackParamList>>();
-  const rootNav = () => navigation.getParent()?.getParent<RootNav>();
+
+  const { confirm } = usePremiumDialog();
 
   const handleLogout = () => {
-    Alert.alert(t('settings:logoutTitle'), t('app:profile.logoutBody'), [
-      { text: t('common:cancel'), style: 'cancel' },
-      {
-        text: t('settings:logout'),
-        style: 'destructive',
-        onPress: () => {
-          void (async () => {
-            await logout();
-            const root = rootNav();
-            if (root) {
-              resetToLogin(root);
-            }
-          })();
-        },
+    confirm({
+      title: t('settings:logoutConfirm'),
+      message: t('app:profile.logoutBody'),
+      confirmLabel: t('settings:logout'),
+      icon: 'logout',
+      tone: 'danger',
+      onConfirm: () => {
+        void logout();
       },
-    ]);
+    });
   };
 
   const handleMenuItemPress = (sectionId: string, itemId: string) => {

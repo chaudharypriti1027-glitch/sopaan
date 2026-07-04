@@ -3,7 +3,6 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MessageCircle, ThumbsUp, Users } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   Alert,
   StyleSheet,
   Text,
@@ -12,6 +11,7 @@ import {
 import {
   Button,
   Card,
+  QueryStateView,
   Screen,
   SectionTitle,
   SegTabs,
@@ -23,6 +23,7 @@ import {
   useDoubts,
   useGroups,
   useJoinGroup,
+  useNetworkStatus,
 } from '../../hooks';
 import { useAuth } from '../../auth';
 import type { MainStackParamList } from '../../navigation/types';
@@ -58,6 +59,7 @@ export function ForumScreen() {
   const [subject, setSubject] = useState('General');
   const [groupName, setGroupName] = useState('');
   const [examTag, setExamTag] = useState('SSC-CGL');
+  const { isOffline } = useNetworkStatus();
 
   const doubtsQuery = useDoubts({ limit: 30 });
   const groupsQuery = useGroups({ limit: 30 });
@@ -126,9 +128,14 @@ export function ForumScreen() {
             </Card>
           ) : null}
 
-          {doubtsQuery.isLoading ? (
-            <ActivityIndicator color={theme.colors.brand.primary} />
-          ) : (
+          <QueryStateView
+            isLoading={doubtsQuery.isLoading}
+            isError={doubtsQuery.isError}
+            isFetching={doubtsQuery.isFetching}
+            isOffline={isOffline}
+            hasData={(doubtsQuery.data?.items.length ?? 0) > 0}
+            onRetry={() => void doubtsQuery.refetch()}
+          >
             <View style={styles.list}>
               {(doubtsQuery.data?.items ?? []).map((post) => (
                 <Card key={post.id} style={styles.post}>
@@ -149,7 +156,7 @@ export function ForumScreen() {
                 </Card>
               ))}
             </View>
-          )}
+          </QueryStateView>
         </>
       ) : (
         <>
@@ -163,9 +170,14 @@ export function ForumScreen() {
             />
           </Card>
 
-          {groupsQuery.isLoading ? (
-            <ActivityIndicator color={theme.colors.brand.primary} />
-          ) : (
+          <QueryStateView
+            isLoading={groupsQuery.isLoading}
+            isError={groupsQuery.isError}
+            isFetching={groupsQuery.isFetching}
+            isOffline={isOffline}
+            hasData={(groupsQuery.data?.items.length ?? 0) > 0}
+            onRetry={() => void groupsQuery.refetch()}
+          >
             <View style={styles.list}>
               {(groupsQuery.data?.items ?? []).map((group) => {
                 const memberIds = group.members ?? [];
@@ -213,7 +225,7 @@ export function ForumScreen() {
               );
               })}
             </View>
-          )}
+          </QueryStateView>
         </>
       )}
     </Screen>

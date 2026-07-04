@@ -144,4 +144,19 @@ export const triggerJobSchema = z.object({
   force: z.boolean().optional(),
 });
 
+export const adminStudentQuerySchema = paginationQuerySchema.extend({
+  q: z.string().trim().optional(),
+});
+
+export const adminBroadcastSchema = z.object({
+  title: z.string().trim().min(1).max(120),
+  body: z.string().trim().min(1).max(500),
+  audience: z.enum(['all', 'active', 'pro', 'free']).optional().default('all'),
+});
+
+export const adminAnnouncementSchema = z.object({
+  message: z.string().trim().min(1).max(280),
+  link: z.string().trim().max(80).optional(),
+});
+
 export { adminContentQuerySchema, publishStatusSchema, questionReviewSchema } from './questionImportValidators.js';

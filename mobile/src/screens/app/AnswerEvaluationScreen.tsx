@@ -1,6 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Camera, CheckCircle2, Image as ImageIcon } from 'lucide-react-native';
+import { Award, Camera, CheckCircle2, Image as ImageIcon } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -14,8 +14,10 @@ import {
 import { useTranslation } from 'react-i18next';
 import {
   AIBadge,
+  BackButton,
   Button,
   Card,
+  PremiumHeroCard,
   ProgressBar,
   Screen,
   SectionTitle,
@@ -127,9 +129,7 @@ export function AnswerEvaluationScreen() {
 
   return (
     <Screen scroll contentContainerStyle={styles.content}>
-      <Pressable onPress={() => navigation.goBack()} hitSlop={12}>
-        <Text style={styles.back}>{t('app:askAi.back')}</Text>
-      </Pressable>
+      <BackButton onPress={() => navigation.goBack()} />
 
       <View style={styles.header}>
         <SectionTitle
@@ -198,13 +198,16 @@ export function AnswerEvaluationScreen() {
 
       {result ? (
         <View style={styles.results}>
-          <Card style={styles.scoreCard}>
-            <Text style={styles.scoreLabel}>{t('answerEvaluation.totalScore')}</Text>
-            <Text style={styles.scoreValue}>
-              {formatNumber(result.score)}
-              <Text style={styles.scoreMax}> / {formatNumber(MAX_MARKS)}</Text>
-            </Text>
-          </Card>
+          <PremiumHeroCard
+            icon={<Award size={24} color="#FFFFFF" strokeWidth={1.8} />}
+            eyebrow={t('answerEvaluation.totalScore')}
+            title={`${formatNumber(result.score)} / ${formatNumber(MAX_MARKS)}`}
+            stats={[
+              { label: t('answerEvaluation.content'), value: `${formatNumber(result.subScores.content)}` },
+              { label: t('answerEvaluation.structure'), value: `${formatNumber(result.subScores.structure)}` },
+              { label: t('answerEvaluation.clarity'), value: `${formatNumber(result.subScores.clarity)}` },
+            ]}
+          />
 
           <SectionTitle title={t('answerEvaluation.breakdown')} />
           <Card style={styles.breakdown}>
@@ -260,10 +263,6 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       gap: theme.spacing.lg,
       paddingBottom: theme.spacing['3xl'],
     },
-    back: {
-      ...theme.typography.presets.bodyMedium,
-      color: theme.colors.brand.primary,
-    },
     header: {
       flexDirection: 'row',
       alignItems: 'flex-start',
@@ -305,25 +304,6 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     },
     results: {
       gap: theme.spacing.md,
-    },
-    scoreCard: {
-      alignItems: 'center',
-      paddingVertical: theme.spacing.xl,
-    },
-    scoreLabel: {
-      ...theme.typography.presets.label,
-      color: theme.colors.text.secondary,
-      textTransform: 'uppercase',
-    },
-    scoreValue: {
-      ...theme.typography.presets.statLarge,
-      fontSize: theme.typography.scale.fontSize['3xl'],
-      color: theme.colors.brand.primary,
-      marginTop: theme.spacing.xs,
-    },
-    scoreMax: {
-      fontSize: theme.typography.scale.fontSize.xl,
-      color: theme.colors.text.tertiary,
     },
     breakdown: {
       gap: theme.spacing.md,

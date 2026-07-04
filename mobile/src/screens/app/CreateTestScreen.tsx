@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import {
   AIBadge,
+  AIGoldCard,
   Button,
   Card,
   ChipSelect,
@@ -173,17 +174,22 @@ export function CreateTestScreen() {
             ))}
           </View>
 
+        </Card>
+
+        <AIGoldCard style={styles.aiCard}>
           <View style={styles.aiRow}>
             <AIBadge label="AI" />
-            <Button
-              label={aiLoading ? 'Generating…' : 'Auto-generate with AI'}
-              variant="ghost"
-              icon={<Sparkles size={16} color={theme.colors.brand.primary} />}
-              onPress={autoGenerate}
-              disabled={aiLoading}
-            />
+            <Text style={styles.aiHint}>Generate 5 questions instantly for this topic</Text>
           </View>
-        </Card>
+          <Button
+            label={aiLoading ? 'Generating…' : 'Auto-generate with AI'}
+            variant="gold"
+            icon={<Sparkles size={16} color={theme.colors.text.inverse} />}
+            onPress={autoGenerate}
+            disabled={aiLoading}
+            fullWidth
+          />
+        </AIGoldCard>
 
         <SectionTitle title="Questions" />
         {questions.map((question, index) => (
@@ -243,7 +249,9 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     content: { padding: theme.spacing.lg, gap: theme.spacing.lg, paddingBottom: theme.spacing['3xl'] },
     form: { gap: theme.spacing.md },
     diffRow: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm },
-    aiRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+    aiCard: { gap: theme.spacing.md },
+    aiRow: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm },
+    aiHint: { ...theme.typography.presets.caption, color: theme.colors.text.secondary, flex: 1 },
     questionCard: { gap: theme.spacing.md },
     qLabel: {
       ...theme.typography.presets.label,
