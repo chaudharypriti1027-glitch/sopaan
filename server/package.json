@@ -25,7 +25,7 @@
     "@anthropic-ai/sdk": "^0.57.0",
     "@aws-sdk/client-s3": "^3.1079.0",
     "@aws-sdk/s3-request-presigner": "^3.1079.0",
-    "@sentry/node": "^9.47.1",
+    "@sentry/node": "^10.63.0",
     "bcrypt": "^6.0.0",
     "bullmq": "^5.79.1",
     "compression": "^1.8.0",
