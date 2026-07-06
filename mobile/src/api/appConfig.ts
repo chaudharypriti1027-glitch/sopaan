@@ -21,6 +21,7 @@ export async function fetchVersionRequirements(): Promise<VersionRequirements> {
       nativeVersion: config.nativeVersion,
       runtimeVersion: config.runtimeVersion,
     },
+    timeout: 5_000,
   });
   return data;
 }

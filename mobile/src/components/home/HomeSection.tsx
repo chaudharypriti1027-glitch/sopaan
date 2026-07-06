@@ -1,46 +1,104 @@
 import { useMemo, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { HOME_UI } from './homeTheme';
+import { LinearGradient } from 'expo-linear-gradient';
+import { HOME_UI, homeSectionPanel } from './homeTheme';
 
 type HomeSectionProps = {
   children: ReactNode;
   testID?: string;
-  /** Overlap hero gradient like the For You nudge card. */
-  overlapHero?: boolean;
-  /** First block under the hero — slightly tighter top spacing. */
   isFirst?: boolean;
-  /** Horizontal inset for section body (default true). */
+  highlighted?: boolean;
   padded?: boolean;
+  panel?: boolean;
+  panelTone?: 'default' | 'gold';
 };
 
-/** Consistent home feed section shell — spacing, overlap, and padding. */
 export function HomeSection({
   children,
   testID,
-  overlapHero = false,
   isFirst = false,
+  highlighted = false,
   padded = true,
+  panel = false,
+  panelTone = 'default',
 }: HomeSectionProps) {
-  const styles = useMemo(() => createStyles(overlapHero, isFirst, padded), [overlapHero, isFirst, padded]);
+  const styles = useMemo(
+    () => createStyles(isFirst, highlighted, padded, panel, panelTone),
+    [highlighted, isFirst, padded, panel, panelTone],
+  );
+
+  const body =
+    panel && !highlighted ? (
+      <View style={styles.panel}>
+        {panelTone === 'gold' ? (
+          <LinearGradient
+            colors={[HOME_UI.goldLt, HOME_UI.gold]}
+            start={{ x: 0, y: 0.5 }}
+            end={{ x: 1, y: 0.5 }}
+            style={styles.panelAccent}
+          />
+        ) : (
+          <View style={styles.panelRule} />
+        )}
+        {children}
+      </View>
+    ) : (
+      children
+    );
 
   return (
     <View style={styles.wrap} testID={testID}>
-      {children}
+      {highlighted ? <View style={styles.highlight}>{body}</View> : body}
     </View>
   );
 }
 
-function createStyles(overlapHero: boolean, isFirst: boolean, padded: boolean) {
-  const marginTop = overlapHero
-    ? HOME_UI.forYouLift
-    : isFirst
-      ? 16
-      : HOME_UI.sectionGap;
-
+function createStyles(
+  isFirst: boolean,
+  highlighted: boolean,
+  padded: boolean,
+  panel: boolean,
+  panelTone: 'default' | 'gold',
+) {
   return StyleSheet.create({
     wrap: {
-      marginTop,
-      ...(padded ? { paddingHorizontal: 16 } : null),
+      marginTop: isFirst ? 0 : HOME_UI.sectionGap,
+      ...(padded && !highlighted && !panel ? { paddingHorizontal: HOME_UI.horizontalPad } : null),
+      ...(panel && !highlighted ? { paddingHorizontal: HOME_UI.horizontalPad } : null),
+    },
+    highlight: {
+      marginHorizontal: HOME_UI.horizontalPad - 4,
+      paddingHorizontal: 12,
+      paddingTop: 12,
+      paddingBottom: 6,
+      borderRadius: HOME_UI.cardRadiusLg,
+      backgroundColor: HOME_UI.surface,
+      borderWidth: 1,
+      borderColor: HOME_UI.goldBorder,
+      borderBottomColor: HOME_UI.bevelDark,
+      borderRightColor: HOME_UI.bevelDark,
+    },
+    panel: {
+      ...homeSectionPanel(panelTone),
+      overflow: 'hidden',
+    },
+    panelAccent: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: 3,
+      zIndex: 1,
+    },
+    panelRule: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: 2,
+      backgroundColor: HOME_UI.gold,
+      opacity: 0.4,
+      zIndex: 1,
     },
   });
 }

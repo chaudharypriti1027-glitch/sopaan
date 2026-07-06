@@ -9,6 +9,17 @@ const mockUpdateMe = jest.fn();
 const mockUploadAvatar = jest.fn();
 const mockSetProfile = jest.fn();
 const mockRouteAfterSession = jest.fn();
+const mockCompleteOnboarding = jest.fn();
+
+jest.mock('../../auth/routeAfterSession', () => ({
+  routeAfterSession: (...args: unknown[]) => mockRouteAfterSession(...args),
+}));
+
+jest.mock('../../auth/OnboardingContext', () => ({
+  useOnboarding: () => ({
+    completeOnboarding: mockCompleteOnboarding,
+  }),
+}));
 const mockPickImageAsset = jest.fn();
 
 jest.mock('@react-navigation/native', () => ({
@@ -26,10 +37,6 @@ jest.mock('../../language/LanguageContext', () => ({
     toggleLanguage: jest.fn(async () => undefined),
     ready: true,
   }),
-}));
-
-jest.mock('../../auth/routeAfterSession', () => ({
-  routeAfterSession: (...args: unknown[]) => mockRouteAfterSession(...args),
 }));
 
 jest.mock('../../utils/imagePicker', () => ({
@@ -70,6 +77,7 @@ jest.mock('../../store/auth', () => ({
 describe('ProfileSetupScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockCompleteOnboarding.mockResolvedValue(undefined);
     mockProfileState.profile = {
       id: '1',
       name: 'Arjun Patel',
@@ -163,6 +171,8 @@ describe('ProfileSetupScreen', () => {
 
     await waitFor(() => {
       expect(mockSetAppLanguage).toHaveBeenLastCalledWith('hi');
+      expect(mockUpdateMe).toHaveBeenLastCalledWith({ language: 'hi' });
+      expect(mockCompleteOnboarding).toHaveBeenCalled();
       expect(mockRouteAfterSession).toHaveBeenCalledWith(
         expect.any(Object),
         expect.objectContaining({

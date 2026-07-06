@@ -9,6 +9,7 @@ import {
   AuthAnimatedSection,
   AuthBrandHeader,
   AuthDivider,
+  AuthFormCard,
   AuthPremiumField,
   AuthScreen,
   AuthSocialPair,
@@ -21,6 +22,7 @@ import { completeStudentLogin, isAdminAppAccessError } from '../auth/studentSess
 import { useGoogleSignIn } from '../auth/useGoogleSignIn';
 import type { AuthStackParamList, RootStackParamList } from '../navigation/types';
 import { AUTH_UI } from '../components/auth/authTheme';
+import { platformShadow } from '../utils/platformShadow';
 
 type LoginNav = CompositeNavigationProp<
   NativeStackNavigationProp<AuthStackParamList, 'Login'>,
@@ -151,17 +153,14 @@ export function LoginScreen() {
     <AuthScreen
       scrollProps={{ keyboardShouldPersistTaps: 'handled' }}
       header={
-        <AuthBrandHeader title={t('login.brandTitle')} subtitle={t('login.brandSubtitle')} />
+        <AuthBrandHeader
+          badge={t('login.eyebrow')}
+          title={t('login.brandTitle')}
+          subtitle={t('login.brandSubtitle')}
+        />
       }
       footer={
         <View style={styles.footer}>
-          <PrimaryButton
-            label={t('login.submit')}
-            loading={loginLoading}
-            disabled={!canEmailLogin}
-            onPress={handlePasswordLogin}
-          />
-
           <AuthDivider label={t('login.dividerOr')} />
 
           <AuthSocialPair
@@ -193,53 +192,63 @@ export function LoginScreen() {
       }
     >
       <Animated.View style={shakeStyle}>
-        <AuthAnimatedSection index={0}>
-          <AuthPremiumField
-            dense
-            variant="email"
-            label={t('login.emailAddress')}
-            value={email}
-            placeholder={t('login.emailPlaceholder')}
-            onChangeText={(value) => {
-              setEmail(value);
-              if (emailError) setEmailError(undefined);
-              if (formError) setFormError(null);
-            }}
-            error={emailError}
-            editable={!isBusy}
-            testID="login-email"
+        <AuthFormCard>
+          <AuthAnimatedSection index={0}>
+            <AuthPremiumField
+              dense
+              variant="email"
+              label={t('login.emailAddress')}
+              value={email}
+              placeholder={t('login.emailPlaceholder')}
+              onChangeText={(value) => {
+                setEmail(value);
+                if (emailError) setEmailError(undefined);
+                if (formError) setFormError(null);
+              }}
+              error={emailError}
+              editable={!isBusy}
+              testID="login-email"
+            />
+          </AuthAnimatedSection>
+
+          <AuthAnimatedSection index={1}>
+            <AuthPremiumField
+              dense
+              variant="password"
+              label={t('login.password')}
+              value={password}
+              onChangeText={(value) => {
+                setPassword(value);
+                if (passwordError) setPasswordError(undefined);
+                if (formError) setFormError(null);
+              }}
+              placeholder={t('login.passwordPlaceholder')}
+              error={passwordError}
+              editable={!isBusy}
+              testID="login-password"
+            />
+          </AuthAnimatedSection>
+
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t('login.forgotPassword')}
+            onPress={handleForgotPassword}
+            style={styles.forgotWrap}
+            testID="login-forgot-password"
+          >
+            <Text style={styles.forgotText}>{t('login.forgotPassword')}</Text>
+          </Pressable>
+
+          {formError ? <Text style={styles.formError}>{formError}</Text> : null}
+
+          <PrimaryButton
+            label={t('login.submit')}
+            loading={loginLoading}
+            disabled={!canEmailLogin}
+            onPress={handlePasswordLogin}
+            style={styles.submitBtn}
           />
-        </AuthAnimatedSection>
-
-        <AuthAnimatedSection index={1}>
-          <AuthPremiumField
-            dense
-            variant="password"
-            label={t('login.password')}
-            value={password}
-            onChangeText={(value) => {
-              setPassword(value);
-              if (passwordError) setPasswordError(undefined);
-              if (formError) setFormError(null);
-            }}
-            placeholder={t('login.passwordPlaceholder')}
-            error={passwordError}
-            editable={!isBusy}
-            testID="login-password"
-          />
-        </AuthAnimatedSection>
-
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t('login.forgotPassword')}
-          onPress={handleForgotPassword}
-          style={styles.forgotWrap}
-          testID="login-forgot-password"
-        >
-          <Text style={styles.forgotText}>{t('login.forgotPassword')}</Text>
-        </Pressable>
-
-        {formError ? <Text style={styles.formError}>{formError}</Text> : null}
+        </AuthFormCard>
       </Animated.View>
     </AuthScreen>
   );
@@ -263,6 +272,13 @@ function createStyles() {
       backgroundColor: AUTH_UI.card,
       borderWidth: 1.5,
       borderColor: AUTH_UI.borderHover,
+      ...platformShadow({
+        color: AUTH_UI.shadowSm,
+        offsetY: 6,
+        opacity: 0.06,
+        radius: 14,
+        elevation: 2,
+      }),
     },
     pressed: { opacity: 0.75, backgroundColor: AUTH_UI.bg },
     footerMuted: {
@@ -291,12 +307,13 @@ function createStyles() {
       fontSize: 12,
       color: '#C4634F',
       textAlign: 'center',
-      marginTop: 8,
+      marginTop: 4,
+      marginBottom: 4,
     },
     forgotWrap: {
       alignSelf: 'flex-end',
-      marginTop: -4,
-      marginBottom: 4,
+      marginTop: -2,
+      marginBottom: 10,
       minHeight: 32,
       justifyContent: 'center',
     },
@@ -304,6 +321,9 @@ function createStyles() {
       fontSize: 12,
       fontWeight: '700',
       color: AUTH_UI.goldDeep,
+    },
+    submitBtn: {
+      marginTop: 6,
     },
   });
 }

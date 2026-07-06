@@ -156,3 +156,22 @@ export async function stubQuestionBatch({ subject, topic, difficulty, count, exa
 
   return docs;
 }
+
+export function stubBookChapterContent({ chapterTitle, chapterIndex, totalChapters }) {
+  return {
+    summary: `Dev stub summary for "${chapterTitle}" (chapter ${chapterIndex + 1} of ${totalChapters}).`,
+    pages: [
+      {
+        html: `<h2>${chapterTitle}</h2><p>Stub page one with a worked example: step 1, step 2, step 3.</p><ul><li>Key point alpha</li><li>Key point beta</li></ul>`,
+      },
+      {
+        html: `<p>Stub page two — practice problems and exam tips for ${chapterTitle}.</p><ol><li>Review formula sheet</li><li>Attempt 10 MCQs</li></ol>`,
+      },
+    ],
+  };
+}
+
+export function stubBookExplain(passage) {
+  const excerpt = passage.trim().slice(0, 80);
+  return `This passage is about "${excerpt}". Think of it like a quick revision note — focus on the core idea, not extra details. Remember this: stick to what the text says when you answer exam questions.`;
+}

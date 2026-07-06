@@ -1,24 +1,24 @@
 import { act, fireEvent, waitFor } from '@testing-library/react-native';
 import { SignupScreen } from '../SignupScreen';
 import { renderWithProviders } from '../../test/render';
+import type { Profile } from '../../types/auth';
 
 const mockNavigate = jest.fn();
 const mockUpdateMe = jest.fn();
 const mockSetProfile = jest.fn();
+const mockSignup = jest.fn();
+const mockRouteAfterSession = jest.fn();
 
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ navigate: mockNavigate }),
 }));
 
-jest.mock('../../api', () => ({
-  meApi: {
-    updateMe: (...args: unknown[]) => mockUpdateMe(...args),
-  },
-  parseApiError: (err: unknown) => ({
-    message: err instanceof Error ? err.message : 'Request failed',
-    code: 'REQUEST_FAILED',
-    status: 400,
-  }),
+jest.mock('../../auth/routeAfterSession', () => ({
+  routeAfterSession: (...args: unknown[]) => mockRouteAfterSession(...args),
+}));
+
+jest.mock('../../auth', () => ({
+  useAuth: () => ({ signup: mockSignup }),
 }));
 
 const profile = {
@@ -31,14 +31,60 @@ const profile = {
   createdAt: '',
 };
 
-jest.mock('../../store/auth', () => ({
-  useAuthStore: (selector: (state: { profile: typeof profile; setProfile: typeof mockSetProfile; status: 'authed' }) => unknown) =>
-    selector({ profile, setProfile: mockSetProfile, status: 'authed' }),
+const authStoreState: {
+  profile: Profile | null;
+  status: 'authed' | 'guest';
+} = {
+  profile,
+  status: 'authed',
+};
+
+jest.mock('../../store/auth', () => {
+  const hook = (selector: (state: {
+    profile: Profile | null;
+    setProfile: typeof mockSetProfile;
+    status: 'authed' | 'guest';
+  }) => unknown) =>
+    selector({
+      profile: authStoreState.profile,
+      setProfile: mockSetProfile,
+      status: authStoreState.status,
+    });
+
+  hook.getState = () => ({
+    profile: authStoreState.profile,
+  });
+
+  return { useAuthStore: hook };
+});
+
+jest.mock('../../api', () => ({
+  meApi: {
+    updateMe: (...args: unknown[]) => mockUpdateMe(...args),
+  },
+  privacyApi: {
+    getPolicy: jest.fn(async () => ({ version: '2025-06-01' })),
+  },
+  parseApiError: (err: unknown) => ({
+    message: err instanceof Error ? err.message : 'Request failed',
+    code: 'REQUEST_FAILED',
+    status: 400,
+  }),
 }));
 
-describe('SignupScreen', () => {
+jest.mock('../../auth/useGoogleSignIn', () => ({
+  useGoogleSignIn: () => ({
+    signInWithGoogle: jest.fn(),
+    loading: false,
+    isConfigured: false,
+  }),
+}));
+
+describe('SignupScreen post-OTP completion', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    authStoreState.status = 'authed';
+    authStoreState.profile = { ...profile, name: 'Student', phone: '+919876543210' };
     mockUpdateMe.mockResolvedValue({
       ...profile,
       name: 'Arjun Patel',
@@ -83,5 +129,49 @@ describe('SignupScreen', () => {
     });
 
     expect(mockUpdateMe).not.toHaveBeenCalled();
+  });
+});
+
+describe('SignupScreen email registration', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    authStoreState.status = 'guest';
+    authStoreState.profile = null;
+    mockSignup.mockImplementation(async () => {
+      authStoreState.status = 'authed';
+      authStoreState.profile = {
+        id: '2',
+        name: 'New User',
+        email: 'new@example.com',
+        phone: '',
+        state: '',
+        targetExam: '',
+        language: 'en' as const,
+        createdAt: '',
+        onboardingComplete: false,
+      };
+    });
+  });
+
+  it('routes to profile setup after creating an email account', async () => {
+    const { getByTestId } = renderWithProviders(<SignupScreen />);
+
+    fireEvent.changeText(getByTestId('signup-name-field'), 'New User');
+    fireEvent.changeText(getByTestId('signup-email-field'), 'new@example.com');
+    fireEvent.changeText(getByTestId('signup-password-field'), 'Password123!');
+    fireEvent.press(getByTestId('consent-policy'));
+    fireEvent.press(getByTestId('signup-create-account'));
+
+    await waitFor(() => {
+      expect(mockSignup).toHaveBeenCalled();
+      expect(mockRouteAfterSession).toHaveBeenCalledWith(
+        expect.any(Object),
+        expect.objectContaining({
+          name: 'New User',
+          email: 'new@example.com',
+          onboardingComplete: false,
+        }),
+      );
+    });
   });
 });

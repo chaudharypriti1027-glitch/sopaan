@@ -40,6 +40,7 @@ describe('User model', () => {
       rank: 1234,
       level: 5,
       coins: 120,
+      xp: 0,
       onboardingComplete: false,
       role: 'student',
       isPremium: false,

@@ -59,6 +59,12 @@ import {
   liveClassRecordingPublishSchema,
   adminLiveClassQuerySchema,
 } from '../validators/liveClassValidators.js';
+import {
+  adminBookGenerateSchema,
+  adminBookGenJobParamsSchema,
+  adminBookPublishParamsSchema,
+} from '../validation/library.js';
+import * as bookAdminController from '../controllers/bookAdminController.js';
 
 const router = Router();
 const validateId = validate(adminResourceParamsSchema, 'params');
@@ -394,6 +400,26 @@ router.patch(
   '/live-classes/:id/status',
   validate(liveClassStatusSchema),
   asyncHandler(adminController.updateAdminLiveClassStatus),
+);
+
+router.post(
+  '/books/generate',
+  adminOnly,
+  validate(adminBookGenerateSchema),
+  asyncHandler(bookAdminController.generateAdminBook),
+);
+router.get(
+  '/books/:jobId/status',
+  adminOnly,
+  validate(adminBookGenJobParamsSchema, 'params'),
+  asyncHandler(bookAdminController.getAdminBookGenStatus),
+);
+router.post(
+  '/books/:id/publish',
+  adminOnly,
+  validate(adminBookPublishParamsSchema, 'params'),
+  validateEmptyBody,
+  asyncHandler(bookAdminController.publishAdminBook),
 );
 
 router.get('/audit-logs', adminOnly, asyncHandler(adminController.listAuditLogs));

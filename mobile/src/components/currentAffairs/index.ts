@@ -5,3 +5,7 @@ export { CaStatsRow } from './CaStatsRow';
 export { CaFilterBar } from './CaFilterBar';
 export { CaCategoryPills, CA_CATEGORY_OPTIONS, type CaCategoryKey } from './CaCategoryPills';
 export { CaFilterSheet } from './CaFilterSheet';
+export { CaPremiumIcon } from './CaPremiumIcon';
+export { CaQuizBanner } from './CaQuizBanner';
+export { CaFeedHeader } from './CaFeedHeader';
+export { CA_UI, caFeedCard, caChip, caPressFeedback } from './caTheme';

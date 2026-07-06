@@ -9,13 +9,10 @@ export type PremiumHeroStat = {
 };
 
 type PremiumHeroCardProps = {
-  /** Small rendered icon element, e.g. <Trophy size={24} color="#FFF" />. */
+  /** Pre-built 3D icon tile (HomePremiumIcon / HomeSlotIcon). */
   icon: ReactNode;
-  /** Gradient used behind the icon tile. Defaults to gold. */
-  iconGradient?: readonly [string, string];
   eyebrow: string;
   title: string;
-  /** Optional element rendered top-right of the title row, e.g. a rank badge. */
   trailing?: ReactNode;
   stats?: PremiumHeroStat[];
   hint?: string;
@@ -27,7 +24,6 @@ type PremiumHeroCardProps = {
 /** Navy/gold gradient hero card — shared "Classic Premium" summary surface. */
 export function PremiumHeroCard({
   icon,
-  iconGradient = ['#D8B368', PREMIUM.gold],
   eyebrow,
   title,
   trailing,
@@ -46,18 +42,12 @@ export function PremiumHeroCard({
       end={{ x: 0.9, y: 1 }}
       style={[styles.card, style]}
     >
-      <View style={[styles.blob, styles.blobA]} />
-      <View style={[styles.blob, styles.blobB]} />
+      <View style={styles.meshLineA} />
+      <View style={styles.meshLineB} />
+      <View style={styles.goldGlow} pointerEvents="none" />
 
       <View style={styles.top}>
-        <LinearGradient
-          colors={[...iconGradient]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.iconTile}
-        >
-          {icon}
-        </LinearGradient>
+        <View style={styles.iconSlot}>{icon}</View>
         <View style={styles.info}>
           <Text style={styles.eyebrow}>{eyebrow}</Text>
           <Text style={styles.title} numberOfLines={1}>
@@ -102,18 +92,35 @@ function createStyles() {
       elevation: 6,
       gap: 16,
     },
-    blob: { position: 'absolute', borderRadius: 999, backgroundColor: 'rgba(194,154,78,0.2)' },
-    blobA: { top: -50, right: -50, width: 190, height: 190 },
-    blobB: { bottom: -30, left: -20, width: 130, height: 130 },
-    top: { flexDirection: 'row', alignItems: 'center', gap: 14, zIndex: 1 },
-    iconTile: {
-      width: 52,
-      height: 52,
-      borderRadius: 16,
-      alignItems: 'center',
-      justifyContent: 'center',
-      flexShrink: 0,
+    meshLineA: {
+      position: 'absolute',
+      top: 24,
+      left: -20,
+      right: -20,
+      height: 1,
+      backgroundColor: 'rgba(255,255,255,0.05)',
+      transform: [{ rotate: '-4deg' }],
     },
+    meshLineB: {
+      position: 'absolute',
+      bottom: 40,
+      left: -20,
+      right: -20,
+      height: 1,
+      backgroundColor: 'rgba(194,154,78,0.12)',
+      transform: [{ rotate: '3deg' }],
+    },
+    goldGlow: {
+      position: 'absolute',
+      top: -36,
+      right: -28,
+      width: 140,
+      height: 140,
+      borderRadius: 70,
+      backgroundColor: 'rgba(194,154,78,0.18)',
+    },
+    top: { flexDirection: 'row', alignItems: 'center', gap: 14, zIndex: 1 },
+    iconSlot: { flexShrink: 0 },
     info: { flex: 1, gap: 3 },
     eyebrow: {
       fontSize: 11,
@@ -133,7 +140,6 @@ function createStyles() {
       paddingVertical: 14,
       zIndex: 1,
     },
-    statCell: { flex: 1, flexDirection: 'row', alignItems: 'center' },
     divider: { width: StyleSheet.hairlineWidth, height: 30, backgroundColor: 'rgba(255,255,255,0.14)', marginRight: 0 },
     stat: { flex: 1, alignItems: 'center', gap: 3 },
     statValue: { fontSize: 16, fontWeight: '800', color: '#FFFFFF' },

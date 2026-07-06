@@ -2,8 +2,10 @@ import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { WifiOff } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
+import { HomeSlotIcon } from './HomePremiumIcon';
 import { Text } from '../Text';
 import { useTheme } from '../../theme';
+import { HOME_UI } from './homeTheme';
 
 /** Thin banner when showing a cached home feed while offline. */
 export function HomeOfflineBanner() {
@@ -13,7 +15,7 @@ export function HomeOfflineBanner() {
 
   return (
     <View style={styles.banner} testID="home-offline-banner">
-      <WifiOff size={14} color={theme.colors.brand.primary} strokeWidth={2} />
+      <HomeSlotIcon slot="inline" Icon={WifiOff} tone="gold" />
       <Text style={styles.label}>{t('home.offlineSaved')}</Text>
     </View>
   );
@@ -26,15 +28,17 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       alignItems: 'center',
       justifyContent: 'center',
       gap: theme.spacing.sm,
-      paddingVertical: theme.spacing.sm,
+      paddingVertical: 9,
       paddingHorizontal: theme.spacing.lg,
-      backgroundColor: theme.colors.brand.primaryMuted,
+      backgroundColor: HOME_UI.goldSoft,
+      borderBottomWidth: 1,
+      borderBottomColor: HOME_UI.goldBorder,
     },
     label: {
       fontSize: 12,
       fontFamily: theme.typography.fonts.ui.semibold,
       fontWeight: '600',
-      color: theme.colors.brand.primary,
+      color: HOME_UI.goldDeep,
     },
   });
 }

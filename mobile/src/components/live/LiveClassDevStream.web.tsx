@@ -4,14 +4,23 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-nati
 import { useTranslation } from 'react-i18next';
 import { createDevStreamPeerConnection, useDevStreamViewer } from '../../hooks/useDevStreamViewer';
 import { useTheme } from '../../theme';
+import { LiveClassEducatorPlaceholder } from './LiveClassEducatorPlaceholder';
 
 type LiveClassDevStreamProps = {
   classId: string;
   title?: string;
   instructor?: string;
+  instructorSubtitle?: string;
+  immersive?: boolean;
 };
 
-export function LiveClassDevStream({ classId, title, instructor }: LiveClassDevStreamProps) {
+export function LiveClassDevStream({
+  classId,
+  title,
+  instructor,
+  instructorSubtitle,
+  immersive = false,
+}: LiveClassDevStreamProps) {
   const { t } = useTranslation('app', { keyPrefix: 'liveClassViewer' });
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -51,35 +60,46 @@ export function LiveClassDevStream({ classId, title, instructor }: LiveClassDevS
       />
 
       {!hasMedia ? (
-        <View style={styles.waiting}>
-          {isConnecting ? <ActivityIndicator color={theme.colors.brand.primary} /> : null}
-          <Text style={styles.waitingText}>
-            {error ?? (isConnecting ? t('connectingEducator') : t('waitingEducator'))}
-          </Text>
-          {isFailed ? (
-            <Pressable onPress={retry} style={styles.retryButton}>
-              <Text style={styles.retryText}>{t('retryStream')}</Text>
-            </Pressable>
-          ) : null}
-        </View>
+        immersive ? (
+          <LiveClassEducatorPlaceholder
+            name={instructor ?? title ?? t('defaultTitle')}
+            subtitle={instructorSubtitle}
+            hint={error ?? (isConnecting ? t('connectingEducator') : t('waitingEducator'))}
+            loading={isConnecting}
+          />
+        ) : (
+          <View style={styles.waiting}>
+            {isConnecting ? <ActivityIndicator color={theme.colors.brand.primary} /> : null}
+            <Text style={styles.waitingText}>
+              {error ?? (isConnecting ? t('connectingEducator') : t('waitingEducator'))}
+            </Text>
+            {isFailed ? (
+              <Pressable onPress={retry} style={styles.retryButton}>
+                <Text style={styles.retryText}>{t('retryStream')}</Text>
+              </Pressable>
+            ) : null}
+          </View>
+        )
       ) : null}
 
-      <LinearGradient
-        colors={['transparent', 'rgba(0,0,0,0.75)']}
-        style={styles.overlay}
-        pointerEvents="none"
-      >
-        {title ? (
-          <Text style={styles.overlayTitle} numberOfLines={2}>
-            {title}
-          </Text>
-        ) : null}
-        {instructor ? (
-          <Text style={styles.overlayInstructor} numberOfLines={1}>
-            {instructor}
-          </Text>
-        ) : null}
-      </LinearGradient>
+      {!immersive ? (
+        <LinearGradient
+          colors={['transparent', 'rgba(0,0,0,0.75)']}
+          style={styles.overlay}
+          pointerEvents="none"
+        >
+          {title ? (
+            <Text style={styles.overlayTitle} numberOfLines={2}>
+              {title}
+            </Text>
+          ) : null}
+          {instructor ? (
+            <Text style={styles.overlayInstructor} numberOfLines={1}>
+              {instructor}
+            </Text>
+          ) : null}
+        </LinearGradient>
+      ) : null}
     </View>
   );
 }

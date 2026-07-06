@@ -4,6 +4,7 @@ export { useCompleteGame } from './useGames';
 export { useGameProgress } from './useGameProgress';
 export { useHomeFeed } from './useHomeFeed';
 export { useHomeBanner } from './useHomeBanner';
+export { useReferralDashboard } from './useReferralDashboard';
 export { useProGate, useTierStatus } from './useProGate';
 export { useExperiments } from '../experiments';
 export { queryKeys } from './queryKeys';
@@ -79,6 +80,8 @@ export {
 } from './useWellness';
 export {
   useBooks,
+  useLibrarySubjects,
+  useLibraryBook,
   useRevisionCapsules,
   useVocabularyToday,
   useVocabularyRecent,
@@ -86,6 +89,11 @@ export {
   useTestSeries,
   useEnrollTestSeries,
 } from './useContent';
+export { useBookReader } from './useBookReader';
+export { useBookDownload, useLocalDownloadIds } from './useBookDownload';
+export { useOfflineBookBundle } from './useOfflineBookBundle';
+export { useBookExplain } from './useBookExplain';
+export { useSimpleSpeech } from './useSimpleSpeech';
 export {
   usePremiumPlans,
   useSubscriptionEntitlement,

@@ -1,49 +1,67 @@
 import { useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Crown } from 'lucide-react-native';
+import { Crown, Home } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { Text } from '../Text';
 import { useTheme } from '../../theme';
+import { ShimmerOverlay } from './ShimmerOverlay';
+import { PROFILE } from './profileTheme';
 
 type ProfileProCardProps = {
+  isPremium?: boolean;
   onPress?: () => void;
 };
 
-export function ProfileProCard({ onPress }: ProfileProCardProps) {
+export function ProfileProCard({ isPremium = false, onPress }: ProfileProCardProps) {
   const { t } = useTranslation('app');
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
+  const title = isPremium ? t('profile.proActiveTitle') : t('profile.proTitle');
+  const subtitle = isPremium ? t('profile.proActiveSubtitle') : t('profile.proSubtitle');
+  const cta = isPremium ? t('profile.proManageCta') : t('profile.proCta');
+  const a11y = isPremium ? t('profile.proManageA11y') : t('profile.proA11y');
+
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={t('profile.proA11y')}
+      accessibilityLabel={a11y}
       onPress={onPress}
       style={({ pressed }) => [styles.wrap, pressed && styles.pressed]}
     >
       <LinearGradient
-        colors={['#2E3766', '#1A1F3B']}
+        colors={[PROFILE.navy2, PROFILE.navyDeep]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.card}
       >
         <View style={styles.decor} />
+        <ShimmerOverlay />
         <LinearGradient
-          colors={['#E3C97F', '#C29A4E']}
+          colors={[PROFILE.goldLt, PROFILE.gold]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.iconWrap}
         >
-          <Crown size={24} color="#FFFFFF" strokeWidth={1.75} />
+          {isPremium ? (
+            <Crown size={24} color="#FFFFFF" strokeWidth={1.75} />
+          ) : (
+            <Home size={24} color="#FFFFFF" strokeWidth={1.75} />
+          )}
         </LinearGradient>
         <View style={styles.textWrap}>
-          <Text style={styles.title}>{t('profile.proTitle')}</Text>
-          <Text style={styles.subtitle}>{t('profile.proSubtitle')}</Text>
+          <Text style={styles.title}>{title}</Text>
+          <Text style={styles.subtitle}>{subtitle}</Text>
         </View>
-        <View style={styles.cta}>
-          <Text style={styles.ctaText}>{t('profile.proCta')}</Text>
-        </View>
+        <LinearGradient
+          colors={[PROFILE.goldLt, PROFILE.gold]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.cta}
+        >
+          <Text style={styles.ctaText}>{cta}</Text>
+        </LinearGradient>
       </LinearGradient>
     </Pressable>
   );
@@ -52,33 +70,36 @@ export function ProfileProCard({ onPress }: ProfileProCardProps) {
 function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
     wrap: {
-      borderRadius: 22,
+      borderRadius: PROFILE.cardRadius,
       overflow: 'hidden',
-      shadowColor: '#232A4D',
-      shadowOffset: { width: 0, height: 18 },
-      shadowOpacity: 0.35,
-      shadowRadius: 20,
-      elevation: 8,
+      borderWidth: 1,
+      borderColor: 'rgba(226,201,127,0.16)',
+      shadowColor: PROFILE.navyDeep,
+      shadowOffset: { width: 0, height: 20 },
+      shadowOpacity: 0.45,
+      shadowRadius: 24,
+      elevation: 10,
     },
     pressed: {
-      opacity: 0.95,
+      opacity: 0.96,
+      transform: [{ scale: 0.99 }],
     },
     card: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 13,
       padding: 17,
-      borderRadius: 22,
+      borderRadius: PROFILE.cardRadius,
       overflow: 'hidden',
     },
     decor: {
       position: 'absolute',
       top: -40,
       right: -20,
-      width: 130,
-      height: 130,
-      borderRadius: 65,
-      backgroundColor: 'rgba(194,154,78,0.22)',
+      width: 140,
+      height: 140,
+      borderRadius: 70,
+      backgroundColor: 'rgba(194,154,78,0.28)',
     },
     iconWrap: {
       width: 48,
@@ -87,6 +108,11 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       alignItems: 'center',
       justifyContent: 'center',
       zIndex: 2,
+      shadowColor: PROFILE.gold,
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.45,
+      shadowRadius: 10,
+      elevation: 4,
     },
     textWrap: {
       flex: 1,
@@ -104,11 +130,10 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       fontSize: 11.5,
       fontFamily: theme.typography.fonts.ui.semibold,
       fontWeight: '600',
-      color: 'rgba(255,255,255,0.85)',
+      color: 'rgba(255,255,255,0.82)',
     },
     cta: {
       zIndex: 2,
-      backgroundColor: '#FFFFFF',
       borderRadius: 12,
       paddingVertical: 10,
       paddingHorizontal: 15,
@@ -117,7 +142,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       fontSize: 12,
       fontFamily: theme.typography.fonts.ui.bold,
       fontWeight: '800',
-      color: '#232A4D',
+      color: '#2A2110',
     },
   });
 }

@@ -5,7 +5,8 @@ import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '../Text';
-import { CA_UI } from './caTheme';
+import { platformShadow } from '../../utils/platformShadow';
+import { CA_UI, caPressFeedback } from './caTheme';
 
 type CaHeaderProps = {
   onAskAi: () => void;
@@ -19,26 +20,32 @@ export function CaHeader({ onAskAi, onNotifications, hasUnread }: CaHeaderProps)
   const styles = useMemo(() => createStyles(insets.top), [insets.top]);
 
   return (
-    <View style={styles.wrap}>
+    <LinearGradient
+      colors={[...CA_UI.heroGradient]}
+      start={{ x: 0.1, y: 0 }}
+      end={{ x: 0.9, y: 1 }}
+      style={styles.wrap}
+    >
+      <View style={styles.decorGold} />
       <View style={styles.top}>
         <View>
+          <Text style={styles.eyebrow}>{t('currentAffairs.subtitle')}</Text>
           <Text style={styles.title}>{t('currentAffairs.title')}</Text>
-          <Text style={styles.subtitle}>{t('currentAffairs.subtitle')}</Text>
         </View>
         <View style={styles.actions}>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={t('currentAffairs.aiAsk')}
             onPress={onAskAi}
-            style={({ pressed }) => [styles.aiBtn, pressed && styles.pressed]}
+            style={({ pressed }) => [styles.aiBtn, pressed && caPressFeedback]}
           >
             <LinearGradient
-              colors={[...CA_UI.aiGradient]}
+              colors={[CA_UI.goldLt, CA_UI.gold, CA_UI.goldDeep]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.aiGradient}
             >
-              <Sparkles size={12} color="#FFFFFF" strokeWidth={2.5} />
+              <Sparkles size={12} color="#2A2110" strokeWidth={2.5} />
               <Text style={styles.aiLabel}>{t('currentAffairs.aiAsk')}</Text>
             </LinearGradient>
           </Pressable>
@@ -46,44 +53,58 @@ export function CaHeader({ onAskAi, onNotifications, hasUnread }: CaHeaderProps)
             accessibilityRole="button"
             accessibilityLabel={t('currentAffairs.notifications')}
             onPress={onNotifications}
-            style={({ pressed }) => [styles.notifBtn, pressed && styles.pressed]}
+            style={({ pressed }) => [styles.notifBtn, pressed && caPressFeedback]}
           >
-            <Bell size={15} color={CA_UI.muted} strokeWidth={2} />
+            <Bell size={15} color="#FFFFFF" strokeWidth={2} />
             {hasUnread ? <View style={styles.notifDot} /> : null}
           </Pressable>
         </View>
       </View>
-    </View>
+      <LinearGradient
+        colors={[CA_UI.goldLt, CA_UI.gold]}
+        start={{ x: 0, y: 0.5 }}
+        end={{ x: 1, y: 0.5 }}
+        style={styles.goldRule}
+      />
+    </LinearGradient>
   );
 }
 
 function createStyles(topInset: number) {
   return StyleSheet.create({
     wrap: {
-      backgroundColor: CA_UI.surface,
-      borderBottomWidth: 1,
-      borderBottomColor: CA_UI.border,
-      paddingTop: topInset + 8,
+      paddingTop: topInset + 10,
       paddingHorizontal: 16,
-      paddingBottom: 12,
+      paddingBottom: 14,
+      overflow: 'hidden',
+    },
+    decorGold: {
+      position: 'absolute',
+      top: -40,
+      right: -30,
+      width: 140,
+      height: 140,
+      borderRadius: 70,
+      backgroundColor: 'rgba(194,154,78,0.18)',
     },
     top: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      marginBottom: 12,
+      zIndex: 1,
+    },
+    eyebrow: {
+      fontSize: 11,
+      color: 'rgba(255,255,255,0.62)',
+      fontWeight: '600',
+      letterSpacing: 0.3,
+      marginBottom: 2,
     },
     title: {
-      fontSize: 18,
+      fontSize: 22,
       fontWeight: '800',
-      color: CA_UI.text,
-      letterSpacing: -0.3,
-    },
-    subtitle: {
-      fontSize: 11,
-      color: CA_UI.faint,
-      fontWeight: '500',
-      marginTop: 2,
+      color: '#FFFFFF',
+      letterSpacing: -0.5,
     },
     actions: {
       flexDirection: 'row',
@@ -93,29 +114,27 @@ function createStyles(topInset: number) {
     aiBtn: {
       borderRadius: 20,
       overflow: 'hidden',
-      shadowColor: CA_UI.accent,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.3,
-      shadowRadius: 12,
-      elevation: 4,
+      ...platformShadow({ color: '#000000', offsetY: 4, opacity: 0.28, radius: 8, elevation: 4 }),
     },
     aiGradient: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 6,
       paddingHorizontal: 12,
-      paddingVertical: 7,
+      paddingVertical: 8,
     },
     aiLabel: {
       fontSize: 11,
-      fontWeight: '700',
-      color: '#FFFFFF',
+      fontWeight: '800',
+      color: '#2A2110',
     },
     notifBtn: {
-      width: 32,
-      height: 32,
-      borderRadius: 16,
-      backgroundColor: CA_UI.accentSoft,
+      width: 36,
+      height: 36,
+      borderRadius: 12,
+      backgroundColor: 'rgba(255,255,255,0.12)',
+      borderWidth: 1,
+      borderColor: 'rgba(255,255,255,0.14)',
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -123,13 +142,18 @@ function createStyles(topInset: number) {
       position: 'absolute',
       top: 6,
       right: 6,
-      width: 6,
-      height: 6,
-      borderRadius: 3,
-      backgroundColor: CA_UI.accent,
+      width: 7,
+      height: 7,
+      borderRadius: 4,
+      backgroundColor: CA_UI.goldLt,
       borderWidth: 1.5,
-      borderColor: '#FFFFFF',
+      borderColor: CA_UI.accent,
     },
-    pressed: { opacity: 0.9 },
+    goldRule: {
+      height: 2,
+      marginTop: 14,
+      borderRadius: 1,
+      opacity: 0.85,
+    },
   });
 }

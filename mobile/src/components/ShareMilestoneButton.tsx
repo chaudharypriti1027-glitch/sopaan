@@ -1,10 +1,8 @@
-import { useQuery } from '@tanstack/react-query';
 import { Share2 } from 'lucide-react-native';
 import { useMemo, useRef, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
-import { getMyReferrals } from '../api/referrals';
-import { queryKeys } from '../hooks/queryKeys';
-import { useAuthStore } from '../store/auth';
+import { useTranslation } from 'react-i18next';
+import { useReferralDashboard } from '../hooks';
 import { captureAndShareCard } from '../share/captureAndShareCard';
 import { ShareMilestoneCard } from '../share/ShareMilestoneCard';
 import type { ShareCardData } from '../share/types';
@@ -27,18 +25,12 @@ export function ShareMilestoneButton({
   size = 'md',
   fullWidth = false,
 }: Props) {
+  const { t } = useTranslation('app');
   const cardRef = useRef<View>(null);
   const [sharing, setSharing] = useState(false);
   const { theme } = useTheme();
-  const isAuthenticated = useAuthStore((state) => state.status === 'authed');
   const styles = useMemo(() => createStyles(), []);
-
-  const referralQuery = useQuery({
-    queryKey: queryKeys.referrals.me(),
-    queryFn: getMyReferrals,
-    staleTime: 5 * 60 * 1000,
-    enabled: isAuthenticated,
-  });
+  const referralQuery = useReferralDashboard();
 
   const iconColor =
     variant === 'gold' ? theme.colors.text.primary : theme.colors.brand.primary;
@@ -51,7 +43,10 @@ export function ShareMilestoneButton({
         code: referralQuery.data?.code,
       });
     } catch (err) {
-      Alert.alert('Could not share', err instanceof Error ? err.message : 'Try again in a moment.');
+      Alert.alert(
+        t('result.shareErrorTitle'),
+        err instanceof Error ? err.message : t('result.shareErrorMessage'),
+      );
     } finally {
       setSharing(false);
     }

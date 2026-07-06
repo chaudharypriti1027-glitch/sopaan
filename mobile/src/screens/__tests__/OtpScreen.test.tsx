@@ -62,6 +62,7 @@ describe('OtpScreen', () => {
   });
 
   afterEach(() => {
+    jest.runOnlyPendingTimers();
     jest.useRealTimers();
   });
 

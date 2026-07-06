@@ -1,47 +1,51 @@
 import { useMemo } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { ChevronRight } from 'lucide-react-native';
-import { GlassSurface } from '../GlassSurface';
-import { PremiumIcon } from '../premium/PremiumIcon';
 import { Text } from '../Text';
 import { useTheme } from '../../theme';
 import type { AINudge } from '../../types/home';
 import { nudgeCardTint, nudgePremiumTone } from './homeIconTone';
-import { resolveHomeIcon } from './homeUtils';
+import { HomeSlotIcon } from './HomePremiumIcon';
+import { HomeFeedCard } from './HomeFeedCard';
+import { resolveHomeIcon } from './homeIcons';
 import { HOME_UI } from './homeTheme';
 
 type AINudgeCardProps = {
   nudge: AINudge;
   onPress?: (deeplink: string) => void;
-  showForYouHeader?: boolean;
 };
 
-export function AINudgeCard({ nudge, onPress, showForYouHeader = true }: AINudgeCardProps) {
+export function AINudgeSectionBadge() {
   const { theme } = useTheme();
-  const tint = nudgeCardTint(nudge.tone);
+  const styles = useMemo(() => createBadgeStyles(theme), [theme]);
+
+  return (
+    <View style={styles.badge}>
+      <Text style={styles.badgeText}>
+        <Text style={styles.spark}>✦ </Text>
+        AI
+      </Text>
+    </View>
+  );
+}
+
+export function AINudgeCard({ nudge, onPress }: AINudgeCardProps) {
+  const { theme } = useTheme();
   const iconTone = nudgePremiumTone(nudge.tone);
-  const styles = useMemo(() => createStyles(theme, tint), [theme, tint]);
+  const tint = nudgeCardTint(nudge.tone);
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const Icon = resolveHomeIcon(nudge.icon);
 
-  const cardBody = (
-    <View style={styles.card}>
-      <View style={styles.iconTile}>
-        <PremiumIcon Icon={Icon} tone={iconTone} size="md" filled />
-      </View>
-
+  return (
+    <HomeFeedCard
+      onPress={() => onPress?.(nudge.deeplink)}
+      accentLeft={tint.accent}
+      tint={tint.iconBg}
+      contentStyle={styles.body}
+    >
+      <HomeSlotIcon slot="shortcut" Icon={Icon} tone={iconTone} />
       <View style={styles.copy}>
-        {showForYouHeader ? (
-          <View style={styles.titleRow}>
-            <Text style={styles.forYou}>For You</Text>
-            <View style={styles.aiBadge}>
-              <Text style={styles.aiBadgeText}>
-                <Text style={styles.aiBadgeSpark}>✦ </Text>
-                AI
-              </Text>
-            </View>
-          </View>
-        ) : null}
-        <Text style={styles.subtitle} numberOfLines={2}>
+        <Text style={styles.title} numberOfLines={2}>
           {nudge.title}
         </Text>
         {nudge.body ? (
@@ -50,105 +54,64 @@ export function AINudgeCard({ nudge, onPress, showForYouHeader = true }: AINudge
           </Text>
         ) : null}
       </View>
-
       <View style={styles.arrow}>
-        <ChevronRight size={18} color={tint.fg} strokeWidth={2.2} />
+        <HomeSlotIcon slot="button" Icon={ChevronRight} tone="slate" />
       </View>
-    </View>
-  );
-
-  return (
-    <Pressable
-      accessibilityRole="button"
-      onPress={() => onPress?.(nudge.deeplink)}
-      style={({ pressed }) => [styles.wrap, pressed && styles.pressed]}
-    >
-      {showForYouHeader ? (
-        <GlassSurface tone="gold" intensity={36} borderRadius={20} style={styles.glassWrap}>
-          {cardBody}
-        </GlassSurface>
-      ) : (
-        cardBody
-      )}
-    </Pressable>
+    </HomeFeedCard>
   );
 }
 
-function createStyles(
-  theme: ReturnType<typeof useTheme>['theme'],
-  tint: { bg: string; fg: string; ring: string },
-) {
+function createBadgeStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
-    wrap: {
-      borderRadius: 20,
-    },
-    pressed: { opacity: 0.96 },
-    glassWrap: {
-      overflow: 'hidden',
-    },
-    card: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 13,
-      backgroundColor: tint.bg,
-      borderRadius: 20,
-      paddingVertical: 15,
-      paddingHorizontal: 15,
-      borderWidth: 1,
-      borderColor: tint.ring,
-      shadowColor: HOME_UI.shadow,
-      shadowOffset: { width: 0, height: 6 },
-      shadowOpacity: 0.1,
-      shadowRadius: 20,
-      elevation: 3,
-    },
-    iconTile: {
-      flexShrink: 0,
-    },
-    copy: { flex: 1, minWidth: 0 },
-    titleRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-      marginBottom: 5,
-    },
-    forYou: {
-      fontSize: 14,
-      fontWeight: '800',
-      color: HOME_UI.accent,
-    },
-    aiBadge: {
+    badge: {
       borderRadius: 99,
       paddingHorizontal: 10,
       paddingVertical: 4,
       backgroundColor: HOME_UI.goldSoft,
       borderWidth: 1,
-      borderColor: '#EADFC4',
+      borderColor: HOME_UI.goldBorder,
     },
-    aiBadgeText: {
+    badgeText: {
       fontSize: 10,
+      fontFamily: theme.typography.fonts.ui.bold,
       fontWeight: '800',
-      color: HOME_UI.accent,
+      color: HOME_UI.goldDeep,
       letterSpacing: 0.4,
     },
-    aiBadgeSpark: {
-      color: HOME_UI.goldDeep,
+    spark: {
+      color: HOME_UI.gold,
     },
-    subtitle: {
-      fontSize: 13.5,
+  });
+}
+
+function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
+  return StyleSheet.create({
+    body: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      paddingVertical: 14,
+      paddingHorizontal: 14,
+      paddingLeft: 16,
+    },
+    copy: { flex: 1, minWidth: 0, gap: 3 },
+    title: {
+      fontSize: 14,
+      fontFamily: theme.typography.fonts.ui.bold,
       fontWeight: '800',
-      color: HOME_UI.accent,
-      lineHeight: 18,
-      marginBottom: 2,
+      color: HOME_UI.ink,
+      lineHeight: 19,
     },
     bodyText: {
-      fontSize: 11.5,
+      fontSize: 12,
+      fontFamily: theme.typography.fonts.ui.semibold,
       fontWeight: '600',
-      color: tint.fg,
-      lineHeight: 15,
+      color: HOME_UI.muted,
+      lineHeight: 16,
     },
     arrow: {
-      opacity: 0.65,
+      opacity: 0.7,
+      flexShrink: 0,
     },
   });
 }

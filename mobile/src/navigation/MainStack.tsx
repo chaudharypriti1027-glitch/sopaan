@@ -60,6 +60,11 @@ export function MainStack() {
         options={{ title: t('books') }}
       />
       <Stack.Screen
+        name="BookReader"
+        getComponent={lazyScreen(() => require('../screens/app/BookReaderScreen'), 'BookReaderScreen')}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
         name="Courses"
         getComponent={lazyScreen(() => require('../screens/app/CoursesScreen'), 'CoursesScreen')}
         options={{ title: t('courses') }}

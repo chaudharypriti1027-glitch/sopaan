@@ -183,6 +183,46 @@
   color: rgba(255, 255, 255, 0.5);
 }
 
+.side-logout {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  flex: none;
+  transition: 0.15s;
+}
+
+.side-logout:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.side-logout svg {
+  width: 15px;
+  height: 15px;
+  stroke: currentColor;
+}
+
+.side .who .t {
+  min-width: 0;
+  flex: 1;
+}
+
+.side .who .t b,
+.side .who .t span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* Topbar */
 .topbar {
   position: sticky;

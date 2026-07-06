@@ -23,6 +23,24 @@ describe('banners', () => {
     await clearTestDatabase();
   });
 
+  it('allows anonymous GET /api/banners', async () => {
+    const admin = await createTestUser({
+      email: 'admin-banner-public@test.com',
+      passwordHash: 'hash',
+      role: 'admin',
+    });
+
+    const live = await createAdminBanner(admin._id, {
+      message: 'Public promo',
+      linkType: 'premium',
+    });
+    await setAdminBannerActive(live.id, true);
+
+    const response = await request(app).get('/api/banners').expect(200);
+
+    expect(response.body.banner?.message).toBe('Public promo');
+  });
+
   it('returns only the active banner for students', async () => {
     const admin = await createTestUser({
       email: 'admin-banner@test.com',

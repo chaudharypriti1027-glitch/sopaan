@@ -13,10 +13,13 @@ type DevStreamProps = {
   classId: string;
   title?: string;
   instructor?: string;
+  instructorSubtitle?: string;
+  immersive?: boolean;
 };
 
 export type LiveClassStreamGateProps = LiveClassStreamProps & {
   classId?: string;
+  instructorSubtitle?: string;
 };
 
 export function LiveClassStreamGate(props: LiveClassStreamGateProps) {
@@ -97,6 +100,7 @@ export function LiveClassStreamGate(props: LiveClassStreamGateProps) {
         <LiveClassDevStage
           title={props.title}
           instructor={props.instructorName}
+          instructorSubtitle={props.instructorSubtitle}
           role={props.role === 'host' ? 'host' : 'viewer'}
         />
       );
@@ -125,6 +129,8 @@ export function LiveClassStreamGate(props: LiveClassStreamGateProps) {
         classId={props.classId}
         title={props.title}
         instructor={props.instructorName}
+        instructorSubtitle={props.instructorSubtitle}
+        immersive={props.immersive}
       />
     );
   }
@@ -138,6 +144,7 @@ export function LiveClassStreamGate(props: LiveClassStreamGateProps) {
           instructorName={props.instructorName}
           topic={props.topic}
           title={props.title}
+          immersive={props.immersive}
         />
       );
     }

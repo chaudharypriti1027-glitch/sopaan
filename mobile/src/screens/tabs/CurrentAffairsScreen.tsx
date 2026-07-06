@@ -2,7 +2,6 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import type { CompositeNavigationProp, RouteProp } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Sparkles } from 'lucide-react-native';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
@@ -17,15 +16,17 @@ import { Text } from '../../components';
 import { PREMIUM } from '../../components/premium';
 import {
   CA_CATEGORY_OPTIONS,
+  CA_UI,
   CaCategoryPills,
+  CaFeedHeader,
   CaFilterBar,
   CaFilterSheet,
   CaHeader,
+  CaQuizBanner,
   CaStatsRow,
   CurrentAffairCard,
   type CaCategoryKey,
 } from '../../components/currentAffairs';
-import { CA_UI } from '../../components/currentAffairs/caTheme';
 import {
   isPublishedToday,
   isTrendingAffair,
@@ -182,57 +183,45 @@ export function CurrentAffairsScreen() {
   );
 
   const listHeader = (
-    <View>
-      <CaHeader
-        onAskAi={() => navigateToAskAI(navigation)}
-        onNotifications={() => navigation.getParent()?.navigate('Notifications')}
-        hasUnread={unreadCount > 0}
-      />
-      <CaStatsRow total={total} today={todayCount} trending={trendingCount} />
-      <CaFilterBar
-        stateLabel={stateLabel}
-        monthLabel={monthLabel(month)}
-        sortMode={sortMode}
-        onStatePress={() => setActiveSheet('state')}
-        onMonthPress={() => setActiveSheet('month')}
-        onSortToggle={() => setSortMode((prev) => (prev === 'latest' ? 'trending' : 'latest'))}
-      />
-      <CaCategoryPills selected={category} onSelect={setCategory} />
+    <View style={styles.headerBody}>
+      <CaFeedHeader>
+        <CaHeader
+          onAskAi={() => navigateToAskAI(navigation)}
+          onNotifications={() => navigation.getParent()?.navigate('Notifications')}
+          hasUnread={unreadCount > 0}
+        />
+        <CaStatsRow total={total} today={todayCount} trending={trendingCount} />
+        <CaFilterBar
+          stateLabel={stateLabel}
+          monthLabel={monthLabel(month)}
+          sortMode={sortMode}
+          onStatePress={() => setActiveSheet('state')}
+          onMonthPress={() => setActiveSheet('month')}
+          onSortToggle={() => setSortMode((prev) => (prev === 'latest' ? 'trending' : 'latest'))}
+        />
+        <CaCategoryPills selected={category} onSelect={setCategory} />
+      </CaFeedHeader>
 
-      <View style={styles.sortRow}>
+      <View style={styles.feedSection}>
         <Text style={styles.sortLabel}>{sortLabel}</Text>
-      </View>
 
-      {hasQuiz ? (
-        <Pressable
-          onPress={() => navigation.navigate('Practice')}
-          style={({ pressed }) => [styles.quizBanner, pressed && styles.pressed]}
-        >
-          <View style={styles.quizLeft}>
-            <View style={styles.quizIcon}>
-              <Sparkles size={18} color="#B45309" strokeWidth={2.5} />
-            </View>
-            <View style={styles.quizCopy}>
-              <Text style={styles.quizTitle}>{t('currentAffairs.dailyQuiz')}</Text>
-              <Text style={styles.quizSubtitle}>{t('currentAffairs.dailyQuizSubtitle')}</Text>
-            </View>
+        {hasQuiz ? (
+          <CaQuizBanner onPress={() => navigation.navigate('Practice')} />
+        ) : null}
+
+        {isInitialLoad ? (
+          <ActivityIndicator color={CA_UI.gold} style={styles.loader} />
+        ) : null}
+
+        {showError ? (
+          <View style={styles.errorBox}>
+            <Text style={styles.emptyText}>{t('currentAffairs.loadFailed')}</Text>
+            <Pressable onPress={() => void affairsQuery.refetch()} style={styles.retryBtn}>
+              <Text style={styles.retryText}>{t('common:retry')}</Text>
+            </Pressable>
           </View>
-          <Text style={styles.quizCta}>{t('currentAffairs.start')}</Text>
-        </Pressable>
-      ) : null}
-
-      {isInitialLoad ? (
-        <ActivityIndicator color={CA_UI.accent} style={styles.loader} />
-      ) : null}
-
-      {showError ? (
-        <View style={styles.errorBox}>
-          <Text style={styles.emptyText}>{t('currentAffairs.loadFailed')}</Text>
-          <Pressable onPress={() => void affairsQuery.refetch()} style={styles.retryBtn}>
-            <Text style={styles.retryText}>{t('common:retry')}</Text>
-          </Pressable>
-        </View>
-      ) : null}
+        ) : null}
+      </View>
     </View>
   );
 
@@ -251,10 +240,15 @@ export function CurrentAffairsScreen() {
             </View>
           ) : null
         }
-        estimatedItemSize={220}
+        estimatedItemSize={230}
         contentContainerStyle={styles.listContent}
         refreshControl={
-          <RefreshControl refreshing={affairsQuery.isRefetching} onRefresh={onRefresh} />
+          <RefreshControl
+            refreshing={affairsQuery.isRefetching}
+            onRefresh={onRefresh}
+            tintColor={CA_UI.gold}
+            colors={[CA_UI.gold]}
+          />
         }
       />
 
@@ -288,58 +282,18 @@ function createStyles() {
       paddingHorizontal: 16,
       paddingBottom: PREMIUM.tabBottomPadding,
     },
-    sortRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingVertical: 12,
+    headerBody: {
+      paddingBottom: 4,
+    },
+    feedSection: {
+      paddingTop: 6,
     },
     sortLabel: {
       fontSize: 11,
-      fontWeight: '600',
-      color: CA_UI.muted,
-    },
-    quizBanner: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      backgroundColor: '#FFFBEB',
-      borderRadius: 14,
-      padding: 14,
-      marginBottom: 12,
-      borderWidth: 1,
-      borderColor: '#FDE68A',
-    },
-    pressed: { opacity: 0.92 },
-    quizLeft: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 10,
-      flex: 1,
-    },
-    quizIcon: {
-      width: 40,
-      height: 40,
-      borderRadius: 12,
-      backgroundColor: '#FEF3C7',
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    quizCopy: { flex: 1, gap: 2 },
-    quizTitle: {
-      fontSize: 13,
       fontWeight: '700',
-      color: CA_UI.text,
-    },
-    quizSubtitle: {
-      fontSize: 11,
-      fontWeight: '500',
       color: CA_UI.muted,
-    },
-    quizCta: {
-      fontSize: 11,
-      fontWeight: '800',
-      color: '#B45309',
+      letterSpacing: 0.2,
+      marginBottom: 12,
     },
     loader: { marginVertical: 24 },
     errorBox: {
@@ -349,23 +303,23 @@ function createStyles() {
     },
     retryBtn: {
       backgroundColor: CA_UI.accent,
-      borderRadius: 10,
-      paddingHorizontal: 16,
-      paddingVertical: 8,
+      borderRadius: 12,
+      paddingHorizontal: 18,
+      paddingVertical: 10,
     },
     retryText: {
       color: '#FFFFFF',
       fontSize: 12,
-      fontWeight: '700',
+      fontWeight: '800',
     },
     emptyBox: {
       gap: 8,
       alignItems: 'center',
-      paddingVertical: 32,
+      paddingVertical: 36,
       paddingHorizontal: 16,
     },
     emptyTitle: {
-      fontSize: 16,
+      fontSize: 17,
       fontWeight: '800',
       color: CA_UI.text,
     },
@@ -374,7 +328,7 @@ function createStyles() {
       fontWeight: '500',
       color: CA_UI.muted,
       textAlign: 'center',
-      lineHeight: 18,
+      lineHeight: 19,
     },
   });
 }

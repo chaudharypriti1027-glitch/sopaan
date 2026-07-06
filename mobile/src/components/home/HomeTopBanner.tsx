@@ -1,6 +1,10 @@
-import { Megaphone } from 'lucide-react-native';
+import { Megaphone, ChevronRight } from 'lucide-react-native';
 import { useMemo } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { HomeSlotIcon } from './HomePremiumIcon';
+import { HomeFeedCard } from './HomeFeedCard';
+import { Text } from '../Text';
 import type { HomeBanner } from '../../api/banners';
 import { HOME_UI } from './homeTheme';
 
@@ -10,69 +14,64 @@ type HomeTopBannerProps = {
 };
 
 export function HomeTopBanner({ banner, onPress }: HomeTopBannerProps) {
+  const { t } = useTranslation('app');
   const styles = useMemo(() => createStyles(), []);
 
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={banner.message}
-      onPress={() => onPress(banner.deeplink)}
-      style={({ pressed }) => [styles.root, pressed ? styles.pressed : null]}
-      testID="home-top-banner"
-    >
-      <View style={styles.iconWrap}>
-        <Megaphone size={18} color={HOME_UI.gold} />
-      </View>
-      <View style={styles.copy}>
-        <Text style={styles.message} numberOfLines={2}>
-          {banner.message}
-        </Text>
-        <Text style={styles.hint}>Tap to open</Text>
-      </View>
-    </Pressable>
+    <View style={styles.wrap}>
+      <HomeFeedCard
+        onPress={() => onPress(banner.deeplink)}
+        accentTop
+        tint={HOME_UI.goldSoft}
+        style={styles.card}
+        contentStyle={styles.body}
+        testID="home-top-banner"
+      >
+        <HomeSlotIcon slot="shortcut" Icon={Megaphone} tone="gold" />
+        <View style={styles.copy}>
+          <Text style={styles.message} numberOfLines={2}>
+            {banner.message}
+          </Text>
+          <Text style={styles.hint}>{t('home.topBannerTap')}</Text>
+        </View>
+        <HomeSlotIcon slot="button" Icon={ChevronRight} tone="gold" />
+      </HomeFeedCard>
+    </View>
   );
 }
 
 function createStyles() {
   return StyleSheet.create({
-    root: {
-      marginHorizontal: 16,
-      marginTop: 12,
+    wrap: {
+      marginHorizontal: HOME_UI.horizontalPad,
+      marginTop: 8,
       marginBottom: 4,
-      borderRadius: 16,
-      borderWidth: 1,
-      borderColor: '#E8D7A8',
-      backgroundColor: '#FFF8E8',
-      paddingHorizontal: 14,
-      paddingVertical: 12,
+    },
+    card: {
+      borderColor: HOME_UI.goldBorder,
+    },
+    body: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 12,
-    },
-    pressed: {
-      opacity: 0.92,
-    },
-    iconWrap: {
-      width: 36,
-      height: 36,
-      borderRadius: 12,
-      backgroundColor: HOME_UI.accent,
-      alignItems: 'center',
-      justifyContent: 'center',
+      paddingHorizontal: 14,
+      paddingVertical: 12,
     },
     copy: {
       flex: 1,
       gap: 2,
+      minWidth: 0,
     },
     message: {
-      fontSize: 14,
-      lineHeight: 20,
-      fontWeight: '600',
+      fontSize: 13.5,
+      lineHeight: 18,
+      fontWeight: '700',
       color: HOME_UI.ink,
     },
     hint: {
-      fontSize: 12,
-      color: HOME_UI.muted,
+      fontSize: 11,
+      fontWeight: '600',
+      color: HOME_UI.goldDeep,
     },
   });
 }

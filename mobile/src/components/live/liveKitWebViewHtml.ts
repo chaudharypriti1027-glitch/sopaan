@@ -63,7 +63,9 @@ export function buildLiveKitWebViewHtml(url: string, token: string): string {
 
         await room.connect(cfg.url, cfg.token);
         attachTracks();
-        post('connected');
+        if (!video.srcObject && video.readyState < 2) {
+          post('connected');
+        }
       } catch (err) {
         const message = err && err.message ? err.message : 'Failed to join live stream';
         status.textContent = message;

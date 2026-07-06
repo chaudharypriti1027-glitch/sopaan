@@ -30,6 +30,7 @@ import { Avatar, ChipSelect } from '../components';
 import { ConfettiBurst } from '../components/profileSetup/ConfettiBurst';
 import { Text } from '../components/Text';
 import { meApi, parseApiError } from '../api';
+import { useOnboarding } from '../auth/OnboardingContext';
 import { routeAfterSession } from '../auth/routeAfterSession';
 import { useLanguage } from '../language/LanguageContext';
 import type {
@@ -103,6 +104,7 @@ export function ProfileSetupScreen() {
   const navigation = useNavigation<ProfileSetupNav>();
   const profile = useAuthStore((state) => state.profile);
   const setProfile = useAuthStore((state) => state.setProfile);
+  const { completeOnboarding } = useOnboarding();
   const { setLanguage: setAppLanguage } = useLanguage();
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -209,8 +211,9 @@ export function ProfileSetupScreen() {
       }
 
       await setAppLanguage(language);
-      const updated = profile ? { ...profile, language } : await meApi.getMe();
+      const updated = await meApi.updateMe({ language });
       await setProfile(updated);
+      await completeOnboarding();
       setShowConfetti(true);
       await wait(CONFETTI_HOLD_MS);
       routeAfterSession(navigation, updated);

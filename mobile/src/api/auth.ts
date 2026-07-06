@@ -45,8 +45,8 @@ export type GoogleAuthInput = {
   privacyConsent?: SignupInput['privacyConsent'];
 };
 
-export async function signup(input: SignupInput): Promise<AuthSession> {
-  const { data } = await apiClient.post<AuthSession>('/auth/signup', input);
+export async function signup(input: SignupInput): Promise<AuthResult> {
+  const { data } = await apiClient.post<AuthResult>('/auth/signup', input);
   return data;
 }
 

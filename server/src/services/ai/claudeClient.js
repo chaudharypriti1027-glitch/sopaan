@@ -208,6 +208,8 @@ async function createMessageWithRetry(params, timeoutMs) {
  * @param {Array} [options.content] - Multimodal user content blocks
  * @param {number} [options.maxTokens] - Max output tokens
  * @param {boolean} [options.json] - Parse response as JSON
+ * @param {boolean} [options.returnMeta] - Return `{ result, usage }` instead of text/json only
+ * @param {number} [options.temperature] - Sampling temperature (0–1)
  * @param {number} [options.timeoutMs] - Request timeout in milliseconds
  * @returns {Promise<string|object>} Text or parsed JSON
  */
@@ -223,7 +225,9 @@ export async function complete({
   feature = 'unknown',
   userId,
   maxTokens = DEFAULT_MAX_TOKENS,
+  temperature,
   json = false,
+  returnMeta = false,
   timeoutMs = DEFAULT_TIMEOUT_MS,
 }) {
   const budgetExceeded = await isGlobalBudgetExceeded();
@@ -264,6 +268,7 @@ export async function complete({
     {
       model: resolvedModel,
       max_tokens: maxTokens,
+      ...(temperature !== undefined ? { temperature } : {}),
       system: typeof resolvedSystem === 'string' ? sanitizeAiUserText(resolvedSystem) : resolvedSystem,
       messages: [{ role: 'user', content: sanitizedContent ?? sanitizedUser }],
     },
@@ -284,11 +289,16 @@ export async function complete({
 
   const text = extractText(response);
 
-  if (json) {
-    return parseJsonResponse(text);
+  const result = json ? parseJsonResponse(text) : text;
+
+  if (returnMeta) {
+    return {
+      result,
+      usage: response.usage ?? null,
+    };
   }
 
-  return text;
+  return result;
 }
 
 export { client };

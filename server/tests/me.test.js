@@ -238,6 +238,8 @@ describe('GET /api/me/summary', () => {
       streak: 12,
       savedQuestions: 0,
       downloads: 0,
+      xp: 0,
+      accuracy: 0,
     });
   });
 });

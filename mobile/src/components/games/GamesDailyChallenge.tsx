@@ -33,9 +33,7 @@ export function GamesDailyChallenge({
     >
       <GlassSurface tone="gold" intensity={36} borderRadius={20} style={styles.glassWrap}>
         <View style={styles.card}>
-          <View style={styles.iconTile}>
-            <PremiumIcon Icon={Target} tone="gold" size="md" filled />
-          </View>
+          <PremiumIcon Icon={Target} tone="gold" size="md" filled />
 
           <View style={styles.copy}>
             <View style={styles.titleRow}>
@@ -96,9 +94,6 @@ function createStyles() {
       shadowOpacity: 0.1,
       shadowRadius: 20,
       elevation: 3,
-    },
-    iconTile: {
-      flexShrink: 0,
     },
     copy: { flex: 1, minWidth: 0 },
     titleRow: {

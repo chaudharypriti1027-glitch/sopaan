@@ -5,11 +5,14 @@ import { createMockSubmitResult } from '../../test/fixtures/stackScreens';
 import { useAuthStore } from '../../store/auth';
 
 const mockNavigate = jest.fn();
+const mockReplace = jest.fn();
 const mockResult = createMockSubmitResult();
 
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({
     navigate: mockNavigate,
+    replace: mockReplace,
+    goBack: jest.fn(),
   }),
   useRoute: () => ({
     params: {
@@ -46,14 +49,14 @@ describe('ResultScreen', () => {
     });
   });
 
-  it('renders score, AI coach feedback, and topic breakdown', () => {
+  it('renders premium result hero, coach feedback, and topic breakdown', () => {
     const { getByText } = renderWithProviders(<ResultScreen />);
 
-    expect(getByText('Test result')).toBeTruthy();
-    expect(getByText('Score 2/2')).toBeTruthy();
+    expect(getByText('Result')).toBeTruthy();
+    expect(getByText('2 of 2 correct · 2:00 taken')).toBeTruthy();
     expect(getByText('Strong accuracy — keep revising polity edge cases.')).toBeTruthy();
-    expect(getByText('Indian Polity')).toBeTruthy();
-    expect(getByText('Review answers')).toBeTruthy();
+    expect(getByText('GK')).toBeTruthy();
+    expect(getByText('Review solutions')).toBeTruthy();
     expect(getByText('Q1. What is the capital of India?')).toBeTruthy();
   });
 
@@ -65,13 +68,16 @@ describe('ResultScreen', () => {
     expect(mockNavigate).toHaveBeenCalledWith('AppTabs', { screen: 'Practice' });
   });
 
-  it('navigates to mock analysis and back to practice', () => {
+  it('navigates to mock analysis, retake, and more tests', () => {
     const { getByText } = renderWithProviders(<ResultScreen />);
 
     fireEvent.press(getByText('View mock analysis'));
     expect(mockNavigate).toHaveBeenCalledWith('MockAnalysis', { attemptId: 'attempt-1' });
 
-    fireEvent.press(getByText('Back to Practice'));
+    fireEvent.press(getByText('Retake'));
+    expect(mockReplace).toHaveBeenCalledWith('Quiz', { testId: 'test-mock-1' });
+
+    fireEvent.press(getByText('More tests'));
     expect(mockNavigate).toHaveBeenCalledWith('AppTabs', { screen: 'Practice' });
   });
 });

@@ -1,16 +1,18 @@
 import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { NumText } from '../NumText';
 import { Text } from '../Text';
+import { platformShadow } from '../../utils/platformShadow';
+import { HOME_UI } from './homeTheme';
 
 type WeekStripProps = {
-  /** Current streak length in days — used to light up the most recent active days. */
   streakDays: number;
 };
 
 function buildWeek(streakDays: number) {
   const today = new Date();
-  const dayIndex = (today.getDay() + 6) % 7; // Monday = 0
+  const dayIndex = (today.getDay() + 6) % 7;
   const monday = new Date(today);
   monday.setDate(today.getDate() - dayIndex);
 
@@ -37,14 +39,30 @@ export function WeekStrip({ streakDays }: WeekStripProps) {
   return (
     <View style={styles.row} testID="home-week-strip">
       {days.map((day) => (
-        <View key={day.key} style={[styles.cell, day.isToday && styles.cellToday]}>
+        <View
+          key={day.key}
+          style={[
+            styles.cell,
+            day.isToday && styles.cellToday,
+            day.active && !day.isToday && styles.cellActive,
+          ]}
+        >
+          {day.isToday ? (
+            <LinearGradient
+              colors={['#FFFFFF', '#F3EEE2']}
+              start={{ x: 0.5, y: 0 }}
+              end={{ x: 0.5, y: 1 }}
+              style={styles.todayFill}
+            />
+          ) : null}
+          <View style={day.isToday ? styles.todaySheen : undefined} />
           <Text style={[styles.letter, day.isToday && styles.letterToday]}>{day.letter}</Text>
           <NumText style={[styles.num, day.isToday && styles.numToday]}>{day.num}</NumText>
           <View
             style={[
-              styles.dot,
-              day.active && !day.isToday && styles.dotActive,
-              day.isToday && styles.dotToday,
+              styles.tick,
+              day.active && !day.isToday && styles.tickActive,
+              day.isToday && styles.tickToday,
             ]}
           />
         </View>
@@ -57,50 +75,74 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: 6,
-    marginTop: 18,
+    gap: 5,
+    marginTop: 16,
     zIndex: 2,
   },
   cell: {
     flex: 1,
     alignItems: 'center',
-    gap: 7,
-    paddingVertical: 9,
-    borderRadius: 15,
-    backgroundColor: 'rgba(255,255,255,0.07)',
+    gap: 4,
+    paddingVertical: 8,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255,255,255,0.05)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
+    borderColor: 'rgba(255,255,255,0.09)',
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  cellActive: {
+    backgroundColor: 'rgba(194,154,78,0.1)',
+    borderColor: 'rgba(194,154,78,0.24)',
   },
   cellToday: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#FFFFFF',
+    borderColor: 'rgba(255,255,255,0.9)',
+    ...platformShadow({ color: '#000000', offsetY: 5, opacity: 0.16, radius: 10, elevation: 3 }),
+  },
+  todayFill: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 10,
+  },
+  todaySheen: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '38%',
+    backgroundColor: 'rgba(255,255,255,0.35)',
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
   },
   letter: {
-    fontSize: 9.5,
-    fontWeight: '700',
-    color: 'rgba(255,255,255,0.55)',
+    fontSize: 9,
+    fontWeight: '800',
+    color: 'rgba(255,255,255,0.48)',
+    letterSpacing: 0.3,
+    zIndex: 1,
   },
   letterToday: {
-    color: '#232A4D',
+    color: HOME_UI.accent,
   },
   num: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '800',
+    color: 'rgba(255,255,255,0.86)',
+    zIndex: 1,
   },
   numToday: {
-    color: '#1A1F3B',
+    color: HOME_UI.accent,
   },
-  dot: {
-    width: 5,
-    height: 5,
-    borderRadius: 3,
-    backgroundColor: 'rgba(255,255,255,0.25)',
+  tick: {
+    width: 14,
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    zIndex: 1,
   },
-  dotActive: {
-    backgroundColor: '#C29A4E',
+  tickActive: {
+    backgroundColor: HOME_UI.goldLt,
   },
-  dotToday: {
-    backgroundColor: '#C29A4E',
+  tickToday: {
+    backgroundColor: HOME_UI.gold,
   },
 });

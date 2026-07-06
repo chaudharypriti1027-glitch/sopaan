@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { ChevronRight } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import type { ProfileSummary } from '../../api/me';
@@ -7,11 +8,10 @@ import { NumText } from '../NumText';
 import { Skeleton } from '../Skeleton';
 import { Text } from '../Text';
 import { useTheme } from '../../theme';
-import { homePremiumCard } from '../home/homeStyles';
 import { MENU_TONE_STYLES } from '../premium/premiumIconTokens';
-import { PREMIUM } from '../premium/premiumStyles';
 import { formatProfileSummaryCount } from './profileMenu';
 import type { ProfileMenuSection } from './profileMenuTypes';
+import { PROFILE, profileCard } from './profileTheme';
 
 type ProfileMenuSectionCardProps = {
   section: ProfileMenuSection;
@@ -53,9 +53,14 @@ export function ProfileMenuSectionCard({
             </View>
             <Text style={styles.label}>{label}</Text>
             {item.badge ? (
-              <View style={styles.badge}>
+              <LinearGradient
+                colors={[PROFILE.goldLt, PROFILE.gold]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.badge}
+              >
                 <Text style={styles.badgeText}>{item.badge}</Text>
-              </View>
+              </LinearGradient>
             ) : item.countKey ? (
               summaryLoading ? (
                 <Skeleton width={22} height={12} borderRadius={6} />
@@ -67,7 +72,7 @@ export function ProfileMenuSectionCard({
             ) : meta ? (
               <NumText style={styles.meta}>{meta}</NumText>
             ) : null}
-            <ChevronRight size={18} color={PREMIUM.sectionLabel} strokeWidth={1.75} />
+            <ChevronRight size={18} color={PROFILE.faint} strokeWidth={1.75} />
           </Pressable>
         );
       })}
@@ -80,7 +85,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     card: {
       paddingHorizontal: 16,
       paddingVertical: 4,
-      ...homePremiumCard(theme),
+      ...profileCard(theme),
     },
     row: {
       flexDirection: 'row',
@@ -90,10 +95,11 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     },
     rowBorder: {
       borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: PREMIUM.hairline,
+      borderTopColor: PROFILE.hair,
     },
     pressed: {
       opacity: 0.92,
+      transform: [{ scale: 0.99 }],
     },
     icon: {
       width: 40,
@@ -107,17 +113,16 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       fontSize: 13.5,
       fontFamily: theme.typography.fonts.ui.bold,
       fontWeight: '700',
-      color: theme.colors.text.primary,
+      color: PROFILE.ink,
     },
     meta: {
       fontSize: 11,
       fontFamily: theme.typography.fonts.stat.bold,
       fontWeight: '700',
-      color: PREMIUM.sectionLabel,
+      color: PROFILE.faint,
       marginRight: 2,
     },
     badge: {
-      backgroundColor: '#F2554B',
       borderRadius: 99,
       paddingHorizontal: 8,
       paddingVertical: 2,
@@ -127,7 +132,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       fontSize: 10,
       fontFamily: theme.typography.fonts.ui.bold,
       fontWeight: '800',
-      color: '#FFFFFF',
+      color: '#2A2110',
     },
   });
 }

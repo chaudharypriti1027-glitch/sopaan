@@ -59,6 +59,14 @@ jest.mock('../../auth/routeAfterSession', () => ({
   routeAfterSession: jest.fn(),
 }));
 
+async function renderLogin() {
+  const result = renderWithProviders(<LoginScreen />);
+  await waitFor(() => {
+    expect(jest.requireMock('../../api').privacyApi.getPolicy).toHaveBeenCalled();
+  });
+  return result;
+}
+
 describe('LoginScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -80,21 +88,21 @@ describe('LoginScreen', () => {
     mockSetSession.mockResolvedValue(undefined);
   });
 
-  it('navigates to phone/OTP login when the Phone option is pressed', () => {
-    const { getByRole } = renderWithProviders(<LoginScreen />);
+  it('navigates to phone/OTP login when the Phone option is pressed', async () => {
+    const { getByRole } = await renderLogin();
 
     fireEvent.press(getByRole('button', { name: 'Phone' }));
 
     expect(mockNavigate).toHaveBeenCalledWith('OtpLogin');
   });
 
-  it('shows a forgot password link', () => {
-    const { getByTestId } = renderWithProviders(<LoginScreen />);
+  it('shows a forgot password link', async () => {
+    const { getByTestId } = await renderLogin();
     expect(getByTestId('login-forgot-password')).toBeTruthy();
   });
 
-  it('keeps Sign in disabled until email and password are valid', () => {
-    const { getByTestId, getByRole } = renderWithProviders(<LoginScreen />);
+  it('keeps Sign in disabled until email and password are valid', async () => {
+    const { getByTestId, getByRole } = await renderLogin();
 
     fireEvent.changeText(getByTestId('login-email'), 'bad');
     fireEvent.changeText(getByTestId('login-password'), 'short');
@@ -102,7 +110,7 @@ describe('LoginScreen', () => {
   });
 
   it('logs in with email and password', async () => {
-    const { getByTestId, getByRole } = renderWithProviders(<LoginScreen />);
+    const { getByTestId, getByRole } = await renderLogin();
 
     fireEvent.changeText(getByTestId('login-email'), 'user@example.com');
     fireEvent.changeText(getByTestId('login-password'), 'Password123!');
@@ -117,8 +125,8 @@ describe('LoginScreen', () => {
     });
   });
 
-  it('navigates to create account', () => {
-    const { getByTestId } = renderWithProviders(<LoginScreen />);
+  it('navigates to create account', async () => {
+    const { getByTestId } = await renderLogin();
 
     fireEvent.press(getByTestId('login-create-account'));
 

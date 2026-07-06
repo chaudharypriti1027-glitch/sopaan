@@ -3,14 +3,11 @@ import {
   Bell,
   BookOpen,
   Bookmark,
-  Crown,
   Download,
   Edit3,
   HelpCircle,
   Languages,
-  MessageCircle,
   Shield,
-  Star,
   Target,
   Trophy,
   UserPlus,
@@ -32,6 +29,7 @@ function languageMeta(profile: Profile): ProfileMenuItem['metaKey'] {
   return 'languageEnglish';
 }
 
+/** Menu structure aligned with sopaan-profile-premium-plus.html */
 export function buildProfileMenuSections(profile: Profile): ProfileMenuSection[] {
   const sections: ProfileMenuSection[] = [
     {
@@ -41,8 +39,8 @@ export function buildProfileMenuSections(profile: Profile): ProfileMenuSection[]
         { id: 'performance', labelKey: 'performance', route: 'ProgressAnalytics', tone: 'indigo', icon: BarChart3 },
         { id: 'courses', labelKey: 'courses', route: 'Courses', tone: 'teal', icon: BookOpen, countKey: 'courses' },
         { id: 'saved', labelKey: 'saved', route: 'Notes', tone: 'gold', icon: Bookmark, countKey: 'savedQuestions' },
-        { id: 'mistakes', labelKey: 'mistakes', route: 'MockAnalysis', tone: 'coral', icon: Target, countKey: 'mistakes' },
-        { id: 'downloads', labelKey: 'downloads', route: 'Notes', tone: 'indigo', icon: Download, countKey: 'downloads' },
+        { id: 'mistakes', labelKey: 'mistakes', route: 'MockAnalysis', tone: 'indigo', icon: Target, countKey: 'mistakes' },
+        { id: 'downloads', labelKey: 'downloads', route: 'Notes', tone: 'teal', icon: Download, countKey: 'downloads' },
       ],
     },
     {
@@ -51,8 +49,7 @@ export function buildProfileMenuSections(profile: Profile): ProfileMenuSection[]
       items: [
         { id: 'badges', labelKey: 'badges', route: 'Rewards', tone: 'gold', icon: Trophy, countKey: 'achievements' },
         { id: 'wallet', labelKey: 'wallet', route: 'Rewards', tone: 'teal', icon: Wallet, countKey: 'coins' },
-        { id: 'refer', labelKey: 'refer', route: 'ReferEarn', tone: 'coral', icon: UserPlus, badge: '₹100' },
-        { id: 'subscription', labelKey: 'subscription', route: 'ManageSubscription', tone: 'indigo', icon: Crown },
+        { id: 'refer', labelKey: 'refer', route: 'ReferEarn', tone: 'gold', icon: UserPlus, badge: '₹100' },
       ],
     },
     {
@@ -86,31 +83,16 @@ export function buildProfileMenuSections(profile: Profile): ProfileMenuSection[]
           id: 'privacy',
           labelKey: 'privacy',
           route: 'PrivacyPolicy',
-          tone: 'coral',
+          tone: 'indigo',
           icon: Shield,
-        },
-        {
-          id: 'whatsapp',
-          labelKey: 'whatsappCommunity',
-          tone: 'teal',
-          icon: MessageCircle,
-          action: 'whatsapp',
-          testID: 'profile-whatsapp-community',
         },
         {
           id: 'help',
           labelKey: 'help',
-          tone: 'indigo',
+          tone: 'gold',
           icon: HelpCircle,
           action: 'help',
           testID: 'profile-help',
-        },
-        {
-          id: 'rate',
-          labelKey: 'rate',
-          route: 'Settings',
-          tone: 'gold',
-          icon: Star,
         },
       ],
     },

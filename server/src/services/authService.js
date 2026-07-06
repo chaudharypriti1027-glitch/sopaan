@@ -19,7 +19,7 @@ function formatUser(user) {
   const id = user._id ?? user.id;
 
   return {
-    id,
+    id: String(id),
     name: user.name,
     email: user.email,
     phone: user.phone,
@@ -40,12 +40,29 @@ async function issueAuthTokens(user, { familyId } = {}) {
 async function issueAuthResult(user, { isNewUser }) {
   assertAccountCanAuthenticate(user);
   const tokens = await issueAuthTokens(user);
+  const profile = user.toProfile();
 
   return {
     token: tokens.accessToken,
+    accessToken: tokens.accessToken,
     refreshToken: tokens.refreshToken,
-    profile: user.toProfile(),
+    profile,
     isNewUser,
+    user: {
+      id: profile.id,
+      name: profile.name,
+      email: profile.email ?? null,
+      phone: profile.phone,
+      role: profile.role ?? 'student',
+      isPremium: profile.isPremium ?? false,
+      premiumPlan: profile.premiumPlan ?? null,
+      premiumExpiresAt: profile.premiumExpiresAt ?? null,
+      coins: profile.coins ?? 0,
+      streak:
+        profile.streak != null
+          ? { count: profile.streak, lastActiveDate: null }
+          : undefined,
+    },
   };
 }
 
@@ -68,13 +85,6 @@ function legacySessionFromAuthResult(result) {
           ? { count: result.profile.streak, lastActiveDate: null }
           : undefined,
     },
-  };
-}
-
-async function authResponse(user, options) {
-  return {
-    ...(await issueAuthTokens(user, options)),
-    user: formatUser(user),
   };
 }
 
@@ -188,7 +198,7 @@ export async function signup({
     });
   }
 
-  return authResponse(user);
+  return issueAuthResult(user, { isNewUser: true });
 }
 
 export async function login({ phone, email, password }) {

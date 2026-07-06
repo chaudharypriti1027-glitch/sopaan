@@ -9,12 +9,13 @@ describe('useLiveClassCountdown', () => {
   });
 
   afterEach(() => {
+    jest.runOnlyPendingTimers();
     jest.useRealTimers();
   });
 
   it('counts down to the scheduled start time', () => {
     const target = '2026-07-04T10:01:05.000Z';
-    const { result } = renderHook(() => useLiveClassCountdown(target));
+    const { result, unmount } = renderHook(() => useLiveClassCountdown(target));
 
     expect(result.current.minutes).toBe(1);
     expect(result.current.seconds).toBe(5);
@@ -33,5 +34,7 @@ describe('useLiveClassCountdown', () => {
 
     expect(result.current.isPast).toBe(true);
     expect(result.current.totalMs).toBe(0);
+
+    unmount();
   });
 });

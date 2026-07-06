@@ -3,6 +3,7 @@ import { AppError } from '../utils/AppError.js';
 import { observabilityConfig } from '../config/observabilityConfig.js';
 
 export async function getHealth(_req, res) {
+  res.set('Cache-Control', 'public, max-age=15, stale-while-revalidate=30');
   res.status(200).json(getHealthStatus());
 }
 

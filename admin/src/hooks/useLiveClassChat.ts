@@ -5,6 +5,7 @@ import {
   type LiveHandNotify,
   type LiveNamespaceError,
   type LivePresenceParticipant,
+  type LiveRaisedHand,
   type LiveReaction,
 } from '../realtime/events';
 import {
@@ -19,7 +20,9 @@ export function useLiveClassChat(liveClassId?: string, { isHost = true } = {}) {
   const [reactions, setReactions] = useState<LiveReaction[]>([]);
   const [presenceCount, setPresenceCount] = useState(0);
   const [participants, setParticipants] = useState<LivePresenceParticipant[]>([]);
+  const [raisedHands, setRaisedHands] = useState<LiveRaisedHand[]>([]);
   const [handNotifications, setHandNotifications] = useState<LiveHandNotify[]>([]);
+  const [pinnedAnnouncement, setPinnedAnnouncement] = useState<string | null>(null);
   const [error, setError] = useState<LiveNamespaceError | null>(null);
 
   useEffect(() => {
@@ -53,14 +56,17 @@ export function useLiveClassChat(liveClassId?: string, { isHost = true } = {}) {
       classId,
       count,
       participants: nextParticipants,
+      raisedHands: nextRaisedHands,
     }: {
       classId: string;
       count: number;
       participants: LivePresenceParticipant[];
+      raisedHands?: LiveRaisedHand[];
     }) => {
       if (classId === liveClassId) {
         setPresenceCount(count);
         setParticipants(nextParticipants);
+        setRaisedHands(nextRaisedHands ?? []);
       }
     };
 
@@ -82,6 +88,19 @@ export function useLiveClassChat(liveClassId?: string, { isHost = true } = {}) {
       }
     };
 
+    const onAnnouncement = ({
+      classId,
+      message,
+    }: {
+      classId: string;
+      message: string;
+      authorName?: string;
+    }) => {
+      if (classId === liveClassId) {
+        setPinnedAnnouncement(message);
+      }
+    };
+
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
     socket.on(LIVE_NS_EVENTS.CHAT_HISTORY, onHistory);
@@ -89,6 +108,7 @@ export function useLiveClassChat(liveClassId?: string, { isHost = true } = {}) {
     socket.on(LIVE_NS_EVENTS.PRESENCE, onPresence);
     socket.on(LIVE_NS_EVENTS.REACTION, onReaction);
     socket.on(LIVE_NS_EVENTS.HAND_NOTIFY, onHandNotify);
+    socket.on(LIVE_NS_EVENTS.HOST_ANNOUNCEMENT, onAnnouncement);
     socket.on(LIVE_NS_EVENTS.ERROR, onError);
 
     const join = () => {
@@ -109,6 +129,7 @@ export function useLiveClassChat(liveClassId?: string, { isHost = true } = {}) {
       socket.off(LIVE_NS_EVENTS.PRESENCE, onPresence);
       socket.off(LIVE_NS_EVENTS.REACTION, onReaction);
       socket.off(LIVE_NS_EVENTS.HAND_NOTIFY, onHandNotify);
+      socket.off(LIVE_NS_EVENTS.HOST_ANNOUNCEMENT, onAnnouncement);
       socket.off(LIVE_NS_EVENTS.ERROR, onError);
       socket.off('connect', join);
       socket.emit(LIVE_NS_EVENTS.LEAVE, { classId: liveClassId });
@@ -191,7 +212,9 @@ export function useLiveClassChat(liveClassId?: string, { isHost = true } = {}) {
     reactions,
     presenceCount,
     participants,
+    raisedHands,
     handNotifications,
+    pinnedAnnouncement,
     error,
     sendMessage,
     sendReaction,

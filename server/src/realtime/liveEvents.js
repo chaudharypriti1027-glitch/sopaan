@@ -8,6 +8,7 @@ export const LIVE_NS_EVENTS = Object.freeze({
   HAND_RAISE: 'hand:raise',
   HAND_LOWER: 'hand:lower',
   HAND_NOTIFY: 'hand:notify',
+  HAND_ACK: 'hand:ack',
   HOST_MUTE_ALL: 'host:muteAll',
   HOST_ANNOUNCEMENT: 'host:announcement',
   DEV_STREAM_REQUEST: 'dev-stream:request',
@@ -15,4 +16,4 @@ export const LIVE_NS_EVENTS = Object.freeze({
   ERROR: 'error',
 });
 
-export const LIVE_REACTION_EMOJIS = Object.freeze(['👍', '🔥', '👏']);
+export const LIVE_REACTION_EMOJIS = Object.freeze(['👍', '🔥', '👏', '❤️']);

@@ -1,45 +1,24 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { NAV_GROUPS } from '../../navigation';
 import { useAuth } from '../../auth/AuthContext';
 import { ADMIN_ONLY_NAV_IDS } from '../../auth/roles';
+import { LogOutIcon, NavIcon } from '../icons/NavIcon';
 import '../ui.css';
 
-function navIcon(id: string) {
-  const common = { className: 'svg', viewBox: '0 0 24 24', 'aria-hidden': true as const };
-  switch (id) {
-    case 'dashboard':
-      return (
-        <svg {...common}>
-          <rect x="3" y="3" width="7" height="9" rx="1.5" />
-          <rect x="14" y="3" width="7" height="5" rx="1.5" />
-          <rect x="14" y="12" width="7" height="9" rx="1.5" />
-          <rect x="3" y="16" width="7" height="5" rx="1.5" />
-        </svg>
-      );
-    case 'live':
-      return (
-        <svg {...common}>
-          <rect x="2" y="5" width="14" height="14" rx="3" />
-          <path d="m22 8-6 4 6 4z" />
-        </svg>
-      );
-    default:
-      return (
-        <svg {...common}>
-          <circle cx="12" cy="12" r="9" />
-        </svg>
-      );
-  }
-}
-
 export function Sidebar() {
-  const { user, isAdmin } = useAuth();
+  const { user, isAdmin, logout } = useAuth();
+  const navigate = useNavigate();
   const initials = user?.name
     ?.split(' ')
     .map((p: string) => p[0])
     .join('')
     .slice(0, 2)
     .toUpperCase();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login', { replace: true });
+  };
 
   return (
     <aside className="side">
@@ -61,22 +40,22 @@ export function Sidebar() {
         if (items.length === 0) return null;
 
         return (
-        <div className="navgrp" key={group.title}>
-          <div className="gl">{group.title}</div>
-          {items.map((item) => (
-            <NavLink
-              key={item.id}
-              to={item.path}
-              end={item.path === '/'}
-              className={({ isActive }) => `nav${isActive ? ' on' : ''}`}
-            >
-              {navIcon(item.id)}
-              {item.label}
-              {item.live ? <span className="badge live">LIVE</span> : null}
-              {item.badge ? <span className="badge">{item.badge}</span> : null}
-            </NavLink>
-          ))}
-        </div>
+          <div className="navgrp" key={group.title}>
+            <div className="gl">{group.title}</div>
+            {items.map((item) => (
+              <NavLink
+                key={item.id}
+                to={item.path}
+                end={item.path === '/'}
+                className={({ isActive }) => `nav${isActive ? ' on' : ''}`}
+              >
+                <NavIcon id={item.id} />
+                {item.label}
+                {item.live ? <span className="badge live">LIVE</span> : null}
+                {item.badge ? <span className="badge">{item.badge}</span> : null}
+              </NavLink>
+            ))}
+          </div>
         );
       })}
 
@@ -86,6 +65,10 @@ export function Sidebar() {
           <b>{user?.name ?? 'Admin'}</b>
           <span>{user?.email ?? 'admin@sopaan.dev'}</span>
         </div>
+        <button type="button" className="side-logout" onClick={handleLogout} aria-label="Sign out">
+          <LogOutIcon />
+          Sign out
+        </button>
       </div>
     </aside>
   );

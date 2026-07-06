@@ -1,14 +1,31 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { booksApi, revisionCapsulesApi, testSeriesApi, vocabularyApi } from '../api';
+import { getBook, listBooks, listSubjects, type LibraryListParams } from '../api/books';
+import { revisionCapsulesApi, testSeriesApi, vocabularyApi } from '../api';
 import type { PaginationParams } from '../api';
 import { useAuth } from '../auth';
 import { useLanguage } from '../language/LanguageContext';
 import { queryKeys } from './queryKeys';
 
-export function useBooks(params?: PaginationParams & { subject?: string; examId?: string }) {
+export function useBooks(params?: LibraryListParams, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: queryKeys.books.list(params),
-    queryFn: () => booksApi.listBooks(params),
+    queryFn: () => listBooks(params),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useLibrarySubjects() {
+  return useQuery({
+    queryKey: queryKeys.books.subjects(),
+    queryFn: () => listSubjects(),
+  });
+}
+
+export function useLibraryBook(id: string | undefined, options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: queryKeys.books.detail(id ?? ''),
+    queryFn: () => getBook(id!),
+    enabled: (options?.enabled ?? true) && Boolean(id),
   });
 }
 

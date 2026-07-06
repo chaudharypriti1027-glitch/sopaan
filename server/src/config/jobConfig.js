@@ -14,6 +14,7 @@ export const JOB_NAMES = Object.freeze({
   OBSERVABILITY_SPIKE_CHECK: 'observability-spike-check',
   DAILY_LEAGUE_MAINTENANCE: 'daily-league-maintenance',
   ADMIN_NOTIFICATION_SEND: 'admin-notification-send',
+  BOOK_GEN: 'book-gen',
 });
 
 export const jobConfig = Object.freeze({

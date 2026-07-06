@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Alert, Pressable, StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
+import type { CompositeNavigationProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import { Smartphone } from 'lucide-react-native';
@@ -22,16 +23,22 @@ import {
 import { Text } from '../components/Text';
 import { meApi, parseApiError, privacyApi } from '../api';
 import { useAuth } from '../auth';
+import { routeAfterSession } from '../auth/routeAfterSession';
 import { completeStudentLogin, isAdminAppAccessError } from '../auth/studentSession';
+import {
+  DEFAULT_PLACEHOLDER_NAME,
+  needsPostOtpProfileCompletion,
+} from '../auth/signupFlow';
 import { useGoogleSignIn } from '../auth/useGoogleSignIn';
-import { useOnboarding } from '../auth/OnboardingContext';
 import { isStrongPassword } from '../lib/passwordPolicy';
-import type { AuthStackParamList } from '../navigation/types';
+import type { AuthStackParamList, RootStackParamList } from '../navigation/types';
 import { useAuthStore } from '../store/auth';
 
-type SignupNav = NativeStackNavigationProp<AuthStackParamList, 'Signup'>;
+type SignupNav = CompositeNavigationProp<
+  NativeStackNavigationProp<AuthStackParamList, 'Signup'>,
+  NativeStackNavigationProp<RootStackParamList>
+>;
 
-const DEFAULT_PLACEHOLDER_NAME = 'Student';
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function initialName(name: string | undefined) {
@@ -168,7 +175,6 @@ function SignupProfileCompletion() {
 function SignupRegistration() {
   const navigation = useNavigation<SignupNav>();
   const { signup } = useAuth();
-  const { completeOnboarding } = useOnboarding();
   const { t } = useTranslation('auth');
   const styles = useMemo(() => createRegistrationStyles(), []);
 
@@ -208,7 +214,7 @@ function SignupRegistration() {
           marketing: false,
         },
       });
-      await completeOnboarding();
+      routeAfterSession(navigation, useAuthStore.getState().profile);
     } catch (err) {
       if (isAdminAppAccessError(err)) {
         navigation.navigate('AdminPortal');
@@ -340,8 +346,9 @@ function SignupRegistration() {
 
 export function SignupScreen() {
   const status = useAuthStore((state) => state.status);
+  const profile = useAuthStore((state) => state.profile);
 
-  if (status === 'authed') {
+  if (status === 'authed' && needsPostOtpProfileCompletion(profile)) {
     return <SignupProfileCompletion />;
   }
 

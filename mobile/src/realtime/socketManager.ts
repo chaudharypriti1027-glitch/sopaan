@@ -1,4 +1,3 @@
-import { Platform } from 'react-native';
 import { io, type Socket } from 'socket.io-client';
 import { config } from '../config/env';
 import { SOCKET_EVENTS } from './events';

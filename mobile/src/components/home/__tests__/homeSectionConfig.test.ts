@@ -19,7 +19,10 @@ describe('homeSectionConfig', () => {
 
     const sections = visibleHomeSections(feed);
     expect(sections.indexOf('dailyChallenge')).toBe(-1);
-    expect(sections[0]).toBe('nudges');
+    expect(sections[0]).toBe('features');
+    expect(sections).toContain('nudges');
+    expect(sections[sections.length - 1]).toBe('league');
+    expect(sections[sections.length - 2]).toBe('nudges');
     expect(sections).toContain('affairs');
   });
 
@@ -27,6 +30,12 @@ describe('homeSectionConfig', () => {
     const feed = createMockHomeFeed({ aiNudges: [], quickActions: [] });
     expect(resolveHomeSectionVisibility(feed).features).toBe(true);
     expect(visibleHomeSections(feed)).toContain('features');
+  });
+
+  it('always includes the AI coach section even without nudges', () => {
+    const feed = createMockHomeFeed({ aiNudges: [] });
+    expect(resolveHomeSectionVisibility(feed).nudges).toBe(true);
+    expect(visibleHomeSections(feed)).toContain('nudges');
   });
 
   it('shows daily challenge when still todo', () => {
@@ -45,8 +54,9 @@ describe('homeSectionConfig', () => {
   });
 
   it('exposes section metadata for feed rendering', () => {
-    expect(HOME_SECTION_META.nudges.overlapHero).toBe(true);
     expect(HOME_SECTION_META.features.titleKey).toBe('explore');
+    expect(HOME_SECTION_META.features.compactWhenFirst).toBe(true);
+    expect(HOME_SECTION_META.nudges.titleKey).toBe('forYou');
     expect(HOME_SECTION_META.continue.actionKey).toBe('seeAll');
   });
 });

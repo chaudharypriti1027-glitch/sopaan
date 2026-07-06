@@ -1,21 +1,22 @@
 import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { CheckSquare, Globe, GraduationCap, MapPin } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { CheckSquare, GraduationCap, Mail, MapPin, Phone } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { Text } from '../Text';
 import { useFormat } from '../../i18n/useFormat';
 import { useTheme } from '../../theme';
 import type { Profile } from '../../types/auth';
-import { homePremiumCard } from '../home/homeStyles';
+import { PROFILE, profileCard } from './profileTheme';
 import { MENU_TONE_STYLES } from '../premium/premiumIconTokens';
-import { PREMIUM } from '../premium/premiumStyles';
+import { maskPhoneForProfile } from './profileUtils';
 
 type DetailRow = {
   id: string;
   label: string;
   value: string;
   tone: 'indigo' | 'teal' | 'gold' | 'coral';
-  icon: typeof CheckSquare;
+  icon: typeof Mail;
   testID?: string;
 };
 
@@ -34,19 +35,28 @@ function buildRows(
       : profile.targetExam
     : notSet;
 
-  const languageValue =
-    profile.language === 'hi'
-      ? t('common:languageHindi')
-      : profile.language === 'gu'
-        ? t('app:profile.languageGu')
-        : t('common:languageEnglish');
-
   return [
+    {
+      id: 'email',
+      label: t('profile.emailLabel'),
+      value: profile.email?.trim() || notSet,
+      tone: 'indigo',
+      icon: Mail,
+      testID: 'profile-detail-email',
+    },
+    {
+      id: 'phone',
+      label: t('profile.phoneLabel'),
+      value: profile.phone ? maskPhoneForProfile(profile.phone) : notSet,
+      tone: 'teal',
+      icon: Phone,
+      testID: 'profile-detail-phone',
+    },
     {
       id: 'target-exam',
       label: t('profile.targetExam'),
       value: targetExam,
-      tone: 'indigo',
+      tone: 'gold',
       icon: CheckSquare,
       testID: 'profile-detail-target-exam',
     },
@@ -54,7 +64,7 @@ function buildRows(
       id: 'state',
       label: t('profile.stateLabel'),
       value: profile.state || notSet,
-      tone: 'teal',
+      tone: 'indigo',
       icon: MapPin,
       testID: 'profile-detail-state',
     },
@@ -62,17 +72,9 @@ function buildRows(
       id: 'education',
       label: t('profile.educationLabel'),
       value: profile.educationLevel || notSet,
-      tone: 'gold',
+      tone: 'teal',
       icon: GraduationCap,
       testID: 'profile-detail-education',
-    },
-    {
-      id: 'language',
-      label: t('profile.languageLabel'),
-      value: languageValue,
-      tone: 'coral',
-      icon: Globe,
-      testID: 'profile-detail-language',
     },
   ];
 }
@@ -82,7 +84,7 @@ type ProfileAccountDetailsProps = {
 };
 
 export function ProfileAccountDetails({ profile }: ProfileAccountDetailsProps) {
-  const { t } = useTranslation(['app', 'common']);
+  const { t } = useTranslation('app');
   const { formatDate } = useFormat();
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -116,7 +118,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     card: {
       paddingHorizontal: 16,
       paddingVertical: 4,
-      ...homePremiumCard(theme),
+      ...profileCard(theme),
     },
     row: {
       flexDirection: 'row',
@@ -126,7 +128,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     },
     rowBorder: {
       borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: PREMIUM.hairline,
+      borderTopColor: PROFILE.hair,
     },
     icon: {
       width: 38,
@@ -140,13 +142,13 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       fontSize: 11,
       fontFamily: theme.typography.fonts.ui.semibold,
       fontWeight: '600',
-      color: theme.colors.text.secondary,
+      color: PROFILE.muted,
     },
     value: {
       fontSize: 13,
       fontFamily: theme.typography.fonts.ui.bold,
       fontWeight: '700',
-      color: theme.colors.text.primary,
+      color: PROFILE.ink2,
       maxWidth: '46%',
       textAlign: 'right',
     },

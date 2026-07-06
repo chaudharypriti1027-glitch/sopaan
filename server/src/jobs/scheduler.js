@@ -8,6 +8,7 @@ import { runWeeklyRecapJob } from './handlers/weeklyRecap.js';
 import { runObservabilitySpikeCheckJob } from './handlers/observabilitySpikeCheck.js';
 import { runDailyLeagueMaintenanceJob } from './handlers/dailyLeagueMaintenance.js';
 import { runAdminNotificationSendJob } from './handlers/adminNotificationSend.js';
+import { runBookGenHandler } from './handlers/bookGen.js';
 import { startBullMqScheduler, stopBullMqScheduler } from './bullmqScheduler.js';
 import { getBullMqConnection } from '../lib/redis.js';
 import { processConfig } from '../config/processConfig.js';
@@ -21,6 +22,7 @@ const JOB_HANDLERS = Object.freeze({
   [JOB_NAMES.OBSERVABILITY_SPIKE_CHECK]: runObservabilitySpikeCheckJob,
   [JOB_NAMES.DAILY_LEAGUE_MAINTENANCE]: runDailyLeagueMaintenanceJob,
   [JOB_NAMES.ADMIN_NOTIFICATION_SEND]: runAdminNotificationSendJob,
+  [JOB_NAMES.BOOK_GEN]: runBookGenHandler,
 });
 
 const scheduledTasks = [];

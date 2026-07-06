@@ -5,6 +5,7 @@ export { AuthStepLabel } from './AuthStepLabel';
 export { AuthLogo } from './AuthLogo';
 export { AuthPremiumField } from './AuthPremiumField';
 export { AuthTabSwitcher } from './AuthTabSwitcher';
+export { AuthFormCard } from './AuthFormCard';
 export { AuthDivider } from './AuthDivider';
 export { AuthTermsBox } from './AuthTermsBox';
 export { AuthSocialButton, AuthSocialPair } from './AuthSocialButton';

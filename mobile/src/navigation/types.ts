@@ -37,7 +37,7 @@ export type AppTabParamList = {
 
 export type MainStackParamList = {
   AppTabs: NavigatorScreenParams<AppTabParamList>;
-  AskAI: undefined;
+  AskAI: { initialPrompt?: string } | undefined;
   Quiz: { testId: string };
   Result: {
     attemptId: string;
@@ -48,6 +48,7 @@ export type MainStackParamList = {
   ExamCalendar: undefined;
   ExamDetail: { examId?: string };
   Books: { examId?: string };
+  BookReader: { bookId: string; startPage?: number; startLine?: number };
   Courses: undefined;
   CourseDetail: { courseId: string };
   LiveClasses: undefined;

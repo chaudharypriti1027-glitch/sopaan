@@ -19,7 +19,8 @@ export function useNetworkStatus() {
     return unsubscribe;
   }, []);
 
-  const isOffline = isConnected === false || isInternetReachable === false;
+  // `isInternetReachable` is often null/false on iOS and Android even when the API works.
+  const isOffline = isConnected === false;
 
   return { isConnected, isInternetReachable, isOffline };
 }

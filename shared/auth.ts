@@ -29,6 +29,7 @@ export interface Profile {
   rank?: number | null;
   level?: number;
   coins?: number;
+  xp?: number;
   /** True once name, state, and targetExam are saved via PUT /api/me. */
   onboardingComplete?: boolean;
   /** App access level — used for admin dashboard and pro bypass. */

@@ -1,32 +1,61 @@
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Trophy } from 'lucide-react-native';
-import { memo, useCallback, useMemo } from 'react';
-import { FlatList, StyleSheet, Text, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
-import { useAuthStore } from '../../store/auth';
+import { useQueryClient } from '@tanstack/react-query';
+import { memo, useCallback, useMemo, useRef } from 'react';
 import {
-  AIBadge,
-  AIGoldCard,
+  Alert,
+  FlatList,
+  ScrollView,
+  StyleSheet,
+  View,
+  type LayoutChangeEvent,
+} from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { useReferralDashboard } from '../../hooks';
+import type { SubmitTestResponse, TestDetail } from '../../api/types';
+import {
   Button,
   Card,
-  Pill,
-  PremiumHeroCard,
-  ProgressBar,
   QuizOption,
-  RankRing,
   RelatedQuestions,
   Screen,
-  SectionTitle,
-  ShareMilestoneButton,
+  Text,
 } from '../../components';
-import type { MainStackParamList } from '../../navigation/types';
-import type { SubmitTestResponse } from '../../api/types';
-import { useTheme } from '../../theme';
+import {
+  ResultActionBar,
+  ResultCoachPanel,
+  ResultHero,
+  ResultRankRow,
+  ResultRewardRow,
+  ResultSectionLabel,
+  ResultSummaryCard,
+  ResultTopicBreakdown,
+  RESULT_UI,
+} from '../../components/result';
+import { queryKeys } from '../../hooks/queryKeys';
 import { useFormat } from '../../i18n/useFormat';
+import type { MainStackParamList } from '../../navigation/types';
+import { captureAndShareCard } from '../../share/captureAndShareCard';
+import { ShareMilestoneCard } from '../../share/ShareMilestoneCard';
+import type { ShareCardData } from '../../share/types';
+import { shareCardTokens } from '../../share/cardTokens';
+import { useAuthStore } from '../../store/auth';
+import { useTheme } from '../../theme';
 
 type ResultNav = NativeStackNavigationProp<MainStackParamList, 'Result'>;
 type ReviewAnswer = SubmitTestResponse['answers'][number];
+
+type ResultRewards = {
+  xpAwarded?: number;
+  coinsAwarded?: number;
+};
+
+function formatDuration(seconds: number): string {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+}
 
 const ReviewAnswerCard = memo(function ReviewAnswerCard({
   item,
@@ -37,7 +66,7 @@ const ReviewAnswerCard = memo(function ReviewAnswerCard({
 }) {
   const { theme } = useTheme();
   const { t } = useTranslation('app');
-  const styles = useMemo(() => createStyles(theme), [theme]);
+  const styles = useMemo(() => createReviewStyles(theme), [theme]);
   const correctKey = item.question?.correctKey;
   const options = item.question?.options ?? [];
 
@@ -77,10 +106,10 @@ function ResultUnavailable() {
   const navigation = useNavigation<ResultNav>();
   const { theme } = useTheme();
   const { t } = useTranslation('app');
-  const styles = useMemo(() => createStyles(theme), [theme]);
+  const styles = useMemo(() => createReviewStyles(theme), [theme]);
 
   return (
-    <Screen scroll contentContainerStyle={styles.content}>
+    <Screen scroll contentContainerStyle={styles.errorContent}>
       <Card style={styles.errorCard}>
         <Text style={styles.errorTitle}>{t('result.unavailable')}</Text>
         <Text style={styles.errorBody}>{t('result.unavailableHint')}</Text>
@@ -92,16 +121,35 @@ function ResultUnavailable() {
 
 function ResultScreenContent({ params }: { params: MainStackParamList['Result'] }) {
   const navigation = useNavigation<ResultNav>();
+  const queryClient = useQueryClient();
   const profileName = useAuthStore((state) => state.profile?.name);
   const { theme } = useTheme();
   const { t } = useTranslation('app');
   const { formatNumber, formatPercent, formatOrdinal } = useFormat();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
-  const { result, previousRank, attemptId } = params;
+  const insets = useSafeAreaInsets();
+  const scrollRef = useRef<ScrollView>(null);
+  const flatListRef = useRef<FlatList<ReviewAnswer>>(null);
+  const reviewY = useRef(0);
+  const shareCardRef = useRef<View>(null);
 
+  const { result, previousRank, attemptId, testId } = params;
   const { attempt, coaching, answers } = result;
+
+  const testDetail = queryClient.getQueryData<TestDetail>(queryKeys.tests.detail(testId));
+  const testTitle = testDetail?.title ?? t('result.defaultTestTitle');
+
   const totalQuestions = answers.length;
+  const correctCount = answers.filter((item) => item.correct).length;
+  const skippedCount = answers.filter((item) => !item.selectedKey).length;
+  const wrongCount = Math.max(0, totalQuestions - correctCount - skippedCount);
+  const durationLabel = formatDuration(attempt.totalTimeSec ?? 0);
+
+  const rewards = result.rewards as ResultRewards | undefined;
+  const xpEarned = rewards?.xpAwarded ?? attempt.score * 5;
+  const coinsEarned = rewards?.coinsAwarded ?? Math.max(5, attempt.score * 2);
+
   const rankChange =
     previousRank != null && attempt.rank != null ? previousRank - attempt.rank : null;
 
@@ -120,192 +168,178 @@ function ResultScreenContent({ params }: { params: MainStackParamList['Result'] 
     }));
   }, [answers, t]);
 
-  const renderReviewItem = useCallback(
-    ({ item, index }: { item: ReviewAnswer; index: number }) => (
-      <ReviewAnswerCard item={item} index={index} />
-    ),
-    [],
-  );
-
-  const listHeader = useMemo(
-    () => (
-      <View style={styles.content}>
-        <PremiumHeroCard
-          icon={<Trophy size={24} color="#FFFFFF" strokeWidth={1.8} />}
-          eyebrow={t('result.completeEyebrow')}
-          title={t('result.title')}
-        >
-          <Text style={styles.heroSubtitle}>
-            {t('result.scoreSubtitle', { score: attempt.score, total: totalQuestions })}
-          </Text>
-
-          <View style={styles.heroRingWrap}>
-            <RankRing
-              value={attempt.accuracy}
-              max={100}
-              label={t('result.accuracy')}
-              size={120}
-              variant="teal"
-              trackColor="rgba(255,255,255,0.15)"
-              accentColor="#F4D58D"
-              labelColor="rgba(255,255,255,0.6)"
-            />
-          </View>
-
-          <View style={styles.statPills}>
-            {rankChange != null && rankChange !== 0 ? (
-              <Pill
-                label={
-                  rankChange > 0
-                    ? t('result.placesUp', { count: Math.abs(rankChange) })
-                    : t('result.placesDown', { count: Math.abs(rankChange) })
-                }
-                variant="teal"
-              />
-            ) : null}
-            <Pill
-              label={t('result.percentile', { value: attempt.percentile ?? 0 })}
-              variant="gold"
-            />
-            <Pill label={t('result.xpEarned', { count: attempt.score * 5 })} variant="primary" />
-          </View>
-        </PremiumHeroCard>
-
-        <ShareMilestoneButton
-          fullWidth
-          variant="gold"
-          data={{
-            kind: 'rank',
-            userName: profileName ?? t('result.sopaanStudent'),
-            headline: attempt.rank ? `#${attempt.rank}` : formatPercent(attempt.accuracy, 0),
-            subtitle: t('result.accuracyMetric', {
-              value: attempt.accuracy,
-              score: attempt.score,
-              total: totalQuestions,
-            }),
-            metrics: [
-              { label: t('result.accuracy'), value: formatPercent(attempt.accuracy, 0) },
-              { label: t('result.percentileLabel'), value: formatOrdinal(attempt.percentile ?? 0) },
-              {
-                label: t('result.rankChange'),
-                value:
-                  rankChange != null && rankChange !== 0
-                    ? `${rankChange > 0 ? '+' : ''}${formatNumber(rankChange)}`
-                    : '—',
-              },
-            ],
-          }}
-        />
-
-        <View style={styles.section}>
-          <AIGoldCard>
-            <AIBadge label={t('result.coachBadge')} />
-            <Text style={styles.feedback}>{coaching.feedback}</Text>
-            {coaching.weakTopics.length > 0 ? (
-              <View style={styles.weakTopics}>
-                <Text style={styles.weakLabel}>{t('result.weakTopics')}</Text>
-                <Text style={styles.weakList}>{coaching.weakTopics.join(' · ')}</Text>
-              </View>
-            ) : null}
-            <View style={styles.actions}>
-              {coaching.actions.map((action) => (
-                <Text key={action} style={styles.actionItem}>
-                  • {action}
-                </Text>
-              ))}
-            </View>
-            <Button
-              label={t('result.practiceWeakTopics')}
-              variant="gold"
-              size="sm"
-              fullWidth
-              onPress={() => navigation.navigate('AppTabs', { screen: 'Practice' })}
-            />
-          </AIGoldCard>
-        </View>
-
-        <View style={styles.section}>
-          <SectionTitle title={t('result.topicBreakdown')} />
-          <Card style={styles.breakdown}>
-            {topicStats.map((item) => (
-              <ProgressBar
-                key={item.topic}
-                label={item.topic}
-                value={item.pct}
-                variant={item.pct >= 70 ? 'teal' : item.pct >= 50 ? 'gold' : 'coral'}
-                showValue
-              />
-            ))}
-          </Card>
-        </View>
-
-        <View style={styles.section}>
-          <SectionTitle title={t('result.reviewAnswers')} />
-        </View>
-      </View>
-    ),
+  const shareData = useMemo<ShareCardData>(
+    () => ({
+      kind: 'rank',
+      userName: profileName ?? t('result.sopaanStudent'),
+      headline: attempt.rank ? `#${attempt.rank}` : formatPercent(attempt.accuracy, 0),
+      subtitle: t('result.accuracyMetric', {
+        value: attempt.accuracy,
+        score: attempt.score,
+        total: totalQuestions,
+      }),
+      metrics: [
+        { label: t('result.accuracy'), value: formatPercent(attempt.accuracy, 0) },
+        { label: t('result.percentileLabel'), value: formatOrdinal(attempt.percentile ?? 0) },
+        {
+          label: t('result.rankChange'),
+          value:
+            rankChange != null && rankChange !== 0
+              ? `${rankChange > 0 ? '+' : ''}${formatNumber(rankChange)}`
+              : '—',
+        },
+      ],
+    }),
     [
-      attempt,
-      coaching,
-      formatOrdinal,
-      navigation,
-      rankChange,
-      styles,
-      topicStats,
-      totalQuestions,
-      profileName,
-      t,
+      attempt.accuracy,
+      attempt.percentile,
+      attempt.rank,
+      attempt.score,
       formatNumber,
+      formatOrdinal,
       formatPercent,
+      profileName,
+      rankChange,
+      t,
+      totalQuestions,
     ],
   );
 
-  const listFooter = useMemo(
-    () => (
-      <View style={styles.footer}>
-        <Button
-          label={t('result.mockAnalysis')}
-          variant="ghost"
-          fullWidth
-          onPress={() => navigation.navigate('MockAnalysis', { attemptId })}
-        />
-        <Button
-          label={t('result.backToPractice')}
-          fullWidth
-          size="lg"
-          onPress={() => navigation.navigate('AppTabs', { screen: 'Practice' })}
-        />
+  const referralQuery = useReferralDashboard();
+
+  const handleShare = useCallback(async () => {
+    try {
+      await captureAndShareCard(shareCardRef, shareData, {
+        webLink: referralQuery.data?.webLink,
+        code: referralQuery.data?.code,
+      });
+    } catch (err) {
+      Alert.alert(
+        t('result.shareErrorTitle'),
+        err instanceof Error ? err.message : t('result.shareErrorMessage'),
+      );
+    }
+  }, [referralQuery.data?.code, referralQuery.data?.webLink, shareData, t]);
+
+  const handleReviewLayout = useCallback((event: LayoutChangeEvent) => {
+    reviewY.current = event.nativeEvent.layout.y;
+  }, []);
+
+  const scrollToReview = useCallback(() => {
+    if (answers.length > 8) {
+      flatListRef.current?.scrollToIndex({ index: 0, animated: true, viewPosition: 0 });
+      return;
+    }
+    scrollRef.current?.scrollTo({ y: reviewY.current, animated: true });
+  }, [answers.length]);
+
+  const renderReviewItem = useCallback(
+    ({ item, index }: { item: ReviewAnswer; index: number }) => (
+      <View style={styles.reviewItemPad}>
+        <ReviewAnswerCard item={item} index={index} />
       </View>
     ),
-    [attemptId, navigation, styles.footer, t],
+    [styles.reviewItemPad],
+  );
+
+  const mainBody = (
+    <>
+      <ResultHero
+        accuracy={attempt.accuracy}
+        testTitle={testTitle}
+        correct={correctCount}
+        total={totalQuestions}
+        durationLabel={durationLabel}
+        onBack={() => navigation.goBack()}
+        onShare={() => void handleShare()}
+      />
+
+      <View style={styles.body}>
+        <ResultSummaryCard
+          correct={correctCount}
+          wrong={wrongCount}
+          skipped={skippedCount}
+          durationLabel={durationLabel}
+        />
+
+        <ResultRewardRow xp={xpEarned} coins={coinsEarned} />
+
+        <ResultSectionLabel title={t('result.topicBreakdown')} />
+        <ResultTopicBreakdown items={topicStats} />
+
+        <ResultRankRow rank={attempt.rank} percentile={attempt.percentile} />
+
+        <ResultSectionLabel title={t('result.aiCoach')} />
+        <ResultCoachPanel
+          feedback={coaching.feedback}
+          weakTopics={coaching.weakTopics}
+          actions={coaching.actions}
+          onPracticePress={() => navigation.navigate('AppTabs', { screen: 'Practice' })}
+        />
+
+        <ResultActionBar
+          onReview={scrollToReview}
+          onRetake={() => navigation.replace('Quiz', { testId })}
+          onMoreTests={() => navigation.navigate('AppTabs', { screen: 'Practice' })}
+          onMockAnalysis={() => navigation.navigate('MockAnalysis', { attemptId })}
+        />
+      </View>
+
+      <View style={styles.reviewSection} onLayout={handleReviewLayout}>
+        <ResultSectionLabel title={t('result.reviewAnswers')} />
+      </View>
+    </>
+  );
+
+  const shareCard = (
+    <View style={styles.offscreen} pointerEvents="none">
+      <View ref={shareCardRef} collapsable={false}>
+        <ShareMilestoneCard
+          {...shareData}
+          referralLink={referralQuery.data?.webLink}
+          referralCode={referralQuery.data?.code}
+        />
+      </View>
+    </View>
   );
 
   if (answers.length > 8) {
     return (
-      <Screen scroll={false} padded={false} style={styles.listRoot}>
-        <FlatList
-          data={answers}
-          renderItem={renderReviewItem}
-          keyExtractor={(item, index) => `${item.questionId}-${index}`}
-          ListHeaderComponent={listHeader}
-          ListFooterComponent={listFooter}
-          contentContainerStyle={styles.listContent}
-          ItemSeparatorComponent={() => <View style={styles.reviewSeparator} />}
-        />
-      </Screen>
+      <>
+        <Screen scroll={false} padded={false} style={styles.root}>
+          <FlatList
+            ref={flatListRef}
+            data={answers}
+            renderItem={renderReviewItem}
+            keyExtractor={(item, index) => `${item.questionId}-${index}`}
+            ListHeaderComponent={<View>{mainBody}</View>}
+            contentContainerStyle={styles.listContent}
+            ItemSeparatorComponent={() => <View style={styles.reviewSeparator} />}
+            showsVerticalScrollIndicator={false}
+          />
+        </Screen>
+        {shareCard}
+      </>
     );
   }
 
   return (
-    <Screen scroll contentContainerStyle={styles.content}>
-      {listHeader}
-      <View style={styles.reviewList}>
-        {answers.map((item, index) => (
-          <ReviewAnswerCard key={`${item.questionId}-${index}`} item={item} index={index} />
-        ))}
-      </View>
-      {listFooter}
-    </Screen>
+    <>
+      <ScrollView
+        ref={scrollRef}
+        style={styles.root}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + theme.spacing['4xl'] }]}
+        showsVerticalScrollIndicator={false}
+      >
+        {mainBody}
+        <View style={styles.reviewList}>
+          {answers.map((item, index) => (
+            <ReviewAnswerCard key={`${item.questionId}-${index}`} item={item} index={index} />
+          ))}
+        </View>
+      </ScrollView>
+      {shareCard}
+    </>
   );
 }
 
@@ -322,78 +356,52 @@ export function ResultScreen() {
 
 function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
-    content: {
-      gap: theme.spacing.xl,
+    root: {
+      backgroundColor: RESULT_UI.bg,
+    },
+    scrollContent: {
+      paddingTop: 0,
+      paddingHorizontal: 0,
       paddingBottom: theme.spacing['4xl'],
     },
-    heroSubtitle: {
-      ...theme.typography.presets.body,
-      color: 'rgba(255,255,255,0.7)',
-      textAlign: 'center',
-      zIndex: 1,
+    body: {
+      marginTop: RESULT_UI.bodyLift,
+      paddingHorizontal: RESULT_UI.horizontalPad,
+      zIndex: 5,
     },
-    heroRingWrap: {
-      alignItems: 'center',
-      zIndex: 1,
-      paddingVertical: theme.spacing.xs,
-    },
-    statPills: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      justifyContent: 'center',
-      gap: theme.spacing.sm,
-      zIndex: 1,
-    },
-    section: {
-      gap: theme.spacing.md,
-    },
-    feedback: {
-      ...theme.typography.presets.body,
-      color: theme.colors.text.primary,
-    },
-    weakTopics: {
-      gap: theme.spacing.xs,
-    },
-    weakLabel: {
-      ...theme.typography.presets.label,
-      color: theme.colors.text.secondary,
-      textTransform: 'uppercase',
-    },
-    weakList: {
-      ...theme.typography.presets.bodyMedium,
-      color: theme.colors.semantic.error,
-    },
-    actions: {
-      gap: theme.spacing.sm,
-      paddingTop: theme.spacing.sm,
-      borderTopWidth: StyleSheet.hairlineWidth,
-      borderTopColor: theme.colors.border.subtle,
-    },
-    actionItem: {
-      ...theme.typography.presets.body,
-      color: theme.colors.text.secondary,
-    },
-    breakdown: {
-      gap: theme.spacing.md,
+    reviewSection: {
+      paddingHorizontal: RESULT_UI.horizontalPad,
     },
     reviewList: {
+      paddingHorizontal: RESULT_UI.horizontalPad,
       gap: theme.spacing.md,
+      marginTop: theme.spacing.sm,
     },
     reviewSeparator: {
       height: theme.spacing.md,
     },
-    listRoot: {
-      flex: 1,
-    },
     listContent: {
-      paddingHorizontal: theme.spacing.lg,
       paddingBottom: theme.spacing['4xl'],
     },
-    footer: {
-      gap: theme.spacing.md,
-      paddingTop: theme.spacing.lg,
-      paddingHorizontal: theme.spacing.lg,
-      paddingBottom: theme.spacing['4xl'],
+    reviewItemPad: {
+      paddingHorizontal: RESULT_UI.horizontalPad,
+    },
+    offscreen: {
+      position: 'absolute',
+      top: -shareCardTokens.height - 100,
+      left: -shareCardTokens.width - 100,
+      opacity: 0,
+    },
+    errorContent: {
+      padding: theme.spacing.lg,
+    },
+  });
+}
+
+function createReviewStyles(theme: ReturnType<typeof useTheme>['theme']) {
+  return StyleSheet.create({
+    errorContent: {
+      padding: theme.spacing.lg,
     },
     reviewCard: {
       gap: theme.spacing.md,

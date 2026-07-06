@@ -1,9 +1,11 @@
 import { Pressable, StyleSheet } from 'react-native';
 import { Star } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { Button } from '../Button';
+import { HomeSlotIcon } from './HomePremiumIcon';
+import { HomePremiumButton } from './HomePremiumButton';
 import { PremiumHeroCard } from '../PremiumHeroCard';
 import type { HomeFeed } from '../../types/home';
+import { HOME_UI, homePressFeedback } from './homeTheme';
 
 type DailyChallengeCardProps = {
   challenge: HomeFeed['dailyChallenge'];
@@ -12,11 +14,9 @@ type DailyChallengeCardProps = {
 
 const styles = StyleSheet.create({
   wrap: {
-    borderRadius: 22,
+    borderRadius: HOME_UI.cardRadiusLg,
   },
-  pressed: {
-    opacity: 0.96,
-  },
+  pressed: homePressFeedback,
 });
 
 export function DailyChallengeCard({ challenge, onPress }: DailyChallengeCardProps) {
@@ -36,16 +36,16 @@ export function DailyChallengeCard({ challenge, onPress }: DailyChallengeCardPro
       style={({ pressed }) => [styles.wrap, pressed && styles.pressed]}
     >
       <PremiumHeroCard
-        icon={<Star size={24} color="#FFFFFF" strokeWidth={1.8} />}
+        icon={<HomeSlotIcon slot="featured" Icon={Star} tone="gold" />}
         eyebrow={t('home.dailyChallenge')}
         title={challenge.title || t('home.questionsToday', { count: challenge.qCount })}
         stats={[{ label: t('practice.questions'), value: String(challenge.qCount) }]}
         hint={t('home.challengeEarn', { coins: challenge.rewardCoins })}
       >
-        <Button
+        <HomePremiumButton
           label={done ? t('home.challengeDoneMark') : t('home.challengeStart')}
-          variant="gold"
-          size="sm"
+          variant={done ? 'ghost' : 'gold'}
+          size="md"
           fullWidth
           disabled={done}
           onPress={() => onPress?.(deeplink)}

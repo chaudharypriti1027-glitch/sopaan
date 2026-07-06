@@ -1,12 +1,12 @@
 import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
-import { NumText } from '../NumText';
 import { Text } from '../Text';
 import { useTheme } from '../../theme';
 import type { Profile } from '../../types/auth';
-import { homePremiumCard } from '../home/homeStyles';
+import { CountUpText } from './CountUpText';
+import { AnimatedProgressBar } from './AnimatedProgressBar';
+import { PROFILE, profileCard } from './profileTheme';
 
 function computeCompletion(profile: Profile, t: (key: string) => string) {
   const checks = [
@@ -37,9 +37,10 @@ function computeCompletion(profile: Profile, t: (key: string) => string) {
 
 type ProfileCompletionCardProps = {
   profile: Profile;
+  replayKey?: number;
 };
 
-export function ProfileCompletionCard({ profile }: ProfileCompletionCardProps) {
+export function ProfileCompletionCard({ profile, replayKey = 0 }: ProfileCompletionCardProps) {
   const { t } = useTranslation('app');
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -53,16 +54,20 @@ export function ProfileCompletionCard({ profile }: ProfileCompletionCardProps) {
     <View style={styles.card}>
       <View style={styles.row}>
         <Text style={styles.title}>{t('profile.completeProfile')}</Text>
-        <NumText style={styles.pct}>{pct}%</NumText>
-      </View>
-      <View style={styles.track}>
-        <LinearGradient
-          colors={['#454C79', '#232A4D']}
-          start={{ x: 0, y: 0.5 }}
-          end={{ x: 1, y: 0.5 }}
-          style={[styles.fill, { width: `${pct}%` }]}
+        <CountUpText
+          value={pct}
+          replayKey={replayKey}
+          suffix="%"
+          style={styles.pct}
         />
       </View>
+      <AnimatedProgressBar
+        progress={pct / 100}
+        replayKey={replayKey}
+        colors={['#6C9A8A', '#4C7264']}
+        height={8}
+        delayMs={500}
+      />
       <Text style={styles.hint}>{hint}</Text>
     </View>
   );
@@ -71,10 +76,9 @@ export function ProfileCompletionCard({ profile }: ProfileCompletionCardProps) {
 function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
     card: {
-      marginTop: 12,
       paddingVertical: 15,
       paddingHorizontal: 16,
-      ...homePremiumCard(theme),
+      ...profileCard(theme),
     },
     row: {
       flexDirection: 'row',
@@ -86,30 +90,20 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       fontSize: 13,
       fontFamily: theme.typography.fonts.ui.bold,
       fontWeight: '800',
-      color: theme.colors.text.primary,
+      color: PROFILE.ink,
     },
     pct: {
       fontSize: 13,
       fontFamily: theme.typography.fonts.stat.bold,
       fontWeight: '700',
-      color: theme.colors.brand.primary,
-    },
-    track: {
-      height: 8,
-      borderRadius: 99,
-      backgroundColor: theme.colors.border.subtle,
-      overflow: 'hidden',
-    },
-    fill: {
-      height: '100%',
-      borderRadius: 99,
+      color: PROFILE.goldDeep,
     },
     hint: {
       marginTop: 8,
       fontSize: 10.5,
       fontFamily: theme.typography.fonts.ui.semibold,
       fontWeight: '600',
-      color: theme.colors.text.secondary,
+      color: PROFILE.muted,
     },
   });
 }

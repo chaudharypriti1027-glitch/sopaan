@@ -14,7 +14,10 @@
       "bundleIdentifier": "com.sopaan.app",
       "associatedDomains": [
         "applinks:sopaan.app"
-      ]
+      ],
+      "infoPlist": {
+        "UIBackgroundModes": ["audio"]
+      }
     },
     "icon": "./assets/icon.png",
     "android": {
@@ -66,6 +69,7 @@
       ],
       "expo-notifications",
       "expo-video",
+      "expo-screen-orientation",
       "@livekit/react-native-expo-plugin",
       "@config-plugins/react-native-webrtc"
     ],

@@ -2,9 +2,10 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useMemo, useState, useEffect, useRef } from 'react';
-import { ActivityIndicator, Alert, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { Button, Card, Pill, PremiumHeroCard, Screen, SectionTitle } from '../../components';
+import { Button, Card, Pill, PremiumHeroCard, Screen } from '../../components';
+import { PREMIUM, PremiumIcon, PremiumSectionLabel } from '../../components/premium';
 import { useAuth } from '../../auth';
 import { useExperiments } from '../../experiments';
 import { usePremiumPlans, useSubscriptionEntitlement } from '../../hooks';
@@ -15,12 +16,7 @@ import {
   startFreeTrial,
   type SubscriptionPlan,
 } from '../../payments/subscriptionFlow';
-import {
-  Check,
-  Crown,
-  Sparkles,
-  Zap,
-} from 'lucide-react-native';
+import { Check, Crown, Sparkles, Zap } from 'lucide-react-native';
 import type { MainStackParamList } from '../../navigation/types';
 import { useTheme } from '../../theme';
 import { useFormat } from '../../i18n/useFormat';
@@ -98,29 +94,34 @@ export function PremiumScreen() {
     }
   };
 
+  const heroIcon = (
+    <PremiumIcon Icon={Crown} tone="gold" size="lg" filled surface="dark" />
+  );
+
   if (plansQuery.isLoading) {
     return (
       <Screen style={styles.centered}>
-        <ActivityIndicator size="large" color={theme.colors.brand.primary} />
+        <ActivityIndicator size="large" color={PREMIUM.gold} />
       </Screen>
     );
   }
 
   if (isPremium) {
     const entitlement = entitlementQuery.data?.entitlement;
+    const periodEnd = entitlement?.currentPeriodEnd ?? user?.premiumExpiresAt;
+    const planLabel =
+      entitlement?.status === 'trialing' || user?.premiumPlan === 'trial'
+        ? t('premium.trialActive')
+        : entitlement?.plan ?? user?.premiumPlan
+          ? t('premium.planSuffix', { plan: entitlement?.plan ?? user?.premiumPlan })
+          : t('premium.premiumActive');
 
     return (
       <Screen scroll contentContainerStyle={styles.content}>
         <PremiumHeroCard
-          icon={<Crown size={24} color="#FFFFFF" strokeWidth={1.8} />}
+          icon={heroIcon}
           eyebrow={t('premium.proActive')}
-          title={
-            entitlement?.status === 'trialing' || user?.premiumPlan === 'trial'
-              ? t('premium.trialActive')
-              : entitlement?.plan ?? user?.premiumPlan
-                ? t('premium.planSuffix', { plan: entitlement?.plan ?? user?.premiumPlan })
-                : t('premium.premiumActive')
-          }
+          title={planLabel}
           trailing={
             entitlement ? (
               <Pill
@@ -133,17 +134,24 @@ export function PremiumScreen() {
               />
             ) : undefined
           }
-          hint={
-            (entitlement?.currentPeriodEnd ?? user?.premiumExpiresAt)
-              ? t('premium.until', {
-                  date: formatDate(entitlement?.currentPeriodEnd ?? user?.premiumExpiresAt!),
-                })
+          stats={
+            periodEnd
+              ? [
+                  {
+                    label: t('manageSubscription.access'),
+                    value: t('manageSubscription.unlocked'),
+                  },
+                  {
+                    label: t('manageSubscription.periodEnds'),
+                    value: formatDate(periodEnd, { day: 'numeric', month: 'short', year: 'numeric' }),
+                  },
+                ]
               : undefined
           }
         />
         <Button
           label={t('premium.manage')}
-          variant="ghost"
+          variant="gold"
           fullWidth
           onPress={() => navigation.navigate('ManageSubscription')}
         />
@@ -153,46 +161,52 @@ export function PremiumScreen() {
 
   return (
     <Screen scroll contentContainerStyle={styles.content}>
-      <PremiumHeroCard
-        icon={<Crown size={24} color="#FFFFFF" strokeWidth={1.8} />}
-        eyebrow="Go Premium"
-        title={heroTitle}
-        hint={heroSub}
-      />
+      <PremiumHeroCard icon={heroIcon} eyebrow="Go Premium" title={heroTitle} hint={heroSub} />
 
-      <SectionTitle title={copy.benefitsTitle} />
-      <Card style={styles.benefits}>
+      <PremiumSectionLabel title={copy.benefitsTitle} />
+      <Card style={styles.benefits} padded>
         {copy.benefits.map((benefit) => (
           <View key={benefit} style={styles.benefitRow}>
-            <Check size={18} color={theme.colors.semantic.success} />
+            <View style={styles.benefitCheck}>
+              <Check size={14} color={PREMIUM.goldDeep} strokeWidth={2.5} />
+            </View>
             <Text style={styles.benefitText}>{benefit}</Text>
           </View>
         ))}
       </Card>
 
-      <SectionTitle title={t('premium.choosePlan')} />
+      <PremiumSectionLabel title={t('premium.choosePlan')} />
       <View style={styles.plans}>
         {plans.map((item) => {
           const selected = plan === item.id;
           return (
-            <Card
+            <Pressable
               key={item.id}
-              style={selected ? { ...styles.planCard, ...styles.planCardSelected } : styles.planCard}
+              accessibilityRole="button"
+              accessibilityState={{ selected }}
+              onPress={() => setPlan(item.id as PremiumPlanId)}
+              style={({ pressed }) => [
+                styles.planCard,
+                selected && styles.planCardSelected,
+                pressed && styles.planCardPressed,
+              ]}
             >
               <View style={styles.planHeader}>
-                <Text style={styles.planLabel}>{item.label}</Text>
+                <Text style={[styles.planLabel, selected && styles.planLabelSelected]}>
+                  {item.label}
+                </Text>
                 {item.id === 'yearly' ? <Pill label={t('premium.bestValue')} variant="gold" /> : null}
               </View>
-              <Text style={styles.planPrice}>{item.displayAmount}</Text>
+              <Text style={[styles.planPrice, selected && styles.planPriceSelected]}>
+                {item.displayAmount}
+              </Text>
               <Text style={styles.planSub}>{item.description}</Text>
-              <Button
-                label={selected ? t('premium.selected') : t('premium.select')}
-                variant={selected ? 'primary' : 'ghost'}
-                size="sm"
-                onPress={() => setPlan(item.id as PremiumPlanId)}
-                fullWidth
-              />
-            </Card>
+              <View style={[styles.planCta, selected && styles.planCtaSelected]}>
+                <Text style={[styles.planCtaText, selected && styles.planCtaTextSelected]}>
+                  {selected ? t('premium.selected') : t('premium.select')}
+                </Text>
+              </View>
+            </Pressable>
           );
         })}
       </View>
@@ -221,29 +235,81 @@ export function PremiumScreen() {
 
 function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
-    content: { gap: theme.spacing.lg, paddingBottom: theme.spacing['3xl'] },
+    content: { gap: theme.spacing.md, paddingBottom: theme.spacing['3xl'] },
     centered: { alignItems: 'center', justifyContent: 'center' },
     benefits: { gap: theme.spacing.md },
     benefitRow: { flexDirection: 'row', gap: theme.spacing.sm, alignItems: 'flex-start' },
-    benefitText: { ...theme.typography.presets.body, color: theme.colors.text.primary, flex: 1 },
+    benefitCheck: {
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: PREMIUM.goldSoft,
+      borderWidth: 1,
+      borderColor: PREMIUM.gold,
+      marginTop: 1,
+    },
+    benefitText: {
+      ...theme.typography.presets.body,
+      color: PREMIUM.ink,
+      flex: 1,
+      fontWeight: '600',
+      lineHeight: 21,
+    },
     plans: { flexDirection: 'row', gap: theme.spacing.md },
-    planCard: { flex: 1, gap: theme.spacing.sm },
-    planCardSelected: { borderWidth: 2, borderColor: theme.colors.brand.primary },
+    planCard: {
+      flex: 1,
+      gap: theme.spacing.sm,
+      padding: theme.spacing.lg,
+      borderRadius: PREMIUM.cardRadius,
+      borderWidth: 1,
+      borderColor: PREMIUM.hairline,
+      backgroundColor: theme.colors.surface.default,
+    },
+    planCardSelected: {
+      borderWidth: 2,
+      borderColor: PREMIUM.gold,
+      backgroundColor: PREMIUM.goldSoft,
+    },
+    planCardPressed: { opacity: 0.94, transform: [{ scale: 0.985 }] },
     planHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     planLabel: {
       ...theme.typography.presets.bodyMedium,
       fontFamily: theme.typography.fonts.ui.semibold,
-      color: theme.colors.text.primary,
+      color: PREMIUM.ink,
     },
+    planLabelSelected: { color: PREMIUM.accent },
     planPrice: {
       ...theme.typography.presets.h3,
-      color: theme.colors.text.primary,
+      color: PREMIUM.ink,
     },
-    planSub: { ...theme.typography.presets.caption, color: theme.colors.text.secondary },
+    planPriceSelected: { color: PREMIUM.goldDeep },
+    planSub: { ...theme.typography.presets.caption, color: PREMIUM.sectionLabel },
+    planCta: {
+      marginTop: 4,
+      borderRadius: 12,
+      paddingVertical: 10,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: PREMIUM.hairline,
+      backgroundColor: theme.colors.surface.default,
+    },
+    planCtaSelected: {
+      backgroundColor: PREMIUM.accent,
+      borderColor: PREMIUM.accent,
+    },
+    planCtaText: {
+      fontSize: 12,
+      fontWeight: '800',
+      color: PREMIUM.sectionLabel,
+    },
+    planCtaTextSelected: { color: '#FFFFFF' },
     disclaimer: {
       ...theme.typography.presets.caption,
-      color: theme.colors.text.tertiary,
+      color: PREMIUM.sectionLabel,
       textAlign: 'center',
+      lineHeight: 18,
     },
   });
 }

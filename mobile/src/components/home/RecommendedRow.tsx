@@ -2,25 +2,30 @@ import { useCallback, useMemo } from 'react';
 import {
   Dimensions,
   FlatList,
-  Pressable,
   StyleSheet,
   View,
   type ListRenderItem,
 } from 'react-native';
 import { ArrowRight, Clock } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
+import { HomeSlotIcon } from './HomePremiumIcon';
+import { HomeFeedCard } from './HomeFeedCard';
+import { HomePremiumButton } from './HomePremiumButton';
 import { Text } from '../Text';
-import { toneColors, toneForText } from '../../utils/iconTone';
 import type { TestCard } from '../../types/home';
-import { resolveTestSubjectIcon } from './homeUtils';
+import { resolveTestSubjectIcon, testDifficultyIconTone } from './homeIcons';
 import { HOME_UI } from './homeTheme';
 
-const CARD_WIDTH = Math.round(Dimensions.get('window').width * 0.74);
+const CARD_WIDTH = Math.round(Dimensions.get('window').width * 0.72);
 
 type RecommendedRowProps = {
   tests: TestCard[];
   onTestPress?: (testId: string) => void;
 };
+
+function difficultyTone(difficulty: TestCard['difficulty']) {
+  return testDifficultyIconTone(difficulty);
+}
 
 function difficultyStyle(
   difficulty: TestCard['difficulty'],
@@ -44,45 +49,48 @@ export function RecommendedRow({ tests, onTestPress }: RecommendedRowProps) {
     ({ item }) => {
       const pill = difficultyStyle(item.difficulty, t);
       const SubjectIcon = resolveTestSubjectIcon(item.tag, item.title);
-      const iconTone = toneColors(toneForText(item.tag ?? item.title));
+      const iconTone = difficultyTone(item.difficulty);
       const subject = item.tag ?? t('home.general');
       const difficultyLabel = t(`practice.difficulty${item.difficulty.charAt(0).toUpperCase()}${item.difficulty.slice(1)}` as 'practice.difficultyEasy');
 
       return (
-        <Pressable
-          accessibilityRole="button"
+        <HomeFeedCard
           onPress={() => onTestPress?.(item.id)}
+          accentTop
           style={styles.cardWrap}
+          contentStyle={styles.cardBody}
         >
-          <View style={styles.card}>
-            <View style={styles.topRow}>
-              <View style={[styles.testIcon, { backgroundColor: iconTone.bg }]}>
-                <SubjectIcon size={20} color={iconTone.fg} strokeWidth={2} />
-              </View>
-              <View style={[styles.badge, { backgroundColor: pill.bg }]}>
-                <View style={[styles.badgeDot, { backgroundColor: pill.color }]} />
-                <Text style={[styles.badgeText, { color: pill.color }]}>{pill.label.replace('● ', '')}</Text>
-              </View>
-            </View>
-            <Text style={styles.title} numberOfLines={2}>
-              {item.title}
-            </Text>
-            <Text style={styles.sub}>
-              {subject} · {difficultyLabel}
-            </Text>
-            <View style={styles.metaRow}>
-              <Clock size={11} color={HOME_UI.muted} strokeWidth={2.2} />
-              <Text style={styles.meta}>
-                {t('practice.questionCount', { count: item.qCount })} ·{' '}
-                {t('practice.durationMin', { count: item.durationMin })}
+          <View style={styles.topRow}>
+            <HomeSlotIcon slot="shortcut" Icon={SubjectIcon} tone={iconTone} />
+            <View style={[styles.badge, { backgroundColor: pill.bg }]}>
+              <View style={[styles.badgeDot, { backgroundColor: pill.color }]} />
+              <Text style={[styles.badgeText, { color: pill.color }]}>
+                {pill.label.replace('● ', '')}
               </Text>
             </View>
-            <View style={styles.cta}>
-              <Text style={styles.ctaText}>{t('home.startTest')}</Text>
-              <ArrowRight size={13} color="#FFFFFF" strokeWidth={2.4} />
-            </View>
           </View>
-        </Pressable>
+          <Text style={styles.title} numberOfLines={2}>
+            {item.title}
+          </Text>
+          <Text style={styles.sub}>
+            {subject} · {difficultyLabel}
+          </Text>
+          <View style={styles.metaRow}>
+            <HomeSlotIcon slot="inline" Icon={Clock} tone="slate" />
+            <Text style={styles.meta}>
+              {t('practice.questionCount', { count: item.qCount })} ·{' '}
+              {t('practice.durationMin', { count: item.durationMin })}
+            </Text>
+          </View>
+          <HomePremiumButton
+            label={t('home.startTest')}
+            variant="navy"
+            size="sm"
+            fullWidth
+            trailingIcon={ArrowRight}
+            onPress={() => onTestPress?.(item.id)}
+          />
+        </HomeFeedCard>
       );
     },
     [onTestPress, styles, t],
@@ -109,41 +117,26 @@ export function RecommendedRow({ tests, onTestPress }: RecommendedRowProps) {
 function createStyles() {
   return StyleSheet.create({
     list: {
-      marginHorizontal: -16,
+      marginHorizontal: -HOME_UI.sectionPanelPad,
     },
     listContent: {
       gap: 12,
-      paddingHorizontal: 16,
+      paddingHorizontal: HOME_UI.sectionPanelPad,
     },
     cardWrap: {
       width: CARD_WIDTH,
     },
-    card: {
-      backgroundColor: HOME_UI.surface,
-      borderRadius: 22,
+    cardBody: {
       paddingVertical: 16,
       paddingHorizontal: 16,
-      borderWidth: 1,
-      borderColor: HOME_UI.border,
-      shadowColor: HOME_UI.shadow,
-      shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 0.08,
-      shadowRadius: 16,
-      elevation: 2,
       minHeight: 200,
+      gap: 0,
     },
     topRow: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      marginBottom: 11,
-    },
-    testIcon: {
-      width: 44,
-      height: 44,
-      borderRadius: 14,
-      alignItems: 'center',
-      justifyContent: 'center',
+      marginBottom: 12,
     },
     title: {
       fontSize: 15,
@@ -157,7 +150,7 @@ function createStyles() {
       fontSize: 11.5,
       color: HOME_UI.muted,
       fontWeight: '600',
-      marginBottom: 11,
+      marginBottom: 10,
       letterSpacing: 0.2,
       textTransform: 'capitalize',
     },
@@ -165,7 +158,7 @@ function createStyles() {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 5,
-      marginBottom: 12,
+      marginBottom: 14,
     },
     meta: {
       fontSize: 11,
@@ -180,6 +173,8 @@ function createStyles() {
       borderRadius: 99,
       paddingHorizontal: 10,
       paddingVertical: 5,
+      borderWidth: 1,
+      borderColor: 'rgba(255,255,255,0.5)',
     },
     badgeDot: {
       width: 6,
@@ -191,26 +186,6 @@ function createStyles() {
       fontWeight: '800',
       letterSpacing: 0.4,
       textTransform: 'uppercase',
-    },
-    cta: {
-      marginTop: 13,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 5,
-      backgroundColor: HOME_UI.accent,
-      borderRadius: 12,
-      paddingVertical: 11,
-      shadowColor: HOME_UI.accent,
-      shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 0.5,
-      shadowRadius: 16,
-      elevation: 3,
-    },
-    ctaText: {
-      fontSize: 12,
-      fontWeight: '800',
-      color: '#FFFFFF',
     },
   });
 }

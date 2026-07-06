@@ -34,7 +34,7 @@ export async function getMe(userId) {
 }
 
 export async function getMeSummary(userId) {
-  const user = await User.findById(userId).select('coins level rank streak accountStatus').lean();
+  const user = await User.findById(userId).select('coins level rank streak xp accountStatus').lean();
 
   if (!user || user.accountStatus === 'deleted') {
     throw new AppError('User not found', 404, 'NOT_FOUND');
@@ -42,7 +42,7 @@ export async function getMeSummary(userId) {
 
   const userObjectId = new mongoose.Types.ObjectId(userId);
 
-  const [courses, achievements, mistakesAgg] = await Promise.all([
+  const [courses, achievements, mistakesAgg, accuracyAgg] = await Promise.all([
     CourseProgress.countDocuments({ userId: userObjectId }),
     Badge.countDocuments({ userId: userObjectId }),
     Attempt.aggregate([
@@ -52,9 +52,14 @@ export async function getMeSummary(userId) {
       { $group: { _id: '$answers.questionId' } },
       { $count: 'total' },
     ]),
+    Attempt.aggregate([
+      { $match: { userId: userObjectId, accuracy: { $ne: null } } },
+      { $group: { _id: null, avgAccuracy: { $avg: '$accuracy' } } },
+    ]),
   ]);
 
   const streakCurrent = user.streak?.current ?? user.streak?.count ?? 0;
+  const avgAccuracy = accuracyAgg[0]?.avgAccuracy;
 
   return {
     courses,
@@ -66,6 +71,8 @@ export async function getMeSummary(userId) {
     rank: user.rank ?? null,
     streak: streakCurrent,
     level: user.level ?? 1,
+    accuracy: avgAccuracy != null ? Math.round(avgAccuracy) : null,
+    xp: user.xp ?? 0,
   };
 }
 
@@ -85,7 +92,7 @@ export async function updateMe(userId, updates) {
   }
 
   if (updates.avatarUrl !== undefined) {
-    user.avatarUrl = updates.avatarUrl;
+    user.avatarUrl = updates.avatarUrl?.trim() || undefined;
   }
 
   if (updates.state !== undefined) {

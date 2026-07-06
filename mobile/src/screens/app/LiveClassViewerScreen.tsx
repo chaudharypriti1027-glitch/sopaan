@@ -1,32 +1,35 @@
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { PlayCircle, Radio, Users } from 'lucide-react-native';
+import { PlayCircle, Radio } from 'lucide-react-native';
 import { useMemo } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   StyleSheet,
   Text,
   View,
-  Alert,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { ApiError } from '../../api/errors';
 import { BackButton, Card, Pill, Screen, SectionTitle } from '../../components';
-import { LiveClassChatPanel } from '../../components/live/LiveClassChatPanel';
+import { usePremiumDialog } from '../../components/premium/PremiumDialogProvider';
 import { LiveClassComingSoon } from '../../components/live/LiveClassComingSoon';
-import { LiveClassFloatingReactions } from '../../components/live/LiveClassFloatingReactions';
+import { LiveClassImmersiveShell } from '../../components/live/LiveClassImmersiveShell';
 import {
   LiveClassRecordingLoading,
   LiveClassRecordingPlayer,
 } from '../../components/live/LiveClassRecordingPlayer';
-import { LiveClassReactionsBar } from '../../components/live/LiveClassReactionsBar';
 import { LiveClassScheduledPanel } from '../../components/live/LiveClassScheduledPanel';
 import { LiveClassStreamGate } from '../../components/live/LiveClassStreamGate';
+import { LIVE } from '../../components/live/liveTheme';
 import { isDevStreamingUrl } from '../../utils/streaming';
 import {
   useLiveClass,
   useLiveClassViewerToken,
   useLiveClasses,
 } from '../../hooks';
+import { useLiveClassOrientation } from '../../hooks/useLiveClassOrientation';
 import { useLiveClassChat } from '../../hooks/useSocket';
 import type { MainStackParamList } from '../../navigation/types';
 import { useTheme } from '../../theme';
@@ -38,6 +41,7 @@ export function LiveClassViewerScreen() {
   const { theme } = useTheme();
   const { t } = useTranslation('app', { keyPrefix: 'liveClassViewer' });
   const styles = useMemo(() => createStyles(theme), [theme]);
+  const { confirm } = usePremiumDialog();
 
   const listQuery = useLiveClasses();
   const classQuery = useLiveClass(liveClassId);
@@ -59,6 +63,23 @@ export function LiveClassViewerScreen() {
   const isLoadingMeta = classQuery.isLoading;
   const isJoiningLive = isLive && streamingConfigured && tokenQuery.isLoading;
   const showComingSoon = streamingConfigured === false;
+
+  useLiveClassOrientation(isLive && !showComingSoon);
+
+  const instructorSubtitle = liveClass
+    ? [liveClass.examTag, liveClass.topic].filter(Boolean).join(' · ')
+    : undefined;
+
+  const handleLeave = () => {
+    confirm({
+      title: t('leave'),
+      message: t('leaveConfirm'),
+      confirmLabel: t('leave'),
+      icon: 'logout',
+      tone: 'danger',
+      onConfirm: () => navigation.goBack(),
+    });
+  };
 
   if (showComingSoon) {
     return (
@@ -87,18 +108,20 @@ export function LiveClassViewerScreen() {
 
   if (status === 'scheduled' && liveClass) {
     return (
-      <Screen scroll={false} padded={false} style={styles.screen}>
-        <View style={styles.header}>
+      <SafeAreaView style={styles.liveRoot} edges={['left', 'right', 'bottom']}>
+        <View style={styles.scheduledHeader}>
           <BackButton onPress={() => navigation.goBack()} />
-          <Text style={styles.title} numberOfLines={2}>
-            {liveClass.title}
-          </Text>
-          {liveClass.instructor ? (
-            <Text style={styles.instructor}>{liveClass.instructor}</Text>
-          ) : null}
+          <View style={styles.scheduledHeaderText}>
+            <Text style={styles.scheduledTitle} numberOfLines={2}>
+              {liveClass.title}
+            </Text>
+            {liveClass.instructor ? (
+              <Text style={styles.scheduledInstructor}>{liveClass.instructor}</Text>
+            ) : null}
+          </View>
         </View>
         <LiveClassScheduledPanel liveClass={liveClass} />
-      </Screen>
+      </SafeAreaView>
     );
   }
 
@@ -147,111 +170,139 @@ export function LiveClassViewerScreen() {
     );
   }
 
-  return (
-    <Screen scroll={false} padded={false} style={styles.screen}>
-      <View style={styles.liveHeader}>
-        <BackButton onPress={() => navigation.goBack()} />
-        <View style={styles.headerMeta}>
-          <Pill label={t('live')} variant="coral" />
-          <View style={styles.viewers}>
-            <Users size={14} color={theme.colors.text.secondary} />
-            <Text style={styles.viewerCount}>{t('watching', { count: viewerCount })}</Text>
-          </View>
+  const streamProps = {
+    classId: liveClassId,
+    url: tokenQuery.data?.url ?? '',
+    token: tokenQuery.data?.token ?? '',
+    role: (tokenQuery.data?.role === 'host' ? 'host' : 'viewer') as 'host' | 'viewer',
+    muteAllSignal: chat.muteAllSignal,
+    instructorName: liveClass?.instructor,
+    instructorSubtitle,
+    topic: liveClass?.topic,
+    title: liveClass?.title,
+    immersive: true,
+  };
+
+  const renderStream = () => {
+    if (isJoiningLive) {
+      return (
+        <View style={styles.centered}>
+          <ActivityIndicator color={theme.colors.brand.primary} size="large" />
+          <Text style={styles.loadingTextDark}>{t('joining')}</Text>
         </View>
+      );
+    }
+
+    if (tokenQuery.isError) {
+      const needsSignIn =
+        tokenQuery.error instanceof ApiError && tokenQuery.error.status === 401;
+      return (
+        <View style={styles.centered}>
+          <Radio size={28} color={theme.colors.semantic.error} />
+          <Text style={styles.loadingTextDark}>
+            {needsSignIn ? t('signInRequired') : t('joinFailed')}
+          </Text>
+        </View>
+      );
+    }
+
+    if (
+      tokenQuery.data &&
+      (tokenQuery.data.provider === 'dev' || isDevStreamingUrl(tokenQuery.data.url))
+    ) {
+      return (
+        <LiveClassStreamGate
+          {...streamProps}
+          url={tokenQuery.data.url ?? 'dev://local-live'}
+          token={tokenQuery.data.token ?? ''}
+          instructorSubtitle={instructorSubtitle}
+        />
+      );
+    }
+
+    if (tokenQuery.data?.url && tokenQuery.data.token) {
+      return <LiveClassStreamGate {...streamProps} instructorSubtitle={instructorSubtitle} />;
+    }
+
+    if (tokenQuery.data?.token === null) {
+      return <LiveClassRecordingLoading />;
+    }
+
+    return (
+      <View style={styles.centered}>
+        <Text style={styles.loadingTextDark}>{t('streamUnavailable')}</Text>
       </View>
+    );
+  };
 
-      <View style={styles.playerWrap}>
-        {isJoiningLive ? (
-          <View style={styles.centered}>
-            <ActivityIndicator color={theme.colors.brand.primary} size="large" />
-            <Text style={styles.loadingText}>{t('joining')}</Text>
-          </View>
-        ) : tokenQuery.isError ? (
-          <View style={styles.centered}>
-            <Radio size={28} color={theme.colors.semantic.error} />
-            <Text style={styles.errorText}>{t('joinFailed')}</Text>
-          </View>
-        ) : tokenQuery.data && (tokenQuery.data.provider === 'dev' || isDevStreamingUrl(tokenQuery.data.url)) ? (
-          <LiveClassStreamGate
-            classId={liveClassId}
-            url={tokenQuery.data.url ?? 'dev://local-live'}
-            token={tokenQuery.data.token ?? ''}
-            role={tokenQuery.data.role === 'host' ? 'host' : 'viewer'}
-            muteAllSignal={chat.muteAllSignal}
-            instructorName={liveClass?.instructor}
-            topic={liveClass?.topic}
-            title={liveClass?.title}
-          />
-        ) : tokenQuery.data?.url && tokenQuery.data.token ? (
-          <>
-            <LiveClassStreamGate
-              classId={liveClassId}
-              url={tokenQuery.data.url}
-              token={tokenQuery.data.token}
-              role={tokenQuery.data.role === 'host' ? 'host' : 'viewer'}
-              muteAllSignal={chat.muteAllSignal}
-              instructorName={liveClass?.instructor}
-              topic={liveClass?.topic}
-              title={liveClass?.title}
-            />
-            <LiveClassFloatingReactions reactions={chat.reactions} />
-          </>
-        ) : tokenQuery.data?.token === null ? (
-          <LiveClassRecordingLoading />
-        ) : (
-          <View style={styles.centered}>
-            <Text style={styles.errorText}>{t('streamUnavailable')}</Text>
-          </View>
-        )}
-      </View>
-
-      {tokenQuery.data?.token ? (
-        <>
-          {chat.hostAnnouncement ? (
-            <View style={styles.announcement}>
-              <Text style={styles.announcementText}>{chat.hostAnnouncement}</Text>
-            </View>
-          ) : null}
-          <LiveClassReactionsBar
-            handRaised={chat.handRaised}
-            onRaiseHand={() => {
-              if (!chat.raiseHand()) {
-                Alert.alert(t('notConnected'), t('reconnecting'));
-              }
-            }}
-            onLowerHand={() => {
-              if (!chat.lowerHand()) {
-                Alert.alert(t('notConnected'), t('reconnecting'));
-              }
-            }}
-            onReaction={(emoji) => {
-              if (!chat.sendReaction(emoji)) {
-                Alert.alert(t('notConnected'), t('reconnecting'));
-              }
-            }}
-          />
-          <LiveClassChatPanel
-            messages={chat.messages}
-            connected={chat.connected}
-            currentUserId={chat.currentUserId}
-            onSend={chat.sendMessage}
-          />
-        </>
-      ) : null}
-
-      {liveClass?.description ? (
-        <Card style={styles.descriptionCard}>
-          <SectionTitle title={t('aboutSession')} />
-          <Text style={styles.description}>{liveClass.description}</Text>
-        </Card>
-      ) : null}
-    </Screen>
+  return (
+    <View style={styles.liveRoot}>
+      <LiveClassImmersiveShell
+        title={liveClass?.title ?? t('defaultTitle')}
+        instructor={liveClass?.instructor}
+        instructorSubtitle={instructorSubtitle}
+        topic={liveClass?.topic}
+        startedAt={liveClass?.startedAt}
+        viewerCount={viewerCount}
+        pinnedMessage={chat.hostAnnouncement}
+        pinnedAuthor={liveClass?.instructor}
+        messages={chat.messages}
+        reactions={chat.reactions}
+        currentUserId={chat.currentUserId}
+        hostUserId={
+          chat.hostUserId ?? liveClass?.educatorId ?? liveClass?.instructorId ?? undefined
+        }
+        handRaised={chat.handRaised}
+        connected={chat.connected}
+        onBack={() => navigation.goBack()}
+        onLeave={handleLeave}
+        onRaiseHand={() => {
+          if (!chat.raiseHand()) {
+            Alert.alert(t('notConnected'), t('reconnecting'));
+          }
+        }}
+        onLowerHand={() => {
+          if (!chat.lowerHand()) {
+            Alert.alert(t('notConnected'), t('reconnecting'));
+          }
+        }}
+        onReaction={(emoji) => {
+          if (!chat.sendReaction(emoji)) {
+            Alert.alert(t('notConnected'), t('reconnecting'));
+          }
+        }}
+        onSend={chat.sendMessage}
+      >
+        {renderStream()}
+      </LiveClassImmersiveShell>
+    </View>
   );
 }
 
 function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
     screen: { flex: 1, backgroundColor: theme.colors.surface.default },
+    liveRoot: { flex: 1, backgroundColor: '#12162B' },
+    scheduledHeader: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: 8,
+      paddingHorizontal: 16,
+      paddingTop: 8,
+      paddingBottom: 4,
+      backgroundColor: LIVE.navyDeep,
+    },
+    scheduledHeaderText: { flex: 1, gap: 2, paddingTop: 4 },
+    scheduledTitle: {
+      fontSize: 16,
+      fontFamily: theme.typography.fonts.ui.bold,
+      fontWeight: '800',
+      color: '#FFFFFF',
+    },
+    scheduledInstructor: {
+      fontSize: 12,
+      color: 'rgba(255,255,255,0.7)',
+    },
     header: {
       gap: theme.spacing.sm,
       paddingHorizontal: theme.spacing.lg,
@@ -259,16 +310,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       paddingBottom: theme.spacing.sm,
       backgroundColor: theme.colors.surface.default,
     },
-    liveHeader: {
-      gap: theme.spacing.sm,
-      paddingHorizontal: theme.spacing.lg,
-      paddingTop: theme.spacing.md,
-      paddingBottom: theme.spacing.xs,
-      backgroundColor: theme.colors.surface.default,
-    },
     headerMeta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-    viewers: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.xs },
-    viewerCount: { ...theme.typography.presets.caption, color: theme.colors.text.secondary },
     title: {
       ...theme.typography.presets.h3,
       color: theme.colors.text.primary,
@@ -280,18 +322,6 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       backgroundColor: '#0b1020',
       position: 'relative',
     },
-    announcement: {
-      marginHorizontal: theme.spacing.lg,
-      marginTop: theme.spacing.sm,
-      padding: theme.spacing.md,
-      borderRadius: theme.radii.md,
-      backgroundColor: theme.colors.brand.primaryMuted,
-    },
-    announcementText: {
-      ...theme.typography.presets.body,
-      color: theme.colors.text.primary,
-      textAlign: 'center',
-    },
     centered: {
       flex: 1,
       alignItems: 'center',
@@ -300,6 +330,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       padding: theme.spacing.lg,
     },
     loadingText: { ...theme.typography.presets.body, color: theme.colors.text.secondary },
+    loadingTextDark: { ...theme.typography.presets.body, color: 'rgba(255,255,255,0.75)' },
     errorText: {
       ...theme.typography.presets.body,
       color: theme.colors.text.secondary,

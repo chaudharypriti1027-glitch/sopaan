@@ -7,6 +7,7 @@ import { parsePagination } from '../utils/pagination.js';
 import { getStreamingProvider, isStreamingConfigured, safeCreateStreamingRoom } from './streaming/index.js';
 import { normalizeUserRole, isAdminRole } from '../constants/userRoles.js';
 import { dispatchNotificationToMatchingStudents } from './notifications/notificationDispatchService.js';
+import { clearLiveClassRoomState } from '../realtime/liveNamespace.js';
 
 const LIVE_CLASS_NOTIFICATION_TYPE = 'live_class_scheduled';
 
@@ -451,6 +452,7 @@ export async function endLiveClass(userId, id) {
   liveClass.status = 'ended';
   liveClass.endedAt = new Date();
   await liveClass.save();
+  clearLiveClassRoomState(liveClass._id.toString());
 
   return formatLiveClass(liveClass.toObject());
 }

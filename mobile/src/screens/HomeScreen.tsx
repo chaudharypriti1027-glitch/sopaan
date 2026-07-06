@@ -14,7 +14,9 @@ import * as Haptics from 'expo-haptics';
 import { Button, Card, Text } from '../components';
 import {
   HomeFeedContent,
+  HomeFeedShell,
   HomeHeroScroll,
+  HomeLiveNowBanner,
   HomeOfflineBanner,
   HomeSkeleton,
   HomeTopBanner,
@@ -22,6 +24,8 @@ import {
 } from '../components/home';
 import { useHomeFeed } from '../hooks/useHomeFeed';
 import { useHomeBanner } from '../hooks/useHomeBanner';
+import { useLiveClasses } from '../hooks';
+import { useHomeAvatar } from '../components/profile/useHomeAvatar';
 import { navigateHomeDeeplink } from '../navigation/homeDeeplink';
 import { navigateHomeFeature } from '../navigation/navigateHomeFeature';
 import type { HomeFeatureLink } from '../navigation/homeFeatureConfig';
@@ -52,6 +56,11 @@ function HomeStudentScreen() {
 
   const { data: feed, isLoading, isError, isOffline, refetch, isRefetching } = useHomeFeed();
   const { data: banner } = useHomeBanner();
+  const { data: liveClasses, refetch: refetchLiveClasses } = useLiveClasses();
+  const liveNow = liveClasses?.liveNow;
+  const { display: homeAvatarDisplay } = useHomeAvatar(
+    feed?.greeting ?? { name: '', message: '', dateLabel: '', unreadCount: 0 },
+  );
 
   useScreenPerf('Home', {
     isContentReady: Boolean(feed ?? isError),
@@ -103,13 +112,28 @@ function HomeStudentScreen() {
     handleDeeplink('/stack/Notifications');
   }, [handleDeeplink]);
 
+  const handleAvatarPress = useCallback(() => {
+    navigation.navigate('Profile');
+  }, [navigation]);
+
   const onRefresh = useCallback(async () => {
     try {
-      await refetch();
+      await Promise.all([refetch(), refetchLiveClasses()]);
     } catch {
       // isError surfaces on the hook.
     }
-  }, [refetch]);
+  }, [refetch, refetchLiveClasses]);
+
+  const handleJoinLive = useCallback(() => {
+    if (!liveNow) return;
+    void lightImpact();
+    if (liveClasses?.streamingConfigured === false) {
+      return;
+    }
+    navigation.getParent<NativeStackNavigationProp<MainStackParamList>>()?.navigate('LiveClassViewer', {
+      liveClassId: liveNow.id,
+    });
+  }, [liveClasses?.streamingConfigured, liveNow, navigation]);
 
   if (isLoading && !feed) {
     return <HomeSkeleton />;
@@ -150,31 +174,39 @@ function HomeStudentScreen() {
           />
         }
       >
-        {banner ? (
-          <HomeTopBanner banner={banner} onPress={handleDeeplinkWithHaptic} />
-        ) : null}
-
         <HomeHeroScroll
           greeting={feed.greeting}
+          avatarDisplay={homeAvatarDisplay}
           streak={feed.streak}
           rank={feed.rank}
           countdown={feed.countdown ?? undefined}
           dailyChallenge={feed.dailyChallenge}
+          studyActive={feed.continue.some((item) => item.progressPct >= 10)}
           onNotificationsPress={handleNotificationsPress}
+          onAvatarPress={handleAvatarPress}
           onGoalPress={() => handleDeeplink('/stack/Readiness')}
           onRankCtaPress={() => handleDeeplink('/tabs/Practice')}
         />
 
-        <HomeFeedContent
-          feed={feed}
-          navigation={navigation}
-          onDeeplink={handleDeeplink}
-          onDeeplinkWithHaptic={handleDeeplinkWithHaptic}
-          onTestPress={handleTestPress}
-          onAffairPress={handleAffairPress}
-          onLeaguePress={handleLeaguePress}
-          onFeaturePress={handleFeaturePress}
-        />
+        {liveNow && liveClasses?.streamingConfigured !== false ? (
+          <HomeLiveNowBanner liveClass={liveNow} onPress={handleJoinLive} />
+        ) : null}
+
+        <HomeFeedShell compactTop={Boolean(liveNow && liveClasses?.streamingConfigured !== false)}>
+          {banner ? (
+            <HomeTopBanner banner={banner} onPress={handleDeeplinkWithHaptic} />
+          ) : null}
+          <HomeFeedContent
+            feed={feed}
+            navigation={navigation}
+            onDeeplink={handleDeeplink}
+            onDeeplinkWithHaptic={handleDeeplinkWithHaptic}
+            onTestPress={handleTestPress}
+            onAffairPress={handleAffairPress}
+            onLeaguePress={handleLeaguePress}
+            onFeaturePress={handleFeaturePress}
+          />
+        </HomeFeedShell>
       </ScrollView>
     </View>
   );

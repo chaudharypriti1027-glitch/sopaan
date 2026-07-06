@@ -5,9 +5,21 @@ const mockNavigate = jest.fn();
 const mockStackNavigate = jest.fn();
 
 function createNavigation() {
+  const stackNav = {
+    navigate: mockStackNavigate,
+    getState: () => ({
+      routeNames: ['AppTabs', 'AskAI', 'Quiz', 'Games', 'GamePlay'],
+      routes: [{ name: 'AppTabs' }],
+      index: 0,
+    }),
+    getParent: () => undefined,
+  };
+
   return {
     navigate: mockNavigate,
-    getParent: () => ({ navigate: mockStackNavigate }),
+    dispatch: jest.fn(),
+    getState: () => ({ routeNames: ['Home'], routes: [{ name: 'Home' }], index: 0 }),
+    getParent: () => stackNav,
   } as never;
 }
 
@@ -70,5 +82,11 @@ describe('navigateHomeDeeplink', () => {
     const navigation = createNavigation();
     navigateHomeDeeplink(navigation, '/stack/AskAI');
     expect(mockStackNavigate).toHaveBeenCalledWith('AskAI');
+  });
+
+  it('routes drill deeplinks to Practice', () => {
+    const navigation = createNavigation();
+    navigateHomeDeeplink(navigation, '/drill/modern-history');
+    expect(mockNavigate).toHaveBeenCalledWith('Practice');
   });
 });

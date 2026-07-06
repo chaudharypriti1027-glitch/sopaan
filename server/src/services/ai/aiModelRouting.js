@@ -9,6 +9,8 @@ export const FEATURE_MODEL_TIER = Object.freeze({
   readiness_focus: 'fast',
   planner_copy: 'fast',
   roadmap_tips: 'fast',
+  book_generation: 'quality',
+  book_explain: 'fast',
 });
 
 const DEFAULT_TIER = 'quality';

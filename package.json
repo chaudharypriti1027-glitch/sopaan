@@ -14,7 +14,8 @@
     "format:check": "prettier --check .",
     "lint": "npm run lint -w @sopaan/server && npm run lint -w @sopaan/mobile",
     "test": "npm run test -w @sopaan/server && npm run test -w @sopaan/mobile",
-    "typecheck": "npm run typecheck -w @sopaan/mobile"
+    "typecheck": "npm run typecheck -w @sopaan/mobile",
+    "validate": "npm run typecheck && npm run test && npm run i18n:check -w @sopaan/mobile"
   },
   "devDependencies": {
     "prettier": "^3.5.3",

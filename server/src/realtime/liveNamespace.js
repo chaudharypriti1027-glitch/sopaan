@@ -5,6 +5,7 @@ import { LIVE_NS_EVENTS, LIVE_REACTION_EMOJIS } from './liveEvents.js';
 import { checkChatRateLimit, sanitizeChatMessage } from './moderation.js';
 
 const raisedHandsByClass = new Map();
+const pinnedByClass = new Map();
 
 function classRaisedHands(classId) {
   if (!raisedHandsByClass.has(classId)) {
@@ -143,6 +144,17 @@ export function registerLiveNamespace(liveNs) {
 
       const history = await getLiveChatHistory(classId);
       socket.emit(LIVE_NS_EVENTS.CHAT_HISTORY, { classId, messages: history });
+
+      const pinned = pinnedByClass.get(classId);
+      if (pinned?.message) {
+        socket.emit(LIVE_NS_EVENTS.HOST_ANNOUNCEMENT, {
+          classId,
+          message: pinned.message,
+          authorName: pinned.authorName,
+          at: pinned.at,
+        });
+      }
+
       broadcastPresence(liveNs, classId);
     });
 
@@ -196,6 +208,7 @@ export function registerLiveNamespace(liveNs) {
         userName: socket.user.name,
         text: sanitized.text,
         createdAt: new Date().toISOString(),
+        isHost: Boolean(socket.data.isLiveHost),
       });
 
       liveNs.to(roomId).emit(LIVE_NS_EVENTS.CHAT_MESSAGE, message);
@@ -257,6 +270,12 @@ export function registerLiveNamespace(liveNs) {
       };
 
       emitToHosts(liveNs, roomId, LIVE_NS_EVENTS.HAND_NOTIFY, payload);
+      emitToUser(liveNs, roomId, socket.user.id, LIVE_NS_EVENTS.HAND_ACK, {
+        classId: roomId,
+        message: 'You raised your hand ✋ — the educator will get to you shortly.',
+        raised: true,
+        createdAt: new Date().toISOString(),
+      });
       broadcastPresence(liveNs, roomId);
     });
 
@@ -308,9 +327,16 @@ export function registerLiveNamespace(liveNs) {
         return;
       }
 
-      socket.to(roomId).emit(LIVE_NS_EVENTS.HOST_ANNOUNCEMENT, {
+      pinnedByClass.set(roomId, {
+        message: text.slice(0, 500),
+        authorName: socket.user.name,
+        at: new Date().toISOString(),
+      });
+
+      liveNs.to(roomId).emit(LIVE_NS_EVENTS.HOST_ANNOUNCEMENT, {
         classId: roomId,
         message: text.slice(0, 500),
+        authorName: socket.user.name,
         at: new Date().toISOString(),
       });
     });
@@ -397,6 +423,12 @@ export function registerLiveNamespace(liveNs) {
   });
 }
 
+export function clearLiveClassRoomState(classId) {
+  raisedHandsByClass.delete(classId);
+  pinnedByClass.delete(classId);
+}
+
 export function resetLiveNamespaceStateForTests() {
   raisedHandsByClass.clear();
+  pinnedByClass.clear();
 }

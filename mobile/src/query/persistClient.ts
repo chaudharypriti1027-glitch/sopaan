@@ -1,11 +1,40 @@
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
 import { QueryClient } from '@tanstack/react-query';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ApiError } from '../api/errors';
 
-const PERSIST_KEY = 'sopaan_rq_cache';
+const PERSIST_KEY = 'sopaan_rq_cache_v3';
 const PERSIST_MAX_AGE_MS = 1000 * 60 * 60 * 24 * 7;
 
-const OFFLINE_QUERY_ROOTS = new Set(['courses', 'revision-capsules', 'notes', 'home']);
+const OFFLINE_QUERY_ROOTS = new Set([
+  'books',
+  'courses',
+  'revision-capsules',
+  'notes',
+  'home',
+  'live-classes',
+]);
+
+function isRetryableQueryError(error: unknown): boolean {
+  if (error instanceof ApiError) {
+    return error.status === 0 || error.status === 429 || error.status >= 502;
+  }
+
+  if (!(error instanceof Error)) {
+    return false;
+  }
+
+  const message = error.message.toLowerCase();
+  if (message.includes('network') || message.includes('timeout')) {
+    return true;
+  }
+
+  if ('status' in error && typeof error.status === 'number') {
+    return error.status === 0 || error.status === 429 || error.status >= 502;
+  }
+
+  return false;
+}
 
 const memoryFallback = new Map<string, string>();
 
@@ -38,15 +67,15 @@ export function createPersistedQueryClient(): QueryClient {
   return new QueryClient({
     defaultOptions: {
       queries: {
-        staleTime: 60_000,
+        staleTime: 5 * 60_000,
         gcTime: PERSIST_MAX_AGE_MS,
         retry: (failureCount, error) => {
-          const offline =
-            error instanceof Error &&
-            (error.message.includes('Network') || error.message.includes('network'));
-          if (offline) return false;
-          return failureCount < 1;
+          if (!isRetryableQueryError(error)) {
+            return false;
+          }
+          return failureCount < 3;
         },
+        retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
         networkMode: 'offlineFirst',
       },
       mutations: {
@@ -66,9 +95,15 @@ export const persistOptions = {
   persister: asyncStoragePersister,
   maxAge: PERSIST_MAX_AGE_MS,
   dehydrateOptions: {
-    shouldDehydrateQuery: (query: { queryKey: readonly unknown[] }) => {
+    shouldDehydrateQuery: (query: {
+      queryKey: readonly unknown[];
+      state: { status: string };
+    }) => {
       const root = String(query.queryKey[0] ?? '');
-      return OFFLINE_QUERY_ROOTS.has(root);
+      if (!OFFLINE_QUERY_ROOTS.has(root)) {
+        return false;
+      }
+      return query.state.status === 'success';
     },
   },
 } as const;

@@ -1,5 +1,11 @@
 import {
   Exam,
+  Book,
+  Chapter,
+  Page,
+  Bookmark,
+  ReadingProgress,
+  BookDownload,
   Course,
   CurrentAffair,
   RevisionCapsule,
@@ -29,6 +35,7 @@ import {
   rewards,
   mentorProfile,
   liveClasses,
+  libraryBooks,
 } from './data.js';
 import { getSeedAdminUser } from './adminConfig.js';
 
@@ -129,11 +136,88 @@ async function ensureSeedUser(seedUser, { coins, premiumTrialUsed, privacyConsen
   return user;
 }
 
+function isNotesBook(book) {
+  return book.tags?.some((tag) => tag === 'pdf' || tag === 'notes' || tag === 'note');
+}
+
+function chaptersForBook(book) {
+  if (isNotesBook(book)) {
+    return [{ order: 1, title: 'Quick revision', summary: 'Condensed exam notes' }];
+  }
+
+  return [
+    { order: 1, title: 'Introduction', summary: 'Core concepts and exam context' },
+    { order: 2, title: 'Practice focus', summary: 'Shortcuts and solved patterns' },
+  ];
+}
+
+function pagesForChapter(book, chapter, globalOrderStart) {
+  const pageCount = isNotesBook(book) ? 2 : 3;
+  const pages = [];
+
+  for (let index = 0; index < pageCount; index += 1) {
+    const order = globalOrderStart + index;
+    const heading = `${book.title} — ${chapter.title}`;
+    const body = `Page ${order}: ${heading}. Revise this section before your next mock.`;
+    pages.push({
+      order,
+      html: `<h2>${chapter.title}</h2><p>${body}</p><p>Remember the key formula and one real exam application.</p>`,
+      plainText: `${heading}. ${body} Remember the key formula and one real exam application.`,
+    });
+  }
+
+  return pages;
+}
+
+async function seedLibraryContent(insertedBooks) {
+  const chapterRows = [];
+  const pageRows = [];
+
+  for (const book of insertedBooks) {
+    const chapterDefs = chaptersForBook(book);
+    let pageOrder = 1;
+
+    for (const chapterDef of chapterDefs) {
+      const chapter = await Chapter.create({
+        bookId: book._id,
+        ...chapterDef,
+      });
+
+      const pages = pagesForChapter(book, chapter, pageOrder);
+      pageOrder += pages.length;
+
+      for (const page of pages) {
+        pageRows.push({
+          bookId: book._id,
+          chapterId: chapter._id,
+          order: page.order,
+          html: page.html,
+          plainText: page.plainText,
+        });
+      }
+
+      chapterRows.push(chapter);
+    }
+  }
+
+  if (pageRows.length) {
+    await Page.insertMany(pageRows);
+  }
+
+  return { chapters: chapterRows.length, pages: pageRows.length };
+}
+
 export async function seedDatabase() {
   console.log('[seed] Clearing existing content collections...');
 
   await Promise.all([
     Exam.deleteMany({}),
+    Book.deleteMany({}),
+    Chapter.deleteMany({}),
+    Page.deleteMany({}),
+    Bookmark.deleteMany({}),
+    ReadingProgress.deleteMany({}),
+    BookDownload.deleteMany({}),
     Course.deleteMany({}),
     CurrentAffair.deleteMany({}),
     RevisionCapsule.deleteMany({}),
@@ -246,6 +330,15 @@ export async function seedDatabase() {
     })),
   );
 
+  console.log('[seed] Inserting library books...');
+  const insertedBooks = await Book.insertMany(
+    libraryBooks.map((book) => ({
+      ...book,
+      createdBy: adminUser._id,
+    })),
+  );
+  const libraryContent = await seedLibraryContent(insertedBooks);
+
   return {
     exams: insertedExams.length,
     courses: insertedCourses.length,
@@ -258,6 +351,9 @@ export async function seedDatabase() {
     rewards: insertedRewards.length,
     mentors: 1,
     liveClasses: insertedLiveClasses.length,
+    libraryBooks: insertedBooks.length,
+    libraryChapters: libraryContent.chapters,
+    libraryPages: libraryContent.pages,
     adminEmail: seedAdmin.email,
     mentorEmail: seedMentorUser.email,
     e2eStudentEmail: e2eStudent.email,

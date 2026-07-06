@@ -4,7 +4,9 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import { NumText } from '../NumText';
 import { Text } from '../Text';
-import { CA_UI } from './caTheme';
+import { CaPremiumIcon } from './CaPremiumIcon';
+import { CA_UI, caChip } from './caTheme';
+import type { PremiumIconTone } from '../premium/premiumIconTokens';
 
 type CaStatsRowProps = {
   total: number;
@@ -16,20 +18,23 @@ export function CaStatsRow({ total, today, trending }: CaStatsRowProps) {
   const { t } = useTranslation('app');
   const styles = useMemo(() => createStyles(), []);
 
-  const stats = [
-    { Icon: Newspaper, value: total, label: t('currentAffairs.statArticles') },
-    { Icon: Clock, value: today, label: t('currentAffairs.statToday') },
-    { Icon: Flame, value: trending, label: t('currentAffairs.statTrending') },
+  const stats: {
+    Icon: typeof Newspaper;
+    value: number;
+    label: string;
+    tone: PremiumIconTone;
+  }[] = [
+    { Icon: Newspaper, value: total, label: t('currentAffairs.statArticles'), tone: 'lavender' },
+    { Icon: Clock, value: today, label: t('currentAffairs.statToday'), tone: 'mint' },
+    { Icon: Flame, value: trending, label: t('currentAffairs.statTrending'), tone: 'gold' },
   ];
 
   return (
     <View style={styles.row}>
-      {stats.map(({ Icon, value, label }) => (
+      {stats.map(({ Icon, value, label, tone }) => (
         <View key={label} style={styles.stat}>
-          <View style={styles.icon}>
-            <Icon size={12} color={CA_UI.accent} strokeWidth={2.5} />
-          </View>
-          <View>
+          <CaPremiumIcon Icon={Icon} tone={tone} size="sm" />
+          <View style={styles.copy}>
             <NumText style={styles.value}>{value}</NumText>
             <Text style={styles.label}>{label}</Text>
           </View>
@@ -45,38 +50,33 @@ function createStyles() {
       flexDirection: 'row',
       gap: 8,
       paddingHorizontal: 16,
-      paddingBottom: 4,
-      backgroundColor: CA_UI.surface,
+      paddingTop: 14,
+      paddingBottom: 10,
+      backgroundColor: CA_UI.bg,
     },
     stat: {
       flex: 1,
       flexDirection: 'row',
       alignItems: 'center',
       gap: 8,
-      backgroundColor: CA_UI.bg,
-      borderRadius: 12,
-      paddingVertical: 8,
-      paddingHorizontal: 10,
+      ...caChip({ paddingVertical: 10, paddingHorizontal: 10 }),
     },
-    icon: {
-      width: 26,
-      height: 26,
-      borderRadius: 8,
-      backgroundColor: CA_UI.accentSoft,
-      alignItems: 'center',
-      justifyContent: 'center',
+    copy: {
+      flex: 1,
+      minWidth: 0,
     },
     value: {
-      fontSize: 13,
+      fontSize: 15,
       fontWeight: '800',
-      color: CA_UI.text2,
-      lineHeight: 14,
+      color: CA_UI.text,
+      lineHeight: 16,
     },
     label: {
       fontSize: 9,
-      color: CA_UI.faint,
+      color: CA_UI.muted,
       marginTop: 2,
-      fontWeight: '600',
+      fontWeight: '700',
+      letterSpacing: 0.2,
     },
   });
 }

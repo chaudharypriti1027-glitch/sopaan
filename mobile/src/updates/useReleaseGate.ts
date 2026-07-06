@@ -4,27 +4,26 @@ import { fetchVersionRequirements, type VersionRequirements } from '../api/appCo
 import { config } from '../config/env';
 
 export type ReleaseGateState =
-  | { status: 'checking' }
-  | { status: 'force-update'; requirements: VersionRequirements }
-  | { status: 'downloading-ota' }
-  | { status: 'ready' };
+  | { status: 'ready' }
+  | { status: 'force-update'; requirements: VersionRequirements };
 
-async function applyOtaUpdateIfAvailable(): Promise<void> {
+async function prefetchOtaUpdateInBackground(): Promise<void> {
   if (__DEV__ || !Updates.isEnabled) {
     return;
   }
 
-  const update = await Updates.checkForUpdateAsync();
-  if (!update.isAvailable) {
-    return;
+  try {
+    const update = await Updates.checkForUpdateAsync();
+    if (update.isAvailable) {
+      await Updates.fetchUpdateAsync();
+    }
+  } catch {
+    // OTA is best-effort; apply on next cold start when fetch succeeds.
   }
-
-  await Updates.fetchUpdateAsync();
-  await Updates.reloadAsync();
 }
 
 export function useReleaseGate(): ReleaseGateState {
-  const [state, setState] = useState<ReleaseGateState>({ status: 'checking' });
+  const [state, setState] = useState<ReleaseGateState>({ status: 'ready' });
 
   useEffect(() => {
     let cancelled = false;
@@ -41,20 +40,12 @@ export function useReleaseGate(): ReleaseGateState {
           setState({ status: 'force-update', requirements });
           return;
         }
-
-        if (Updates.isEnabled) {
-          setState({ status: 'downloading-ota' });
-          await applyOtaUpdateIfAvailable();
-        }
-
-        if (!cancelled) {
-          setState({ status: 'ready' });
-        }
       } catch {
-        // Offline or API unavailable — allow cached app; OTA may apply on next launch.
-        if (!cancelled) {
-          setState({ status: 'ready' });
-        }
+        // Offline or cold API — continue with cached build; recheck next launch.
+      }
+
+      if (!cancelled) {
+        void prefetchOtaUpdateInBackground();
       }
     }
 

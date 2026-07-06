@@ -3,7 +3,6 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Skeleton } from '../Skeleton';
-import { HOME_V2 } from './homeStyles';
 import { HOME_UI } from './homeTheme';
 
 /** Shimmer placeholder mirroring premium home layout. */
@@ -14,7 +13,7 @@ export function HomeSkeleton() {
   return (
     <SafeAreaView style={styles.safe} edges={['left', 'right', 'bottom']} testID="home-skeleton">
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <LinearGradient colors={[...HOME_V2.headerGradient]} style={styles.header}>
+        <LinearGradient colors={[...HOME_UI.heroGradient]} style={styles.header}>
           <View style={styles.greetingRow}>
             <Skeleton width={54} height={54} borderRadius={18} />
             <View style={styles.greetingText}>
@@ -25,20 +24,20 @@ export function HomeSkeleton() {
           </View>
           <View style={styles.weekRow}>
             {Array.from({ length: 7 }).map((_, i) => (
-              <Skeleton key={i} width="12%" height={58} borderRadius={15} />
+              <Skeleton key={i} width="12%" height={56} borderRadius={HOME_UI.innerRadius} />
             ))}
           </View>
         </LinearGradient>
 
         <View style={styles.heroOverlap}>
-          <Skeleton height={168} borderRadius={22} />
+          <Skeleton height={164} borderRadius={HOME_UI.cardRadiusLg} />
         </View>
 
-        <Skeleton height={92} borderRadius={20} style={styles.block} />
-        <Skeleton height={280} borderRadius={22} style={styles.block} />
-        <Skeleton height={180} borderRadius={22} style={styles.block} />
-        <Skeleton height={140} borderRadius={22} style={styles.block} />
-        <Skeleton height={120} borderRadius={22} style={styles.block} />
+        <Skeleton height={88} borderRadius={HOME_UI.cardRadiusLg} style={styles.block} />
+        <Skeleton height={268} borderRadius={HOME_UI.cardRadiusLg} style={styles.block} />
+        <Skeleton height={172} borderRadius={HOME_UI.cardRadiusLg} style={styles.block} />
+        <Skeleton height={132} borderRadius={HOME_UI.cardRadiusLg} style={styles.block} />
+        <Skeleton height={112} borderRadius={HOME_UI.cardRadiusLg} style={styles.block} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -48,18 +47,20 @@ function createStyles(topInset: number) {
   return StyleSheet.create({
     safe: {
       flex: 1,
-      backgroundColor: HOME_V2.bg,
+      backgroundColor: HOME_UI.bg,
     },
     content: {
-      paddingHorizontal: 16,
+      paddingHorizontal: HOME_UI.horizontalPad,
       paddingBottom: HOME_UI.tabBottomPad,
     },
     header: {
-      marginHorizontal: -16,
+      marginHorizontal: -HOME_UI.horizontalPad,
       paddingTop: topInset + 12,
       paddingHorizontal: 20,
-      paddingBottom: 56,
-      gap: 18,
+      paddingBottom: 52,
+      gap: 16,
+      borderBottomLeftRadius: HOME_UI.heroRadius,
+      borderBottomRightRadius: HOME_UI.heroRadius,
     },
     greetingRow: {
       flexDirection: 'row',
@@ -76,11 +77,11 @@ function createStyles(topInset: number) {
       gap: 6,
     },
     heroOverlap: {
-      marginTop: HOME_V2.bodyLift,
-      marginBottom: 16,
+      marginTop: -38,
+      marginBottom: 14,
     },
     block: {
-      marginBottom: 16,
+      marginBottom: 14,
     },
   });
 }

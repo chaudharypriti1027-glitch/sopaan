@@ -1,11 +1,10 @@
 import { Router } from 'express';
-import healthRoutes from './healthRoutes.js';
 import authRoutes from './authRoutes.js';
 import profileRoutes from './profileRoutes.js';
 import examRoutes from './examRoutes.js';
 import courseRoutes from './courseRoutes.js';
 import currentAffairRoutes from './currentAffairRoutes.js';
-import bookRoutes from './bookRoutes.js';
+import libraryRoutes from './libraryRoutes.js';
 import revisionCapsuleRoutes from './revisionCapsuleRoutes.js';
 import vocabularyRoutes from './vocabularyRoutes.js';
 import testRoutes from './testRoutes.js';
@@ -36,7 +35,6 @@ import adminRoutes from './adminRoutes.js';
 import practiceRoutes from './practiceRoutes.js';
 import questionRoutes from './questionRoutes.js';
 import privacyRoutes from './privacyRoutes.js';
-import mobileAppRoutes from './mobileAppRoutes.js';
 import mediaRoutes from './mediaRoutes.js';
 import homeRoutes from './homeRoutes.js';
 import bannerRoutes from './bannerRoutes.js';
@@ -46,8 +44,6 @@ import gamesRoutes from './gamesRoutes.js';
 
 const router = Router();
 
-router.use(healthRoutes);
-router.use('/app', mobileAppRoutes);
 router.use('/home', homeRoutes);
 router.use('/banners', bannerRoutes);
 router.use('/me', meRoutes);
@@ -58,7 +54,7 @@ router.use('/profile', profileRoutes);
 router.use('/exams', examRoutes);
 router.use('/courses', courseRoutes);
 router.use('/current-affairs', currentAffairRoutes);
-router.use('/books', bookRoutes);
+router.use('/books', libraryRoutes);
 router.use('/revision-capsules', revisionCapsuleRoutes);
 router.use('/vocabulary', vocabularyRoutes);
 router.use('/test-series', testSeriesRoutes);

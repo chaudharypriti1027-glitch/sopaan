@@ -63,6 +63,11 @@ export const queryKeys = {
   books: {
     all: ['books'] as const,
     list: (params?: unknown) => [...queryKeys.books.all, 'list', params] as const,
+    subjects: () => [...queryKeys.books.all, 'subjects'] as const,
+    detail: (id: string) => [...queryKeys.books.all, 'detail', id] as const,
+    reader: (id: string) => [...queryKeys.books.all, 'reader', id] as const,
+    chapterPages: (bookId: string, chapterId: string) =>
+      [...queryKeys.books.all, 'chapter-pages', bookId, chapterId] as const,
   },
   revisionCapsules: {
     all: ['revision-capsules'] as const,

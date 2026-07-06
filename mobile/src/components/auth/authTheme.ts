@@ -1,6 +1,8 @@
 /** Premium auth tokens — "Classic Premium" navy/gold. */
 export const AUTH_UI = {
   bg: '#F4F1E9',
+  bgTop: '#F7F3EA',
+  bgBottom: '#ECE7DC',
   card: '#FFFFFF',
   ink: '#1C1E2E',
   muted: '#87889A',
@@ -16,6 +18,7 @@ export const AUTH_UI = {
   gold: '#C29A4E',
   goldDeep: '#A67C33',
   goldSoft: 'rgba(194,154,78,0.16)',
+  goldGlow: 'rgba(194,154,78,0.28)',
   sage: '#5F8A7B',
   sageDeep: '#4C7264',
   sageSoft: 'rgba(95,138,123,0.12)',

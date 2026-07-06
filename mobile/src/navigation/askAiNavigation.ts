@@ -2,8 +2,12 @@ import { CommonActions, type NavigationProp, type ParamListBase } from '@react-n
 
 type AnyNavigation = Pick<NavigationProp<ParamListBase>, 'navigate' | 'dispatch' | 'getState' | 'getParent'>;
 
+export type AskAiNavParams = {
+  initialPrompt?: string;
+};
+
 function navigatorHasAskAI(nav: AnyNavigation): boolean {
-  const routeNames = nav.getState()?.routeNames;
+  const routeNames = nav.getState?.()?.routeNames;
   return Array.isArray(routeNames) && routeNames.includes('AskAI');
 }
 
@@ -24,23 +28,25 @@ export function isAskAiScreenOpen(navigation: AnyNavigation): boolean {
 }
 
 /** Open Ask AI on the main stack (works from tabs, stack screens, and nested navigators). */
-export function navigateToAskAI(navigation: AnyNavigation) {
+export function navigateToAskAI(navigation: AnyNavigation, params?: AskAiNavParams) {
   let current: AnyNavigation | undefined = navigation;
 
   while (current) {
     if (navigatorHasAskAI(current)) {
-      current.navigate('AskAI' as never);
+      if (params?.initialPrompt) {
+        (current.navigate as (name: string, p?: AskAiNavParams) => void)('AskAI', params);
+      } else {
+        (current.navigate as (name: string) => void)('AskAI');
+      }
       return;
     }
     current = current.getParent() ?? undefined;
   }
 
   navigation.dispatch(
-    CommonActions.navigate({
-      name: 'Main',
-      params: {
-        screen: 'AskAI',
-      },
+    CommonActions.navigate('Main', {
+      screen: 'AskAI',
+      params: params ?? undefined,
     }),
   );
 }

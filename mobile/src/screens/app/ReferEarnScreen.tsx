@@ -1,43 +1,48 @@
-import { useQuery } from '@tanstack/react-query';
+import { useCallback, useMemo } from 'react';
 import { Copy, Gift, Share2, Users } from 'lucide-react-native';
-import { useMemo } from 'react';
+import { Share, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import {
-  Share,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
-import { Button, Card, Pill, PremiumHeroCard, QueryStateView, Screen, SectionTitle, StatTile } from '../../components';
-import { PREMIUM_ICON_TONES } from '../../components/premium/premiumIconTokens';
-import { getMyReferrals } from '../../api/referrals';
-import { useNetworkStatus } from '../../hooks';
-import { queryKeys } from '../../hooks/queryKeys';
+  Button,
+  Card,
+  Pill,
+  PremiumHeroCard,
+  QueryStateView,
+  Screen,
+  SectionTitle,
+  StatTile,
+} from '../../components';
+import { PremiumIcon } from '../../components/premium/PremiumIcon';
+import { useNetworkStatus, useReferralDashboard } from '../../hooks';
+import { useFormat } from '../../i18n/useFormat';
 import { useTheme } from '../../theme';
-
-function statusLabel(status: string) {
-  if (status === 'rewarded') return 'Rewarded';
-  if (status === 'onboarding_complete') return 'Waiting for first mock';
-  if (status === 'rejected') return 'Rejected';
-  return 'Signed up';
-}
-
-function statusVariant(status: string): 'teal' | 'gold' | 'muted' {
-  if (status === 'rewarded') return 'teal';
-  if (status === 'onboarding_complete') return 'gold';
-  return 'muted';
-}
 
 export function ReferEarnScreen() {
   const { theme } = useTheme();
+  const { t } = useTranslation('app');
+  const { formatDate } = useFormat();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   const { isOffline } = useNetworkStatus();
-  const dashboardQuery = useQuery({
-    queryKey: queryKeys.referrals.me(),
-    queryFn: getMyReferrals,
-  });
+  const dashboardQuery = useReferralDashboard();
 
   const data = dashboardQuery.data;
+
+  const statusLabel = useCallback(
+    (status: string) => {
+      if (status === 'rewarded') return t('referEarn.statusRewarded');
+      if (status === 'onboarding_complete') return t('referEarn.statusWaiting');
+      if (status === 'rejected') return t('referEarn.statusRejected');
+      return t('referEarn.statusSignedUp');
+    },
+    [t],
+  );
+
+  const statusVariant = (status: string): 'teal' | 'gold' | 'muted' => {
+    if (status === 'rewarded') return 'teal';
+    if (status === 'onboarding_complete') return 'gold';
+    return 'muted';
+  };
 
   const shareInvite = async () => {
     if (!data) {
@@ -57,12 +62,19 @@ export function ReferEarnScreen() {
     await Share.share({ message: data.code });
   };
 
+  const rewardHint = data
+    ? t('referEarn.rewardHint', {
+        referrer: data.rewards.referrerCoins,
+        referee: data.rewards.refereeCoins,
+        trial: data.rewards.refereeTrialDays
+          ? t('referEarn.trialBonus', { days: data.rewards.refereeTrialDays })
+          : '',
+      })
+    : undefined;
+
   return (
     <Screen scroll contentContainerStyle={styles.content}>
-      <SectionTitle
-        title="Refer & Earn"
-        subtitle="Invite friends — both of you earn coins after they finish onboarding and their first mock"
-      />
+      <SectionTitle title={t('referEarn.title')} subtitle={t('referEarn.subtitle')} />
 
       <QueryStateView
         isLoading={dashboardQuery.isLoading}
@@ -75,52 +87,52 @@ export function ReferEarnScreen() {
         {data ? (
           <>
             <PremiumHeroCard
-              icon={<Gift size={24} color="#FFFFFF" strokeWidth={1.8} />}
-              eyebrow="Your referral code"
+              icon={<PremiumIcon Icon={Gift} tone="gold" size="lg" filled surface="dark" />}
+              eyebrow={t('referEarn.yourCode')}
               title={data.code}
-              hint={`You get ${data.rewards.referrerCoins} coins · they get ${data.rewards.refereeCoins} coins${
-                data.rewards.refereeTrialDays
-                  ? ` + ${data.rewards.refereeTrialDays} bonus premium days`
-                  : ''
-              }`}
+              hint={rewardHint}
             >
               <View style={styles.heroActions}>
                 <Button
-                  label="Share invite link"
+                  label={t('referEarn.shareInvite')}
                   variant="gold"
                   icon={<Share2 size={18} color={theme.colors.text.inverse} />}
                   onPress={() => void shareInvite()}
                 />
-                <Button label="Copy code" variant="ghost" onPress={() => void copyCode()} />
+                <Button
+                  label={t('referEarn.copyCode')}
+                  variant="ghost"
+                  onPress={() => void copyCode()}
+                />
               </View>
             </PremiumHeroCard>
 
             <View style={styles.statsRow}>
               <StatTile
-                label="Invited"
+                label={t('referEarn.invited')}
                 value={String(data.stats.invited)}
-                icon={<Users size={18} color={PREMIUM_ICON_TONES.lavender.fg} />}
-                tone="lavender"
+                icon={<PremiumIcon Icon={Users} tone="lavender" size="xs" filled />}
               />
               <StatTile
-                label="Rewarded"
+                label={t('referEarn.rewarded')}
                 value={String(data.stats.rewarded)}
-                icon={<Gift size={18} color={PREMIUM_ICON_TONES.gold.fg} />}
-                tone="gold"
+                icon={<PremiumIcon Icon={Gift} tone="gold" size="xs" filled />}
               />
               <StatTile
-                label="Coins earned"
+                label={t('referEarn.coinsEarned')}
                 value={String(data.stats.coinsEarned)}
-                icon={<Copy size={18} color={PREMIUM_ICON_TONES.mint.fg} />}
-                tone="mint"
+                icon={<PremiumIcon Icon={Copy} tone="mint" size="xs" filled />}
               />
             </View>
 
-            <SectionTitle title="Your referrals" subtitle="Track who joined with your code" />
+            <SectionTitle
+              title={t('referEarn.yourReferrals')}
+              subtitle={t('referEarn.referralsSubtitle')}
+            />
 
             {data.referrals.length === 0 ? (
               <Card>
-                <Text style={styles.empty}>No referrals yet. Share your code to start earning.</Text>
+                <Text style={styles.empty}>{t('referEarn.noReferrals')}</Text>
               </Card>
             ) : (
               <Card padded={false}>
@@ -132,7 +144,13 @@ export function ReferEarnScreen() {
                     <View style={styles.referralMeta}>
                       <Text style={styles.referralName}>{referral.refereeName}</Text>
                       <Text style={styles.referralDate}>
-                        Joined {new Date(referral.refereeJoinedAt).toLocaleDateString()}
+                        {t('referEarn.joined', {
+                          date: formatDate(referral.refereeJoinedAt, {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                          }),
+                        })}
                       </Text>
                     </View>
                     <Pill label={statusLabel(referral.status)} variant={statusVariant(referral.status)} />

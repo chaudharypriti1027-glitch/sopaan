@@ -7,6 +7,8 @@ export type LiveClass = {
   title: string;
   description?: string;
   instructor: string;
+  educatorId?: string | null;
+  instructorId?: string | null;
   examTag: string;
   topic?: string | null;
   startsAt?: string;

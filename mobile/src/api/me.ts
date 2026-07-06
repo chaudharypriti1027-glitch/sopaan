@@ -4,6 +4,7 @@ import type { EducationLevel, Profile, ProfileCategory, ProfileLanguage } from '
 export type UpdateMeInput = {
   name?: string;
   email?: string;
+  /** Pass empty string to remove a custom photo. */
   avatarUrl?: string;
   state?: string;
   category?: ProfileCategory;
@@ -23,6 +24,8 @@ export type ProfileSummary = {
   rank: number | null;
   streak: number;
   level: number;
+  accuracy: number | null;
+  xp: number;
 };
 
 export async function getMe(): Promise<Profile> {

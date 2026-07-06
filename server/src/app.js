@@ -8,6 +8,8 @@ import { env } from './config/env.js';
 import { getSeedAdminUser } from './seed/adminConfig.js';
 import { securityConfig } from './config/securityConfig.js';
 import apiRoutes from './routes/index.js';
+import healthRoutes from './routes/healthRoutes.js';
+import mobileAppRoutes from './routes/mobileAppRoutes.js';
 import metricsRoutes from './routes/metricsRoutes.js';
 import { attachResolvedLanguage } from './middleware/resolveLanguageMiddleware.js';
 import { apiRateLimiter } from './middleware/rateLimiter.js';
@@ -116,6 +118,11 @@ app.use(attachResolvedLanguage);
 app.use(compression());
 
 app.use(metricsRoutes);
+
+// Fast public endpoints — health checks and mobile version gate (skip rate limiter).
+app.use('/api', healthRoutes);
+app.use('/api/app', mobileAppRoutes);
+
 app.use('/api', apiRateLimiter, apiRoutes);
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

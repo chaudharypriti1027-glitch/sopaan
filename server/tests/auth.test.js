@@ -28,11 +28,13 @@ describe('Auth API', () => {
     }));
 
     expect(response.status).toBe(201);
-    expect(response.body.accessToken).toEqual(expect.any(String));
+    expect(response.body.token).toEqual(expect.any(String));
     expect(response.body.refreshToken).toEqual(expect.any(String));
-    expect(response.body.user).toMatchObject({
+    expect(response.body.isNewUser).toBe(true);
+    expect(response.body.profile).toMatchObject({
       name: 'Asha Kumar',
       email: 'asha@example.com',
+      onboardingComplete: false,
     });
   });
 
@@ -47,11 +49,12 @@ describe('Auth API', () => {
     const response = await request(app).post('/api/auth/signup').send(payload);
 
     expect(response.status).toBe(201);
-    expect(response.body.user).toMatchObject({
+    expect(response.body.profile).toMatchObject({
       name: 'Email Only User',
       email: 'emailonly@example.com',
+      onboardingComplete: false,
     });
-    expect(response.body.user.phone).toBeFalsy();
+    expect(response.body.profile.phone).toBeFalsy();
   });
 
   it('logs in with phone and password and returns AuthResult', async () => {

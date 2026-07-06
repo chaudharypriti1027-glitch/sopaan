@@ -296,9 +296,40 @@ export function useLiveClassChat(liveClassId?: string) {
         }
       };
 
-      const onAnnouncement = ({ classId, message }: { classId: string; message: string }) => {
+      const onAnnouncement = ({
+        classId,
+        message,
+        authorName,
+      }: {
+        classId: string;
+        message: string;
+        authorName?: string;
+      }) => {
         if (classId === liveClassId) {
           setHostAnnouncement(message);
+        }
+      };
+
+      const onHandAck = ({
+        classId,
+        message,
+      }: {
+        classId: string;
+        message: string;
+      }) => {
+        if (classId === liveClassId && message) {
+          setMessages((current) => [
+            ...current,
+            {
+              id: `hand-ack-${Date.now()}`,
+              classId: liveClassId,
+              userId: 'hand-ack',
+              userName: 'Host',
+              text: message,
+              createdAt: new Date().toISOString(),
+              isHost: true,
+            },
+          ]);
         }
       };
 
@@ -320,6 +351,7 @@ export function useLiveClassChat(liveClassId?: string) {
       socket.on(LIVE_NS_EVENTS.REACTION, onReaction);
       socket.on(LIVE_NS_EVENTS.HOST_MUTE_ALL, onMuteAll);
       socket.on(LIVE_NS_EVENTS.HOST_ANNOUNCEMENT, onAnnouncement);
+      socket.on(LIVE_NS_EVENTS.HAND_ACK, onHandAck);
       socket.on(LIVE_NS_EVENTS.ERROR, onError);
 
       if (socket.connected) {
@@ -338,6 +370,7 @@ export function useLiveClassChat(liveClassId?: string) {
         socket.off(LIVE_NS_EVENTS.REACTION, onReaction);
         socket.off(LIVE_NS_EVENTS.HOST_MUTE_ALL, onMuteAll);
         socket.off(LIVE_NS_EVENTS.HOST_ANNOUNCEMENT, onAnnouncement);
+        socket.off(LIVE_NS_EVENTS.HAND_ACK, onHandAck);
         socket.off(LIVE_NS_EVENTS.ERROR, onError);
         socket.off('connect', join);
         socket.emit(LIVE_NS_EVENTS.LEAVE, { classId: liveClassId });
@@ -430,6 +463,9 @@ export function useLiveClassChat(liveClassId?: string) {
     muteAllSignal,
     hostAnnouncement,
     currentUserId: user?.id,
+    hostUserId:
+      participants.find((entry) => entry.isHost)?.userId ??
+      messages.find((message) => message.isHost)?.userId,
     connected: liveConnected && joinedClass,
   };
 }

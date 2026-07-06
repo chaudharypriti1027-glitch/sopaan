@@ -3,9 +3,11 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ChevronRight, Trophy } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
+import { HomeSlotIcon } from './HomePremiumIcon';
 import { PremiumHeroCard } from '../PremiumHeroCard';
 import { Text } from '../Text';
 import type { HomeFeed } from '../../types/home';
+import { HOME_UI, homePressFeedback } from './homeTheme';
 
 const XP_TARGET = 150;
 
@@ -45,7 +47,7 @@ function XpProgressBar({
       </View>
       <View style={styles.track}>
         <LinearGradient
-          colors={['#E3C97F', '#C29A4E']}
+          colors={[HOME_UI.goldLt, HOME_UI.gold]}
           start={{ x: 0, y: 0.5 }}
           end={{ x: 1, y: 0.5 }}
           style={[styles.fill, { width: `${progressPct}%` }]}
@@ -74,13 +76,11 @@ export function LeagueSnapshot({ league, onPress }: LeagueSnapshotProps) {
       style={({ pressed }) => [styles.pressable, pressed && styles.pressed]}
     >
       <PremiumHeroCard
-        icon={<Trophy size={24} color="#FFFFFF" strokeWidth={1.8} />}
+        icon={<HomeSlotIcon slot="featured" Icon={Trophy} tone="gold" />}
         eyebrow={`${tierKey} League`}
         title={`${t('home.leagueRank')} #${league.rankInLeague}`}
         trailing={
-          <View style={styles.chevron}>
-            <ChevronRight size={15} color="rgba(255,255,255,0.5)" strokeWidth={2.2} />
-          </View>
+          <HomeSlotIcon slot="button" Icon={ChevronRight} tone="gold" />
         }
         stats={[
           { label: t('home.leagueXp'), value: String(league.xpThisWeek) },
@@ -94,18 +94,8 @@ export function LeagueSnapshot({ league, onPress }: LeagueSnapshotProps) {
 }
 
 const styles = StyleSheet.create({
-  pressable: { borderRadius: 22 },
-  pressed: { opacity: 0.96 },
-  chevron: {
-    width: 34,
-    height: 34,
-    borderRadius: 11,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  pressable: { borderRadius: HOME_UI.cardRadiusLg },
+  pressed: homePressFeedback,
 });
 
 function createXpStyles() {

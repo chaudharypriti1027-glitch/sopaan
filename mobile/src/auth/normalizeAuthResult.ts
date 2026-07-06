@@ -21,6 +21,7 @@ function profileFromLegacyUser(user: User): Profile {
     ...(user.premiumPlan ? { premiumPlan: user.premiumPlan } : {}),
     ...(user.premiumExpiresAt ? { premiumExpiresAt: user.premiumExpiresAt } : {}),
     coins: user.coins ?? 0,
+    onboardingComplete: false,
   };
 }
 

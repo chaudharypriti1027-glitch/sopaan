@@ -21,6 +21,8 @@ type RankRingProps = {
   label?: string;
   /** Overrides the numeric value shown in the ring center (stroke still uses `value`). */
   displayValue?: string | number;
+  /** When true, only the ring stroke is shown (no center value/label). */
+  hideCenter?: boolean;
   size?: number;
   strokeWidth?: number;
   variant?: AccentVariant;
@@ -47,6 +49,7 @@ export function RankRing({
   trackColor,
   accentColor,
   labelColor,
+  hideCenter = false,
 }: RankRingProps) {
   const { theme } = useTheme();
   const styles = useMemo(
@@ -107,16 +110,18 @@ export function RankRing({
           origin={`${size / 2}, ${size / 2}`}
         />
       </Svg>
-      <View style={styles.center} {...noHideDescendantsA11y()}>
-        <Text {...scalableTextProps} style={styles.value}>
-          {displayValue ?? Math.round(value)}
-        </Text>
-        {label ? (
-          <Text {...scalableTextProps} style={styles.label}>
-            {label}
+      {hideCenter ? null : (
+        <View style={styles.center} {...noHideDescendantsA11y()}>
+          <Text {...scalableTextProps} style={styles.value}>
+            {displayValue ?? Math.round(value)}
           </Text>
-        ) : null}
-      </View>
+          {label ? (
+            <Text {...scalableTextProps} style={styles.label}>
+              {label}
+            </Text>
+          ) : null}
+        </View>
+      )}
     </View>
   );
 }

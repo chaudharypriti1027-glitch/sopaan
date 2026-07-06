@@ -1,4 +1,5 @@
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import type { RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { BookOpen, Brain, PenLine, TrendingUp } from 'lucide-react-native';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -41,6 +42,7 @@ const PROMPT_CONFIG = [
 
 export function AskAIScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
+  const route = useRoute<RouteProp<MainStackParamList, 'AskAI'>>();
   const { theme } = useTheme();
   const { t } = useTranslation(['app', 'common']);
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -54,6 +56,14 @@ export function AskAIScreen() {
   const [lastQuestion, setLastQuestion] = useState('');
   const [savedAnswerIds, setSavedAnswerIds] = useState<Set<string>>(new Set());
   const [historyHydrated, setHistoryHydrated] = useState(false);
+
+  useEffect(() => {
+    const initialPrompt = route.params?.initialPrompt?.trim();
+    if (initialPrompt) {
+      setInput(initialPrompt);
+      setTab('ask');
+    }
+  }, [route.params?.initialPrompt]);
 
   const askMutation = useAskDoubt();
   const historyQuery = useAiDoubtHistory();

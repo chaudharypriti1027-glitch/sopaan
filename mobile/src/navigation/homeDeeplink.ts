@@ -26,9 +26,24 @@ export function navigateHomeDeeplink(navigation: HomeNav, deeplink: string) {
     return;
   }
 
+  if (area === 'drill') {
+    navigation.navigate('Practice');
+    return;
+  }
+
   if (area === 'stack' && screen) {
+    if (screen === 'AskAI') {
+      navigateToAskAI(navigation);
+      return;
+    }
+
     const stackNav = navigation.getParent<NativeStackNavigationProp<MainStackParamList>>();
-    if (!stackNav) return;
+    if (!stackNav) {
+      if (screen === 'Quiz' && param) {
+        navigateToAskAI(navigation);
+      }
+      return;
+    }
 
     switch (screen) {
       case 'Quiz':
@@ -36,9 +51,6 @@ export function navigateHomeDeeplink(navigation: HomeNav, deeplink: string) {
         break;
       case 'CourseDetail':
         if (param) stackNav.navigate('CourseDetail', { courseId: param });
-        break;
-      case 'AskAI':
-        stackNav.navigate('AskAI');
         break;
       case 'TestSeries':
         stackNav.navigate('TestSeries');

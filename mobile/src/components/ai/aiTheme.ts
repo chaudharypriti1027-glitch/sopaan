@@ -11,6 +11,7 @@ export const AI_UI = {
   sub: '#B3B4C2',
   gold: '#C29A4E',
   goldDeep: '#A67C33',
+  goldSoft: '#F4EBD8',
   gradientEnd: '#2E3766',
   border: 'rgba(35,42,77,0.12)',
   borderStrong: 'rgba(35,42,77,0.2)',

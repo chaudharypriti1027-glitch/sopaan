@@ -30,47 +30,44 @@ export function LiveClassFloatingReactions({ reactions }: LiveClassFloatingReact
         return current;
       }
 
-      return [...current.slice(-8), { id, emoji: latest.emoji, x: 12 + Math.random() * 56 }];
+      return [...current.slice(-8), { id, emoji: latest.emoji, x: Math.random() * 30 }];
     });
   }, [reactions]);
 
   return (
     <View pointerEvents="none" style={styles.overlay}>
       {items.map((item) => (
-        <FloatingEmoji key={item.id} emoji={item.emoji} leftPct={item.x} />
+        <FloatingEmoji key={item.id} emoji={item.emoji} offsetRight={item.x} />
       ))}
     </View>
   );
 }
 
-function FloatingEmoji({ emoji, leftPct }: { emoji: string; leftPct: number }) {
+function FloatingEmoji({ emoji, offsetRight }: { emoji: string; offsetRight: number }) {
   const opacity = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(16)).current;
-  const scale = useRef(new Animated.Value(0.8)).current;
+  const translateY = useRef(new Animated.Value(0)).current;
+  const scale = useRef(new Animated.Value(0.6)).current;
 
   useEffect(() => {
     Animated.sequence([
       Animated.parallel([
-        Animated.timing(opacity, { toValue: 1, duration: 180, useNativeDriver: true }),
-        Animated.timing(translateY, { toValue: 0, duration: 180, useNativeDriver: true }),
-        Animated.spring(scale, { toValue: 1, useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 1, duration: 200, useNativeDriver: true }),
+        Animated.timing(translateY, { toValue: -40, duration: 2200, useNativeDriver: true }),
+        Animated.timing(scale, { toValue: 1.2, duration: 2200, useNativeDriver: true }),
       ]),
-      Animated.parallel([
-        Animated.timing(opacity, { toValue: 0, duration: 900, delay: 700, useNativeDriver: true }),
-        Animated.timing(translateY, { toValue: -72, duration: 900, delay: 700, useNativeDriver: true }),
-      ]),
+      Animated.timing(opacity, { toValue: 0, duration: 400, useNativeDriver: true }),
     ]).start();
   }, [opacity, scale, translateY]);
 
   return (
     <Animated.View
       style={[
+        floatingStyles.emoji,
         {
-          left: `${leftPct}%`,
+          right: offsetRight,
           opacity,
           transform: [{ translateY }, { scale }],
         },
-        floatingStyles.emoji,
       ]}
     >
       <Text style={floatingStyles.glyph}>{emoji}</Text>
@@ -81,7 +78,7 @@ function FloatingEmoji({ emoji, leftPct }: { emoji: string; leftPct: number }) {
 const floatingStyles = StyleSheet.create({
   emoji: {
     position: 'absolute',
-    bottom: 24,
+    bottom: 0,
   },
   glyph: {
     fontSize: 30,
@@ -94,8 +91,12 @@ const floatingStyles = StyleSheet.create({
 function createStyles(_theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
     overlay: {
-      ...StyleSheet.absoluteFillObject,
-      zIndex: 3,
+      position: 'absolute',
+      right: 14,
+      bottom: 170,
+      width: 60,
+      height: 300,
+      zIndex: 18,
     },
   });
 }

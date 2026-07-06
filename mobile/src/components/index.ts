@@ -18,6 +18,7 @@ export * from './currentAffairs';
 export * from './ai';
 export * from './practice';
 export * from './games';
+export * from './profile';
 export { RankRing } from './RankRing';
 export { ProgressBar } from './ProgressBar';
 export { StatTile } from './StatTile';

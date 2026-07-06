@@ -8,6 +8,7 @@ export const LIVE_NS_EVENTS = {
   HAND_RAISE: 'hand:raise',
   HAND_LOWER: 'hand:lower',
   HAND_NOTIFY: 'hand:notify',
+  HAND_ACK: 'hand:ack',
   HOST_MUTE_ALL: 'host:muteAll',
   HOST_ANNOUNCEMENT: 'host:announcement',
   DEV_STREAM_REQUEST: 'dev-stream:request',
@@ -27,12 +28,19 @@ export interface LiveChatMessage {
   userName: string;
   text: string;
   createdAt: string;
+  isHost?: boolean;
 }
 
 export interface LivePresenceParticipant {
   userId: string;
   name: string;
   isHost?: boolean;
+}
+
+export interface LiveRaisedHand {
+  userId: string;
+  userName: string;
+  raisedAt: string;
 }
 
 export interface LiveReaction {

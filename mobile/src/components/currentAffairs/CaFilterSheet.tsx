@@ -1,6 +1,7 @@
 import { Check } from 'lucide-react-native';
 import { useMemo } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '../Text';
 import { CA_UI } from './caTheme';
@@ -35,7 +36,14 @@ export function CaFilterSheet({
       <Pressable style={styles.backdrop} onPress={onClose} />
       <View style={styles.sheet}>
         <View style={styles.handle} />
-        <Text style={styles.title}>{title}</Text>
+        <LinearGradient
+          colors={[...CA_UI.heroGradient]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.titleBar}
+        >
+          <Text style={styles.title}>{title}</Text>
+        </LinearGradient>
         <ScrollView style={styles.list} keyboardShouldPersistTaps="handled">
           {options.map((opt) => {
             const selected = opt.value === selectedValue;
@@ -48,10 +56,14 @@ export function CaFilterSheet({
                   onSelect(opt.value);
                   onClose();
                 }}
-                style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+                style={({ pressed }) => [
+                  styles.row,
+                  selected && styles.rowSelected,
+                  pressed && styles.pressed,
+                ]}
               >
                 <Text style={[styles.rowText, selected && styles.rowTextSelected]}>{opt.label}</Text>
-                {selected ? <Check size={16} color={CA_UI.accent} strokeWidth={2.5} /> : null}
+                {selected ? <Check size={16} color={CA_UI.goldDeep} strokeWidth={2.5} /> : null}
               </Pressable>
             );
           })}
@@ -65,33 +77,39 @@ function createStyles(bottomInset: number) {
   return StyleSheet.create({
     backdrop: {
       flex: 1,
-      backgroundColor: 'rgba(15,23,42,0.35)',
+      backgroundColor: 'rgba(26,31,59,0.45)',
     },
     sheet: {
       backgroundColor: CA_UI.surface,
-      borderTopLeftRadius: 20,
-      borderTopRightRadius: 20,
+      borderTopLeftRadius: 22,
+      borderTopRightRadius: 22,
       paddingBottom: bottomInset + 16,
       maxHeight: '70%',
+      overflow: 'hidden',
     },
     handle: {
-      width: 36,
+      width: 40,
       height: 4,
       borderRadius: 2,
-      backgroundColor: '#E2E8F0',
+      backgroundColor: CA_UI.border,
       alignSelf: 'center',
       marginTop: 10,
-      marginBottom: 12,
+      marginBottom: 0,
+    },
+    titleBar: {
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+      marginTop: 8,
     },
     title: {
-      fontSize: 16,
+      fontSize: 17,
       fontWeight: '800',
-      color: CA_UI.text,
-      paddingHorizontal: 20,
-      marginBottom: 8,
+      color: '#FFFFFF',
+      letterSpacing: -0.2,
     },
     list: {
-      paddingHorizontal: 8,
+      paddingHorizontal: 12,
+      paddingTop: 8,
     },
     row: {
       flexDirection: 'row',
@@ -100,16 +118,22 @@ function createStyles(bottomInset: number) {
       paddingVertical: 14,
       paddingHorizontal: 12,
       borderRadius: 12,
+      marginBottom: 4,
+    },
+    rowSelected: {
+      backgroundColor: CA_UI.goldSoft,
+      borderWidth: 1,
+      borderColor: CA_UI.goldBorder,
     },
     rowText: {
       fontSize: 14,
-      fontWeight: '500',
+      fontWeight: '600',
       color: CA_UI.text2,
     },
     rowTextSelected: {
       color: CA_UI.accent,
-      fontWeight: '700',
+      fontWeight: '800',
     },
-    pressed: { backgroundColor: '#F8FAFC' },
+    pressed: { opacity: 0.9 },
   });
 }

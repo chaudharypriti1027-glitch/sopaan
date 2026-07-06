@@ -1,31 +1,47 @@
 import { useMemo } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { Text } from '../Text';
-import { useTheme } from '../../theme';
+import { PROFILE } from './profileTheme';
 
 type ProfileSectionLabelProps = {
   title: string;
+  /** Tighter spacing when used inside the scroll stack. */
+  stacked?: boolean;
 };
 
-export function ProfileSectionLabel({ title }: ProfileSectionLabelProps) {
-  const { theme } = useTheme();
-  const styles = useMemo(() => createStyles(theme), [theme]);
+export function ProfileSectionLabel({ title, stacked = false }: ProfileSectionLabelProps) {
+  const styles = useMemo(() => createStyles(stacked), [stacked]);
 
-  return <Text style={styles.label}>{title}</Text>;
+  return (
+    <View style={styles.row}>
+      <View style={styles.accent} />
+      <Text style={styles.label}>{title}</Text>
+    </View>
+  );
 }
 
-function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
+function createStyles(stacked: boolean) {
   return StyleSheet.create({
-    label: {
-      marginTop: 22,
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      marginTop: stacked ? 10 : PROFILE.sectionGap,
       marginBottom: 11,
       marginHorizontal: 6,
+    },
+    accent: {
+      width: 4,
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: PROFILE.gold,
+    },
+    label: {
       fontSize: 12,
-      fontFamily: theme.typography.fonts.ui.bold,
       fontWeight: '800',
-      letterSpacing: 0.4,
+      letterSpacing: 0.5,
       textTransform: 'uppercase',
-      color: theme.colors.text.tertiary,
+      color: PROFILE.faint,
     },
   });
 }

@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useTheme } from '../../theme';
+import { HOME_UI } from './homeTheme';
 
 type GoalDotsProps = {
   done: number;
@@ -10,8 +10,7 @@ type GoalDotsProps = {
 };
 
 export function GoalDots({ done, total, variant = 'default' }: GoalDotsProps) {
-  const { theme } = useTheme();
-  const styles = useMemo(() => createStyles(theme, variant), [theme, variant]);
+  const styles = useMemo(() => createStyles(variant), [variant]);
 
   return (
     <View style={styles.row} accessibilityLabel={`${done} of ${total} goals complete`}>
@@ -22,7 +21,11 @@ export function GoalDots({ done, total, variant = 'default' }: GoalDotsProps) {
           return (
             <LinearGradient
               key={index}
-              colors={variant === 'hero' ? ['#6C9A8A', '#5F8A7B'] : ['#5F8A7B', '#4C7264']}
+              colors={
+                variant === 'hero'
+                  ? [HOME_UI.goldLt, HOME_UI.gold]
+                  : [HOME_UI.sage, HOME_UI.sageDeep]
+              }
               start={{ x: 0, y: 0.5 }}
               end={{ x: 1, y: 0.5 }}
               style={[styles.dot, styles.dotFilled]}
@@ -36,24 +39,24 @@ export function GoalDots({ done, total, variant = 'default' }: GoalDotsProps) {
   );
 }
 
-function createStyles(
-  theme: ReturnType<typeof useTheme>['theme'],
-  variant: 'default' | 'hero',
-) {
+function createStyles(variant: 'default' | 'hero') {
   return StyleSheet.create({
     row: {
       flexDirection: 'row',
-      gap: 6,
-      marginTop: variant === 'hero' ? 0 : 9,
+      gap: 7,
+      marginTop: variant === 'hero' ? 0 : 8,
     },
     dot: {
       flex: 1,
-      height: variant === 'hero' ? 6 : 7,
+      height: variant === 'hero' ? 7 : 7,
       borderRadius: 99,
-      backgroundColor: variant === 'hero' ? 'rgba(255,255,255,0.15)' : theme.colors.border.subtle,
+      backgroundColor: variant === 'hero' ? 'rgba(255,255,255,0.12)' : HOME_UI.borderSoft,
+      borderWidth: variant === 'hero' ? 1 : 0,
+      borderColor: 'rgba(255,255,255,0.08)',
     },
     dotFilled: {
       backgroundColor: 'transparent',
+      borderWidth: 0,
     },
   });
 }

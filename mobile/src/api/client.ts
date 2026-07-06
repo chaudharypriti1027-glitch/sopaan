@@ -11,7 +11,12 @@ import { refreshSocketAuth } from '../realtime/socketManager';
 
 type RetryConfig = InternalAxiosRequestConfig & {
   _retry?: boolean;
+  _rateRetry?: boolean;
 };
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 type QueueEntry = {
   resolve: (token: string) => void;
@@ -98,6 +103,16 @@ apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const original = error.config as RetryConfig | undefined;
+
+    if (
+      original &&
+      !original._rateRetry &&
+      error.response?.status === 429
+    ) {
+      original._rateRetry = true;
+      await sleep(1200);
+      return apiClient(original);
+    }
 
     if (!original || original._retry || error.response?.status !== 401) {
       const parsed = parseApiError(error);

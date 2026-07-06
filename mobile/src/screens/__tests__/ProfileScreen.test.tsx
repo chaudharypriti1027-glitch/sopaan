@@ -12,6 +12,7 @@ const mockProfile = {
   id: '1',
   name: 'Arjun Patel',
   phone: '+919876543210',
+  email: 'arjun@sopaan.com',
   state: 'Gujarat',
   category: 'GEN' as const,
   targetExam: 'SSC CGL',
@@ -22,6 +23,7 @@ const mockProfile = {
   rank: 48,
   level: 3,
   coins: 420,
+  xp: 1240,
   createdAt: '',
 };
 
@@ -45,6 +47,8 @@ const mockSummary = {
   rank: 48,
   streak: 12,
   level: 3,
+  accuracy: 38,
+  xp: 1240,
 };
 
 const mockSummaryQuery: {
@@ -59,6 +63,16 @@ const mockSummaryQuery: {
   refetch: jest.fn(),
 };
 
+const mockBadgesQuery: {
+  data: { id: string; key: string; earnedAt: string }[];
+  isLoading: boolean;
+  refetch: jest.Mock;
+} = {
+  data: [{ id: '1', key: 'first_attempt', earnedAt: '2026-01-01T00:00:00.000Z' }],
+  isLoading: false,
+  refetch: jest.fn(),
+};
+
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({
     getParent: mockGetParent,
@@ -66,6 +80,7 @@ jest.mock('@react-navigation/native', () => ({
   useFocusEffect: (callback: () => void) => {
     callback();
   },
+  useIsFocused: () => true,
 }));
 
 jest.mock('../../auth/routeAfterSession', () => ({
@@ -81,6 +96,7 @@ jest.mock('../../auth', () => ({
 jest.mock('../../hooks', () => ({
   useMe: () => mockMeQuery,
   useProfileSummary: () => mockSummaryQuery,
+  useBadges: () => mockBadgesQuery,
   useUpdateMe: () => ({
     mutateAsync: (...args: unknown[]) => mockUpdateMe(...args),
     isPending: false,
@@ -108,6 +124,8 @@ describe('ProfileScreen', () => {
     mockMeQuery.isFetching = false;
     mockSummaryQuery.data = { ...mockSummary };
     mockSummaryQuery.isLoading = false;
+    mockBadgesQuery.data = [{ id: '1', key: 'first_attempt', earnedAt: '2026-01-01T00:00:00.000Z' }];
+    mockBadgesQuery.isLoading = false;
   });
 
   it('renders cached account details immediately', () => {
@@ -115,13 +133,16 @@ describe('ProfileScreen', () => {
 
     expect(getByText('Arjun Patel')).toBeTruthy();
     expect(getByText(/verified/i)).toBeTruthy();
+    expect(getByTestId('profile-detail-email')).toBeTruthy();
     expect(getByTestId('profile-detail-target-exam')).toBeTruthy();
     expect(getByText(/SSC CGL/)).toBeTruthy();
     expect(getByText('Gujarat')).toBeTruthy();
     expect(getByText('Graduate')).toBeTruthy();
-    expect(getByText('48')).toBeTruthy();
+    expect(getByText('38%')).toBeTruthy();
+    expect(getByText('Accuracy')).toBeTruthy();
     expect(getByText('Day streak')).toBeTruthy();
     expect(getByText('Coins')).toBeTruthy();
+    expect(getByText('LEVEL 3')).toBeTruthy();
   });
 
   it('renders live menu counts from profile summary', () => {

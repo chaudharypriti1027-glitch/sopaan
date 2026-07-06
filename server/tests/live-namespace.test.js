@@ -1,7 +1,6 @@
 import { beforeAll, afterAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { io as Client } from 'socket.io-client';
 import jwt from 'jsonwebtoken';
-import app from '../src/app.js';
 import { env } from '../src/config/env.js';
 import { LiveClass } from '../src/models/LiveClass.js';
 import {
@@ -111,6 +110,7 @@ describe('/live socket namespace', () => {
     const message = await studentMessage;
     expect(message.text).toBe('Hello from student');
     expect(message.userName).toBe('Student One');
+    expect(message.isHost).toBe(false);
 
     const hostMessage = new Promise((resolve) => {
       const handler = (payload) => {
@@ -129,6 +129,7 @@ describe('/live socket namespace', () => {
 
     const reply = await hostMessage;
     expect(reply.text).toBe('Welcome everyone');
+    expect(reply.isHost).toBe(true);
 
     host.disconnect();
     student.disconnect();
@@ -261,6 +262,97 @@ describe('/live socket namespace', () => {
     const signal = await signalPromise;
     expect(signal.type).toBe('offer');
     expect(signal.fromUserId).toBe(hostUser._id.toString());
+
+    host.disconnect();
+    student.disconnect();
+  });
+
+  it('persists host announcements for late joiners', async () => {
+    const host = connectClient(hostUser);
+    const student = connectClient(studentUser);
+
+    await Promise.all([
+      new Promise((resolve) => host.on('connect', resolve)),
+      new Promise((resolve) => student.on('connect', resolve)),
+    ]);
+
+    const classId = liveClass._id.toString();
+    host.emit(LIVE_NS_EVENTS.JOIN, { classId });
+    student.emit(LIVE_NS_EVENTS.JOIN, { classId });
+    await waitForPresence(host, classId, 2);
+
+    host.emit(LIVE_NS_EVENTS.HOST_ANNOUNCEMENT, {
+      classId,
+      message: 'Formula: Work = Rate × Time',
+    });
+
+    const lateStudent = connectClient(studentUser);
+    await new Promise((resolve) => lateStudent.on('connect', resolve));
+
+    const announcementPromise = new Promise((resolve) => {
+      lateStudent.once(LIVE_NS_EVENTS.HOST_ANNOUNCEMENT, resolve);
+    });
+
+    lateStudent.emit(LIVE_NS_EVENTS.JOIN, { classId });
+
+    const announcement = await announcementPromise;
+    expect(announcement.message).toBe('Formula: Work = Rate × Time');
+
+    host.disconnect();
+    student.disconnect();
+    lateStudent.disconnect();
+  });
+
+  it('acks hand raise to the student', async () => {
+    const host = connectClient(hostUser);
+    const student = connectClient(studentUser);
+
+    await Promise.all([
+      new Promise((resolve) => host.on('connect', resolve)),
+      new Promise((resolve) => student.on('connect', resolve)),
+    ]);
+
+    const classId = liveClass._id.toString();
+    host.emit(LIVE_NS_EVENTS.JOIN, { classId });
+    student.emit(LIVE_NS_EVENTS.JOIN, { classId });
+    await waitForPresence(host, classId, 2);
+
+    const ackPromise = new Promise((resolve) => {
+      student.once(LIVE_NS_EVENTS.HAND_ACK, resolve);
+    });
+
+    student.emit(LIVE_NS_EVENTS.HAND_RAISE, { classId });
+
+    const ack = await ackPromise;
+    expect(ack.raised).toBe(true);
+    expect(ack.message).toMatch(/raised your hand/i);
+
+    host.disconnect();
+    student.disconnect();
+  });
+
+  it('accepts heart reaction emoji', async () => {
+    const host = connectClient(hostUser);
+    const student = connectClient(studentUser);
+
+    await Promise.all([
+      new Promise((resolve) => host.on('connect', resolve)),
+      new Promise((resolve) => student.on('connect', resolve)),
+    ]);
+
+    const classId = liveClass._id.toString();
+    host.emit(LIVE_NS_EVENTS.JOIN, { classId });
+    student.emit(LIVE_NS_EVENTS.JOIN, { classId });
+    await waitForPresence(host, classId, 2);
+
+    const reactionPromise = new Promise((resolve) => {
+      host.once(LIVE_NS_EVENTS.REACTION, resolve);
+    });
+
+    student.emit(LIVE_NS_EVENTS.REACTION, { classId, emoji: '❤️' });
+
+    const reaction = await reactionPromise;
+    expect(reaction.emoji).toBe('❤️');
 
     host.disconnect();
     student.disconnect();

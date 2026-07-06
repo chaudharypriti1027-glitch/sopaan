@@ -314,6 +314,7 @@ userSchema.methods.toProfile = function toProfile() {
     rank: this.rank ?? null,
     level: this.level ?? 1,
     coins: this.coins ?? 0,
+    xp: this.xp ?? 0,
     onboardingComplete: Boolean(this.onboardingComplete),
     role: this.role ?? 'student',
     isPremium: Boolean(this.isPremium),

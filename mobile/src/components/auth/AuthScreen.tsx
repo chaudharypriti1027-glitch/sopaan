@@ -8,6 +8,7 @@ import {
   type ScrollViewProps,
   type ViewStyle,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useResponsiveLayout } from '../../layout/responsive';
 import { AUTH_UI } from './authTheme';
@@ -46,28 +47,36 @@ export function AuthScreen({
   );
 
   return (
-    <KeyboardAvoidingView
+    <LinearGradient
+      colors={[AUTH_UI.bgTop, AUTH_UI.bg, AUTH_UI.bgBottom]}
+      start={{ x: 0.5, y: 0 }}
+      end={{ x: 0.5, y: 1 }}
       style={styles.root}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
     >
-      <View style={[styles.decoGold, styles.pointerNone]} />
-      <View style={[styles.decoSage, styles.pointerNone]} />
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
+      >
+        <View style={[styles.decoGold, styles.pointerNone]} />
+        <View style={[styles.decoSage, styles.pointerNone]} />
+        <View style={[styles.decoNavy, styles.pointerNone]} />
 
-      {scroll ? (
-        <ScrollView
-          style={styles.scroll}
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-          {...scrollProps}
-        >
-          {card}
-        </ScrollView>
-      ) : (
-        <View style={[styles.scrollContent, styles.staticContent]}>{card}</View>
-      )}
-    </KeyboardAvoidingView>
+        {scroll ? (
+          <ScrollView
+            style={styles.scroll}
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+            {...scrollProps}
+          >
+            {card}
+          </ScrollView>
+        ) : (
+          <View style={[styles.scrollContent, styles.staticContent]}>{card}</View>
+        )}
+      </KeyboardAvoidingView>
+    </LinearGradient>
   );
 }
 
@@ -79,25 +88,39 @@ function createStyles(
   return StyleSheet.create({
     root: {
       flex: 1,
-      backgroundColor: AUTH_UI.bg,
+    },
+    flex: {
+      flex: 1,
     },
     decoGold: {
       position: 'absolute',
-      top: -70,
-      right: wideWeb ? '10%' : -60,
-      width: wideWeb ? 280 : 220,
-      height: wideWeb ? 280 : 220,
-      borderRadius: 140,
+      top: -90,
+      right: wideWeb ? '8%' : -70,
+      width: wideWeb ? 300 : 240,
+      height: wideWeb ? 300 : 240,
+      borderRadius: 150,
       backgroundColor: AUTH_UI.goldSoft,
+      opacity: 0.9,
     },
     decoSage: {
       position: 'absolute',
-      bottom: 120,
-      left: wideWeb ? '8%' : -70,
-      width: wideWeb ? 240 : 200,
-      height: wideWeb ? 240 : 200,
-      borderRadius: 120,
+      bottom: 100,
+      left: wideWeb ? '6%' : -80,
+      width: wideWeb ? 260 : 210,
+      height: wideWeb ? 260 : 210,
+      borderRadius: 130,
       backgroundColor: AUTH_UI.sageSoft,
+      opacity: 0.85,
+    },
+    decoNavy: {
+      position: 'absolute',
+      top: '38%',
+      left: -120,
+      width: 180,
+      height: 180,
+      borderRadius: 90,
+      backgroundColor: AUTH_UI.accentSoft,
+      opacity: 0.35,
     },
     scroll: {
       flex: 1,
@@ -105,7 +128,7 @@ function createStyles(
     scrollContent: {
       flexGrow: 1,
       justifyContent: 'center',
-      paddingTop: insets.top + 24,
+      paddingTop: insets.top + 20,
       paddingBottom: insets.bottom + 24,
       paddingLeft: horizontalPad + insets.left,
       paddingRight: horizontalPad + insets.right,
@@ -127,8 +150,8 @@ function createStyles(
       gap: 0,
     },
     footer: {
-      marginTop: 20,
-      gap: 10,
+      marginTop: 18,
+      gap: 8,
     },
     pointerNone: {
       pointerEvents: 'none',

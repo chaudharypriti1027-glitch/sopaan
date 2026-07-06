@@ -13,8 +13,9 @@ import {
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Text } from '../Text';
-import { CA_UI } from './caTheme';
+import { CA_UI, caChip, caPressFeedback } from './caTheme';
 
 export type CaCategoryKey =
   | 'all'
@@ -33,16 +34,17 @@ export const CA_CATEGORY_OPTIONS: {
   Icon: LucideIcon;
   color: string;
   bg: string;
+  gradient: readonly [string, string];
 }[] = [
-  { key: 'all', apiValue: null, Icon: Star, color: '#1E293B', bg: '#1E293B' },
-  { key: 'economy', apiValue: 'Economy', Icon: DollarSign, color: '#059669', bg: '#059669' },
-  { key: 'international', apiValue: 'International', Icon: Globe, color: '#2563EB', bg: '#2563EB' },
-  { key: 'defence', apiValue: 'Defence', Icon: Shield, color: '#DC2626', bg: '#DC2626' },
-  { key: 'schemes', apiValue: 'Schemes', Icon: Scale, color: '#7C3AED', bg: '#7C3AED' },
-  { key: 'politics', apiValue: 'Polity', Icon: Landmark, color: '#EA580C', bg: '#EA580C' },
-  { key: 'health', apiValue: 'Science', Icon: Heart, color: '#DB2777', bg: '#DB2777' },
-  { key: 'environment', apiValue: 'Environment', Icon: Leaf, color: '#16A34A', bg: '#16A34A' },
-  { key: 'scienceTech', apiValue: 'Science', Icon: Cpu, color: '#0891B2', bg: '#0891B2' },
+  { key: 'all', apiValue: null, Icon: Star, color: CA_UI.accent, bg: CA_UI.accent, gradient: [CA_UI.accent, '#1A1F3B'] },
+  { key: 'economy', apiValue: 'Economy', Icon: DollarSign, color: '#4C7264', bg: '#568274', gradient: ['#6A9A88', '#426A5C'] },
+  { key: 'international', apiValue: 'International', Icon: Globe, color: '#3B4B6E', bg: '#4C6084', gradient: ['#5E7296', '#3A4E6E'] },
+  { key: 'defence', apiValue: 'Defence', Icon: Shield, color: '#A8503E', bg: '#A86452', gradient: ['#C07866', '#8C5040'] },
+  { key: 'schemes', apiValue: 'Schemes', Icon: Scale, color: '#5C4030', bg: '#6A4838', gradient: ['#8A5840', '#4A3020'] },
+  { key: 'politics', apiValue: 'Polity', Icon: Landmark, color: '#A67C33', bg: '#B89442', gradient: ['#D4B066', '#8F7028'] },
+  { key: 'health', apiValue: 'Science', Icon: Heart, color: '#A8503E', bg: '#C07866', gradient: ['#D08878', '#A8503E'] },
+  { key: 'environment', apiValue: 'Environment', Icon: Leaf, color: '#4C7264', bg: '#568274', gradient: ['#6A9A88', '#3E5E50'] },
+  { key: 'scienceTech', apiValue: 'Science', Icon: Cpu, color: '#3A4E6E', bg: '#4C6084', gradient: ['#6888B0', '#3E5E88'] },
 ];
 
 type CaCategoryPillsProps = {
@@ -61,7 +63,7 @@ export function CaCategoryPills({ selected, onSelect }: CaCategoryPillsProps) {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scroll}
       >
-        {CA_CATEGORY_OPTIONS.map(({ key, Icon, color, bg }) => {
+        {CA_CATEGORY_OPTIONS.map(({ key, Icon, color, gradient }) => {
           const active = selected === key;
           return (
             <Pressable
@@ -69,16 +71,25 @@ export function CaCategoryPills({ selected, onSelect }: CaCategoryPillsProps) {
               accessibilityRole="button"
               accessibilityState={{ selected: active }}
               onPress={() => onSelect(key)}
-              style={({ pressed }) => [
-                styles.pill,
-                active && { backgroundColor: bg, borderColor: bg },
-                pressed && styles.pressed,
-              ]}
+              style={({ pressed }) => [pressed && caPressFeedback]}
             >
-              <Icon size={11} color={active ? '#FFFFFF' : color} strokeWidth={2.5} />
-              <Text style={[styles.pillText, active && styles.pillTextActive]}>
-                {t(`currentAffairs.${key}`)}
-              </Text>
+              {active ? (
+                <LinearGradient
+                  colors={[...gradient]}
+                  start={{ x: 0.15, y: 0 }}
+                  end={{ x: 0.85, y: 1 }}
+                  style={styles.pillActive}
+                >
+                  <View style={styles.pillSheen} />
+                  <Icon size={11} color="#FFFFFF" strokeWidth={2.5} />
+                  <Text style={styles.pillTextActive}>{t(`currentAffairs.${key}`)}</Text>
+                </LinearGradient>
+              ) : (
+                <View style={styles.pill}>
+                  <Icon size={11} color={color} strokeWidth={2.5} />
+                  <Text style={styles.pillText}>{t(`currentAffairs.${key}`)}</Text>
+                </View>
+              )}
             </Pressable>
           );
         })}
@@ -90,35 +101,53 @@ export function CaCategoryPills({ selected, onSelect }: CaCategoryPillsProps) {
 function createStyles() {
   return StyleSheet.create({
     wrap: {
-      backgroundColor: CA_UI.surface,
-      borderBottomWidth: 1,
-      borderBottomColor: CA_UI.border,
+      backgroundColor: CA_UI.bg,
+      paddingBottom: 4,
     },
     scroll: {
       paddingHorizontal: 16,
       paddingVertical: 10,
-      gap: 6,
+      gap: 8,
     },
     pill: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 5,
       paddingHorizontal: 12,
-      paddingVertical: 6,
-      borderRadius: 20,
-      backgroundColor: '#F8FAFC',
-      borderWidth: 1,
-      borderColor: CA_UI.borderStrong,
+      paddingVertical: 8,
       marginRight: 6,
+      ...caChip(),
+    },
+    pillActive: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 5,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: 20,
+      marginRight: 6,
+      overflow: 'hidden',
+      borderWidth: 1,
+      borderColor: 'rgba(255,255,255,0.2)',
+    },
+    pillSheen: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      height: '50%',
+      backgroundColor: 'rgba(255,255,255,0.18)',
     },
     pillText: {
       fontSize: 11,
-      fontWeight: '600',
+      fontWeight: '700',
       color: CA_UI.muted,
     },
     pillTextActive: {
+      fontSize: 11,
+      fontWeight: '800',
       color: '#FFFFFF',
+      zIndex: 1,
     },
-    pressed: { opacity: 0.9 },
   });
 }

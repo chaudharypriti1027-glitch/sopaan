@@ -1,11 +1,15 @@
-import { Bell, BellOff, CalendarClock } from 'lucide-react-native';
+import { Bell, BellOff, BookOpen, CalendarClock } from 'lucide-react-native';
 import { useMemo } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
+import { Text } from '../Text';
+import { NumText } from '../NumText';
 import { useLiveClassCountdown } from '../../hooks/useLiveClassCountdown';
 import { useLiveClassReminder } from '../../hooks';
 import type { LiveClass } from '../../api/liveClasses';
 import { useTheme } from '../../theme';
+import { LIVE } from './liveTheme';
 
 type LiveClassScheduledPanelProps = {
   liveClass: LiveClass;
@@ -38,56 +42,71 @@ export function LiveClassScheduledPanel({ liveClass }: LiveClassScheduledPanelPr
   };
 
   return (
-    <View style={styles.root}>
-      <CalendarClock size={32} color={theme.colors.brand.primary} />
-      <Text style={styles.heading}>{t('startsIn')}</Text>
+    <LinearGradient
+      colors={[LIVE.stageMid, LIVE.navy, LIVE.stageDeep]}
+      locations={[0, 0.5, 1]}
+      style={styles.root}
+    >
+      <View style={styles.glow} pointerEvents="none" />
 
-      {countdown.hasTarget ? (
-        <View style={styles.countdownRow}>
-          <CountdownUnit label={t('days')} value={pad(countdown.days)} />
-          <Text style={styles.sep}>:</Text>
-          <CountdownUnit label={t('hours')} value={pad(countdown.hours)} />
-          <Text style={styles.sep}>:</Text>
-          <CountdownUnit label={t('mins')} value={pad(countdown.minutes)} />
-          <Text style={styles.sep}>:</Text>
-          <CountdownUnit label={t('secs')} value={pad(countdown.seconds)} />
-        </View>
-      ) : (
-        <Text style={styles.whenUnknown}>{t('scheduleTbd')}</Text>
-      )}
+      <View style={styles.card}>
+        <CalendarClock size={30} color={LIVE.goldLt} strokeWidth={1.75} />
+        <Text style={styles.heading}>{t('startsIn')}</Text>
 
-      {startsAt ? (
-        <Text style={styles.when}>
-          {new Date(startsAt).toLocaleString('en-IN', {
-            weekday: 'long',
-            day: 'numeric',
-            month: 'short',
-            hour: '2-digit',
-            minute: '2-digit',
-          })}
-        </Text>
-      ) : null}
-
-      <Pressable
-        accessibilityRole="button"
-        onPress={toggleReminder}
-        disabled={reminderMutation.isPending}
-        style={[styles.notifyBtn, liveClass.reminderSet ? styles.notifyBtnOn : null]}
-      >
-        {liveClass.reminderSet ? (
-          <BellOff size={18} color={theme.colors.brand.onPrimary} />
+        {countdown.hasTarget ? (
+          <View style={styles.countdownRow}>
+            <CountdownUnit label={t('days')} value={pad(countdown.days)} />
+            <Text style={styles.sep}>:</Text>
+            <CountdownUnit label={t('hours')} value={pad(countdown.hours)} />
+            <Text style={styles.sep}>:</Text>
+            <CountdownUnit label={t('mins')} value={pad(countdown.minutes)} />
+            <Text style={styles.sep}>:</Text>
+            <CountdownUnit label={t('secs')} value={pad(countdown.seconds)} />
+          </View>
         ) : (
-          <Bell size={18} color={theme.colors.brand.onPrimary} />
+          <Text style={styles.whenUnknown}>{t('scheduleTbd')}</Text>
         )}
-        <Text style={styles.notifyLabel}>
-          {liveClass.reminderSet ? t('reminderOn') : t('notifyMe')}
-        </Text>
-      </Pressable>
 
-      <Text style={styles.hint}>
-        {countdown.isPast ? t('waitingForHost') : t('scheduledHint')}
-      </Text>
-    </View>
+        {startsAt ? (
+          <Text style={styles.when}>
+            {new Date(startsAt).toLocaleString('en-IN', {
+              weekday: 'long',
+              day: 'numeric',
+              month: 'short',
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
+          </Text>
+        ) : null}
+
+        {liveClass.topic ? (
+          <View style={styles.topicRow}>
+            <BookOpen size={15} color={LIVE.goldLt} strokeWidth={1.75} />
+            <Text style={styles.topic}>{liveClass.topic}</Text>
+          </View>
+        ) : null}
+
+        <Pressable
+          accessibilityRole="button"
+          onPress={toggleReminder}
+          disabled={reminderMutation.isPending}
+          style={[styles.notifyBtn, liveClass.reminderSet && styles.notifyBtnOn]}
+        >
+          {liveClass.reminderSet ? (
+            <BellOff size={18} color={LIVE.inkPin} />
+          ) : (
+            <Bell size={18} color={LIVE.inkPin} />
+          )}
+          <Text style={styles.notifyLabel}>
+            {liveClass.reminderSet ? t('reminderOn') : t('notifyMe')}
+          </Text>
+        </Pressable>
+
+        <Text style={styles.hint}>
+          {countdown.isPast ? t('waitingForHost') : t('scheduledHint')}
+        </Text>
+      </View>
+    </LinearGradient>
   );
 }
 
@@ -97,7 +116,7 @@ function CountdownUnit({ label, value }: { label: string; value: string }) {
 
   return (
     <View style={styles.unit}>
-      <Text style={styles.value}>{value}</Text>
+      <NumText style={styles.value}>{value}</NumText>
       <Text style={styles.label}>{label}</Text>
     </View>
   );
@@ -107,13 +126,16 @@ function createUnitStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
     unit: { alignItems: 'center', minWidth: 52 },
     value: {
-      ...theme.typography.presets.h2,
-      color: theme.colors.text.primary,
-      fontVariant: ['tabular-nums'],
+      fontSize: 28,
+      fontFamily: theme.typography.fonts.stat.bold,
+      fontWeight: '700',
+      color: '#FFFFFF',
     },
     label: {
-      ...theme.typography.presets.caption,
-      color: theme.colors.text.tertiary,
+      fontSize: 10,
+      fontFamily: theme.typography.fonts.ui.semibold,
+      fontWeight: '600',
+      color: LIVE.textMuted,
       textTransform: 'uppercase',
     },
   });
@@ -123,15 +145,28 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
     root: {
       flex: 1,
+    },
+    glow: {
+      position: 'absolute',
+      top: '18%',
+      alignSelf: 'center',
+      width: 260,
+      height: 260,
+      borderRadius: 130,
+      backgroundColor: 'rgba(194,154,78,0.18)',
+    },
+    card: {
+      flex: 1,
       alignItems: 'center',
       justifyContent: 'center',
       gap: theme.spacing.md,
       padding: theme.spacing.xl,
-      backgroundColor: '#0b1020',
     },
     heading: {
-      ...theme.typography.presets.h3,
-      color: theme.colors.text.primary,
+      fontSize: 22,
+      fontFamily: theme.typography.fonts.ui.bold,
+      fontWeight: '800',
+      color: '#FFFFFF',
       textAlign: 'center',
     },
     countdownRow: {
@@ -140,42 +175,64 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       gap: theme.spacing.xs,
     },
     sep: {
-      ...theme.typography.presets.h3,
-      color: theme.colors.text.tertiary,
-      marginBottom: theme.spacing.lg,
+      fontSize: 22,
+      fontFamily: theme.typography.fonts.stat.bold,
+      color: LIVE.textFaint,
+      marginBottom: 18,
     },
     when: {
-      ...theme.typography.presets.body,
-      color: theme.colors.text.secondary,
+      fontSize: 14,
+      fontFamily: theme.typography.fonts.ui.semibold,
+      fontWeight: '600',
+      color: LIVE.textMuted,
       textAlign: 'center',
     },
     whenUnknown: {
-      ...theme.typography.presets.body,
-      color: theme.colors.text.secondary,
+      fontSize: 14,
+      color: LIVE.textMuted,
+    },
+    topicRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      backgroundColor: LIVE.glassDark,
+      borderRadius: 99,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+    },
+    topic: {
+      fontSize: 12,
+      fontFamily: theme.typography.fonts.ui.bold,
+      fontWeight: '700',
+      color: '#FFFFFF',
     },
     notifyBtn: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: theme.spacing.sm,
-      backgroundColor: theme.colors.brand.primary,
-      borderRadius: theme.radii.pill,
+      backgroundColor: LIVE.goldLt,
+      borderRadius: 14,
       paddingVertical: 12,
       paddingHorizontal: theme.spacing.xl,
       marginTop: theme.spacing.sm,
     },
     notifyBtnOn: {
-      backgroundColor: theme.colors.semantic.success,
+      backgroundColor: LIVE.sageLt,
     },
     notifyLabel: {
-      ...theme.typography.presets.bodyMedium,
-      fontFamily: theme.typography.fonts.ui.semibold,
-      color: theme.colors.brand.onPrimary,
+      fontSize: 14,
+      fontFamily: theme.typography.fonts.ui.bold,
+      fontWeight: '800',
+      color: LIVE.inkPin,
     },
     hint: {
-      ...theme.typography.presets.caption,
-      color: theme.colors.text.tertiary,
+      fontSize: 12,
+      fontFamily: theme.typography.fonts.ui.semibold,
+      fontWeight: '600',
+      color: LIVE.textFaint,
       textAlign: 'center',
       maxWidth: 320,
+      lineHeight: 17,
     },
   });
 }

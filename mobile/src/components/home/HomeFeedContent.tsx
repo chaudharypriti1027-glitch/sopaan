@@ -1,13 +1,14 @@
 import { useCallback, useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import type { CompositeNavigationProp } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AffairsList } from './AffairsList';
-import { AINudgeCard } from './AINudgeCard';
+import { AINudgeSectionBadge } from './AINudgeCard';
 import { ContinueRow } from './ContinueRow';
 import { DailyChallengeCard } from './DailyChallengeCard';
+import { HomeAIHub } from './HomeAIHub';
 import { HomeFeaturesHub } from './HomeFeaturesHub';
 import { HomeAnimatedSection } from './HomeAnimatedSection';
 import { HomeSection } from './HomeSection';
@@ -19,7 +20,9 @@ import {
   visibleHomeSections,
   type HomeSectionKey,
 } from './homeSectionConfig';
+import { HOME_SECTION_ICONS } from './homeSectionIcons';
 import type { HomeFeatureLink } from '../../navigation/homeFeatureConfig';
+import { navigateToAskAI } from '../../navigation/askAiNavigation';
 import type { AppTabParamList, MainStackParamList } from '../../navigation/types';
 import type { HomeFeed } from '../../types/home';
 
@@ -68,25 +71,27 @@ export function HomeFeedContent({
     [navigation],
   );
 
+  const handleAskAiPress = useCallback(
+    (initialPrompt?: string) => {
+      navigateToAskAI(
+        navigation,
+        initialPrompt?.trim() ? { initialPrompt: initialPrompt.trim() } : undefined,
+      );
+    },
+    [navigation],
+  );
+
   const renderSectionBody = useCallback(
     (key: HomeSectionKey) => {
       switch (key) {
-        case 'nudges': {
-          const [primaryNudge, ...extraNudges] = feed.aiNudges;
-          if (!primaryNudge) return null;
+        case 'nudges':
           return (
-            <View style={styles.nudgesStack}>
-              <View testID={`home-section-nudge-${primaryNudge.id}`}>
-                <AINudgeCard nudge={primaryNudge} onPress={onDeeplinkWithHaptic} />
-              </View>
-              {extraNudges.map((nudge) => (
-                <View key={nudge.id} style={styles.extraNudge} testID={`home-section-nudge-${nudge.id}`}>
-                  <AINudgeCard nudge={nudge} onPress={onDeeplinkWithHaptic} showForYouHeader={false} />
-                </View>
-              ))}
-            </View>
+            <HomeAIHub
+              nudges={feed.aiNudges}
+              onNudgePress={onDeeplinkWithHaptic}
+              onAskAiPress={handleAskAiPress}
+            />
           );
-        }
         case 'features':
           return (
             <HomeFeaturesHub
@@ -119,8 +124,7 @@ export function HomeFeedContent({
       onFeaturePress,
       onLeaguePress,
       onTestPress,
-      styles.extraNudge,
-      styles.nudgesStack,
+      handleAskAiPress,
     ],
   );
 
@@ -130,6 +134,7 @@ export function HomeFeedContent({
         const meta = HOME_SECTION_META[key];
         const isFirst = index === 0;
         const title = meta.titleKey ? t(`home.${meta.titleKey}`) : undefined;
+        const subtitle = meta.subtitleKey ? t(`home.${meta.subtitleKey}`) : undefined;
         const actionLabel = meta.actionKey ? t(`home.${meta.actionKey}`) : undefined;
         const onAction = sectionAction(key);
 
@@ -137,16 +142,21 @@ export function HomeFeedContent({
           <HomeAnimatedSection key={key} index={index}>
             <HomeSection
               testID={meta.testId}
-              overlapHero={meta.overlapHero && isFirst}
               isFirst={isFirst}
+              highlighted={isFirst && Boolean(meta.highlightWhenFirst)}
               padded={meta.padded}
+              panel={meta.panel}
+              panelTone={meta.panelTone}
             >
               {title ? (
                 <HomeSectionHeader
                   title={title}
+                  subtitle={subtitle}
                   actionLabel={actionLabel}
                   onActionPress={onAction}
                   compact={isFirst && meta.compactWhenFirst}
+                  sectionIcon={HOME_SECTION_ICONS[key]}
+                  badge={key === 'nudges' ? <AINudgeSectionBadge /> : undefined}
                 />
               ) : null}
               {renderSectionBody(key)}
@@ -159,12 +169,5 @@ export function HomeFeedContent({
 }
 
 function createStyles() {
-  return StyleSheet.create({
-    nudgesStack: {
-      gap: 10,
-    },
-    extraNudge: {
-      marginTop: 4,
-    },
-  });
+  return StyleSheet.create({});
 }

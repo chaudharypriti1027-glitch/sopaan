@@ -6,11 +6,15 @@ import { useDevStreamViewer, type PeerFactory } from '../../hooks/useDevStreamVi
 import { ensureLiveKitReady, isLiveKitNativeAvailable } from '../../livekit/bootstrap';
 import { useTheme } from '../../theme';
 import { DEV_STREAM_ICE_SERVERS } from '../../utils/webrtcIce';
+import { LiveClassEducatorPlaceholder } from './LiveClassEducatorPlaceholder';
+import { useReportLiveVideo } from './liveClassStageContext';
 
 type LiveClassDevStreamProps = {
   classId: string;
   title?: string;
   instructor?: string;
+  instructorSubtitle?: string;
+  immersive?: boolean;
 };
 
 type NativeWebRtcModule = {
@@ -18,7 +22,13 @@ type NativeWebRtcModule = {
   RTCPeerConnection: new (config: RTCConfiguration) => RTCPeerConnection;
 };
 
-export function LiveClassDevStream({ classId, title, instructor }: LiveClassDevStreamProps) {
+export function LiveClassDevStream({
+  classId,
+  title,
+  instructor,
+  instructorSubtitle,
+  immersive = false,
+}: LiveClassDevStreamProps) {
   const { t } = useTranslation('app', { keyPrefix: 'liveClassViewer' });
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -78,16 +88,27 @@ export function LiveClassDevStream({ classId, title, instructor }: LiveClassDevS
 
   const displayError = bootError ?? error;
   const showSpinner = !bootError && !webrtc && isLiveKitNativeAvailable();
+  const hasVideo = Boolean(remoteStreamUrl && webrtc);
+  useReportLiveVideo(hasVideo);
 
   return (
     <View style={styles.stage}>
-      {remoteStreamUrl && webrtc ? (
+      {hasVideo && webrtc ? (
         <webrtc.RTCView
-          streamURL={remoteStreamUrl}
+          streamURL={remoteStreamUrl!}
           style={styles.video}
           objectFit="cover"
           mirror={false}
         />
+      ) : immersive ? (
+        <View style={styles.waitingOverlay} pointerEvents="none">
+          <LiveClassEducatorPlaceholder
+            name={instructor ?? title ?? t('defaultTitle')}
+            subtitle={instructorSubtitle}
+            hint={displayError ?? (showSpinner || isConnecting ? t('connectingEducator') : t('waitingEducator'))}
+            loading={showSpinner || isConnecting}
+          />
+        </View>
       ) : (
         <View style={styles.waiting}>
           {showSpinner || isConnecting ? (
@@ -104,27 +125,29 @@ export function LiveClassDevStream({ classId, title, instructor }: LiveClassDevS
         </View>
       )}
 
-      <LinearGradient
-        colors={['transparent', 'rgba(0,0,0,0.75)']}
-        style={styles.overlay}
-        pointerEvents="none"
-      >
-        {title ? (
-          <Text style={styles.overlayTitle} numberOfLines={2}>
-            {title}
-          </Text>
-        ) : null}
-        {instructor ? (
-          <Text style={styles.overlayInstructor} numberOfLines={1}>
-            {instructor}
-          </Text>
-        ) : null}
-        {Platform.OS !== 'web' && isConnected ? (
-          <Text style={styles.overlayHint} numberOfLines={2}>
-            {t('devStreamHint')}
-          </Text>
-        ) : null}
-      </LinearGradient>
+      {!immersive ? (
+        <LinearGradient
+          colors={['transparent', 'rgba(0,0,0,0.75)']}
+          style={styles.overlay}
+          pointerEvents="none"
+        >
+          {title ? (
+            <Text style={styles.overlayTitle} numberOfLines={2}>
+              {title}
+            </Text>
+          ) : null}
+          {instructor ? (
+            <Text style={styles.overlayInstructor} numberOfLines={1}>
+              {instructor}
+            </Text>
+          ) : null}
+          {Platform.OS !== 'web' && isConnected ? (
+            <Text style={styles.overlayHint} numberOfLines={2}>
+              {t('devStreamHint')}
+            </Text>
+          ) : null}
+        </LinearGradient>
+      ) : null}
     </View>
   );
 }
@@ -133,10 +156,17 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
     stage: {
       flex: 1,
-      backgroundColor: '#0b1020',
+      backgroundColor: '#000000',
+      overflow: 'hidden',
     },
     video: {
       ...StyleSheet.absoluteFillObject,
+      zIndex: 1,
+    },
+    waitingOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      zIndex: 2,
+      backgroundColor: 'rgba(11,16,32,0.55)',
     },
     waiting: {
       flex: 1,

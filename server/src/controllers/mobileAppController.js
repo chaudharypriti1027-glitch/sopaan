@@ -9,6 +9,7 @@ export async function getVersionRequirements(req, res) {
     nativeVersion: typeof nativeVersion === 'string' ? nativeVersion : undefined,
   });
 
+  res.set('Cache-Control', 'public, max-age=60, stale-while-revalidate=120');
   res.status(200).json({
     ...requirements,
     clientNativeVersion: nativeVersion ?? null,

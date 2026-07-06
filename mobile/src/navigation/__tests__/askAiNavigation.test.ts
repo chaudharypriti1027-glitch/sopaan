@@ -75,10 +75,7 @@ describe('navigateToAskAI', () => {
     navigateToAskAI(tabNav as never);
 
     expect(tabNav.dispatch).toHaveBeenCalledWith(
-      CommonActions.navigate({
-        name: 'Main',
-        params: { screen: 'AskAI' },
-      }),
+      CommonActions.navigate('Main', { screen: 'AskAI' }),
     );
   });
 });

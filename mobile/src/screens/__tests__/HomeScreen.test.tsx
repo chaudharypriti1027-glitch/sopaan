@@ -68,19 +68,31 @@ describe('HomeScreen integration', () => {
       'home-section-greeting',
       'home-section-countdown',
       'home-section-streak',
-      'home-section-nudges',
-      'home-section-nudge-nudge-streak',
-      'home-section-nudge-nudge-weak-topic',
       'home-section-features',
       'home-section-explore-shortcuts',
       'home-section-daily-challenge',
       'home-section-continue',
       'home-section-recommended',
       'home-section-affairs',
+      'home-section-nudges',
+      'home-section-nudge-nudge-weak-topic',
       'home-section-league',
     ]);
 
     expect(mockedGetHomeFeed).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders AI coach when nudges are empty', async () => {
+    const feed = createMockHomeFeed({ aiNudges: [] });
+    mockedGetHomeFeed.mockResolvedValue(feed);
+
+    const screen = renderWithProviders(<HomeScreen />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId('home-section-nudges')).toBeTruthy();
+      expect(screen.getByTestId('home-ai-coach-card')).toBeTruthy();
+      expect(screen.getByTestId('home-ask-ai-cta')).toBeTruthy();
+    });
   });
 
   it('renders no continue section or header when continue is empty', async () => {

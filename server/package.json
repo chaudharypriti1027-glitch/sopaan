@@ -13,6 +13,7 @@
     "ensure-admin": "node src/seed/ensureAdmin.js",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest --runInBand",
     "lint": "eslint src tests",
+    "validate": "npm run lint && npm run test",
     "verify:indexes": "node scripts/verify-indexes.js",
     "backup:mongodb": "bash scripts/backup/mongodb-backup.sh",
     "backup:restore": "bash scripts/backup/mongodb-restore.sh",
@@ -44,6 +45,7 @@
     "nanoid": "^5.1.16",
     "node-cron": "^3.0.3",
     "rate-limit-redis": "^4.3.1",
+    "sanitize-html": "^2.17.5",
     "socket.io": "^4.8.3",
     "zod": "^3.25.67"
   },

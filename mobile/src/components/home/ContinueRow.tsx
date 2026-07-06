@@ -1,21 +1,20 @@
 import { useCallback, useMemo } from 'react';
 import {
   FlatList,
-  Pressable,
   StyleSheet,
   View,
   type ListRenderItem,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Play, BookOpen, Video } from 'lucide-react-native';
-import { Card } from '../Card';
-import { PremiumIcon } from '../premium/PremiumIcon';
+import { HomeSlotIcon } from './HomePremiumIcon';
+import { HomeFeedCard } from './HomeFeedCard';
+import { HomePlayChip } from './HomePlayChip';
+import { NumText } from '../NumText';
 import { Text } from '../Text';
 import { useTheme } from '../../theme';
 import type { ContinueItem } from '../../types/home';
-import { continueAccentTone } from './homeIconTone';
+import { continueAccentTone, continueItemIcon } from './homeIcons';
 import { CONTINUE_CARD_WIDTH } from './homeUtils';
-import { homePremiumCard } from './homeStyles';
 import { HOME_UI } from './homeTheme';
 
 type ContinueRowProps = {
@@ -23,15 +22,9 @@ type ContinueRowProps = {
   onItemPress?: (deeplink: string) => void;
 };
 
-function continueIcon(kind: ContinueItem['kind']) {
-  if (kind === 'video') return Video;
-  if (kind === 'test') return BookOpen;
-  return Play;
-}
-
 function progressGradient(accent: ContinueItem['accent']): [string, string] {
-  if (accent === 'teal') return ['#6C9A8A', '#5F8A7B'];
-  if (accent === 'gold') return ['#E3C97F', '#C29A4E'];
+  if (accent === 'teal') return [HOME_UI.sage, HOME_UI.sageDeep];
+  if (accent === 'gold') return [HOME_UI.goldLt, HOME_UI.gold];
   if (accent === 'coral') return ['#D4A08C', '#A8503E'];
   return [...HOME_UI.accentGradient];
 }
@@ -47,29 +40,47 @@ function ContinueProgressBar({
   const styles = useMemo(
     () =>
       StyleSheet.create({
+        row: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 8,
+        },
         track: {
-          height: 7,
+          flex: 1,
+          height: 6,
           borderRadius: 99,
-          backgroundColor: theme.colors.border.subtle,
+          backgroundColor: HOME_UI.borderSoft,
           overflow: 'hidden',
         },
         fill: {
           height: '100%',
           borderRadius: 99,
         },
+        pct: {
+          fontSize: 11,
+          fontFamily: theme.typography.fonts.ui.bold,
+          fontWeight: '800',
+          color: HOME_UI.muted,
+          minWidth: 32,
+          textAlign: 'right',
+        },
       }),
     [theme],
   );
-  const fillWidth = `${Math.min(Math.max(value, 0), 100)}%` as `${number}%`;
+  const clamped = Math.min(Math.max(value, 0), 100);
+  const fillWidth = `${clamped}%` as `${number}%`;
 
   return (
-    <View style={styles.track}>
-      <LinearGradient
-        colors={progressGradient(accent)}
-        start={{ x: 0, y: 0.5 }}
-        end={{ x: 1, y: 0.5 }}
-        style={[styles.fill, { width: fillWidth }]}
-      />
+    <View style={styles.row}>
+      <View style={styles.track}>
+        <LinearGradient
+          colors={progressGradient(accent)}
+          start={{ x: 0, y: 0.5 }}
+          end={{ x: 1, y: 0.5 }}
+          style={[styles.fill, { width: fillWidth }]}
+        />
+      </View>
+      <NumText style={styles.pct}>{clamped}%</NumText>
     </View>
   );
 }
@@ -80,30 +91,29 @@ export function ContinueRow({ items, onItemPress }: ContinueRowProps) {
 
   const renderItem = useCallback<ListRenderItem<ContinueItem>>(
     ({ item }) => {
-      const Icon = continueIcon(item.kind);
+      const Icon = continueItemIcon(item.kind);
       const iconTone = continueAccentTone(item.accent);
 
       return (
-        <Pressable
-          accessibilityRole="button"
+        <HomeFeedCard
           onPress={() => onItemPress?.(item.deeplink)}
           style={styles.cardWrap}
+          contentStyle={styles.cardBody}
         >
-          <Card padded={false} style={styles.card}>
-            <View style={styles.top}>
-              <PremiumIcon Icon={Icon} tone={iconTone} size="sm" filled />
-              <View style={styles.copy}>
-                <Text style={styles.title} numberOfLines={2}>
-                  {item.title}
-                </Text>
-                <Text style={styles.subtitle} numberOfLines={1}>
-                  {item.subtitle}
-                </Text>
-              </View>
+          <View style={styles.top}>
+            <HomeSlotIcon slot="shortcut" Icon={Icon} tone={iconTone} />
+            <View style={styles.copy}>
+              <Text style={styles.kind} numberOfLines={1}>
+                {item.subtitle}
+              </Text>
+              <Text style={styles.title} numberOfLines={2}>
+                {item.title}
+              </Text>
             </View>
-            <ContinueProgressBar value={item.progressPct} accent={item.accent} />
-          </Card>
-        </Pressable>
+            <HomePlayChip onPress={() => onItemPress?.(item.deeplink)} />
+          </View>
+          <ContinueProgressBar value={item.progressPct} accent={item.accent} />
+        </HomeFeedCard>
       );
     },
     [onItemPress, styles],
@@ -130,22 +140,18 @@ export function ContinueRow({ items, onItemPress }: ContinueRowProps) {
 function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
     list: {
-      marginHorizontal: -theme.spacing.lg,
+      marginHorizontal: -HOME_UI.sectionPanelPad,
     },
     listContent: {
       gap: 12,
-      paddingHorizontal: theme.spacing.lg,
+      paddingHorizontal: HOME_UI.sectionPanelPad,
     },
     cardWrap: {
       width: CONTINUE_CARD_WIDTH,
     },
-    card: {
-      padding: 16,
+    cardBody: {
+      padding: 15,
       gap: 12,
-      borderRadius: 22,
-      ...homePremiumCard(theme),
-      borderWidth: 1,
-      borderColor: HOME_UI.border,
     },
     top: {
       flexDirection: 'row',
@@ -155,21 +161,24 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     copy: {
       flex: 1,
       gap: 2,
+      minWidth: 0,
+    },
+    kind: {
+      fontSize: 9.5,
+      lineHeight: 12,
+      fontFamily: theme.typography.fonts.ui.bold,
+      fontWeight: '800',
+      letterSpacing: 0.5,
+      textTransform: 'uppercase',
+      color: HOME_UI.goldDeep,
     },
     title: {
-      fontSize: 15,
+      fontSize: 14.5,
       lineHeight: 18,
       fontFamily: theme.typography.fonts.ui.bold,
       fontWeight: '800',
-      color: theme.colors.text.primary,
-    },
-    subtitle: {
-      fontSize: 11.5,
-      lineHeight: 14,
-      fontFamily: theme.typography.fonts.ui.semibold,
-      fontWeight: '600',
-      color: theme.colors.text.secondary,
-      marginTop: 2,
+      color: HOME_UI.ink,
+      letterSpacing: -0.2,
     },
   });
 }

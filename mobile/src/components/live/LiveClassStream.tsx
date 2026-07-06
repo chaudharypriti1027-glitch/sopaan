@@ -12,6 +12,8 @@ import {
 } from '@livekit/react-native';
 import { ConnectionState, Room, RoomEvent, Track } from 'livekit-client';
 import { useTheme } from '../../theme';
+import { LiveClassEducatorPlaceholder } from './LiveClassEducatorPlaceholder';
+import { useReportLiveVideo } from './liveClassStageContext';
 
 export type LiveClassStreamProps = {
   url: string;
@@ -19,8 +21,11 @@ export type LiveClassStreamProps = {
   role: 'host' | 'viewer' | 'student';
   muteAllSignal?: number;
   instructorName?: string;
+  instructorSubtitle?: string;
   topic?: string | null;
   title?: string;
+  /** Hide bottom title overlay when parent shell renders chrome. */
+  immersive?: boolean;
 };
 
 function useStudentMuteAllListener(
@@ -94,14 +99,18 @@ function useRemoteMediaSubscriber(role: LiveClassStreamProps['role']) {
 
 function EducatorVideoStage({
   instructorName,
+  instructorSubtitle,
   topic,
   title,
   connectionError,
+  immersive = false,
 }: {
   instructorName?: string;
+  instructorSubtitle?: string;
   topic?: string | null;
   title?: string;
   connectionError?: string | null;
+  immersive?: boolean;
 }) {
   const { t } = useTranslation('app', { keyPrefix: 'liveClassViewer' });
   const { theme } = useTheme();
@@ -134,6 +143,8 @@ function EducatorVideoStage({
       track.publication?.kind === Track.Kind.Video &&
       !track.participant.isLocal,
   );
+  const hasVideo = Boolean(educatorTrack && isTrackReference(educatorTrack));
+  useReportLiveVideo(hasVideo);
 
   const isConnecting =
     connectionState === ConnectionState.Connecting ||
@@ -141,11 +152,21 @@ function EducatorVideoStage({
   const waitingMessage =
     connectionError ??
     (isConnecting ? t('joining') : connectionState === ConnectionState.Connected ? t('waitingEducator') : t('joinFailed'));
+  const displayName = instructorName ?? title ?? t('defaultTitle');
 
   return (
     <View style={styles.stage}>
       {educatorTrack && isTrackReference(educatorTrack) ? (
         <VideoTrack trackRef={educatorTrack} style={styles.video} objectFit="cover" />
+      ) : immersive ? (
+        <View style={styles.waitingOverlay} pointerEvents="none">
+          <LiveClassEducatorPlaceholder
+            name={displayName}
+            subtitle={instructorSubtitle ?? topic ?? undefined}
+            hint={waitingMessage}
+            loading={isConnecting}
+          />
+        </View>
       ) : (
         <View style={styles.waiting}>
           {isConnecting ? <ActivityIndicator color={theme.colors.brand.primary} /> : null}
@@ -153,27 +174,29 @@ function EducatorVideoStage({
         </View>
       )}
 
-      <LinearGradient
-        colors={['transparent', 'rgba(0,0,0,0.75)']}
-        style={styles.overlay}
-        pointerEvents="none"
-      >
-        {title ? (
-          <Text style={styles.overlayTitle} numberOfLines={2}>
-            {title}
-          </Text>
-        ) : null}
-        {instructorName ? (
-          <Text style={styles.overlayInstructor} numberOfLines={1}>
-            {instructorName}
-          </Text>
-        ) : null}
-        {topic ? (
-          <Text style={styles.overlayTopic} numberOfLines={2}>
-            {topic}
-          </Text>
-        ) : null}
-      </LinearGradient>
+      {!immersive ? (
+        <LinearGradient
+          colors={['transparent', 'rgba(0,0,0,0.75)']}
+          style={styles.overlay}
+          pointerEvents="none"
+        >
+          {title ? (
+            <Text style={styles.overlayTitle} numberOfLines={2}>
+              {title}
+            </Text>
+          ) : null}
+          {instructorName ? (
+            <Text style={styles.overlayInstructor} numberOfLines={1}>
+              {instructorName}
+            </Text>
+          ) : null}
+          {topic ? (
+            <Text style={styles.overlayTopic} numberOfLines={2}>
+              {topic}
+            </Text>
+          ) : null}
+        </LinearGradient>
+      ) : null}
     </View>
   );
 }
@@ -201,8 +224,10 @@ export function LiveClassStream({
   role,
   muteAllSignal = 0,
   instructorName,
+  instructorSubtitle,
   topic,
   title,
+  immersive = false,
 }: LiveClassStreamProps) {
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const isHost = role === 'host';
@@ -232,9 +257,11 @@ export function LiveClassStream({
       <RemoteMediaBridge role={role} />
       <EducatorVideoStage
         instructorName={instructorName}
+        instructorSubtitle={instructorSubtitle}
         topic={topic}
         title={title}
         connectionError={connectionError}
+        immersive={immersive}
       />
     </LiveKitRoom>
   );
@@ -244,10 +271,17 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
     stage: {
       flex: 1,
-      backgroundColor: '#0b1020',
+      backgroundColor: '#000000',
+      overflow: 'hidden',
     },
     video: {
       ...StyleSheet.absoluteFillObject,
+      zIndex: 1,
+    },
+    waitingOverlay: {
+      ...StyleSheet.absoluteFillObject,
+      zIndex: 2,
+      backgroundColor: 'rgba(11,16,32,0.55)',
     },
     waiting: {
       flex: 1,

@@ -10,6 +10,8 @@ import {
 import { fetchAdminStats } from '../api/admin';
 import { clearSession, getAccessToken, getStoredUser } from '../api/storage';
 import type { AuthUser } from '../api/types';
+import { disconnectAdminSocket } from '../realtime/adminSocket';
+import { disconnectAdminLiveSocket } from '../realtime/liveSocket';
 import { isAdminRole, isStaffRole } from './roles';
 
 interface AuthContextValue {
@@ -39,6 +41,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(Boolean(getAccessToken()));
 
   const logout = useCallback(() => {
+    disconnectAdminSocket();
+    disconnectAdminLiveSocket();
     clearSession();
     setUser(null);
   }, []);

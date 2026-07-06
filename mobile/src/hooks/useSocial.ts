@@ -95,6 +95,9 @@ export function useLiveClasses() {
   return useQuery({
     queryKey: queryKeys.liveClasses.list(),
     queryFn: liveClassesApi.getLiveClasses,
+    staleTime: 30_000,
+    refetchOnMount: 'always',
+    refetchInterval: (query) => (query.state.data?.liveNow ? 15_000 : false),
   });
 }
 
