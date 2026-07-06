@@ -71,7 +71,7 @@
     "expo-speech": "~13.1.7",
     "expo-splash-screen": "~0.30.10",
     "expo-status-bar": "~2.2.3",
-    "expo-updates": "~0.28.18",
+    "expo-updates": "~57.0.6",
     "expo-video": "~2.2.2",
     "expo-web-browser": "~14.2.0",
     "i18next": "^26.3.3",
