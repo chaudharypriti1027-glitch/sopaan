@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { ArrowRight, Sparkles } from 'lucide-react-native';
+import { ArrowRight } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { HomeSlotIcon } from './HomePremiumIcon';
 import { HomeFeedCard } from './HomeFeedCard';
@@ -10,6 +10,7 @@ import { Text } from '../Text';
 import { useTheme } from '../../theme';
 import type { AINudge } from '../../types/home';
 import { AINudgeCard } from './AINudgeCard';
+import { PREMIUM_ICON_TONES } from '../premium/premiumIconTokens';
 import { HOME_COACH_PROMPTS, nudgePremiumTone, resolveHomeIcon } from './homeIcons';
 import { HOME_UI } from './homeTheme';
 
@@ -54,7 +55,6 @@ export function HomeAIHub({
           eyebrow={t('home.aiFeaturedEyebrow')}
           title={coachTitle}
           hint={coachHint}
-          trailing={<HomeSlotIcon slot="micro" Icon={Sparkles} tone="gold" />}
         >
           <View style={styles.coachActions}>
             <HomePremiumButton
@@ -86,19 +86,25 @@ export function HomeAIHub({
         contentContainerStyle={styles.promptRow}
         testID="home-ai-coach-prompts"
       >
-        {prompts.map((prompt) => (
-          <HomeFeedCard
-            key={prompt.key}
-            onPress={() => onAskAiPress(prompt.label)}
-            contentStyle={styles.promptBody}
-            testID={`home-ai-prompt-${prompt.key}`}
-          >
-            <HomeSlotIcon slot="micro" Icon={prompt.Icon} tone="lavender" />
-            <Text style={styles.promptLabel} numberOfLines={2}>
-              {prompt.label}
-            </Text>
-          </HomeFeedCard>
-        ))}
+        {prompts.map((prompt) => {
+          const palette = PREMIUM_ICON_TONES[prompt.tone];
+
+          return (
+            <HomeFeedCard
+              key={prompt.key}
+              onPress={() => onAskAiPress(prompt.label)}
+              tint={palette.bg}
+              accentLeft={palette.fg}
+              contentStyle={styles.promptBody}
+              testID={`home-ai-prompt-${prompt.key}`}
+            >
+              <HomeSlotIcon slot="shortcut" Icon={prompt.Icon} tone={prompt.tone} />
+              <Text style={styles.promptLabel} numberOfLines={2}>
+                {prompt.label}
+              </Text>
+            </HomeFeedCard>
+          );
+        })}
       </ScrollView>
 
       {rest.length > 0 ? (
@@ -110,17 +116,6 @@ export function HomeAIHub({
           ))}
         </View>
       ) : null}
-
-      <HomeFeedCard onPress={() => onAskAiPress()} contentStyle={styles.askBody} testID="home-ask-ai-row">
-        <HomeSlotIcon slot="shortcut" Icon={Sparkles} tone="gold" />
-        <View style={styles.askCopy}>
-          <Text style={styles.askTitle}>{t('home.askAi')}</Text>
-          <Text style={styles.askSubtitle} numberOfLines={1}>
-            {t('home.aiHubAskSubtitle')}
-          </Text>
-        </View>
-        <HomeSlotIcon slot="button" Icon={ArrowRight} tone="lavender" />
-      </HomeFeedCard>
     </View>
   );
 }
@@ -133,41 +128,23 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       overflow: 'hidden',
     },
     coachActions: { gap: 8 },
-    promptRow: { gap: 8, paddingVertical: 2 },
+    promptRow: { gap: 10, paddingVertical: 2, paddingRight: 4 },
     promptBody: {
-      width: 120,
-      minHeight: 92,
-      paddingHorizontal: 10,
-      paddingVertical: 10,
-      gap: 8,
-    },
-    promptLabel: {
-      fontSize: 10.5,
-      lineHeight: 13,
-      fontFamily: theme.typography.fonts.ui.semibold,
-      fontWeight: '700',
-      color: HOME_UI.ink,
-    },
-    moreStack: { gap: 10 },
-    askBody: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 12,
+      width: 132,
+      minHeight: 100,
       paddingHorizontal: 14,
       paddingVertical: 12,
+      gap: 10,
+      justifyContent: 'flex-start',
     },
-    askCopy: { flex: 1, gap: 1, minWidth: 0 },
-    askTitle: {
-      fontSize: 14,
+    promptLabel: {
+      fontSize: 11.5,
+      lineHeight: 14.5,
       fontFamily: theme.typography.fonts.ui.bold,
       fontWeight: '800',
+      letterSpacing: -0.2,
       color: HOME_UI.ink,
     },
-    askSubtitle: {
-      fontSize: 11.5,
-      fontFamily: theme.typography.fonts.ui.semibold,
-      fontWeight: '600',
-      color: HOME_UI.muted,
-    },
+    moreStack: { gap: 8 },
   });
 }

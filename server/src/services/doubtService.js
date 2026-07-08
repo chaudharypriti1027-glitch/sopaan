@@ -4,6 +4,11 @@ import { buildPaginatedResult, parsePagination } from '../utils/pagination.js';
 import { embedDoubtPost } from './semantic/doubtSemanticService.js';
 import { caseInsensitiveRegex } from '../utils/regex.js';
 
+function hasVoted(voterIds, userId) {
+  const key = String(userId);
+  return (voterIds ?? []).some((id) => String(id) === key);
+}
+
 export async function listDoubts(query) {
   const { limit, offset } = parsePagination(query);
   const filters = {};
@@ -26,12 +31,18 @@ export async function listDoubts(query) {
 }
 
 export async function createDoubt(userId, data) {
-  return DoubtPost.create({
+  const doubt = await DoubtPost.create({
     userId,
     title: data.title,
     body: data.body,
     subject: data.subject,
   });
+
+  void embedDoubtPost(doubt).catch((err) => {
+    console.warn(`[doubts] Failed to embed new doubt ${doubt._id}: ${err.message}`);
+  });
+
+  return doubt;
 }
 
 export async function addAnswer(userId, doubtId, body) {
@@ -42,6 +53,7 @@ export async function addAnswer(userId, doubtId, body) {
   }
 
   doubt.answers.push({ userId, body });
+  doubt.hasAnswer = true;
   await doubt.save();
   await embedDoubtPost(doubt).catch((err) => {
     console.warn(`[doubts] Failed to embed answered doubt ${doubt._id}: ${err.message}`);
@@ -64,8 +76,18 @@ export async function voteDoubt(userId, doubtId, { target, answerId }) {
       throw new AppError('Answer not found', 404, 'NOT_FOUND');
     }
 
+    if (hasVoted(answer.voterIds, userId)) {
+      return doubt;
+    }
+
+    answer.voterIds = [...(answer.voterIds ?? []), userId];
     answer.votes = (answer.votes ?? 0) + 1;
   } else {
+    if (hasVoted(doubt.voterIds, userId)) {
+      return doubt;
+    }
+
+    doubt.voterIds = [...(doubt.voterIds ?? []), userId];
     doubt.votes = (doubt.votes ?? 0) + 1;
   }
 

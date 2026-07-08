@@ -59,12 +59,8 @@ jest.mock('../../auth/routeAfterSession', () => ({
   routeAfterSession: jest.fn(),
 }));
 
-async function renderLogin() {
-  const result = renderWithProviders(<LoginScreen />);
-  await waitFor(() => {
-    expect(jest.requireMock('../../api').privacyApi.getPolicy).toHaveBeenCalled();
-  });
-  return result;
+function renderLogin() {
+  return renderWithProviders(<LoginScreen />);
 }
 
 describe('LoginScreen', () => {
@@ -88,21 +84,16 @@ describe('LoginScreen', () => {
     mockSetSession.mockResolvedValue(undefined);
   });
 
-  it('navigates to phone/OTP login when the Phone option is pressed', async () => {
-    const { getByRole } = await renderLogin();
+  it('navigates to phone OTP login from the secondary link', () => {
+    const { getByTestId } = renderLogin();
 
-    fireEvent.press(getByRole('button', { name: 'Phone' }));
+    fireEvent.press(getByTestId('login-use-phone'));
 
     expect(mockNavigate).toHaveBeenCalledWith('OtpLogin');
   });
 
-  it('shows a forgot password link', async () => {
-    const { getByTestId } = await renderLogin();
-    expect(getByTestId('login-forgot-password')).toBeTruthy();
-  });
-
-  it('keeps Sign in disabled until email and password are valid', async () => {
-    const { getByTestId, getByRole } = await renderLogin();
+  it('keeps Sign in disabled until email and password are valid', () => {
+    const { getByTestId, getByRole } = renderLogin();
 
     fireEvent.changeText(getByTestId('login-email'), 'bad');
     fireEvent.changeText(getByTestId('login-password'), 'short');
@@ -110,7 +101,7 @@ describe('LoginScreen', () => {
   });
 
   it('logs in with email and password', async () => {
-    const { getByTestId, getByRole } = await renderLogin();
+    const { getByTestId, getByRole } = renderLogin();
 
     fireEvent.changeText(getByTestId('login-email'), 'user@example.com');
     fireEvent.changeText(getByTestId('login-password'), 'Password123!');
@@ -125,11 +116,4 @@ describe('LoginScreen', () => {
     });
   });
 
-  it('navigates to create account', async () => {
-    const { getByTestId } = await renderLogin();
-
-    fireEvent.press(getByTestId('login-create-account'));
-
-    expect(mockNavigate).toHaveBeenCalledWith('Signup');
-  });
 });

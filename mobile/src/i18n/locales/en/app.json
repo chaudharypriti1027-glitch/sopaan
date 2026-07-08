@@ -431,6 +431,9 @@
     "avatarPersonZara": "Zara",
     "verified": "Verified",
     "signInPrompt": "Sign in to view your profile",
+    "signInHint": "Your stats, achievements, and study progress live here.",
+    "goalStripHint": "Add your target exam and date to unlock a personalised plan.",
+    "daysLeft": "days",
     "membership": "Membership",
     "accountDetailsSection": "Account details",
     "syncing": "Syncing latest profile…",
@@ -709,10 +712,15 @@
     "statusSignedUp": "Signed up"
   },
   "notifications": {
+    "inbox": "Inbox",
+    "allCaughtUp": "All caught up",
+    "subtitle": "Rank updates, streaks, and study reminders",
     "unread": "{{count}} unread",
     "today": "Today",
     "earlier": "Earlier",
-    "empty": "You're all caught up — no notifications yet."
+    "empty": "You're all caught up — no notifications yet.",
+    "emptyTitle": "No notifications yet",
+    "emptyHint": "When you get rank updates or reminders, they'll show up here."
   },
   "groupChat": {
     "back": "← Back",

@@ -5,21 +5,23 @@ import { queryKeys } from './queryKeys';
 
 export function useAdminStats() {
   const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
 
   return useQuery({
     queryKey: queryKeys.admin.stats(),
     queryFn: adminApi.getStats,
-    enabled: false,
+    enabled: isAdmin,
   });
 }
 
 export function usePendingTests(params?: PaginationParams) {
   const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
 
   return useQuery({
     queryKey: queryKeys.admin.pendingTests(params),
     queryFn: () => adminApi.listPendingTests(params),
-    enabled: false,
+    enabled: isAdmin,
   });
 }
 

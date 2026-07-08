@@ -21,32 +21,24 @@ export async function refresh(req, res) {
 }
 
 export async function requestOtp(req, res) {
-  const result = await authService.requestOtp(req.body.phone);
+  const result = await authService.requestOtp(req.body);
   res.status(200).json(result);
 }
 
 export async function verifyOtp(req, res) {
-  const result = await authService.verifyOtp(req.body.phone, req.body.code, {
-    referralCode: req.body.referralCode,
-    installId: req.body.installId,
-    privacyConsent: req.body.privacyConsent,
-  });
+  const result = await authService.verifyOtp(req.body);
   res.status(200).json(result);
 }
 
 /** @deprecated legacy path — includes { message } and session-shaped verify response. */
 export async function requestOtpLegacy(req, res) {
-  const result = await authService.requestOtp(req.body.phone);
+  const result = await authService.requestOtp(req.body);
   res.status(200).json({ ...result, message: 'OTP sent successfully' });
 }
 
 /** @deprecated legacy path — maps AuthResult to accessToken/user session. */
 export async function verifyOtpLegacy(req, res) {
-  const result = await authService.verifyOtp(req.body.phone, req.body.code, {
-    referralCode: req.body.referralCode,
-    installId: req.body.installId,
-    privacyConsent: req.body.privacyConsent,
-  });
+  const result = await authService.verifyOtp(req.body);
   res.status(200).json(authService.toLegacyAuthSession(result));
 }
 

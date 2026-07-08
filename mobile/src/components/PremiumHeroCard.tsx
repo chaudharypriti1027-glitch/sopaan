@@ -43,7 +43,6 @@ export function PremiumHeroCard({
       style={[styles.card, style]}
     >
       <View style={styles.meshLineA} />
-      <View style={styles.meshLineB} />
       <View style={styles.goldGlow} pointerEvents="none" />
 
       <View style={styles.top}>
@@ -97,18 +96,8 @@ function createStyles() {
       top: 24,
       left: -20,
       right: -20,
-      height: 1,
+      height: StyleSheet.hairlineWidth,
       backgroundColor: 'rgba(255,255,255,0.05)',
-      transform: [{ rotate: '-4deg' }],
-    },
-    meshLineB: {
-      position: 'absolute',
-      bottom: 40,
-      left: -20,
-      right: -20,
-      height: 1,
-      backgroundColor: 'rgba(194,154,78,0.12)',
-      transform: [{ rotate: '3deg' }],
     },
     goldGlow: {
       position: 'absolute',

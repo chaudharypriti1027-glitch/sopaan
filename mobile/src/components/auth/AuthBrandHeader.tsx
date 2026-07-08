@@ -17,7 +17,11 @@ export function AuthBrandHeader({ title, subtitle, badge }: AuthBrandHeaderProps
     <View style={styles.root}>
       <AuthLogo />
       <View style={styles.hairline} />
-      {badge ? <Text style={styles.badge}>{badge}</Text> : null}
+      {badge ? (
+        <View style={styles.badgeWrap}>
+          <Text style={styles.badge}>{badge}</Text>
+        </View>
+      ) : null}
       <Text style={styles.title}>{title}</Text>
       {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
     </View>
@@ -28,7 +32,7 @@ function createStyles() {
   return StyleSheet.create({
     root: {
       alignItems: 'center',
-      marginBottom: 22,
+      marginBottom: 20,
     },
     hairline: {
       width: 48,
@@ -36,16 +40,22 @@ function createStyles() {
       borderRadius: 99,
       backgroundColor: AUTH_UI.gold,
       opacity: 0.85,
-      marginTop: 14,
-      marginBottom: 12,
+      marginTop: 12,
+      marginBottom: 10,
+    },
+    badgeWrap: {
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 99,
+      backgroundColor: AUTH_UI.goldSoft,
+      marginBottom: 8,
     },
     badge: {
-      fontSize: 11,
+      fontSize: 10,
       fontWeight: '800',
-      letterSpacing: 1.4,
+      letterSpacing: 1.2,
       textTransform: 'uppercase',
       color: AUTH_UI.goldDeep,
-      marginBottom: 6,
       textAlign: 'center',
     },
     title: {

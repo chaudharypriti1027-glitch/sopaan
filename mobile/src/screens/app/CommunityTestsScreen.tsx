@@ -68,7 +68,7 @@ export function CommunityTestsScreen() {
   return (
     <Screen scroll contentContainerStyle={styles.content}>
       <View style={styles.header}>
-        <SectionTitle title="Community tests" subtitle="Practice tests shared by students" />
+      <SectionTitle subtitle="Practice tests shared by students" />
         <Button
           label="Create"
           size="sm"

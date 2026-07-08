@@ -94,6 +94,17 @@ function fallbackAttemptCoaching({ attempt, test, topicStats, weakTopics }) {
   };
 }
 
+export function instantAttemptCoaching({ attempt, test, questions }) {
+  const questionMap = new Map(questions.map((question) => [question._id.toString(), question]));
+  const topicStats = buildTopicStats(attempt.answers, questionMap);
+  return fallbackAttemptCoaching({
+    attempt,
+    test,
+    topicStats,
+    weakTopics: attempt.weakTopics ?? [],
+  });
+}
+
 export async function feedbackForAttempt({ attempt, test, questions, userId }) {
   const questionMap = new Map(questions.map((question) => [question._id.toString(), question]));
   const topicStats = buildTopicStats(attempt.answers, questionMap);

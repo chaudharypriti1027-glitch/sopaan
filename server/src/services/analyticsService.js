@@ -1,9 +1,17 @@
 import { Attempt } from '../models/Attempt.js';
 import { FocusLog } from '../models/FocusLog.js';
 import { Test } from '../models/Test.js';
+import { weekKeyToRange } from '../jobs/runKeys.js';
 import { average, subtractDays } from '../utils/testHelpers.js';
+import { CACHE_TTLS } from '../config/cacheConfig.js';
+import { cacheGetOrSet, stableCacheKey } from '../lib/cache.js';
 
-function getRangeStart(range) {
+function getRangeStart(range, weekKey) {
+  const weekRange = weekKey ? weekKeyToRange(weekKey) : null;
+  if (weekRange) {
+    return weekRange.start;
+  }
+
   const now = new Date();
 
   if (range === 'week') {
@@ -15,6 +23,11 @@ function getRangeStart(range) {
   }
 
   return null;
+}
+
+function getRangeEnd(weekKey) {
+  const weekRange = weekKey ? weekKeyToRange(weekKey) : null;
+  return weekRange?.end ?? null;
 }
 
 function groupAccuracyByDate(attempts) {
@@ -69,22 +82,47 @@ function withDeltas(currentPeriod, previousPeriod) {
   }));
 }
 
-export async function getProgressAnalytics(userId, range) {
-  const rangeStart = getRangeStart(range);
+export async function getProgressAnalytics(userId, range, weekKey) {
+  const cacheKey = stableCacheKey('cache:analytics', {
+    userId: String(userId),
+    range: range ?? 'all',
+    weekKey: weekKey ?? '',
+  });
+
+  return cacheGetOrSet(cacheKey, CACHE_TTLS.analyticsProgressSec, () =>
+    buildProgressAnalytics(userId, range, weekKey),
+  );
+}
+
+async function buildProgressAnalytics(userId, range, weekKey) {
+  const rangeStart = getRangeStart(range, weekKey);
+  const rangeEnd = getRangeEnd(weekKey);
   const attemptFilter = { userId };
 
-  if (rangeStart) {
-    attemptFilter.createdAt = { $gte: rangeStart };
+  if (rangeStart || rangeEnd) {
+    attemptFilter.createdAt = {};
+    if (rangeStart) {
+      attemptFilter.createdAt.$gte = rangeStart;
+    }
+    if (rangeEnd) {
+      attemptFilter.createdAt.$lt = rangeEnd;
+    }
+  }
+
+  const focusFilter = { userId };
+  if (rangeStart || rangeEnd) {
+    focusFilter.date = {};
+    if (rangeStart) {
+      focusFilter.date.$gte = rangeStart;
+    }
+    if (rangeEnd) {
+      focusFilter.date.$lt = rangeEnd;
+    }
   }
 
   const [attempts, focusLogs] = await Promise.all([
-    Attempt.find(attemptFilter).sort({ createdAt: 1 }).limit(1000).lean(),
-    FocusLog.find(
-      rangeStart ? { userId, date: { $gte: rangeStart } } : { userId }
-    )
-      .sort({ date: 1 })
-      .limit(365)
-      .lean(),
+    Attempt.find(attemptFilter).select('accuracy createdAt testId').sort({ createdAt: 1 }).limit(1000).lean(),
+    FocusLog.find(focusFilter).select('date focusMinutes sessionsCompleted').sort({ date: 1 }).limit(365).lean(),
   ]);
 
   const testIds = [...new Set(attempts.map((attempt) => attempt.testId.toString()))];
@@ -117,6 +155,7 @@ export async function getProgressAnalytics(userId, range) {
 
   return {
     range,
+    weekKey: weekKey ?? undefined,
     summary: {
       totalAttempts: attempts.length,
       avgAccuracy: Math.round(average(attempts.map((attempt) => attempt.accuracy ?? 0))),

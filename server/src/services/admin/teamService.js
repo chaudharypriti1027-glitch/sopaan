@@ -5,6 +5,7 @@ import { AppError } from '../../utils/AppError.js';
 import { normalizeUserRole } from '../../constants/userRoles.js';
 import { getSeedAdminUser } from '../../seed/adminConfig.js';
 import { buildTeamInviteSignupUrl, sendTeamInviteEmail } from './teamInviteEmail.js';
+import { bustAuthUserCache } from '../../middleware/optionalAuth.js';
 
 export const TEAM_ROLES = ['admin', 'creator', 'moderator'];
 const INVITE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
@@ -101,6 +102,7 @@ export async function inviteTeamMember({ email, role, invitedBy }) {
     }
 
     await User.updateOne({ _id: existing._id }, { $set: { role: normalizedRole } });
+    bustAuthUserCache(existing._id);
     await revokePendingInviteForEmail(normalizedEmail);
 
     const updated = await User.findById(existing._id).select('name email role createdAt').lean();
@@ -160,6 +162,7 @@ export async function updateTeamMemberRole({ memberId, role, actorId }) {
   }
 
   await User.updateOne({ _id: member._id }, { $set: { role: normalizedRole } });
+  bustAuthUserCache(member._id);
 
   const updated = await User.findById(member._id).select('name email role createdAt').lean();
   return formatMember(updated);
@@ -191,6 +194,7 @@ export async function removeTeamMember({ memberId, actorId }) {
   }
 
   await User.updateOne({ _id: member._id }, { $set: { role: 'student' } });
+  bustAuthUserCache(member._id);
   await revokePendingInviteForEmail(normalizeEmail(member.email));
 
   return { removed: true, kind: 'member', id: member._id.toString() };
@@ -233,6 +237,7 @@ export async function acceptTeamInviteOnSignup({ inviteToken, userId, email }) {
   }
 
   await User.updateOne({ _id: userId }, { $set: { role: invite.role } });
+  bustAuthUserCache(userId);
   invite.status = 'accepted';
   invite.acceptedAt = new Date();
   invite.acceptedUserId = userId;

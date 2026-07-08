@@ -5,7 +5,10 @@ export const CACHE_TTLS = Object.freeze({
   currentAffairDetailSec: Number(process.env.CACHE_TTL_CA_DETAIL_SEC ?? 300),
   caDigestSec: Number(process.env.CACHE_TTL_CA_DIGEST_SEC ?? 600),
   leaderboardSec: Number(process.env.CACHE_TTL_LEADERBOARD_SEC ?? 60),
+  searchSec: Number(process.env.CACHE_TTL_SEARCH_SEC ?? 45),
+  userStandingSec: Number(process.env.CACHE_TTL_USER_STANDING_SEC ?? 90),
   flashcardDecksSec: Number(process.env.CACHE_TTL_FLASHCARD_DECKS_SEC ?? 300),
+  analyticsProgressSec: Number(process.env.CACHE_TTL_ANALYTICS_SEC ?? 60),
 });
 
 export const CACHE_HEADERS = Object.freeze({
@@ -18,5 +21,6 @@ export const CACHE_HEADERS = Object.freeze({
   homeFeed: { maxAge: 30, swr: 10, private: true },
   /** Server-side assembled feed cache (see buildHomeFeed.js). */
   homeFeedServerSec: Number(process.env.CACHE_TTL_HOME_FEED_SEC ?? 60),
+  search: { maxAge: 45, swr: 15, private: true },
   staticCatalog: { maxAge: 3600, swr: 300 },
 });

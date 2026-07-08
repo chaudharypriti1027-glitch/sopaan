@@ -290,14 +290,13 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme'], topInset: num
       flexShrink: 0,
     },
     goalFooter: {
-      borderTopWidth: 1,
+      borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: HOME_UI.border,
-      paddingVertical: 13,
+      paddingVertical: 11,
       paddingHorizontal: 18,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      backgroundColor: HOME_UI.surface,
     },
     rankHint: {
       fontSize: 12,

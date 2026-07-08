@@ -26,7 +26,7 @@ describe('Auth OTP API', () => {
     const response = await request(app).post('/api/auth/request-otp').send({ phone: PHONE_RAW });
 
     expect(response.status).toBe(200);
-    expect(response.body).toEqual({ sent: true });
+    expect(response.body).toEqual({ sent: true, channel: 'phone' });
 
     const token = await OtpToken.findOne({ phone: PHONE }).select('+codeHash');
     expect(token).toBeTruthy();
@@ -148,5 +148,39 @@ describe('Auth OTP API', () => {
 
     expect(response.status).toBe(400);
     expect(response.body.error.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('POST /request-otp returns { sent: true } for valid email', async () => {
+    const response = await request(app)
+      .post('/api/auth/request-otp')
+      .send({ email: 'student@example.com' });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ sent: true, channel: 'email' });
+
+    const token = await OtpToken.findOne({ email: 'student@example.com' }).select('+codeHash');
+    expect(token).toBeTruthy();
+    expect(token.expiresAt.getTime()).toBeGreaterThan(Date.now());
+  });
+
+  it('POST /verify-otp signs in with email OTP', async () => {
+    const email = 'otp-user@example.com';
+    const code = '654321';
+    await OtpToken.create({
+      email,
+      codeHash: await bcrypt.hash(code, 10),
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+      attempts: 0,
+    });
+
+    const response = await request(app).post('/api/auth/verify-otp').send({ email, code });
+
+    expect(response.status).toBe(200);
+    expect(response.body.isNewUser).toBe(true);
+    expect(response.body.profile.email).toBe(email);
+
+    const user = await User.findOne({ email });
+    expect(user).toBeTruthy();
+    expect(await OtpToken.findOne({ email })).toBeNull();
   });
 });

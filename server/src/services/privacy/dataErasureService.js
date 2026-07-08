@@ -30,6 +30,7 @@ import { User } from '../../models/User.js';
 import { privacyConfig } from '../../config/privacyConfig.js';
 import { revokeAllUserRefreshTokens } from '../../lib/tokenDenylist.js';
 import { logger } from '../../observability/logger.js';
+import { bustAuthUserCache } from '../../middleware/optionalAuth.js';
 
 export async function eraseUserData(userId) {
   const user = await User.findById(userId);
@@ -110,6 +111,8 @@ export async function eraseUserData(userId) {
   user.lockedUntil = null;
 
   await user.save();
+
+  bustAuthUserCache(userObjectId);
 
   logger.info('user account erased', { userId: String(userObjectId) });
 

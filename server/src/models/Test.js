@@ -84,6 +84,8 @@ const testSchema = new mongoose.Schema(
   }
 );
 
+testSchema.index({ status: 1, createdAt: -1 });
+testSchema.index({ status: 1, 'stats.attempts': -1, createdAt: -1 });
 testSchema.index({ type: 1, status: 1 });
 testSchema.index({ examTag: 1, status: 1 });
 testSchema.index({ createdBy: 1 });

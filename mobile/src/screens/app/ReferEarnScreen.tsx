@@ -74,7 +74,7 @@ export function ReferEarnScreen() {
 
   return (
     <Screen scroll contentContainerStyle={styles.content}>
-      <SectionTitle title={t('referEarn.title')} subtitle={t('referEarn.subtitle')} />
+      <SectionTitle subtitle={t('referEarn.subtitle')} />
 
       <QueryStateView
         isLoading={dashboardQuery.isLoading}

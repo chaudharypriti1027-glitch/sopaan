@@ -70,7 +70,7 @@ export function OtpScreen() {
   const { t } = useTranslation('auth');
   const navigation = useNavigation<OtpNav>();
   const route = useRoute<OtpRoute>();
-  const { phone, privacyConsent } = route.params;
+  const { phone, email, privacyConsent } = route.params;
   const reducedMotion = useReducedMotion();
 
   const [code, setCode] = useState('');
@@ -82,7 +82,8 @@ export function OtpScreen() {
 
   const { remaining, canResend, reset: resetCountdown } = useResendCountdown(30);
   const shakeStyle = useShakeOnError(error);
-  const maskedPhone = useMemo(() => maskIndianPhone(phone), [phone]);
+  const maskedPhone = useMemo(() => (phone ? maskIndianPhone(phone) : ''), [phone]);
+  const destinationLabel = email ?? maskedPhone;
 
   const handleVerify = useCallback(async () => {
     if (code.length !== 6 || verifying || success || submittingRef.current) {
@@ -94,7 +95,12 @@ export function OtpScreen() {
     setError(null);
 
     try {
-      const result = await authApi.verifyOtp({ phone, code, privacyConsent });
+      const result = await authApi.verifyOtp({
+        ...(phone ? { phone } : {}),
+        ...(email ? { email } : {}),
+        code,
+        privacyConsent,
+      });
       setSuccess(true);
 
       const holdMs = reducedMotion ? 120 : SUCCESS_HOLD_MS;
@@ -117,7 +123,7 @@ export function OtpScreen() {
     } finally {
       setVerifying(false);
     }
-  }, [code, verifying, success, phone, privacyConsent, reducedMotion, navigation]);
+  }, [code, verifying, success, phone, email, privacyConsent, reducedMotion, navigation]);
 
   useEffect(() => {
     if (code.length === 6) {
@@ -136,7 +142,11 @@ export function OtpScreen() {
     submittingRef.current = false;
 
     try {
-      await authApi.requestOtp({ phone });
+      if (phone) {
+        await authApi.requestOtp({ phone });
+      } else if (email) {
+        await authApi.requestOtp({ email });
+      }
       resetCountdown();
     } catch (err) {
       setError(formatOtpError(parseApiError(err)));
@@ -150,7 +160,7 @@ export function OtpScreen() {
       header={
         <AuthBrandHeader
           title={t('otp.verifyTitle')}
-          subtitle={t('otp.codeSentSubtitle', { phone: maskedPhone })}
+          subtitle={t('otp.codeSentSubtitle', { phone: destinationLabel })}
         />
       }
       footer={
@@ -166,7 +176,7 @@ export function OtpScreen() {
             <Text style={styles.countdown}>{t('otp.resendIn', { seconds: remaining })}</Text>
           )}
           <GhostButton
-            label={t('otp.changeNumber')}
+            label={phone ? t('otp.changeNumber') : t('otp.changeEmail')}
             disabled={verifying || success}
             onPress={() => navigation.goBack()}
           />

@@ -386,9 +386,9 @@ export function SettingsScreen() {
 
   return (
     <Screen scroll contentContainerStyle={styles.content}>
-      <SectionTitle title={t('settings:title')} subtitle={t('settings:subtitle')} />
+      <SectionTitle subtitle={t('settings:subtitle')} />
 
-      <Text style={styles.groupLabel}>{t('settings:account')}</Text>
+      <SectionTitle title={t('settings:account')} />
       <Card style={styles.group}>
         <SettingsRow
           icon={User}
@@ -439,7 +439,7 @@ export function SettingsScreen() {
         </Card>
       ) : null}
 
-      <Text style={styles.groupLabel}>{t('settings:study')}</Text>
+      <SectionTitle title={t('settings:study')} />
       <Card style={styles.group}>
         <SettingsRow
           icon={Languages}
@@ -478,7 +478,7 @@ export function SettingsScreen() {
         />
       </Card>
 
-      <Text style={styles.groupLabel}>{t('settings:notifications')}</Text>
+      <SectionTitle title={t('settings:notifications')} />
       <Card style={styles.group}>
         <SettingsRow
           icon={Bell}
@@ -534,7 +534,7 @@ export function SettingsScreen() {
         ))}
       </Card>
 
-      <Text style={styles.groupLabel}>{t('settings:privacyData')}</Text>
+      <SectionTitle title={t('settings:privacyData')} />
       <Card style={styles.group}>
         <SettingsRow
           icon={Shield}
@@ -573,7 +573,7 @@ export function SettingsScreen() {
         />
       </Card>
 
-      <Text style={styles.groupLabel}>{t('settings:support')}</Text>
+      <SectionTitle title={t('settings:support')} />
       <Card style={styles.group}>
         <SettingsRow
           icon={MessageCircle}
@@ -668,11 +668,6 @@ function createRowStyles(theme: ReturnType<typeof useTheme>['theme']) {
 function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
     content: { gap: theme.spacing.lg, paddingBottom: theme.spacing['3xl'] },
-    groupLabel: {
-      ...theme.typography.presets.eyebrow,
-      color: theme.colors.text.tertiary,
-      marginBottom: -theme.spacing.sm,
-    },
     group: { paddingVertical: theme.spacing.xs },
     goalCard: { gap: theme.spacing.md },
     fieldLabel: {

@@ -4,9 +4,16 @@ const otpTokenSchema = new mongoose.Schema(
   {
     phone: {
       type: String,
-      required: true,
-      index: true,
       trim: true,
+      index: true,
+      sparse: true,
+    },
+    email: {
+      type: String,
+      lowercase: true,
+      trim: true,
+      index: true,
+      sparse: true,
     },
     codeHash: {
       type: String,
@@ -30,5 +37,7 @@ const otpTokenSchema = new mongoose.Schema(
 
 /** MongoDB TTL — documents removed when expiresAt passes. */
 otpTokenSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+otpTokenSchema.index({ phone: 1, expiresAt: -1 });
+otpTokenSchema.index({ email: 1, expiresAt: -1 });
 
 export const OtpToken = mongoose.model('OtpToken', otpTokenSchema);

@@ -4,7 +4,8 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import { requireAuth } from '../middleware/requireAuth.js';
 import { optionalAuth } from '../middleware/optionalAuth.js';
 import { requireRole } from '../middleware/requireRole.js';
-import { validate } from '../middleware/validate.js';
+import { validate, validateParams } from '../middleware/validate.js';
+import { objectIdParamsSchema } from '../validators/commonValidators.js';
 import { paginationQuerySchema } from '../validators/contentValidators.js';
 import {
   liveClassCreateSchema,
@@ -14,7 +15,12 @@ import {
 const router = Router();
 
 router.get('/', optionalAuth, validate(paginationQuerySchema, 'query'), asyncHandler(liveClassController.getLiveClasses));
-router.get('/:id', optionalAuth, asyncHandler(liveClassController.getLiveClass));
+router.get(
+  '/:id',
+  optionalAuth,
+  validateParams(objectIdParamsSchema),
+  asyncHandler(liveClassController.getLiveClass),
+);
 
 router.post(
   '/',
@@ -28,6 +34,7 @@ router.patch(
   '/:id/status',
   requireAuth,
   requireRole('admin', 'creator'),
+  validateParams(objectIdParamsSchema),
   validate(liveClassStatusSchema),
   asyncHandler(liveClassController.updateLiveClassStatus),
 );
@@ -35,18 +42,21 @@ router.patch(
 router.post(
   '/:id/viewer-token',
   requireAuth,
+  validateParams(objectIdParamsSchema),
   asyncHandler(liveClassController.createViewerToken),
 );
 
 router.post(
   '/:id/reminders',
   requireAuth,
+  validateParams(objectIdParamsSchema),
   asyncHandler(liveClassController.setLiveClassReminder),
 );
 
 router.delete(
   '/:id/reminders',
   requireAuth,
+  validateParams(objectIdParamsSchema),
   asyncHandler(liveClassController.removeLiveClassReminder),
 );
 

@@ -76,7 +76,7 @@ export function DeleteAccountScreen() {
 
   return (
     <Screen scroll contentContainerStyle={styles.content}>
-      <SectionTitle title={t('app:deleteAccount.title')} subtitle={t('app:deleteAccount.subtitle')} />
+      <SectionTitle subtitle={t('app:deleteAccount.subtitle')} />
 
       <Card style={styles.warningCard}>
         <Trash2 size={20} color={theme.colors.semantic.error} />

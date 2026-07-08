@@ -12,6 +12,8 @@ export function useCompleteGame() {
     onSuccess: async (data) => {
       await setProfile(data.profile);
       queryClient.setQueryData(queryKeys.account.me(), data.profile);
+      void queryClient.invalidateQueries({ queryKey: queryKeys.home.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.rewards.all });
     },
   });
 }

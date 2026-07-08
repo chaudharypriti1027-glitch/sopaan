@@ -75,7 +75,7 @@ export function VocabularyScreen() {
 
   return (
     <Screen scroll contentContainerStyle={styles.content}>
-      <SectionTitle title="Vocabulary" subtitle="Word of the day and quick quiz" />
+      <SectionTitle subtitle="Word of the day and quick quiz" />
 
       <QueryStateView
         isLoading={todayQuery.isLoading}

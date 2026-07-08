@@ -1,18 +1,23 @@
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Bell } from 'lucide-react-native';
 import { useMemo } from 'react';
+import { RefreshControl, StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import {
-  Pressable,
-  RefreshControl,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
-import { Card, QueryStateView, Screen } from '../../components';
+  Card,
+  PremiumEmptyState,
+  PremiumHeroCard,
+  PremiumListRow,
+  QueryStateView,
+  Screen,
+  SectionTitle,
+} from '../../components';
 import { useGroupedNotifications, useMarkNotificationRead, useNetworkStatus } from '../../hooks';
 import { openInAppNotification } from '../../hooks/useNotificationDeepLink';
 import type { MainStackParamList } from '../../navigation/types';
 import { useTheme } from '../../theme';
+import { HomeSlotIcon } from '../../components/home/HomePremiumIcon';
 
 function formatTime(iso: string): string {
   const date = new Date(iso);
@@ -22,11 +27,14 @@ function formatTime(iso: string): string {
 export function NotificationsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
   const { theme } = useTheme();
+  const { t } = useTranslation('app');
   const styles = useMemo(() => createStyles(theme), [theme]);
   const { grouped, isLoading, isError, isFetching, isRefetching, refetch, unreadCount } =
     useGroupedNotifications();
   const markRead = useMarkNotificationRead();
   const { isOffline } = useNetworkStatus();
+
+  const hasNotifications = grouped.today.length > 0 || grouped.earlier.length > 0;
 
   const handlePress = (item: (typeof grouped.today)[number]) => {
     if (!item.read) {
@@ -44,27 +52,20 @@ export function NotificationsScreen() {
 
     return (
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{title}</Text>
+        <SectionTitle title={title} />
         <Card padded={false}>
           {items.map((item, index) => (
-            <Pressable
+            <PremiumListRow
               key={item.id}
+              title={item.title}
+              subtitle={item.body}
+              meta={formatTime(item.createdAt)}
+              icon={Bell}
+              tone="gold"
+              unread={!item.read}
               onPress={() => handlePress(item)}
-              style={({ pressed }) => [
-                styles.row,
-                index < items.length - 1 && styles.rowBorder,
-                pressed && styles.pressed,
-              ]}
-            >
-              <View style={styles.rowContent}>
-                <View style={styles.titleRow}>
-                  {!item.read ? <View style={styles.unreadDot} /> : null}
-                  <Text style={[styles.title, !item.read && styles.titleUnread]}>{item.title}</Text>
-                </View>
-                {item.body ? <Text style={styles.body}>{item.body}</Text> : null}
-                <Text style={styles.time}>{formatTime(item.createdAt)}</Text>
-              </View>
-            </Pressable>
+              last={index === items.length - 1}
+            />
           ))}
         </Card>
       </View>
@@ -79,22 +80,30 @@ export function NotificationsScreen() {
       }}
       contentContainerStyle={styles.content}
     >
-      {unreadCount > 0 ? (
-        <Text style={styles.unreadBanner}>{unreadCount} unread</Text>
-      ) : null}
+      <PremiumHeroCard
+        icon={<HomeSlotIcon slot="featured" Icon={Bell} tone="gold" />}
+        eyebrow={t('notifications.inbox')}
+        title={unreadCount > 0 ? t('notifications.unread', { count: unreadCount }) : t('notifications.allCaughtUp')}
+        hint={t('notifications.subtitle')}
+      />
 
       <QueryStateView
         isLoading={isLoading}
         isError={isError}
         isFetching={isFetching}
         isOffline={isOffline}
-        hasData={grouped.today.length > 0 || grouped.earlier.length > 0}
+        hasData={hasNotifications}
         onRetry={() => void refetch()}
       >
-        {renderGroup('Today', grouped.today)}
-        {renderGroup('Earlier', grouped.earlier)}
-        {!grouped.today.length && !grouped.earlier.length ? (
-          <Text style={styles.empty}>You’re all caught up — no notifications yet.</Text>
+        {renderGroup(t('notifications.today'), grouped.today)}
+        {renderGroup(t('notifications.earlier'), grouped.earlier)}
+        {!hasNotifications ? (
+          <PremiumEmptyState
+            title={t('notifications.emptyTitle')}
+            hint={t('notifications.emptyHint')}
+            Icon={Bell}
+            tone="gold"
+          />
         ) : null}
       </QueryStateView>
     </Screen>
@@ -104,69 +113,11 @@ export function NotificationsScreen() {
 function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
     content: {
-      gap: theme.spacing.xl,
+      gap: theme.spacing.lg,
       paddingBottom: theme.spacing['4xl'],
-    },
-    unreadBanner: {
-      ...theme.typography.presets.label,
-      color: theme.colors.brand.primary,
-      textTransform: 'uppercase',
     },
     section: {
       gap: theme.spacing.sm,
-    },
-    sectionTitle: {
-      ...theme.typography.presets.bodyMedium,
-      color: theme.colors.text.primary,
-      fontFamily: theme.typography.fonts.ui.semibold,
-    },
-    row: {
-      paddingHorizontal: theme.spacing.lg,
-      paddingVertical: theme.spacing.md,
-    },
-    rowBorder: {
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: theme.colors.border.subtle,
-    },
-    pressed: {
-      backgroundColor: theme.colors.surface.muted,
-    },
-    rowContent: {
-      gap: theme.spacing.xs,
-    },
-    titleRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: theme.spacing.sm,
-    },
-    unreadDot: {
-      width: 8,
-      height: 8,
-      borderRadius: 4,
-      backgroundColor: theme.colors.brand.primary,
-    },
-    title: {
-      ...theme.typography.presets.body,
-      color: theme.colors.text.secondary,
-      flex: 1,
-    },
-    titleUnread: {
-      color: theme.colors.text.primary,
-      fontFamily: theme.typography.fonts.ui.semibold,
-    },
-    body: {
-      ...theme.typography.presets.caption,
-      color: theme.colors.text.secondary,
-    },
-    time: {
-      ...theme.typography.presets.label,
-      color: theme.colors.text.tertiary,
-    },
-    empty: {
-      ...theme.typography.presets.body,
-      color: theme.colors.text.secondary,
-      textAlign: 'center',
-      marginTop: theme.spacing['3xl'],
     },
   });
 }

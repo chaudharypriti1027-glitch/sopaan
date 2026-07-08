@@ -7,7 +7,7 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import { LogOut } from 'lucide-react-native';
+import { LogOut, UserRound } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { CompositeNavigationProp } from '@react-navigation/native';
@@ -25,7 +25,9 @@ import { ProfileAchievementsStrip } from '../components/profile/ProfileAchieveme
 import { ProfileCompletionCard } from '../components/profile/ProfileCompletionCard';
 import { ProfileEditSheet } from '../components/profile/ProfileEditSheet';
 import { ProfileAvatarPickerSheet } from '../components/profile/ProfileAvatarPickerSheet';
+import { ProfileGoalStrip } from '../components/profile/ProfileGoalStrip';
 import { ProfileHeader } from '../components/profile/ProfileHeader';
+import { ProfileQuickHub } from '../components/profile/ProfileQuickHub';
 import { useProfileAvatar } from '../components/profile/useProfileAvatar';
 import { ProfileMenuSectionCard } from '../components/profile/ProfileMenuSectionCard';
 import { ProfileProCard } from '../components/profile/ProfileProCard';
@@ -35,6 +37,7 @@ import { ProfileXpCard } from '../components/profile/ProfileXpCard';
 import { buildProfileMenuSections } from '../components/profile/profileMenu';
 import { PROFILE, profileCard } from '../components/profile/profileTheme';
 import { usePremiumDialog } from '../components/premium/PremiumDialogProvider';
+import { PremiumEmptyState } from '../components/premium/PremiumEmptyState';
 import { useAuth } from '../auth';
 import { useBadges, useMe, useProfileSummary, useUpdateMe } from '../hooks';
 import { queryKeys } from '../hooks/queryKeys';
@@ -186,9 +189,12 @@ export function ProfileScreen() {
     return (
       <SafeAreaView style={styles.safe} edges={['left', 'right', 'bottom']}>
         <View style={styles.centered}>
-          <Text variant="body" color="secondary">
-            {t('app:profile.signInPrompt')}
-          </Text>
+          <PremiumEmptyState
+            title={t('app:profile.signInPrompt')}
+            hint={t('app:profile.signInHint')}
+            Icon={UserRound}
+            tone="lavender"
+          />
         </View>
       </SafeAreaView>
     );
@@ -200,6 +206,10 @@ export function ProfileScreen() {
 
   const handleMembershipPress = () => {
     mainNav()?.navigate(isPremium ? 'ManageSubscription' : 'Premium');
+  };
+
+  const handleHubNavigate = (route: string) => {
+    mainNav()?.navigate(route as never);
   };
 
   return (
@@ -236,10 +246,24 @@ export function ProfileScreen() {
 
           <View style={styles.stack}>
             <ProfileAnimatedSection index={1} replayKey={replayKey}>
-              <ProfileXpCard level={level} xp={xp} replayKey={replayKey} />
+              <ProfileGoalStrip profile={profile} onEditPress={() => setEditOpen(true)} />
             </ProfileAnimatedSection>
 
             <ProfileAnimatedSection index={2} replayKey={replayKey}>
+              <ProfileXpCard level={level} xp={xp} replayKey={replayKey} />
+            </ProfileAnimatedSection>
+
+            <ProfileAnimatedSection index={3} replayKey={replayKey}>
+              <ProfileQuickHub summary={summary} onNavigate={handleHubNavigate} />
+            </ProfileAnimatedSection>
+
+            <ProfileAnimatedSection index={4} replayKey={replayKey}>
+              <ProfileSection title={t('app:profile.membership')}>
+                <ProfileProCard isPremium={isPremium} onPress={handleMembershipPress} />
+              </ProfileSection>
+            </ProfileAnimatedSection>
+
+            <ProfileAnimatedSection index={5} replayKey={replayKey}>
               <ProfileSection title={t('app:profile.achievementsSection')}>
                 <ProfileAchievementsStrip
                   badges={badgesQuery.data ?? []}
@@ -250,17 +274,11 @@ export function ProfileScreen() {
               </ProfileSection>
             </ProfileAnimatedSection>
 
-            <ProfileAnimatedSection index={3} replayKey={replayKey}>
+            <ProfileAnimatedSection index={6} replayKey={replayKey}>
               <ProfileCompletionCard profile={profile} replayKey={replayKey} />
             </ProfileAnimatedSection>
 
-            <ProfileAnimatedSection index={4} replayKey={replayKey}>
-              <ProfileSection title={t('app:profile.membership')}>
-                <ProfileProCard isPremium={isPremium} onPress={handleMembershipPress} />
-              </ProfileSection>
-            </ProfileAnimatedSection>
-
-            <ProfileAnimatedSection index={5} replayKey={replayKey}>
+            <ProfileAnimatedSection index={7} replayKey={replayKey}>
               <ProfileSection title={t('app:profile.accountDetailsSection')}>
                 <ProfileAccountDetails profile={profile} />
               </ProfileSection>
@@ -269,7 +287,7 @@ export function ProfileScreen() {
             {menuSections.map((section, sectionOffset) => (
               <ProfileAnimatedSection
                 key={section.id}
-                index={6 + sectionOffset}
+                index={8 + sectionOffset}
                 replayKey={replayKey}
               >
                 <ProfileSection title={t(`app:profile.menu.${section.titleKey}`)}>
@@ -283,7 +301,7 @@ export function ProfileScreen() {
               </ProfileAnimatedSection>
             ))}
 
-            <ProfileAnimatedSection index={9} replayKey={replayKey}>
+            <ProfileAnimatedSection index={10} replayKey={replayKey}>
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={t('settings:logout')}
@@ -375,7 +393,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       zIndex: 5,
     },
     stack: {
-      gap: PROFILE.stackGap,
+      gap: 14,
     },
     centered: {
       flex: 1,

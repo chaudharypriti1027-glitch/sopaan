@@ -1,5 +1,6 @@
 import { AppError } from '../../utils/AppError.js';
 import { logger } from '../../observability/logger.js';
+import { buildOtpSmsBody } from './otpSmsCopy.js';
 
 /** Twilio SMS provider — configure TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER. */
 export const twilioSmsProvider = {
@@ -18,7 +19,7 @@ export const twilioSmsProvider = {
     const body = new URLSearchParams({
       To: phone,
       From: fromNumber,
-      Body: `Your Sopaan verification code is ${code}. Valid for 5 minutes.`,
+      Body: buildOtpSmsBody(code),
     });
 
     const response = await fetch(
@@ -34,7 +35,11 @@ export const twilioSmsProvider = {
     );
 
     if (!response.ok) {
-      logger.error('[sms][twilio] send failed', { status: response.status });
+      const detail = await response.text().catch(() => '');
+      logger.error('[sms][twilio] send failed', {
+        status: response.status,
+        detail: detail.slice(0, 300),
+      });
       throw new AppError('Failed to send OTP', 503, 'SMS_UNAVAILABLE');
     }
   },

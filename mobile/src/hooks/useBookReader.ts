@@ -162,6 +162,7 @@ export function useBookReader(
       void queryClient.invalidateQueries({ queryKey: queryKeys.books.reader(bookId) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.books.detail(bookId) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.books.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.home.all });
     },
   });
 

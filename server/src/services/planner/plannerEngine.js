@@ -1,8 +1,7 @@
-import { StudentProfile } from '../../models/StudentProfile.js';
 import { Exam } from '../../models/Exam.js';
 import { TopicMastery } from '../../models/TopicMastery.js';
 import { Attempt } from '../../models/Attempt.js';
-import { AppError } from '../../utils/AppError.js';
+import { getOrCreateProfile } from '../profileService.js';
 import { countDueCards } from '../flashcards/reviewService.js';
 import {
   annotateWeakestTopics,
@@ -50,11 +49,8 @@ function fallbackMotivation(session) {
  * Build today's adaptive plan: code picks sessions, Claude writes copy.
  */
 export async function buildAdaptiveDayPlan(userId, { date } = {}) {
-  const profile = await StudentProfile.findOne({ userId }).lean();
-
-  if (!profile) {
-    throw new AppError('Student profile not found', 404, 'NOT_FOUND');
-  }
+  const profileDoc = await getOrCreateProfile(userId);
+  const profile = typeof profileDoc.toObject === 'function' ? profileDoc.toObject() : profileDoc;
 
   const examTrack = profile.goal?.examTrack ?? 'General';
   const dailyGoalMinutes = profile.preferences?.dailyGoalMinutes ?? 90;

@@ -1,15 +1,10 @@
 import {
-  BarChart3,
   Bell,
-  BookOpen,
-  Bookmark,
   Download,
   Edit3,
   HelpCircle,
   Languages,
   Shield,
-  Target,
-  Trophy,
   UserPlus,
   Wallet,
 } from 'lucide-react-native';
@@ -29,26 +24,15 @@ function languageMeta(profile: Profile): ProfileMenuItem['metaKey'] {
   return 'languageEnglish';
 }
 
-/** Menu structure aligned with sopaan-profile-premium-plus.html */
+/** Menu structure — quick hub covers learning shortcuts; wallet/refer stay here. */
 export function buildProfileMenuSections(profile: Profile): ProfileMenuSection[] {
   const sections: ProfileMenuSection[] = [
-    {
-      id: 'learning',
-      titleKey: 'learning',
-      items: [
-        { id: 'performance', labelKey: 'performance', route: 'ProgressAnalytics', tone: 'indigo', icon: BarChart3 },
-        { id: 'courses', labelKey: 'courses', route: 'Courses', tone: 'teal', icon: BookOpen, countKey: 'courses' },
-        { id: 'saved', labelKey: 'saved', route: 'Notes', tone: 'gold', icon: Bookmark, countKey: 'savedQuestions' },
-        { id: 'mistakes', labelKey: 'mistakes', route: 'MockAnalysis', tone: 'indigo', icon: Target, countKey: 'mistakes' },
-        { id: 'downloads', labelKey: 'downloads', route: 'Notes', tone: 'teal', icon: Download, countKey: 'downloads' },
-      ],
-    },
     {
       id: 'rewards',
       titleKey: 'rewards',
       items: [
-        { id: 'badges', labelKey: 'badges', route: 'Rewards', tone: 'gold', icon: Trophy, countKey: 'achievements' },
         { id: 'wallet', labelKey: 'wallet', route: 'Rewards', tone: 'teal', icon: Wallet, countKey: 'coins' },
+        { id: 'downloads', labelKey: 'downloads', route: 'Notes', tone: 'indigo', icon: Download, countKey: 'downloads' },
         { id: 'refer', labelKey: 'refer', route: 'ReferEarn', tone: 'gold', icon: UserPlus, badge: '₹100' },
       ],
     },

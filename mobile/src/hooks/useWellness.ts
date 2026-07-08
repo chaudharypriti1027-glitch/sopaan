@@ -13,8 +13,15 @@ import { useAuth } from '../auth';
 import { queryKeys } from './queryKeys';
 
 export function useLogFocus() {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (input: FocusLogInput) => focusApi.logFocus(input),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.analytics.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.home.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.account.summary() });
+    },
   });
 }
 

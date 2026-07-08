@@ -1,4 +1,4 @@
-import { useMemo, forwardRef } from 'react';
+import { useMemo, forwardRef, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { scalableTextProps } from '../a11y/textProps';
 import { useTheme } from '../theme';
+import { PREMIUM } from './premium/premiumStyles';
 
 type TextFieldProps = TextInputProps & {
   label?: string;
@@ -22,7 +23,11 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(function TextFiel
   ref,
 ) {
   const { theme } = useTheme();
-  const styles = useMemo(() => createStyles(theme, Boolean(error)), [theme, error]);
+  const [focused, setFocused] = useState(false);
+  const styles = useMemo(
+    () => createStyles(theme, Boolean(error), focused),
+    [theme, error, focused],
+  );
   const resolvedTestId =
     testID ??
     (label
@@ -40,8 +45,16 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(function TextFiel
         ref={ref}
         testID={resolvedTestId}
         accessibilityLabel={accessibilityLabel ?? label}
-        placeholderTextColor={theme.colors.text.tertiary}
+        placeholderTextColor={PREMIUM.sectionLabel}
         style={[styles.input, style]}
+        onFocus={(event) => {
+          setFocused(true);
+          rest.onFocus?.(event);
+        }}
+        onBlur={(event) => {
+          setFocused(false);
+          rest.onBlur?.(event);
+        }}
         {...scalableTextProps}
         {...rest}
       />
@@ -54,22 +67,37 @@ export const TextField = forwardRef<TextInput, TextFieldProps>(function TextFiel
   );
 });
 
-function createStyles(theme: ReturnType<typeof useTheme>['theme'], hasError: boolean) {
+function createStyles(
+  theme: ReturnType<typeof useTheme>['theme'],
+  hasError: boolean,
+  focused: boolean,
+) {
+  const borderColor = hasError
+    ? theme.colors.semantic.error
+    : focused
+      ? PREMIUM.gold
+      : 'rgba(236,232,221,0.95)';
+
   return StyleSheet.create({
     container: {
       gap: theme.spacing.xs,
     },
     label: {
       ...theme.typography.presets.label,
-      color: theme.colors.text.secondary,
+      color: PREMIUM.sectionLabel,
+      fontFamily: theme.typography.fonts.ui.bold,
+      fontWeight: '700',
+      letterSpacing: 0.3,
+      textTransform: 'uppercase',
+      fontSize: 11,
     },
     input: {
       ...theme.typography.presets.body,
-      color: theme.colors.text.primary,
-      backgroundColor: theme.colors.surface.default,
+      color: PREMIUM.ink,
+      backgroundColor: '#FFFFFF',
       borderWidth: 1,
-      borderColor: hasError ? theme.colors.semantic.error : theme.colors.border.default,
-      borderRadius: theme.radii.lg,
+      borderColor,
+      borderRadius: 16,
       paddingHorizontal: theme.spacing.lg,
       paddingVertical: theme.spacing.md,
       minHeight: theme.a11y.minTouchTarget,

@@ -7,9 +7,10 @@ import { parsePagination } from '../utils/pagination.js';
 import { getStreamingProvider, isStreamingConfigured, safeCreateStreamingRoom } from './streaming/index.js';
 import { normalizeUserRole, isAdminRole } from '../constants/userRoles.js';
 import { dispatchNotificationToMatchingStudents } from './notifications/notificationDispatchService.js';
+import { NOTIFICATION_TYPES } from './notifications/notificationTypes.js';
 import { clearLiveClassRoomState } from '../realtime/liveNamespace.js';
 
-const LIVE_CLASS_NOTIFICATION_TYPE = 'live_class_scheduled';
+const LIVE_CLASS_NOTIFICATION_TYPE = NOTIFICATION_TYPES.LIVE_CLASS_SCHEDULED;
 
 function resolveRoomName(doc) {
   return doc.roomName ?? doc.streamingRoomId;

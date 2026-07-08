@@ -1,3 +1,4 @@
+import { CommonActions } from '@react-navigation/native';
 import type { CompositeNavigationProp } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -9,6 +10,77 @@ type HomeNav = CompositeNavigationProp<
   BottomTabNavigationProp<AppTabParamList, 'Home'>,
   NativeStackNavigationProp<MainStackParamList>
 >;
+
+/** Stack routes that accept a single string id from `/stack/Screen/id`. */
+const STACK_ID_PARAMS: Partial<Record<keyof MainStackParamList, string>> = {
+  Quiz: 'testId',
+  CourseDetail: 'courseId',
+  BookReader: 'bookId',
+  GamePlay: 'gameId',
+  CurrentAffairReader: 'affairId',
+  ExamDetail: 'examId',
+  LiveClassViewer: 'liveClassId',
+  MockAnalysis: 'attemptId',
+  GroupChat: 'groupId',
+  TestSeries: 'seriesId',
+  StudyPlanner: 'date',
+  ProgressAnalytics: 'weekKey',
+  Leaderboard: 'testId',
+};
+
+const STACK_NO_PARAM: (keyof MainStackParamList)[] = [
+  'Flashcards',
+  'ExamCalendar',
+  'Readiness',
+  'Notifications',
+  'Search',
+  'Premium',
+  'LiveClasses',
+  'Games',
+  'Books',
+  'Courses',
+  'Forum',
+  'CutoffsForms',
+  'FocusTimer',
+  'Wellness',
+  'Rewards',
+  'ReferEarn',
+  'Mentors',
+  'Roadmap',
+  'AnswerEvaluation',
+  'PhysicalTest',
+  'RevisionCapsules',
+  'Vocabulary',
+  'Notes',
+  'Settings',
+  'CommunityTests',
+  'CreateTest',
+  'SuccessStories',
+  'ManageSubscription',
+];
+
+function navigateMainStack(
+  navigation: HomeNav,
+  screen: keyof MainStackParamList,
+  params?: MainStackParamList[keyof MainStackParamList],
+) {
+  const stackNav = navigation.getParent<NativeStackNavigationProp<MainStackParamList>>();
+  if (stackNav) {
+    if (params !== undefined) {
+      (stackNav.navigate as (name: string, p?: object) => void)(screen, params);
+    } else {
+      (stackNav.navigate as (name: string) => void)(screen);
+    }
+    return;
+  }
+
+  navigation.dispatch(
+    CommonActions.navigate({
+      name: 'Main',
+      params: { screen, params },
+    }),
+  );
+}
 
 /** Navigate from server-driven home feed deeplinks. */
 export function navigateHomeDeeplink(navigation: HomeNav, deeplink: string) {
@@ -27,7 +99,8 @@ export function navigateHomeDeeplink(navigation: HomeNav, deeplink: string) {
   }
 
   if (area === 'drill') {
-    navigation.navigate('Practice');
+    const topicSlug = screen?.replace(/-/g, ' ');
+    navigation.navigate('Practice', topicSlug ? { topic: topicSlug } : undefined);
     return;
   }
 
@@ -37,58 +110,25 @@ export function navigateHomeDeeplink(navigation: HomeNav, deeplink: string) {
       return;
     }
 
-    const stackNav = navigation.getParent<NativeStackNavigationProp<MainStackParamList>>();
-    if (!stackNav) {
-      if (screen === 'Quiz' && param) {
-        navigateToAskAI(navigation);
+    const stackScreen = screen as keyof MainStackParamList;
+    const paramKey = STACK_ID_PARAMS[stackScreen];
+
+    if (paramKey && param) {
+      if (stackScreen === 'GamePlay') {
+        navigateMainStack(navigation, stackScreen, { gameId: param as GameId });
+        return;
       }
+      navigateMainStack(navigation, stackScreen, { [paramKey]: param });
       return;
     }
 
-    switch (screen) {
-      case 'Quiz':
-        if (param) stackNav.navigate('Quiz', { testId: param });
-        break;
-      case 'CourseDetail':
-        if (param) stackNav.navigate('CourseDetail', { courseId: param });
-        break;
-      case 'TestSeries':
-        stackNav.navigate('TestSeries');
-        break;
-      case 'Flashcards':
-        stackNav.navigate('Flashcards');
-        break;
-      case 'ExamCalendar':
-        stackNav.navigate('ExamCalendar');
-        break;
-      case 'Readiness':
-        stackNav.navigate('Readiness');
-        break;
-      case 'Notifications':
-        stackNav.navigate('Notifications');
-        break;
-      case 'Search':
-        stackNav.navigate('Search');
-        break;
-      case 'Leaderboard':
-        stackNav.navigate('Leaderboard');
-        break;
-      case 'Premium':
-        stackNav.navigate('Premium');
-        break;
-      case 'LiveClasses':
-        stackNav.navigate('LiveClasses');
-        break;
-      case 'Games':
-        stackNav.navigate('Games');
-        break;
-      case 'GamePlay':
-        if (param) {
-          stackNav.navigate('GamePlay', { gameId: param as GameId });
-        }
-        break;
-      default:
-        break;
+    if (STACK_NO_PARAM.includes(stackScreen)) {
+      navigateMainStack(navigation, stackScreen);
+      return;
+    }
+
+    if (stackScreen === 'Quiz' && param) {
+      navigateMainStack(navigation, 'Quiz', { testId: param });
     }
   }
 }

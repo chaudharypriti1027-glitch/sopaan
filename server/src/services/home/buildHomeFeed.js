@@ -1,4 +1,5 @@
 import { cacheDel, cacheGet, cacheSet } from '../../lib/cache.js';
+import { CACHE_HEADERS } from '../../config/cacheConfig.js';
 import { isRedisReady } from '../../lib/redis.js';
 import { logger } from '../../observability/logger.js';
 import { formatIstDateLabel } from '../../utils/date.js';
@@ -14,7 +15,7 @@ import { getRank } from './getRank.js';
 import { getRecommendedTests } from './getRecommendedTests.js';
 import { getStreak } from './getStreak.js';
 
-export const HOME_FEED_CACHE_TTL_SEC = 60;
+export const HOME_FEED_CACHE_TTL_SEC = CACHE_HEADERS.homeFeedServerSec;
 const MAX_MEMORY_CACHE_ENTRIES = 200;
 
 /** @type {Map<string, { value: unknown, expiresAt: number }>} */

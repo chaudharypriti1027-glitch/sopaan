@@ -1,8 +1,9 @@
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import type { RouteProp } from '@react-navigation/native';
 import type { CompositeNavigationProp } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -91,6 +92,7 @@ function formatTestRow(test: TestSummary, tab: PracticeTab, t: ReturnType<typeof
 export function PracticeScreen() {
   const { t } = useTranslation('app');
   const navigation = useNavigation<PracticeNav>();
+  const route = useRoute<RouteProp<AppTabParamList, 'Practice'>>();
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => createStyles(insets.bottom), [insets.bottom]);
   const { data: profile } = useProfile();
@@ -108,6 +110,23 @@ export function PracticeScreen() {
   const [difficulty, setDifficulty] = useState<(typeof DIFFICULTIES)[number]>('medium');
   const [count, setCount] = useState(10);
   const [showForm, setShowForm] = useState(false);
+
+  useEffect(() => {
+    const drillTopic = route.params?.topic?.trim();
+    if (!drillTopic) {
+      return;
+    }
+
+    const normalized = drillTopic
+      .split(' ')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+
+    setTopic(normalized);
+    setActiveTab('sectional');
+    setShowForm(true);
+    navigation.setParams({ topic: undefined });
+  }, [navigation, route.params?.topic]);
 
   const examTag = profile?.profile.goal?.examTrack ?? 'SSC CGL';
 

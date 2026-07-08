@@ -1,12 +1,9 @@
 import { useMemo, type ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import type { LucideIcon } from 'lucide-react-native';
 import { ChevronRight } from 'lucide-react-native';
 import { Text } from '../Text';
 import { useTheme } from '../../theme';
-import type { PremiumIconTone } from '../premium/premiumIconTokens';
-import { HomeSectionIcon, HomeSlotIcon } from './HomePremiumIcon';
-import { HOME_UI, home3dBevel, homePressFeedback } from './homeTheme';
+import { HOME_UI, homePressFeedback } from './homeTheme';
 
 type HomeSectionHeaderProps = {
   title: string;
@@ -14,8 +11,6 @@ type HomeSectionHeaderProps = {
   actionLabel?: string;
   onActionPress?: () => void;
   badge?: ReactNode;
-  sectionIcon?: { Icon: LucideIcon; tone: PremiumIconTone };
-  /** Tighter top spacing directly under the hero card. */
   compact?: boolean;
 };
 
@@ -25,7 +20,6 @@ export function HomeSectionHeader({
   actionLabel,
   onActionPress,
   badge,
-  sectionIcon,
   compact = false,
 }: HomeSectionHeaderProps) {
   const { theme } = useTheme();
@@ -35,11 +29,7 @@ export function HomeSectionHeader({
     <View style={styles.row}>
       <View style={styles.titleCol}>
         <View style={styles.titleWrap}>
-          {sectionIcon ? (
-            <HomeSectionIcon Icon={sectionIcon.Icon} tone={sectionIcon.tone} />
-          ) : (
-            <GoldAccent />
-          )}
+          <View style={styles.accent} />
           <View style={styles.titleTextCol}>
             <Text style={styles.title}>{title}</Text>
             {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
@@ -57,9 +47,7 @@ export function HomeSectionHeader({
             style={({ pressed }) => [styles.actionBtn, pressed && onActionPress && styles.pressed]}
           >
             <Text style={[styles.action, !onActionPress && styles.actionMuted]}>{actionLabel}</Text>
-            {onActionPress ? (
-              <HomeSlotIcon slot="button" Icon={ChevronRight} tone="gold" />
-            ) : null}
+            {onActionPress ? <ChevronRight size={14} color={HOME_UI.accent} strokeWidth={2.5} /> : null}
           </Pressable>
         ) : null}
       </View>
@@ -67,47 +55,14 @@ export function HomeSectionHeader({
   );
 }
 
-function GoldAccent() {
-  return (
-    <View style={accentStyles.wrap}>
-      <View style={accentStyles.bar} />
-      <View style={accentStyles.glow} />
-    </View>
-  );
-}
-
-const accentStyles = StyleSheet.create({
-  wrap: {
-    width: 5,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 4,
-  },
-  bar: {
-    width: 4,
-    height: 22,
-    borderRadius: 2,
-    backgroundColor: HOME_UI.gold,
-  },
-  glow: {
-    position: 'absolute',
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: HOME_UI.goldSoft,
-    opacity: 0.8,
-  },
-});
-
 function createStyles(theme: ReturnType<typeof useTheme>['theme'], compact: boolean) {
   return StyleSheet.create({
     row: {
       flexDirection: 'row',
       alignItems: 'flex-start',
       justifyContent: 'space-between',
-      marginBottom: 14,
-      marginTop: compact ? 0 : 4,
-      paddingHorizontal: 2,
+      marginBottom: 12,
+      marginTop: compact ? 0 : 2,
       gap: theme.spacing.sm,
     },
     titleCol: {
@@ -118,17 +73,23 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme'], compact: bool
       alignItems: 'flex-start',
       gap: 10,
     },
+    accent: {
+      width: 3,
+      height: 18,
+      borderRadius: 2,
+      backgroundColor: HOME_UI.gold,
+      marginTop: 3,
+    },
     titleTextCol: {
       flex: 1,
       gap: 2,
-      paddingTop: 1,
     },
     title: {
-      fontSize: 18,
-      lineHeight: 23,
+      fontSize: 17,
+      lineHeight: 22,
       fontFamily: theme.typography.fonts.ui.bold,
       fontWeight: '800',
-      letterSpacing: -0.4,
+      letterSpacing: -0.35,
       color: HOME_UI.ink,
     },
     subtitle: {
@@ -146,7 +107,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme'], compact: bool
       paddingTop: 2,
     },
     action: {
-      fontSize: 12.5,
+      fontSize: 12,
       fontFamily: theme.typography.fonts.ui.bold,
       fontWeight: '700',
       color: HOME_UI.accent,
@@ -157,14 +118,8 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme'], compact: bool
     actionBtn: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 4,
-      paddingVertical: 4,
-      paddingHorizontal: 6,
-      borderRadius: 10,
-      backgroundColor: HOME_UI.surface,
-      borderWidth: 1,
-      borderColor: HOME_UI.border,
-      ...home3dBevel,
+      gap: 2,
+      paddingVertical: 2,
     },
     pressed: homePressFeedback,
   });

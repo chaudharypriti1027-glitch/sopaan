@@ -11,7 +11,7 @@ import {
   View,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { Button, Card, Eyebrow, Pill, PremiumHeroCard, Screen, SectionTitle } from '../../components';
+import { Button, Card, Pill, PremiumHeroCard, Screen, SectionTitle } from '../../components';
 import { useExams, useExam, useGoalRoadmap, useProfile } from '../../hooks';
 import type { MainStackParamList } from '../../navigation/types';
 import type { Exam } from '../../api/types';
@@ -76,9 +76,7 @@ export function CutoffsFormsScreen() {
 
   return (
     <Screen scroll contentContainerStyle={styles.content}>
-      <Eyebrow>{t('cutoffsForms.eyebrow')}</Eyebrow>
       <SectionTitle
-        title={t('cutoffsForms.title')}
         subtitle={exam ? t('cutoffsForms.subtitle', { exam: exam.name }) : t('cutoffsForms.subtitleGeneric')}
       />
 

@@ -1,6 +1,8 @@
 import { BarChart2, TrendingUp } from 'lucide-react-native';
-import { memo, useMemo, useState } from 'react';
+import { memo, useMemo, useState, useEffect } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { useRoute } from '@react-navigation/native';
+import type { RouteProp } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import {
   Button,
@@ -17,6 +19,7 @@ import { useAnalyticsProgress, useProGate } from '../../hooks';
 import { useFormat } from '../../i18n/useFormat';
 import { useScreenPerf } from '../../perf';
 import { useTheme } from '../../theme';
+import type { MainStackParamList } from '../../navigation/types';
 
 function formatDelta(delta: number | undefined, formatPercent: (value: number) => string): string | undefined {
   if (delta == null || delta === 0) {
@@ -64,12 +67,19 @@ const MasteryRow = memo(function MasteryRow({
 });
 
 export function ProgressAnalyticsScreen() {
+  const route = useRoute<RouteProp<MainStackParamList, 'ProgressAnalytics'>>();
   const { t } = useTranslation('app');
   const { formatNumber, formatPercent } = useFormat();
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const [range, setRange] = useState<AnalyticsRange>('week');
   const { isPro, openPaywall } = useProGate();
+
+  useEffect(() => {
+    if (route.params?.weekKey) {
+      setRange('week');
+    }
+  }, [route.params?.weekKey]);
 
   const rangeOptions = useMemo(
     () => [
@@ -80,7 +90,8 @@ export function ProgressAnalyticsScreen() {
     [t],
   );
 
-  const analyticsQuery = useAnalyticsProgress(range, isPro);
+  const weekKey = route.params?.weekKey;
+  const analyticsQuery = useAnalyticsProgress(range, isPro, weekKey);
   const data = analyticsQuery.data;
 
   useScreenPerf('Analytics', {
@@ -100,7 +111,7 @@ export function ProgressAnalyticsScreen() {
   if (!isPro) {
     return (
       <Screen scroll contentContainerStyle={styles.content}>
-        <SectionTitle title={t('progressAnalytics.title')} subtitle={t('progressAnalytics.proFeature')} />
+        <SectionTitle subtitle={t('progressAnalytics.proFeature')} />
         <Card style={styles.lockedCard}>
           <BarChart2 size={32} color={theme.colors.brand.primary} />
           <Text style={styles.lockedTitle}>{t('progressAnalytics.lockedTitle')}</Text>
@@ -126,7 +137,7 @@ export function ProgressAnalyticsScreen() {
 
   return (
     <Screen scroll contentContainerStyle={styles.content}>
-      <SectionTitle title={t('progressAnalytics.title')} subtitle={t('progressAnalytics.subtitle')} />
+      <SectionTitle subtitle={t('progressAnalytics.subtitle')} />
 
       <SegTabs options={rangeOptions} value={range} onChange={setRange} />
 

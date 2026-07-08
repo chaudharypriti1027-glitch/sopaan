@@ -7,7 +7,11 @@ const noopLimiter = (_req, _res, next) => next();
 
 const API_RATE_LIMIT_MAX = env.isDevelopment
   ? Number(process.env.API_RATE_LIMIT_MAX ?? 5000)
-  : Number(process.env.API_RATE_LIMIT_MAX ?? 300);
+  : Number(process.env.API_RATE_LIMIT_MAX ?? 1000);
+
+function apiRateLimitKey(req) {
+  return req.user?._id?.toString() ?? req.auth?.sub ?? req.ip ?? 'anonymous';
+}
 
 function buildStore(prefix) {
   if (!isRedisReady()) {
@@ -20,7 +24,7 @@ function buildStore(prefix) {
   });
 }
 
-function createLimiter({ prefix, windowMs, max, message, skip }) {
+function createLimiter({ prefix, windowMs, max, message, skip, keyGenerator }) {
   if (env.isTest || env.isDevelopment) {
     return noopLimiter;
   }
@@ -32,6 +36,7 @@ function createLimiter({ prefix, windowMs, max, message, skip }) {
     legacyHeaders: false,
     store: buildStore(prefix),
     skip,
+    keyGenerator,
     message: {
       error: message,
     },
@@ -48,6 +53,7 @@ export const apiRateLimiter = createLimiter({
   prefix: 'api',
   windowMs: 15 * 60 * 1000,
   max: API_RATE_LIMIT_MAX,
+  keyGenerator: apiRateLimitKey,
   skip: skipLightweightApiPaths,
   message: {
     message: 'Too many requests, please try again later',

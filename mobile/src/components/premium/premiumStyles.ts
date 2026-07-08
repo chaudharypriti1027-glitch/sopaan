@@ -36,10 +36,10 @@ export function premiumCard(theme: Theme): ViewStyle {
     borderColor: 'rgba(236,232,221,0.9)',
     ...platformShadow({
       color: theme.colors.shadow.color,
-      offsetY: 12,
-      opacity: 0.1,
-      radius: 26,
-      elevation: 5,
+      offsetY: 8,
+      opacity: 0.08,
+      radius: 20,
+      elevation: 4,
     }),
   };
 }

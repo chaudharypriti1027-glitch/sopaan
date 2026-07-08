@@ -150,7 +150,7 @@ export function CreateTestScreen() {
   return (
     <Screen scroll={false} padded={false}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <SectionTitle title="Create test" subtitle="Build and share with the community" />
+        <SectionTitle subtitle="Build and share with the community" />
 
         <Card style={styles.form}>
           <TextField label="Title" value={title} onChangeText={setTitle} />

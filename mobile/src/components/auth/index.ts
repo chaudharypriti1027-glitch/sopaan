@@ -19,4 +19,6 @@ export { OtpInput } from './OtpInput';
 export { AuthAnimatedSection } from './AuthAnimatedSection';
 export { ComingSoonNotice } from './ComingSoonNotice';
 export { PasswordRequirements } from './PasswordRequirements';
+export { AuthFooterLink } from './AuthFooterLink';
+export { AuthAltLinks } from './AuthAltLinks';
 export { useShakeOnError } from './useShakeOnError';

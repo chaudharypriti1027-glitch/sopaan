@@ -4,6 +4,7 @@ export const NOTIFICATION_TYPES = Object.freeze({
   NEW_CURRENT_AFFAIRS: 'new_current_affairs',
   PLAN_READY: 'plan_ready',
   MOCK_LIVE: 'mock_live',
+  LIVE_CLASS_SCHEDULED: 'live_class_scheduled',
   PROGRESS_RECAP: 'progress_recap',
   BADGE: 'badge',
   REWARD: 'reward',
@@ -29,6 +30,7 @@ export const DEFAULT_TYPE_PREFERENCES = Object.freeze({
   [NOTIFICATION_TYPES.NEW_CURRENT_AFFAIRS]: false,
   [NOTIFICATION_TYPES.PLAN_READY]: true,
   [NOTIFICATION_TYPES.MOCK_LIVE]: true,
+  [NOTIFICATION_TYPES.LIVE_CLASS_SCHEDULED]: true,
   [NOTIFICATION_TYPES.PROGRESS_RECAP]: true,
   [NOTIFICATION_TYPES.BADGE]: true,
   [NOTIFICATION_TYPES.REWARD]: true,
@@ -42,8 +44,8 @@ export function buildDeepLinkPayload(type, data = {}) {
   switch (type) {
     case NOTIFICATION_TYPES.RANK_UP:
       return {
-        screen: 'Leaderboard',
-        params: { testId: data.testId ?? undefined },
+        screen: 'MockAnalysis',
+        params: { attemptId: data.attemptId ?? undefined },
       };
     case NOTIFICATION_TYPES.STREAK_REMINDER:
       return { screen: 'StudyPlanner', params: {} };
@@ -56,6 +58,11 @@ export function buildDeepLinkPayload(type, data = {}) {
       return { screen: 'StudyPlanner', params: { date: data.date ?? undefined } };
     case NOTIFICATION_TYPES.MOCK_LIVE:
       return { screen: 'TestSeries', params: { seriesId: data.seriesId ?? undefined } };
+    case NOTIFICATION_TYPES.LIVE_CLASS_SCHEDULED:
+      return {
+        screen: 'LiveClassViewer',
+        params: { liveClassId: data.liveClassId ?? undefined },
+      };
     case NOTIFICATION_TYPES.PROGRESS_RECAP:
       return { screen: 'ProgressAnalytics', params: { weekKey: data.weekKey ?? undefined } };
     case NOTIFICATION_TYPES.BADGE:

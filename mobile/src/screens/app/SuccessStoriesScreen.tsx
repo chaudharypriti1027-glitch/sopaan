@@ -14,7 +14,7 @@ export function SuccessStoriesScreen() {
 
   return (
     <Screen scroll contentContainerStyle={styles.content}>
-      <SectionTitle title="Success stories" subtitle="Real journeys from Sopaan learners" />
+      <SectionTitle subtitle="Real journeys from Sopaan learners" />
 
       <QueryStateView
         isLoading={storiesQuery.isLoading}

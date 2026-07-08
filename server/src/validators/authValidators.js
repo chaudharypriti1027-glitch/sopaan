@@ -70,17 +70,29 @@ export const logoutSchema = z.object({
   refreshToken: z.string().min(1).optional(),
 });
 
-export const requestOtpSchema = z.object({
-  phone: indianPhoneSchema,
-});
+export const requestOtpSchema = z
+  .object({
+    phone: indianPhoneSchema.optional(),
+    email: z.string().trim().email('Invalid email').optional(),
+  })
+  .refine((data) => Boolean(data.phone || data.email), {
+    message: 'Phone or email is required',
+    path: ['phone'],
+  });
 
-export const verifyOtpSchema = z.object({
-  phone: indianPhoneSchema,
-  code: otpCodeSchema,
-  referralCode: z.string().trim().min(4).max(32).optional(),
-  installId: z.string().trim().min(8).max(128).optional(),
-  privacyConsent: privacyConsentInputSchema.optional(),
-});
+export const verifyOtpSchema = z
+  .object({
+    phone: indianPhoneSchema.optional(),
+    email: z.string().trim().email('Invalid email').optional(),
+    code: otpCodeSchema,
+    referralCode: z.string().trim().min(4).max(32).optional(),
+    installId: z.string().trim().min(8).max(128).optional(),
+    privacyConsent: privacyConsentInputSchema.optional(),
+  })
+  .refine((data) => Boolean(data.phone || data.email), {
+    message: 'Phone or email is required',
+    path: ['phone'],
+  });
 
 /** @deprecated prefer requestOtpSchema */
 export const otpRequestSchema = requestOtpSchema;

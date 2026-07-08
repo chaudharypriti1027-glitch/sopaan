@@ -25,5 +25,17 @@ export function formatOtpError(error: ApiError): string {
     return 'Too many requests. Please wait a moment and try again.';
   }
 
+  if (error.code === 'EMAIL_UNAVAILABLE') {
+    return 'Could not send the OTP email. Please try again in a moment.';
+  }
+
+  if (error.code === 'SMS_UNAVAILABLE') {
+    return 'Could not send the OTP SMS. Try again in a moment.';
+  }
+
+  if (error.code === 'SMS_TRIAL_RESTRICTED') {
+    return 'SMS is not enabled for this number yet. Please try again later or contact support.';
+  }
+
   return error.message;
 }

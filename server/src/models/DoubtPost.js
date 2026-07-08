@@ -17,6 +17,10 @@ const doubtAnswerSchema = new mongoose.Schema(
       default: 0,
       min: 0,
     },
+    voterIds: {
+      type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+      default: [],
+    },
     createdAt: {
       type: Date,
       default: Date.now,
@@ -51,6 +55,10 @@ const doubtPostSchema = new mongoose.Schema(
       type: Number,
       default: 0,
       min: 0,
+    },
+    voterIds: {
+      type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+      default: [],
     },
     answers: {
       type: [doubtAnswerSchema],

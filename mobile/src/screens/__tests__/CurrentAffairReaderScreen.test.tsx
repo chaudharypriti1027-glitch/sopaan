@@ -40,10 +40,9 @@ describe('CurrentAffairReaderScreen', () => {
       refetch: mockRefetch,
     });
 
-    const { UNSAFE_getByType } = renderWithProviders(<CurrentAffairReaderScreen />);
-    const { ActivityIndicator } = require('react-native');
+    const { getByTestId } = renderWithProviders(<CurrentAffairReaderScreen />);
 
-    expect(UNSAFE_getByType(ActivityIndicator)).toBeTruthy();
+    expect(getByTestId('query-state-skeleton')).toBeTruthy();
   });
 
   it('shows error state and retries fetch', async () => {

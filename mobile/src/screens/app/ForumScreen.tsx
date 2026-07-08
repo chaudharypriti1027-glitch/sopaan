@@ -4,6 +4,7 @@ import { MessageCircle, ThumbsUp, Users } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import {
   Alert,
+  Pressable,
   StyleSheet,
   Text,
   View,
@@ -24,6 +25,7 @@ import {
   useGroups,
   useJoinGroup,
   useNetworkStatus,
+  useVoteDoubt,
 } from '../../hooks';
 import { useAuth } from '../../auth';
 import type { MainStackParamList } from '../../navigation/types';
@@ -64,6 +66,7 @@ export function ForumScreen() {
   const doubtsQuery = useDoubts({ limit: 30 });
   const groupsQuery = useGroups({ limit: 30 });
   const createDoubt = useCreateDoubt();
+  const voteDoubt = useVoteDoubt();
   const createGroup = useCreateGroup();
   const joinGroup = useJoinGroup();
 
@@ -148,8 +151,15 @@ export function ForumScreen() {
                   <View style={styles.postFooter}>
                     <Text style={styles.postMeta}>{authorName(post.userId)}</Text>
                     <View style={styles.votes}>
-                      <ThumbsUp size={14} color={theme.colors.text.tertiary} />
-                      <Text style={styles.votesText}>{post.votes ?? 0}</Text>
+                      <Pressable
+                        accessibilityRole="button"
+                        accessibilityLabel="Upvote doubt"
+                        onPress={() => void voteDoubt.mutateAsync(post.id)}
+                        style={styles.voteBtn}
+                      >
+                        <ThumbsUp size={14} color={theme.colors.text.tertiary} />
+                        <Text style={styles.votesText}>{post.votes ?? 0}</Text>
+                      </Pressable>
                       <Text style={styles.answers}>{post.answers?.length ?? 0} answers</Text>
                     </View>
                   </View>
@@ -258,7 +268,8 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     postBody: { ...theme.typography.presets.body, color: theme.colors.text.secondary },
     postFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     postMeta: { ...theme.typography.presets.caption, color: theme.colors.text.tertiary },
-    votes: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.xs },
+    votes: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm },
+    voteBtn: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.xs },
     votesText: { ...theme.typography.presets.caption, color: theme.colors.text.secondary },
     answers: { ...theme.typography.presets.caption, color: theme.colors.text.tertiary },
   });

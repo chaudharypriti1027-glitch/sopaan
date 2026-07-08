@@ -1,7 +1,6 @@
 import { Crown } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
 import { HomeSlotIcon } from './HomePremiumIcon';
 import { HomePremiumButton } from './HomePremiumButton';
@@ -15,13 +14,11 @@ import {
   type HomeFeatureSectionKey,
 } from '../../navigation/homeFeatureConfig';
 import { toneForText } from '../../utils/iconTone';
-import { PREMIUM_ICON_TONES } from '../premium/premiumIconTokens';
 import { useTheme } from '../../theme';
 import type { HomeFeed } from '../../types/home';
 import { featureLinkPremiumTone } from './homeIcons';
 import { resolveHomeIcon } from './homeUtils';
-import { HOME_UI, homeFeedCard, home3dBevel, homePressFeedback } from './homeTheme';
-import { platformShadow } from '../../utils/platformShadow';
+import { HOME_UI, homeFeedCard, homePressFeedback } from './homeTheme';
 
 const GRID_COLUMNS = 5;
 const SECTION_PAD = HOME_UI.horizontalPad;
@@ -106,12 +103,6 @@ export function HomeFeaturesHub({
       ) : null}
 
       <View style={styles.exploreCard}>
-        <LinearGradient
-          colors={[HOME_UI.goldLt, HOME_UI.gold]}
-          start={{ x: 0, y: 0.5 }}
-          end={{ x: 1, y: 0.5 }}
-          style={styles.exploreAccent}
-        />
         <View style={styles.cardInner}>
           <SegTabs
             options={tabOptions}
@@ -135,19 +126,12 @@ export function HomeFeaturesHub({
                   onPress={() => handleFeatureTap(link)}
                   style={({ pressed }) => [styles.tile, { width: tileWidth }, pressed && homePressFeedback]}
                 >
-                  <View
-                    style={[
-                      styles.iconPedestal,
-                      { backgroundColor: PREMIUM_ICON_TONES[iconTone].bg },
-                    ]}
-                  >
-                    <HomeSlotIcon slot="grid" Icon={Icon} tone={iconTone} />
-                    {showPro ? (
-                      <View style={styles.proBadge}>
-                        <HomeSlotIcon slot="micro" Icon={Crown} tone="gold" />
-                      </View>
-                    ) : null}
-                  </View>
+                  <HomeSlotIcon slot="grid" Icon={Icon} tone={iconTone} />
+                  {showPro ? (
+                    <View style={styles.proBadge}>
+                      <HomeSlotIcon slot="micro" Icon={Crown} tone="gold" />
+                    </View>
+                  ) : null}
                   <Text style={styles.tileLabel} numberOfLines={2}>
                     {label}
                   </Text>
@@ -204,14 +188,6 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       backgroundColor: HOME_UI.surface,
       borderWidth: 1,
       borderColor: HOME_UI.border,
-      ...home3dBevel,
-      ...platformShadow({
-        color: HOME_UI.shadow,
-        offsetY: 4,
-        opacity: 0.08,
-        radius: 10,
-        elevation: 2,
-      }),
     },
     shortcutLabel: {
       fontSize: 12.5,
@@ -223,10 +199,6 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     exploreCard: {
       ...homeFeedCard(),
       overflow: 'hidden',
-    },
-    exploreAccent: {
-      height: 3,
-      width: '100%',
     },
     cardInner: {
       padding: CARD_PAD + 2,
@@ -242,21 +214,15 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     },
     tile: {
       alignItems: 'center',
-      gap: 7,
-      paddingVertical: 8,
+      gap: 6,
+      paddingVertical: 6,
       paddingHorizontal: 2,
-    },
-    iconPedestal: {
       position: 'relative',
-      padding: 5,
-      borderRadius: 14,
-      borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.55)',
     },
     proBadge: {
       position: 'absolute',
-      top: -6,
-      right: -8,
+      top: 0,
+      right: 4,
       zIndex: 2,
     },
     tileLabel: {
@@ -276,7 +242,6 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       borderRadius: HOME_UI.innerRadius,
       borderWidth: 1,
       borderColor: HOME_UI.goldBorder,
-      ...home3dBevel,
       paddingHorizontal: 12,
       paddingVertical: 10,
     },

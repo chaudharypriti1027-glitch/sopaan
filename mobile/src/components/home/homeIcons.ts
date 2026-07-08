@@ -52,9 +52,9 @@ export const HOME_COACH_FALLBACK: AINudge = {
 };
 
 export const HOME_COACH_PROMPTS = [
-  { key: 'coachPromptPlan', icon: 'target' as const },
-  { key: 'coachPromptWeak', icon: 'brain' as const },
-  { key: 'coachPromptCa', icon: 'newspaper' as const },
+  { key: 'coachPromptPlan', icon: 'target' as const, tone: 'gold' as const },
+  { key: 'coachPromptWeak', icon: 'brain' as const, tone: 'lavender' as const },
+  { key: 'coachPromptCa', icon: 'newspaper' as const, tone: 'coral' as const },
 ] as const;
 
 /** Shared size / elevation presets — single source for all home icon slots. */

@@ -42,7 +42,6 @@ export function PrivacyPolicyScreen() {
   return (
     <Screen scroll contentContainerStyle={styles.content}>
       <SectionTitle
-        title={t('privacyPolicy.title')}
         subtitle={t('privacyPolicy.versionSubtitle', {
           version: policy.version,
           jurisdiction: policy.jurisdiction,

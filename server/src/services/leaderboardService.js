@@ -248,11 +248,15 @@ export async function getLeaderboard(userId, query) {
   const periodMatch = buildPeriodMatch(period);
   const cacheKey = stableCacheKey('cache:leaderboard', { limit, offset, period });
 
+  const youCacheKey = stableCacheKey('cache:user-standing', { userId, period });
+
   const [page, you, meta] = await Promise.all([
     cacheGetOrSet(cacheKey, CACHE_TTLS.leaderboardSec, () =>
       buildLeaderboardPage({ limit, offset, period }),
     ),
-    buildUserStanding(userId, period),
+    cacheGetOrSet(youCacheKey, CACHE_TTLS.userStandingSec, () =>
+      buildUserStanding(userId, period),
+    ),
     cacheGetOrSet(stableCacheKey('cache:leaderboard:meta', { period }), 30, () =>
       buildLeaderboardMeta(periodMatch),
     ),

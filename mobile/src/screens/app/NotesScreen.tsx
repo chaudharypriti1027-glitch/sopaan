@@ -93,10 +93,7 @@ export function NotesScreen() {
 
   return (
     <Screen scroll contentContainerStyle={styles.content}>
-      <SectionTitle
-        title="Notes & bookmarks"
-        subtitle="Saved current affairs, AI answers, and flashcards"
-      />
+      <SectionTitle subtitle="Saved current affairs, AI answers, and flashcards" />
 
       <SegTabs options={TAB_OPTIONS} value={tab} onChange={setTab} />
 

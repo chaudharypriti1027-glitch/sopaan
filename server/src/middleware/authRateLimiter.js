@@ -18,13 +18,21 @@ function buildStore(prefix) {
   });
 }
 
-function otpPhoneKey(req) {
+function otpDestinationKey(req) {
+  const email = req.body?.email?.trim().toLowerCase();
+  if (email) {
+    return `email:${email}`;
+  }
+
   try {
-    return normalizeIndianPhone(req.body?.phone ?? '');
+    return `phone:${normalizeIndianPhone(req.body?.phone ?? '')}`;
   } catch {
     return req.ip ?? 'anonymous';
   }
 }
+
+/** @deprecated use otpDestinationKey */
+const otpPhoneKey = otpDestinationKey;
 
 const otpLimitMessage = {
   error: {
@@ -58,7 +66,7 @@ export const otpRateLimiter = env.isTest
       standardHeaders: true,
       legacyHeaders: false,
       store: buildStore('otp'),
-      keyGenerator: otpPhoneKey,
+      keyGenerator: otpDestinationKey,
       message: otpLimitMessage,
     });
 
@@ -71,7 +79,7 @@ export const otpBurstLimiter = env.isTest
       standardHeaders: true,
       legacyHeaders: false,
       store: buildStore('otp-burst'),
-      keyGenerator: otpPhoneKey,
+      keyGenerator: otpDestinationKey,
       message: otpLimitMessage,
     });
 
@@ -84,6 +92,6 @@ export const otpHourlyLimiter = env.isTest
       standardHeaders: true,
       legacyHeaders: false,
       store: buildStore('otp-hourly'),
-      keyGenerator: otpPhoneKey,
+      keyGenerator: otpDestinationKey,
       message: otpLimitMessage,
     });

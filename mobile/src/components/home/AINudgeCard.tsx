@@ -55,7 +55,7 @@ export function AINudgeCard({ nudge, onPress }: AINudgeCardProps) {
         ) : null}
       </View>
       <View style={styles.arrow}>
-        <HomeSlotIcon slot="button" Icon={ChevronRight} tone="slate" />
+        <ChevronRight size={16} color={HOME_UI.muted} strokeWidth={2.5} />
       </View>
     </HomeFeedCard>
   );

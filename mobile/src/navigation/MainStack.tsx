@@ -1,6 +1,6 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
-import { PREMIUM } from '../components/premium/premiumStyles';
+import { premiumStackScreenOptions } from '../components/premium/PremiumNavigationHeader';
 import { lazyScreen } from './lazyScreen';
 import type { MainStackParamList } from './types';
 import { AppTabs } from './AppTabs';
@@ -12,13 +12,7 @@ export function MainStack() {
 
   return (
     <Stack.Navigator
-      screenOptions={{
-        headerTitleStyle: { fontWeight: '800', fontSize: 16 },
-        headerShadowVisible: false,
-        headerStyle: { backgroundColor: PREMIUM.bg },
-        headerTintColor: PREMIUM.ink,
-        contentStyle: { backgroundColor: PREMIUM.bg },
-      }}
+      screenOptions={premiumStackScreenOptions()}
     >
       <Stack.Screen name="AppTabs" component={AppTabs} options={{ headerShown: false }} />
       <Stack.Screen

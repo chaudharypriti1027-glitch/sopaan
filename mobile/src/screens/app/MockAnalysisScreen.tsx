@@ -83,7 +83,6 @@ export function MockAnalysisScreen() {
   return (
     <Screen scroll contentContainerStyle={styles.content}>
       <SectionTitle
-        title="Mock analysis"
         subtitle={attempt.test?.title ?? 'Performance breakdown'}
       />
 

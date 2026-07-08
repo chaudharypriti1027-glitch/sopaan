@@ -62,10 +62,10 @@ export async function listCommunityTests(query, userId) {
 
   if (query.mine && userId) {
     filters.createdBy = userId;
-  } else if (query.published === true) {
-    filters.status = 'published';
   } else if (query.published === false) {
     filters.status = { $ne: 'published' };
+  } else {
+    filters.status = 'published';
   }
 
   const [items, total] = await Promise.all([

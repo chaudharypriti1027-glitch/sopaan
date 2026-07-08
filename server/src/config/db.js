@@ -5,10 +5,11 @@ const MAX_RETRIES = 5;
 const BASE_DELAY_MS = 1000;
 
 const connectionOptions = {
-  maxPoolSize: 10,
-  minPoolSize: 1,
+  maxPoolSize: Number(process.env.MONGODB_MAX_POOL_SIZE ?? 50),
+  minPoolSize: Number(process.env.MONGODB_MIN_POOL_SIZE ?? 2),
   serverSelectionTimeoutMS: 5000,
-  socketTimeoutMS: 45000,
+  socketTimeoutMS: 45_000,
+  maxIdleTimeMS: 60_000,
 };
 
 let eventsRegistered = false;

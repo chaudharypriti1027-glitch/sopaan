@@ -4,7 +4,7 @@ import app from '../src/app.js';
 import { Attempt } from '../src/models/Attempt.js';
 import { Test } from '../src/models/Test.js';
 import { clearTestDatabase, setupTestDatabase, teardownTestDatabase } from './helpers/db.js';
-import { createTestUser } from './helpers/fixtures.js';
+import { createPublishedTest, createTestUser } from './helpers/fixtures.js';
 
 describe('Leaderboard API', () => {
   beforeAll(async () => {
@@ -115,6 +115,46 @@ describe('Leaderboard API', () => {
       },
     });
     expect(response.body.items[0].rankDelta).toBeDefined();
+  });
+
+  it('updates the requesting user standing immediately after a mock submit', async () => {
+    const creator = await createTestUser({ name: 'Creator', email: 'creator3@test.com' });
+    const viewer = await createTestUser({ name: 'Fresh Viewer', email: 'viewer3@test.com' });
+    const { test, questions } = await createPublishedTest(creator._id);
+    const token = await loginToken(viewer);
+
+    const before = await request(app)
+      .get('/api/leaderboard')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+
+    expect(before.body.you).toMatchObject({
+      attempts: 0,
+      rank: null,
+    });
+
+    await request(app)
+      .post(`/api/tests/${test._id}/submit`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        answers: questions.map((question) => ({
+          questionId: question._id.toString(),
+          selectedKey: question.correctKey,
+          timeSec: 25,
+        })),
+      })
+      .expect(201);
+
+    const after = await request(app)
+      .get('/api/leaderboard')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+
+    expect(after.body.you).toMatchObject({
+      attempts: 1,
+      avgAccuracy: 100,
+      rank: 1,
+    });
   });
 
   it('ranks the requesting user relative to everyone else even off the current page', async () => {

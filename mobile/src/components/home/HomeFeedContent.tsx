@@ -5,7 +5,6 @@ import type { CompositeNavigationProp } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AffairsList } from './AffairsList';
-import { AINudgeSectionBadge } from './AINudgeCard';
 import { ContinueRow } from './ContinueRow';
 import { DailyChallengeCard } from './DailyChallengeCard';
 import { HomeAIHub } from './HomeAIHub';
@@ -20,7 +19,6 @@ import {
   visibleHomeSections,
   type HomeSectionKey,
 } from './homeSectionConfig';
-import { HOME_SECTION_ICONS } from './homeSectionIcons';
 import type { HomeFeatureLink } from '../../navigation/homeFeatureConfig';
 import { navigateToAskAI } from '../../navigation/askAiNavigation';
 import type { AppTabParamList, MainStackParamList } from '../../navigation/types';
@@ -60,6 +58,14 @@ export function HomeFeedContent({
     (key: HomeSectionKey) => {
       switch (key) {
         case 'continue':
+          return () => {
+            const first = feed.continue[0];
+            if (first?.deeplink) {
+              onDeeplink(first.deeplink);
+              return;
+            }
+            navigation.getParent()?.navigate('Courses');
+          };
         case 'recommended':
           return () => navigation.navigate('Practice');
         case 'affairs':
@@ -68,7 +74,7 @@ export function HomeFeedContent({
           return undefined;
       }
     },
-    [navigation],
+    [feed.continue, navigation, onDeeplink],
   );
 
   const handleAskAiPress = useCallback(
@@ -140,14 +146,7 @@ export function HomeFeedContent({
 
         return (
           <HomeAnimatedSection key={key} index={index}>
-            <HomeSection
-              testID={meta.testId}
-              isFirst={isFirst}
-              highlighted={isFirst && Boolean(meta.highlightWhenFirst)}
-              padded={meta.padded}
-              panel={meta.panel}
-              panelTone={meta.panelTone}
-            >
+            <HomeSection testID={meta.testId} isFirst={isFirst} padded={meta.padded}>
               {title ? (
                 <HomeSectionHeader
                   title={title}
@@ -155,8 +154,6 @@ export function HomeFeedContent({
                   actionLabel={actionLabel}
                   onActionPress={onAction}
                   compact={isFirst && meta.compactWhenFirst}
-                  sectionIcon={HOME_SECTION_ICONS[key]}
-                  badge={key === 'nudges' ? <AINudgeSectionBadge /> : undefined}
                 />
               ) : null}
               {renderSectionBody(key)}

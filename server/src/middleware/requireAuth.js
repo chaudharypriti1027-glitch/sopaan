@@ -18,6 +18,19 @@ export async function requireAuth(req, _res, next) {
 
     const token = header.slice(7);
     const payload = verifyAccessToken(token);
+
+    if (req.user?._id?.toString() === payload.sub && req.auth?.sub === payload.sub) {
+      if (req.user.accountStatus === 'deleted') {
+        throw new AppError('Account has been deleted', 401, 'UNAUTHORIZED');
+      }
+
+      if (isAccountSuspended(req.user)) {
+        throw new AppError('Account suspended', 403, 'ACCOUNT_SUSPENDED');
+      }
+
+      return next();
+    }
+
     const user = await User.findById(payload.sub).select(USER_AUTH_SELECT).lean();
 
     if (!user) {

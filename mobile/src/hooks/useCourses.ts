@@ -38,6 +38,7 @@ export function useEnrollCourse() {
       void queryClient.invalidateQueries({ queryKey: queryKeys.courses.detail(courseId) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.courses.all });
       void queryClient.invalidateQueries({ queryKey: queryKeys.account.summary() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.home.all });
     },
   });
 }
@@ -59,6 +60,7 @@ export function useUpdateCourseProgress() {
       void queryClient.invalidateQueries({ queryKey: queryKeys.courses.detail(courseId) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.courses.all });
       void queryClient.invalidateQueries({ queryKey: queryKeys.account.summary() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.home.all });
     },
   });
 }

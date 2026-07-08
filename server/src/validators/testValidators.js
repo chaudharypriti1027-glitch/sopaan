@@ -22,6 +22,11 @@ export const submitTestSchema = z.object({
 
 export const analyticsProgressQuerySchema = z.object({
   range: z.enum(['week', 'month', 'all']).default('week'),
+  weekKey: z
+    .string()
+    .trim()
+    .regex(/^\d{4}-W\d{2}$/, 'weekKey must be YYYY-Www')
+    .optional(),
 });
 
 export const attemptsQuerySchema = z.object({

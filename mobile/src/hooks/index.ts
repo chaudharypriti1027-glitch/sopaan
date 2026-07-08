@@ -15,6 +15,7 @@ export { useTests, useTest, useSubmitTest } from './useTests';
 export {
   useDoubts,
   useCreateDoubt,
+  useVoteDoubt,
   useGroups,
   useCreateGroup,
   useJoinGroup,

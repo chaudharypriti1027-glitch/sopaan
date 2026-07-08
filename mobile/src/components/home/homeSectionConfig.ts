@@ -20,70 +20,49 @@ export type HomeSectionMeta = {
   titleKey?: string;
   subtitleKey?: string;
   actionKey?: string;
-  /** Tighter header spacing when this is the first visible block under the hero. */
   compactWhenFirst?: boolean;
-  /** Soft highlight panel when first under the hero (explore hub). */
-  highlightWhenFirst?: boolean;
   padded?: boolean;
-  /** Wrap section body in premium elevated panel. */
-  panel?: boolean;
-  panelTone?: 'default' | 'gold';
 };
 
 export const HOME_SECTION_META: Record<HomeSectionKey, HomeSectionMeta> = {
   features: {
     testId: 'home-section-features',
     titleKey: 'explore',
-    subtitleKey: 'exploreSubtitle',
     compactWhenFirst: true,
-    highlightWhenFirst: true,
     padded: true,
   },
   nudges: {
     testId: 'home-section-nudges',
     titleKey: 'forYou',
-    subtitleKey: 'aiHubSubtitle',
     padded: true,
-    panel: true,
-    panelTone: 'gold',
   },
   dailyChallenge: {
     testId: 'home-section-daily-challenge',
     titleKey: 'dailyChallenge',
-    subtitleKey: 'dailyChallengeSubtitle',
     padded: true,
-    panel: true,
   },
   continue: {
     testId: 'home-section-continue',
     titleKey: 'continueLearning',
-    subtitleKey: 'continueSubtitle',
     actionKey: 'seeAll',
     padded: true,
-    panel: true,
   },
   recommended: {
     testId: 'home-section-recommended',
     titleKey: 'recommendedTests',
-    subtitleKey: 'recommendedSubtitle',
     actionKey: 'seeAll',
     padded: true,
-    panel: true,
   },
   affairs: {
     testId: 'home-section-affairs',
     titleKey: 'todaysAffairs',
-    subtitleKey: 'affairsSubtitle',
     actionKey: 'allAffairs',
     padded: true,
-    panel: true,
   },
   league: {
     testId: 'home-section-league',
     titleKey: 'yourLeague',
-    subtitleKey: 'leagueSubtitle',
     padded: true,
-    panel: true,
   },
 };
 

@@ -1,5 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import {
+  Alert,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -128,12 +129,16 @@ function HomeStudentScreen() {
     if (!liveNow) return;
     void lightImpact();
     if (liveClasses?.streamingConfigured === false) {
+      Alert.alert(
+        t('app:liveClasses.comingSoonAlert'),
+        liveClasses?.message ?? t('app:liveClasses.comingSoonDefault'),
+      );
       return;
     }
     navigation.getParent<NativeStackNavigationProp<MainStackParamList>>()?.navigate('LiveClassViewer', {
       liveClassId: liveNow.id,
     });
-  }, [liveClasses?.streamingConfigured, liveNow, navigation]);
+  }, [liveClasses?.message, liveClasses?.streamingConfigured, liveNow, navigation, t]);
 
   if (isLoading && !feed) {
     return <HomeSkeleton />;

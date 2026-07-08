@@ -34,6 +34,7 @@ import {
   type CaSortMode,
 } from '../../components/currentAffairs/caUtils';
 import { toggleSavedAffair, listSavedAffairIds } from '../../affairs/savedAffairs';
+import { currentAffairsApi } from '../../api';
 import { useCurrentAffairs, useGroupedNotifications, useProfile } from '../../hooks';
 import { useFormat } from '../../i18n/useFormat';
 import { navigateToAskAI } from '../../navigation/askAiNavigation';
@@ -82,6 +83,31 @@ export function CurrentAffairsScreen() {
     navigation.getParent()?.navigate('CurrentAffairReader', { affairId });
     navigation.setParams({ affairId: undefined });
   }, [navigation, route.params?.affairId]);
+
+  useEffect(() => {
+    const digestId = route.params?.digestId;
+    if (!digestId) {
+      return;
+    }
+
+    void (async () => {
+      try {
+        const digest = await currentAffairsApi.getTodayDigest();
+        if (digest.id === digestId) {
+          setCategory('all');
+          setSortMode('latest');
+          const firstAffair = digest.affairs?.[0];
+          if (firstAffair?.id) {
+            navigation.getParent()?.navigate('CurrentAffairReader', { affairId: firstAffair.id });
+          }
+        }
+      } catch {
+        // Digest may not be published yet — stay on feed.
+      } finally {
+        navigation.setParams({ digestId: undefined });
+      }
+    })();
+  }, [navigation, route.params?.digestId]);
 
   const selectedCategory = CA_CATEGORY_OPTIONS.find((item) => item.key === category);
   const affairsQuery = useCurrentAffairs({

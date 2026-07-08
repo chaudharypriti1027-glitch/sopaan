@@ -49,7 +49,6 @@ export function ReadinessScreen() {
   return (
     <Screen scroll contentContainerStyle={styles.content}>
       <SectionTitle
-        title="Readiness score"
         subtitle={`${data.examTrack}${data.targetYear ? ` · ${data.targetYear}` : ''}`}
       />
 

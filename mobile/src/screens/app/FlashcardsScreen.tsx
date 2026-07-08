@@ -141,7 +141,6 @@ export function FlashcardsScreen() {
   return (
     <Screen scroll contentContainerStyle={styles.content}>
       <SectionTitle
-        title="Flashcards"
         subtitle={`Spaced repetition · ${totalDue} due today`}
       />
       <QueryStateView

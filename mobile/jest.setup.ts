@@ -1,5 +1,11 @@
 import '@testing-library/jest-native/extend-expect';
+import { notifyManager } from '@tanstack/react-query';
 import './src/i18n';
+
+// Run React Query notifications synchronously in tests — prevents timer leaks.
+notifyManager.setScheduler((callback) => {
+  callback();
+});
 
 jest.mock('react-native-reanimated', () => {
   const Reanimated = require('react-native-reanimated/mock');
@@ -194,4 +200,6 @@ jest.mock('@sentry/react-native', () => ({
 
 afterEach(() => {
   jest.clearAllTimers();
+  const { cleanupTestQueryClients } = require('./src/test/queryCleanup') as typeof import('./src/test/queryCleanup');
+  cleanupTestQueryClients();
 });

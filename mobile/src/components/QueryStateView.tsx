@@ -1,10 +1,12 @@
 import { useMemo, type ReactNode } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
-import { WifiOff } from 'lucide-react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { AlertCircle, WifiOff } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../theme';
 import { Button } from './Button';
-import { Card } from './Card';
+import { PREMIUM } from './premium/premiumStyles';
+import { PremiumIcon } from './premium/PremiumIcon';
+import { QueryStateSkeleton } from './premium/QueryStateSkeleton';
 
 type QueryStateViewProps = {
   isLoading: boolean;
@@ -14,6 +16,7 @@ type QueryStateViewProps = {
   hasData: boolean;
   onRetry?: () => void;
   children: ReactNode;
+  skeletonRows?: number;
 };
 
 export function QueryStateView({
@@ -24,34 +27,38 @@ export function QueryStateView({
   hasData,
   onRetry,
   children,
+  skeletonRows = 3,
 }: QueryStateViewProps) {
   const { theme } = useTheme();
   const { t } = useTranslation('common');
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   if (isLoading && !hasData) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={theme.colors.brand.primary} />
-      </View>
-    );
+    return <QueryStateSkeleton rows={skeletonRows} />;
   }
 
   if (isError && !hasData) {
     return (
-      <Card style={styles.errorCard}>
-        <WifiOff size={28} color={theme.colors.text.tertiary} />
+      <View style={styles.errorCard}>
+        <PremiumIcon
+          Icon={isOffline ? WifiOff : AlertCircle}
+          tone={isOffline ? 'gold' : 'coral'}
+          size="md"
+          filled
+          depth
+        />
         <Text style={styles.errorTitle}>{isOffline ? t('offline') : t('couldNotLoad')}</Text>
         <Text style={styles.errorBody}>{isOffline ? t('offlineHint') : t('connectionHint')}</Text>
         {onRetry ? (
           <Button
             label={isFetching ? t('retrying') : t('retry')}
+            variant="gold"
             onPress={onRetry}
             loading={isFetching}
             fullWidth
           />
         ) : null}
-      </Card>
+      </View>
     );
   }
 
@@ -59,13 +66,13 @@ export function QueryStateView({
     <View style={styles.wrap}>
       {isOffline && hasData ? (
         <View style={styles.cachedBanner}>
-          <WifiOff size={14} color={theme.colors.semantic.warning} />
+          <WifiOff size={14} color={PREMIUM.goldDeep} />
           <Text style={styles.cachedText}>{t('offlineCached')}</Text>
         </View>
       ) : null}
 
       {isError && hasData ? (
-        <Card style={styles.inlineError}>
+        <View style={styles.inlineError}>
           <Text style={styles.inlineErrorText}>{t('couldNotRefresh')}</Text>
           {onRetry ? (
             <Button
@@ -76,7 +83,7 @@ export function QueryStateView({
               loading={isFetching}
             />
           ) : null}
-        </Card>
+        </View>
       ) : null}
 
       {children}
@@ -87,46 +94,55 @@ export function QueryStateView({
 function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
     wrap: { gap: theme.spacing.md },
-    centered: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: theme.spacing.xl,
-    },
     errorCard: {
       alignItems: 'center',
       gap: theme.spacing.md,
       padding: theme.spacing.xl,
+      borderRadius: PREMIUM.cardRadius,
+      backgroundColor: theme.colors.surface.default,
+      borderWidth: 1,
+      borderColor: 'rgba(236,232,221,0.9)',
     },
     errorTitle: {
       ...theme.typography.presets.bodyMedium,
-      fontFamily: theme.typography.fonts.ui.semibold,
-      color: theme.colors.text.primary,
+      fontFamily: theme.typography.fonts.ui.bold,
+      fontWeight: '800',
+      color: PREMIUM.ink,
       textAlign: 'center',
     },
     errorBody: {
       ...theme.typography.presets.body,
       color: theme.colors.text.secondary,
       textAlign: 'center',
+      lineHeight: 18,
     },
     cachedBanner: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: theme.spacing.sm,
-      padding: theme.spacing.sm,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm,
       borderRadius: theme.radii.md,
-      backgroundColor: theme.colors.semantic.warningMuted,
+      backgroundColor: PREMIUM.goldSoft,
+      borderWidth: 1,
+      borderColor: 'rgba(194,154,78,0.25)',
     },
     cachedText: {
       ...theme.typography.presets.caption,
-      color: theme.colors.semantic.warning,
+      color: PREMIUM.goldDeep,
       fontFamily: theme.typography.fonts.ui.semibold,
+      fontWeight: '600',
     },
     inlineError: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
       gap: theme.spacing.md,
+      padding: theme.spacing.md,
+      borderRadius: theme.radii.lg,
+      backgroundColor: theme.colors.surface.muted,
+      borderWidth: 1,
+      borderColor: theme.colors.border.subtle,
     },
     inlineErrorText: {
       ...theme.typography.presets.caption,

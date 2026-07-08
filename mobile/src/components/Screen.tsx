@@ -16,6 +16,7 @@ type ScreenProps = {
   style?: ViewStyle;
   contentContainerStyle?: ViewStyle;
   scrollProps?: Omit<ScrollViewProps, 'contentContainerStyle' | 'style' | 'children'>;
+  testID?: string;
 };
 
 function bottomPadding(inset: BottomInset, safeBottom: number) {
@@ -36,6 +37,7 @@ export function Screen({
   style,
   contentContainerStyle,
   scrollProps,
+  testID,
 }: ScreenProps) {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
@@ -57,6 +59,7 @@ export function Screen({
   if (scroll) {
     return (
       <ScrollView
+        testID={testID}
         style={[styles.screen, style]}
         contentContainerStyle={[styles.content, contentContainerStyle]}
         showsVerticalScrollIndicator={false}
@@ -67,7 +70,11 @@ export function Screen({
     );
   }
 
-  return <View style={[styles.screen, styles.content, style, contentContainerStyle]}>{children}</View>;
+  return (
+    <View testID={testID} style={[styles.screen, styles.content, style, contentContainerStyle]}>
+      {children}
+    </View>
+  );
 }
 
 function createStyles(

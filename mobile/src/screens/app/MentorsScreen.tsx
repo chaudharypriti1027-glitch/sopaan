@@ -52,7 +52,7 @@ export function MentorsScreen() {
 
   return (
     <Screen scroll contentContainerStyle={styles.content}>
-      <SectionTitle title="Mentors" subtitle="Book 1:1 guidance from toppers" />
+      <SectionTitle subtitle="Book 1:1 guidance from toppers" />
 
       <QueryStateView
         isLoading={mentorsQuery.isLoading}

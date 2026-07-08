@@ -2,7 +2,6 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useEffect, useMemo, useState } from 'react';
 import {
-  ActivityIndicator,
   Pressable,
   StyleSheet,
   Text,
@@ -14,11 +13,20 @@ import {
   Landmark,
   Search as SearchIcon,
   Sparkles,
+  type LucideIcon,
 } from 'lucide-react-native';
-import { Card, ChipSelect, Screen, TextField } from '../../components';
-import { MENU_TONE_STYLES } from '../../components/premium/premiumIconTokens';
+import {
+  Card,
+  ChipSelect,
+  PremiumEmptyState,
+  PremiumListRow,
+  QueryStateView,
+  Screen,
+  SectionTitle,
+  TextField,
+} from '../../components';
 import type { SearchResult, SearchResultGroup } from '../../api/search';
-import { useRecentSearches, useSearch } from '../../hooks';
+import { useNetworkStatus, useRecentSearches, useSearch } from '../../hooks';
 import type { MainStackParamList } from '../../navigation/types';
 import { navigateToAskAI } from '../../navigation/askAiNavigation';
 import { useTheme } from '../../theme';
@@ -34,33 +42,26 @@ const GROUP_LABELS: Record<SearchResultGroup, string> = {
 
 const GROUP_ORDER: SearchResultGroup[] = ['exams', 'courses', 'tests', 'ai'];
 
-/** Matches each result group to the same tone Home/Profile use for that feature. */
-const GROUP_TONES: Record<SearchResultGroup, keyof typeof MENU_TONE_STYLES> = {
+const GROUP_TONES = {
   exams: 'coral',
   courses: 'indigo',
   tests: 'teal',
   ai: 'gold',
-};
+} as const satisfies Record<SearchResultGroup, 'coral' | 'indigo' | 'teal' | 'gold'>;
 
-function GroupIcon({ group, color }: { group: SearchResultGroup; color: string }) {
-  const size = 18;
-  switch (group) {
-    case 'exams':
-      return <Landmark size={size} color={color} />;
-    case 'courses':
-      return <GraduationCap size={size} color={color} />;
-    case 'tests':
-      return <BookOpen size={size} color={color} />;
-    case 'ai':
-      return <Sparkles size={size} color={color} />;
-  }
-}
+const GROUP_ICONS: Record<SearchResultGroup, LucideIcon> = {
+  exams: Landmark,
+  courses: GraduationCap,
+  tests: BookOpen,
+  ai: Sparkles,
+};
 
 export function SearchScreen() {
   const navigation = useNavigation<SearchNav>();
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const { recent, addRecent, clearRecent } = useRecentSearches();
+  const { isOffline } = useNetworkStatus();
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
 
@@ -87,7 +88,10 @@ export function SearchScreen() {
         navigation.navigate('Quiz', { testId: result.routeParams?.testId ?? result.id });
         break;
       case 'AskAI':
-        navigateToAskAI(navigation);
+        navigateToAskAI(
+          navigation,
+          debouncedQuery.trim() ? { initialPrompt: debouncedQuery.trim() } : undefined,
+        );
         break;
       case 'CourseDetail':
         navigation.navigate('CourseDetail', {
@@ -101,6 +105,7 @@ export function SearchScreen() {
 
   const hasResults =
     debouncedQuery.length > 0 &&
+    !searchQuery.isError &&
     GROUP_ORDER.some((group) => (searchQuery.data?.results[group]?.length ?? 0) > 0);
 
   return (
@@ -117,7 +122,7 @@ export function SearchScreen() {
       {debouncedQuery.length === 0 ? (
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Recent</Text>
+            <SectionTitle title="Recent" />
             {recent.length > 0 ? (
               <Pressable onPress={() => void clearRecent()}>
                 <Text style={styles.clearText}>Clear</Text>
@@ -125,7 +130,12 @@ export function SearchScreen() {
             ) : null}
           </View>
           {recent.length === 0 ? (
-            <Text style={styles.emptyText}>Your recent searches will appear here.</Text>
+            <PremiumEmptyState
+              title="No recent searches"
+              hint="Your recent searches will appear here."
+              Icon={SearchIcon}
+              tone="slate"
+            />
           ) : (
             <View style={styles.chipRow}>
               {recent.map((item) => (
@@ -136,50 +146,50 @@ export function SearchScreen() {
         </View>
       ) : null}
 
-      {searchQuery.isLoading ? (
-        <ActivityIndicator color={theme.colors.brand.primary} style={styles.loader} />
+      {debouncedQuery.length > 0 ? (
+        <QueryStateView
+          isLoading={searchQuery.isLoading}
+          isError={searchQuery.isError}
+          isFetching={searchQuery.isFetching}
+          isOffline={isOffline}
+          hasData={hasResults}
+          onRetry={() => void searchQuery.refetch()}
+          skeletonRows={2}
+        >
+          {!hasResults ? (
+            <PremiumEmptyState
+              title="No results"
+              hint={`Nothing matched “${debouncedQuery}”. Try a different keyword.`}
+              Icon={SearchIcon}
+              tone="slate"
+            />
+          ) : (
+            GROUP_ORDER.map((group) => {
+              const items = searchQuery.data?.results[group] ?? [];
+              if (!items.length) return null;
+
+              return (
+                <View key={group} style={styles.section}>
+                  <SectionTitle title={GROUP_LABELS[group]} />
+                  <Card padded={false}>
+                    {items.map((item: SearchResult, index: number) => (
+                      <PremiumListRow
+                        key={item.id}
+                        title={item.title}
+                        subtitle={item.subtitle}
+                        icon={GROUP_ICONS[group]}
+                        tone={GROUP_TONES[group]}
+                        onPress={() => openResult(item)}
+                        last={index === items.length - 1}
+                      />
+                    ))}
+                  </Card>
+                </View>
+              );
+            })
+          )}
+        </QueryStateView>
       ) : null}
-
-      {debouncedQuery.length > 0 && !searchQuery.isLoading && !hasResults ? (
-        <Text style={styles.emptyText}>No results for “{debouncedQuery}”.</Text>
-      ) : null}
-
-      {GROUP_ORDER.map((group) => {
-        const items = searchQuery.data?.results[group] ?? [];
-        if (!items.length) return null;
-
-        const tone = MENU_TONE_STYLES[GROUP_TONES[group]];
-
-        return (
-          <View key={group} style={styles.section}>
-            <Text style={styles.sectionTitle}>{GROUP_LABELS[group]}</Text>
-            <Card padded={false}>
-              {items.map((item: SearchResult, index: number) => (
-                <Pressable
-                  key={item.id}
-                  onPress={() => openResult(item)}
-                  style={({ pressed }) => [
-                    styles.resultRow,
-                    index < items.length - 1 && styles.resultBorder,
-                    pressed && styles.pressed,
-                  ]}
-                >
-                  <View style={[styles.resultIcon, { backgroundColor: tone.bg }]}>
-                    <GroupIcon group={group} color={tone.fg} />
-                  </View>
-                  <View style={styles.resultText}>
-                    <Text style={styles.resultTitle}>{item.title}</Text>
-                    {item.subtitle ? (
-                      <Text style={styles.resultSubtitle}>{item.subtitle}</Text>
-                    ) : null}
-                  </View>
-                  <SearchIcon size={16} color={theme.colors.text.tertiary} />
-                </Pressable>
-              ))}
-            </Card>
-          </View>
-        );
-      })}
     </Screen>
   );
 }
@@ -198,59 +208,16 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       justifyContent: 'space-between',
       alignItems: 'center',
     },
-    sectionTitle: {
-      ...theme.typography.presets.bodyMedium,
-      color: theme.colors.text.primary,
-      fontFamily: theme.typography.fonts.ui.semibold,
-    },
     clearText: {
       ...theme.typography.presets.label,
       color: theme.colors.brand.primary,
+      fontFamily: theme.typography.fonts.ui.bold,
+      fontWeight: '700',
     },
     chipRow: {
       flexDirection: 'row',
       flexWrap: 'wrap',
       gap: theme.spacing.sm,
-    },
-    emptyText: {
-      ...theme.typography.presets.body,
-      color: theme.colors.text.secondary,
-    },
-    loader: {
-      marginTop: theme.spacing.lg,
-    },
-    resultRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: theme.spacing.md,
-      paddingHorizontal: theme.spacing.lg,
-      paddingVertical: theme.spacing.md,
-    },
-    resultBorder: {
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: theme.colors.border.subtle,
-    },
-    pressed: {
-      backgroundColor: theme.colors.surface.muted,
-    },
-    resultIcon: {
-      width: 36,
-      height: 36,
-      borderRadius: theme.radii.md,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    resultText: {
-      flex: 1,
-      gap: theme.spacing.xs / 2,
-    },
-    resultTitle: {
-      ...theme.typography.presets.bodyMedium,
-      color: theme.colors.text.primary,
-    },
-    resultSubtitle: {
-      ...theme.typography.presets.caption,
-      color: theme.colors.text.secondary,
     },
   });
 }

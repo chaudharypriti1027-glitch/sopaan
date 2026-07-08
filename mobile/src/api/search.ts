@@ -56,7 +56,41 @@ function mapTest(test: TestSummary & { _id?: string }): SearchResult {
   };
 }
 
-export async function searchAll(query: string): Promise<SearchResponse> {
+function buildAiResult(query: string): SearchResult[] {
+  return [
+    {
+      id: `ai-${query}`,
+      group: 'ai',
+      title: `Ask AI about “${query}”`,
+      subtitle: 'Get instant explanations & study tips',
+      route: 'AskAI',
+    },
+  ];
+}
+
+function mapServerResults(
+  data: {
+    query: string;
+    results: {
+      exams: SearchResult[];
+      courses: SearchResult[];
+      tests: SearchResult[];
+    };
+  },
+): SearchResponse {
+  const trimmed = data.query;
+  return {
+    query: trimmed,
+    results: {
+      exams: data.results.exams ?? [],
+      courses: data.results.courses ?? [],
+      tests: data.results.tests ?? [],
+      ai: buildAiResult(trimmed),
+    },
+  };
+}
+
+async function searchClientSide(query: string): Promise<SearchResponse> {
   const trimmed = query.trim();
   if (!trimmed) {
     return { query: '', results: { exams: [], courses: [], tests: [], ai: [] } };
@@ -97,18 +131,25 @@ export async function searchAll(query: string): Promise<SearchResponse> {
     .slice(0, 8)
     .map(mapTest);
 
-  const ai: SearchResult[] = [
-    {
-      id: `ai-${trimmed}`,
-      group: 'ai',
-      title: `Ask AI about “${trimmed}”`,
-      subtitle: 'Get instant explanations & study tips',
-      route: 'AskAI',
-    },
-  ];
-
   return {
     query: trimmed,
-    results: { exams, courses, tests, ai },
+    results: { exams, courses, tests, ai: buildAiResult(trimmed) },
   };
+}
+
+export async function searchAll(query: string): Promise<SearchResponse> {
+  const trimmed = query.trim();
+  if (!trimmed) {
+    return { query: '', results: { exams: [], courses: [], tests: [], ai: [] } };
+  }
+
+  try {
+    const { data } = await apiClient.get<{
+      query: string;
+      results: { exams: SearchResult[]; courses: SearchResult[]; tests: SearchResult[] };
+    }>('/search', { params: { q: trimmed, limit: 8 } });
+    return mapServerResults(data);
+  } catch {
+    return searchClientSide(trimmed);
+  }
 }

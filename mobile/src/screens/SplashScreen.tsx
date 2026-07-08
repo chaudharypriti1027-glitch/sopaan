@@ -30,7 +30,7 @@ function wait(ms: number) {
   });
 }
 
-function resetToWelcome(navigation: SplashNav) {
+function resetToOtpLogin(navigation: SplashNav) {
   navigation.reset({
     index: 0,
     routes: [
@@ -38,7 +38,7 @@ function resetToWelcome(navigation: SplashNav) {
         name: 'Auth',
         state: {
           index: 0,
-          routes: [{ name: 'Welcome' }],
+          routes: [{ name: 'OtpLogin' }],
         },
       },
     ],
@@ -89,7 +89,7 @@ function routeAfterBootstrap(navigation: SplashNav, result: BootstrapResult) {
   }
 
   if (result.kind === 'guest') {
-    resetToWelcome(navigation);
+    resetToOtpLogin(navigation);
     return;
   }
 

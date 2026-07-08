@@ -1,9 +1,18 @@
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Play } from 'lucide-react-native';
+import { Play, GraduationCap } from 'lucide-react-native';
 import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Card, Pill, ProgressBar, QueryStateView, Screen, SectionTitle } from '../../components';
+import {
+  Card,
+  Pill,
+  PremiumEmptyState,
+  PremiumHeroCard,
+  ProgressBar,
+  QueryStateView,
+  Screen,
+} from '../../components';
+import { HomeSlotIcon } from '../../components/home/HomePremiumIcon';
 import type { Course } from '../../api/types';
 import { useCourses, useNetworkStatus } from '../../hooks';
 import type { MainStackParamList } from '../../navigation/types';
@@ -63,10 +72,16 @@ export function CoursesScreen() {
   const coursesQuery = useCourses({ limit: 30 });
   const freeCourses = (coursesQuery.data?.items ?? []).filter((course) => course.isFree !== false);
   const hasData = freeCourses.length > 0;
+  const inProgress = freeCourses.filter((course) => (course.progressPercent ?? 0) > 0).length;
 
   return (
     <Screen scroll contentContainerStyle={styles.content}>
-      <SectionTitle title="Free courses" subtitle="Video lessons with tracked progress" />
+      <PremiumHeroCard
+        icon={<HomeSlotIcon slot="featured" Icon={GraduationCap} tone="lavender" />}
+        eyebrow="Free courses"
+        title={`${freeCourses.length} available`}
+        hint={inProgress > 0 ? `${inProgress} in progress` : 'Video lessons with tracked progress'}
+      />
 
       <QueryStateView
         isLoading={coursesQuery.isLoading}
@@ -76,6 +91,7 @@ export function CoursesScreen() {
         hasData={hasData}
         onRetry={() => void coursesQuery.refetch()}
       >
+        {hasData ? (
         <View style={styles.list}>
           {freeCourses.map((course) => (
             <CourseCard
@@ -87,6 +103,14 @@ export function CoursesScreen() {
             />
           ))}
         </View>
+        ) : (
+          <PremiumEmptyState
+            title="No courses yet"
+            hint="Free video courses will appear here when available."
+            Icon={GraduationCap}
+            tone="lavender"
+          />
+        )}
       </QueryStateView>
     </Screen>
   );

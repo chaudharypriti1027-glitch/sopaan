@@ -111,11 +111,11 @@ app.post(
 );
 
 app.use(express.json({ limit: securityConfig.jsonBodyLimit }));
+app.use(compression({ threshold: 1024 }));
 app.use(requestContextMiddleware);
 app.use(optionalAuth);
 app.use(attachUserToRequestContext);
 app.use(attachResolvedLanguage);
-app.use(compression());
 
 app.use(metricsRoutes);
 

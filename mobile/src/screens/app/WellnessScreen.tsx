@@ -67,7 +67,6 @@ export function WellnessScreen() {
   return (
     <Screen scroll contentContainerStyle={styles.content}>
       <SectionTitle
-        title="Wellness"
         subtitle="Calm sessions for breathing, pre-exam nerves, sleep, and focus reset"
       />
 

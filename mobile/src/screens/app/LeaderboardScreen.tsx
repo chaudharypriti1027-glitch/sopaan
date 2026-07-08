@@ -1,6 +1,7 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { RefreshControl, StyleSheet, View } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import type { RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
   LeaderboardHero,
@@ -18,10 +19,22 @@ import type { MainStackParamList } from '../../navigation/types';
 
 export function LeaderboardScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
+  const route = useRoute<RouteProp<MainStackParamList, 'Leaderboard'>>();
   const styles = useMemo(() => createStyles(), []);
+  const routedTestId = useRef(false);
   const { user } = useAuth();
   const { isOffline } = useNetworkStatus();
   const [period, setPeriod] = useState<LeaderboardPeriod>('all-time');
+
+  useEffect(() => {
+    const testId = route.params?.testId;
+    if (!testId || routedTestId.current) {
+      return;
+    }
+
+    routedTestId.current = true;
+    navigation.navigate('TestSeries', { testId });
+  }, [navigation, route.params?.testId]);
 
   const leaderboardQuery = useLeaderboard({ limit: 50, period });
   const data = leaderboardQuery.data;

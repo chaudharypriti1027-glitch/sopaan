@@ -18,6 +18,7 @@ export interface HomeFeed {
   aiNudges: AINudge[];
   dailyChallenge: {
     id: string;
+    testId: string;
     title: string;
     qCount: number;
     rewardCoins: number;

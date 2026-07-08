@@ -39,6 +39,7 @@ const dailyChallengeSchema = new mongoose.Schema(
   }
 );
 
+dailyChallengeSchema.index({ status: 1, date: -1 });
 dailyChallengeSchema.index({ date: 1, examTag: 1 }, { unique: true, sparse: true });
 
 export const DailyChallenge = mongoose.model('DailyChallenge', dailyChallengeSchema);

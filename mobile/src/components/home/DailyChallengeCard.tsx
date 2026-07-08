@@ -27,7 +27,7 @@ export function DailyChallengeCard({ challenge, onPress }: DailyChallengeCardPro
   }
 
   const done = challenge.status === 'done';
-  const deeplink = `/stack/Quiz/${challenge.id}`;
+  const deeplink = `/stack/Quiz/${challenge.testId}`;
 
   return (
     <Pressable

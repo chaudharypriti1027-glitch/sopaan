@@ -6,7 +6,7 @@ import {
   revokeRefresh,
   revokeAllSessions,
 } from './tokens.js';
-import { createAndSendOtp, verifyAndConsumeOtp } from './otpService.js';
+import { createAndSendOtp, createAndSendEmailOtp, verifyAndConsumeOtp, verifyAndConsumeEmailOtp } from './otpService.js';
 import { normalizeIndianPhone } from '../utils/phone.js';
 import { applyReferralAtSignup, ensureUserReferralCode } from './referralService.js';
 import { securityConfig } from '../config/securityConfig.js';
@@ -277,13 +277,27 @@ export async function logout({ refreshToken, userId } = {}) {
   return { message: 'Logged out successfully' };
 }
 
-export async function requestOtp(phone) {
-  const normalized = normalizeIndianPhone(phone);
-  await createAndSendOtp(normalized);
-  return { sent: true };
+export async function requestOtp({ phone, email } = {}) {
+  if (phone) {
+    const normalized = normalizeIndianPhone(phone);
+    await createAndSendOtp(normalized);
+    return { sent: true, channel: 'phone' };
+  }
+
+  const normalizedEmail = String(email).trim().toLowerCase();
+  await createAndSendEmailOtp(normalizedEmail);
+  return { sent: true, channel: 'email' };
 }
 
-export async function verifyOtp(phone, code, { referralCode, installId, privacyConsent } = {}) {
+export async function verifyOtp({ phone, email, code, referralCode, installId, privacyConsent } = {}) {
+  if (phone) {
+    return verifyPhoneOtp(phone, code, { referralCode, installId, privacyConsent });
+  }
+
+  return verifyEmailOtp(email, code, { referralCode, installId, privacyConsent });
+}
+
+async function verifyPhoneOtp(phone, code, { referralCode, installId, privacyConsent } = {}) {
   const normalized = normalizeIndianPhone(phone);
   const trimmedCode = String(code).trim();
 
@@ -324,6 +338,57 @@ export async function verifyOtp(phone, code, { referralCode, installId, privacyC
         const { trackSignupComplete } = await import('./experimentService.js');
         trackSignupComplete({ installId, userId: user._id }).catch((trackErr) => {
           console.warn(`[experiments] otp signup track failed for ${user._id}:`, trackErr.message);
+        });
+      }
+    }
+  }
+
+  if (!user) {
+    throw new AppError('Unable to complete sign in', 500, 'INTERNAL_ERROR');
+  }
+
+  await resetFailedLogin(user);
+  return issueAuthResult(user, { isNewUser });
+}
+
+async function verifyEmailOtp(email, code, { referralCode, installId, privacyConsent } = {}) {
+  const normalizedEmail = String(email).trim().toLowerCase();
+  const trimmedCode = String(code).trim();
+
+  await verifyAndConsumeEmailOtp(normalizedEmail, trimmedCode);
+
+  let user = await User.findOne({ email: normalizedEmail });
+  let isNewUser = false;
+
+  if (!user) {
+    isNewUser = true;
+
+    user = new User({
+      email: normalizedEmail,
+      name: 'Student',
+      onboardingComplete: false,
+      ...(privacyConsent?.aiProcessing ? { privacyConsent: buildConsentRecord(privacyConsent) } : {}),
+    });
+
+    try {
+      await user.save();
+    } catch (err) {
+      if (err?.code === 11000) {
+        user = await User.findOne({ email: normalizedEmail });
+        isNewUser = false;
+      } else {
+        handleDuplicateKeyError(err);
+      }
+    }
+
+    if (isNewUser && user) {
+      await ensureUserReferralCode(user._id);
+      await applyReferralAtSignup(user._id, referralCode, { installId });
+
+      if (installId) {
+        const { trackSignupComplete } = await import('./experimentService.js');
+        trackSignupComplete({ installId, userId: user._id }).catch((trackErr) => {
+          console.warn(`[experiments] email otp signup track failed for ${user._id}:`, trackErr.message);
         });
       }
     }

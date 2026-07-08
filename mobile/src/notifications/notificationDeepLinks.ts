@@ -1,5 +1,6 @@
+import { CommonActions } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { MainStackParamList } from '../navigation/types';
+import type { AppTabParamList, MainStackParamList } from '../navigation/types';
 
 export type NotificationPayload = {
   type?: string;
@@ -16,79 +17,184 @@ export type NotificationPayload = {
   [key: string]: unknown;
 };
 
-export function navigateFromNotificationPayload(
-  navigation: NativeStackNavigationProp<MainStackParamList>,
-  payload: NotificationPayload,
+function getNavigationRef() {
+  // Lazy require keeps Jest mocks that replace @react-navigation/native working.
+  const { navigationRef } = require('../navigation/navigationRef') as {
+    navigationRef: {
+      isReady: () => boolean;
+      dispatch: (action: ReturnType<typeof CommonActions.navigate>) => void;
+    };
+  };
+  return navigationRef;
+}
+
+function openMainScreen(
+  screen: keyof MainStackParamList,
+  params?: MainStackParamList[keyof MainStackParamList],
 ) {
+  const navigationRef = getNavigationRef();
+  if (!navigationRef.isReady()) {
+    return false;
+  }
+
+  navigationRef.dispatch(
+    CommonActions.navigate({
+      name: 'Main',
+      params: { screen, params },
+    }),
+  );
+  return true;
+}
+
+function openTab(
+  screen: keyof AppTabParamList,
+  params?: AppTabParamList[keyof AppTabParamList],
+) {
+  const navigationRef = getNavigationRef();
+  if (!navigationRef.isReady()) {
+    return false;
+  }
+
+  navigationRef.dispatch(
+    CommonActions.navigate({
+      name: 'Main',
+      params: {
+        screen: 'AppTabs',
+        params: { screen, params },
+      },
+    }),
+  );
+  return true;
+}
+
+export function navigateFromNotificationPayload(payload: NotificationPayload) {
+  if (payload.type === 'rank_up' && payload.attemptId) {
+    openMainScreen('MockAnalysis', { attemptId: String(payload.attemptId) });
+    return;
+  }
+
   const screen = payload.screen;
   const params = payload.params ?? {};
 
   switch (screen) {
     case 'CurrentAffairsTab':
-      navigation.navigate('AppTabs', {
-        screen: 'CurrentAffairs',
-        params: {
-          digestId: (params.digestId as string | undefined) ?? payload.digestId,
-          affairId: (params.affairId as string | undefined) ?? payload.affairId,
-        },
+      openTab('CurrentAffairs', {
+        digestId: (params.digestId as string | undefined) ?? payload.digestId,
+        affairId: (params.affairId as string | undefined) ?? payload.affairId,
       });
       return;
     case 'StudyPlanner':
-      navigation.navigate('StudyPlanner', {
+      openMainScreen('StudyPlanner', {
         date: (params.date as string | undefined) ?? payload.date,
       });
       return;
     case 'TestSeries':
-      navigation.navigate('TestSeries');
+      openMainScreen('TestSeries', {
+        seriesId: (params.seriesId as string | undefined) ?? payload.seriesId,
+      });
       return;
     case 'ProgressAnalytics':
-      navigation.navigate('ProgressAnalytics');
+      openMainScreen('ProgressAnalytics', {
+        weekKey: (params.weekKey as string | undefined) ?? payload.weekKey,
+      });
       return;
     case 'Leaderboard':
-      navigation.navigate('Leaderboard', {
+      openMainScreen('Leaderboard', {
         testId: (params.testId as string | undefined) ?? payload.testId,
       });
       return;
     case 'Rewards':
-      navigation.navigate('Rewards');
+      openMainScreen('Rewards');
       return;
     case 'Mentors':
-      navigation.navigate('Mentors');
+      openMainScreen('Mentors');
       return;
     case 'Premium':
-      navigation.navigate('Premium');
+      openMainScreen('Premium', {
+        plan: (params.plan as string | undefined) ?? payload.plan,
+      } as MainStackParamList['Premium']);
       return;
-    case 'MockAnalysis':
-      if (payload.attemptId) {
-        navigation.navigate('MockAnalysis', { attemptId: payload.attemptId });
-        return;
+    case 'MockAnalysis': {
+      const attemptId =
+        (params.attemptId as string | undefined) ?? payload.attemptId;
+      if (attemptId) {
+        openMainScreen('MockAnalysis', { attemptId: String(attemptId) });
       }
-      break;
-    case 'Result':
-      break;
+      return;
+    }
+    case 'LiveClassViewer': {
+      const liveClassId =
+        (params.liveClassId as string | undefined) ??
+        (payload.liveClassId as string | undefined);
+      if (liveClassId) {
+        openMainScreen('LiveClassViewer', { liveClassId: String(liveClassId) });
+      }
+      return;
+    }
+    case 'LiveClasses':
+      openMainScreen('LiveClasses');
+      return;
     default:
       break;
   }
 
-  if (payload.type === 'rank_up' && payload.attemptId && payload.testId) {
-    navigation.navigate('MockAnalysis', { attemptId: String(payload.attemptId) });
-    return;
-  }
-
   if (payload.type === 'mock_live' || payload.type === 'progress_recap') {
-    navigation.navigate(payload.type === 'mock_live' ? 'TestSeries' : 'ProgressAnalytics');
+    if (payload.type === 'mock_live') {
+      openMainScreen('TestSeries', {
+        seriesId: payload.seriesId as string | undefined,
+      });
+    } else {
+      openMainScreen('ProgressAnalytics', {
+        weekKey: payload.weekKey as string | undefined,
+      });
+    }
     return;
   }
 
   if (payload.type === 'plan_ready' || payload.type === 'streak_reminder') {
-    navigation.navigate('StudyPlanner');
+    openMainScreen('StudyPlanner', {
+      date: payload.date as string | undefined,
+    });
     return;
   }
 
   if (payload.type === 'new_current_affairs') {
-    navigation.navigate('AppTabs', { screen: 'CurrentAffairs' });
+    openTab('CurrentAffairs', {
+      digestId: payload.digestId as string | undefined,
+      affairId: payload.affairId as string | undefined,
+    });
     return;
   }
 
-  navigation.navigate('Notifications');
+  if (payload.type === 'live_class_scheduled') {
+    const liveClassId = payload.liveClassId as string | undefined;
+    if (liveClassId) {
+      openMainScreen('LiveClassViewer', { liveClassId: String(liveClassId) });
+    } else {
+      openMainScreen('LiveClasses');
+    }
+    return;
+  }
+
+  openMainScreen('Notifications');
+}
+
+/** @deprecated use navigateFromNotificationPayload — kept for typed screen navigation contexts. */
+export function navigateFromNotificationPayloadWithNav(
+  _navigation: NativeStackNavigationProp<MainStackParamList>,
+  payload: NotificationPayload,
+) {
+  navigateFromNotificationPayload(payload);
+}
+
+export function openInAppNotification(
+  _navigation: NativeStackNavigationProp<MainStackParamList>,
+  notification: { type: string; data?: NotificationPayload | null },
+) {
+  const payload: NotificationPayload = {
+    type: notification.type,
+    ...(notification.data ?? {}),
+  };
+
+  navigateFromNotificationPayload(payload);
 }

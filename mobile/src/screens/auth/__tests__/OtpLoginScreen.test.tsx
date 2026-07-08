@@ -8,8 +8,10 @@ const mockRequestOtp = jest.fn();
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({
     navigate: mockNavigate,
+    replace: mockNavigate,
     dispatch: jest.fn(),
   }),
+  useRoute: () => ({ params: undefined }),
 }));
 
 jest.mock('../../../api', () => ({
@@ -26,25 +28,33 @@ jest.mock('../../../api', () => ({
   }),
 }));
 
+async function renderOtpLogin() {
+  const result = renderWithProviders(<OtpLoginScreen />);
+  await waitFor(() => {
+    expect(jest.requireMock('../../../api').privacyApi.getPolicy).toHaveBeenCalled();
+  });
+  return result;
+}
+
 describe('OtpLoginScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockRequestOtp.mockResolvedValue({ sent: true });
   });
 
-  it('keeps Send OTP disabled until phone is valid and consent is checked', () => {
-    const { getByTestId, getByRole } = renderWithProviders(<OtpLoginScreen />);
+  it('keeps Send OTP disabled until phone is valid and consent is checked', async () => {
+    const { getByTestId, getByRole } = await renderOtpLogin();
 
     fireEvent.changeText(getByTestId('otp-login-phone'), '98765');
-    expect(getByRole('button', { name: 'Send OTP' })).toBeDisabled();
+    expect(getByRole('button', { name: 'Continue' })).toBeDisabled();
   });
 
   it('requests an OTP and navigates to the verify screen with consent attached', async () => {
-    const { getByTestId, getByRole } = renderWithProviders(<OtpLoginScreen />);
+    const { getByTestId, getByRole } = await renderOtpLogin();
 
     fireEvent.changeText(getByTestId('otp-login-phone'), '9876543210');
     fireEvent.press(getByTestId('otp-login-consent'));
-    fireEvent.press(getByRole('button', { name: 'Send OTP' }));
+    fireEvent.press(getByRole('button', { name: 'Continue' }));
 
     await waitFor(() => {
       expect(mockRequestOtp).toHaveBeenCalledWith({ phone: '+919876543210' });
@@ -59,10 +69,10 @@ describe('OtpLoginScreen', () => {
     });
   });
 
-  it('navigates back to email login', () => {
-    const { getByRole } = renderWithProviders(<OtpLoginScreen />);
+  it('navigates to email login from the secondary link', async () => {
+    const { getByTestId } = await renderOtpLogin();
 
-    fireEvent.press(getByRole('button', { name: 'Back to email login' }));
+    fireEvent.press(getByTestId('otp-login-email-link'));
 
     expect(mockNavigate).toHaveBeenCalledWith('Login');
   });

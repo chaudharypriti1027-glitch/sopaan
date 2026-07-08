@@ -21,6 +21,7 @@ export type NotificationTypePreferences = {
   new_current_affairs: boolean;
   plan_ready: boolean;
   mock_live: boolean;
+  live_class_scheduled: boolean;
   progress_recap: boolean;
   badge: boolean;
   reward: boolean;

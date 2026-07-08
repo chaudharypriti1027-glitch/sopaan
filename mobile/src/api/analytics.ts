@@ -4,6 +4,7 @@ export type AnalyticsRange = 'week' | 'month' | 'all';
 
 export type ProgressAnalytics = {
   range: AnalyticsRange;
+  weekKey?: string;
   summary: {
     totalAttempts: number;
     avgAccuracy: number;
@@ -28,9 +29,12 @@ export type ProgressAnalytics = {
   }[];
 };
 
-export async function getProgressAnalytics(range: AnalyticsRange = 'week'): Promise<ProgressAnalytics> {
+export async function getProgressAnalytics(
+  range: AnalyticsRange = 'week',
+  weekKey?: string,
+): Promise<ProgressAnalytics> {
   const { data } = await apiClient.get<ProgressAnalytics>('/analytics/progress', {
-    params: { range },
+    params: { range, ...(weekKey ? { weekKey } : {}) },
   });
   return data;
 }

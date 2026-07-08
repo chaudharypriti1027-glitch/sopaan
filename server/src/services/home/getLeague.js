@@ -1,4 +1,6 @@
 import { buildUserStanding } from '../leaderboardService.js';
+import { CACHE_TTLS } from '../../config/cacheConfig.js';
+import { cacheGetOrSet, stableCacheKey } from '../../lib/cache.js';
 import { safeHomeCall } from './safe.js';
 
 export async function getLeague(user) {
@@ -10,7 +12,13 @@ export async function getLeague(user) {
     let rankInLeague = 0;
 
     try {
-      const standing = await buildUserStanding(user._id);
+      const cacheKey = stableCacheKey('cache:user-standing', {
+        userId: user._id.toString(),
+        period: 'all-time',
+      });
+      const standing = await cacheGetOrSet(cacheKey, CACHE_TTLS.userStandingSec, () =>
+        buildUserStanding(user._id),
+      );
       rankInLeague = standing.rank ?? 0;
     } catch {
       rankInLeague = 0;

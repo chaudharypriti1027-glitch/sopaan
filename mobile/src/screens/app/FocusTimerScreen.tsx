@@ -109,7 +109,6 @@ export function FocusTimerScreen() {
   return (
     <Screen scroll contentContainerStyle={styles.content}>
       <SectionTitle
-        title="Focus Timer"
         subtitle={`Pomodoro · ${focusMinutesLogged} min logged today`}
       />
 

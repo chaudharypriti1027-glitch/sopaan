@@ -2,6 +2,11 @@ import { jest, beforeAll, afterAll, beforeEach, describe, expect, it } from '@je
 import request from 'supertest';
 
 jest.unstable_mockModule('../../src/services/ai/coach.js', () => ({
+  instantAttemptCoaching: jest.fn(() => ({
+    feedback: 'Strong accuracy — revise weak topics next.',
+    weakTopics: ['Ratios'],
+    actions: ['Review incorrect answers', 'Practice ratio problems'],
+  })),
   feedbackForAttempt: jest.fn(async () => ({
     feedback: 'Strong accuracy — revise weak topics next.',
     weakTopics: ['Ratios'],

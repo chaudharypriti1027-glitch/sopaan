@@ -47,7 +47,7 @@ function formatProfile(profile) {
   };
 }
 
-async function getOrCreateProfile(userId) {
+export async function getOrCreateProfile(userId) {
   let profile = await StudentProfile.findOne({ userId });
 
   if (!profile) {

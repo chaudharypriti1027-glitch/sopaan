@@ -42,6 +42,7 @@ export function createMockHomeFeed(overrides: Partial<HomeFeed> = {}): HomeFeed 
     ],
     dailyChallenge: {
       id: 'daily-1',
+      testId: 'test-daily-1',
       title: 'Daily CA Quiz',
       qCount: 10,
       rewardCoins: 25,

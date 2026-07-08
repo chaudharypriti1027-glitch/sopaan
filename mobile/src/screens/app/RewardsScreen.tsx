@@ -42,8 +42,7 @@ export function RewardsScreen() {
   const loading = profileQuery.isLoading || rewardsQuery.isLoading;
 
   return (
-    <Screen scroll contentContainerStyle={styles.content}>
-      <SectionTitle title={t('rewards.title')} testID="rewards-screen" subtitle={t('rewards.subtitle')} />
+    <Screen scroll contentContainerStyle={styles.content} testID="rewards-screen">
 
       <PremiumHeroCard
         icon={<Coins size={24} color="#FFFFFF" strokeWidth={1.8} />}
@@ -51,7 +50,7 @@ export function RewardsScreen() {
         title={formatNumber(coins)}
       />
 
-      <Text style={styles.sectionLabel}>{t('rewards.badges')}</Text>
+      <SectionTitle title={t('rewards.badges')} />
       {badgesQuery.isLoading ? (
         <ActivityIndicator color={theme.colors.brand.primary} />
       ) : badges.length === 0 ? (
@@ -72,7 +71,7 @@ export function RewardsScreen() {
         </View>
       )}
 
-      <Text style={styles.sectionLabel}>{t('rewards.redeemSection')}</Text>
+      <SectionTitle title={t('rewards.redeemSection')} />
       {loading ? (
         <ActivityIndicator color={theme.colors.brand.primary} />
       ) : (
@@ -110,11 +109,6 @@ export function RewardsScreen() {
 function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
     content: { gap: theme.spacing.lg, paddingBottom: theme.spacing['3xl'] },
-    sectionLabel: {
-      ...theme.typography.presets.bodyMedium,
-      fontFamily: theme.typography.fonts.ui.semibold,
-      color: theme.colors.text.primary,
-    },
     badgeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm },
     badgeTile: {
       alignItems: 'center',

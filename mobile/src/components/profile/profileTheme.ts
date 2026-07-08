@@ -18,6 +18,7 @@ export const PROFILE = {
   gold: '#C29A4E',
   goldLt: '#E3C97F',
   goldDeep: '#A67C33',
+  goldSoft: '#F4EBD8',
   sage: '#5F8A7B',
   sageDeep: '#4C7264',
   cardRadius: 22,
@@ -38,10 +39,10 @@ export function profileCard(_theme: Theme): ViewStyle {
     borderColor: PROFILE.line,
     ...platformShadow({
       color: '#232A4D',
-      offsetY: 16,
-      opacity: 0.28,
-      radius: 26,
-      elevation: 6,
+      offsetY: 6,
+      opacity: 0.14,
+      radius: 18,
+      elevation: 4,
     }),
   };
 }

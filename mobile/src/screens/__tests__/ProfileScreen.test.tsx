@@ -135,7 +135,7 @@ describe('ProfileScreen', () => {
     expect(getByText(/verified/i)).toBeTruthy();
     expect(getByTestId('profile-detail-email')).toBeTruthy();
     expect(getByTestId('profile-detail-target-exam')).toBeTruthy();
-    expect(getByText(/SSC CGL/)).toBeTruthy();
+    expect(getByTestId('profile-detail-target-exam')).toHaveTextContent(/SSC CGL/);
     expect(getByText('Gujarat')).toBeTruthy();
     expect(getByText('Graduate')).toBeTruthy();
     expect(getByText('38%')).toBeTruthy();
@@ -148,11 +148,11 @@ describe('ProfileScreen', () => {
   it('renders live menu counts from profile summary', () => {
     const { getByTestId } = renderWithProviders(<ProfileScreen />);
 
-    expect(getByTestId('profile-count-courses')).toHaveTextContent('2');
-    expect(getByTestId('profile-count-saved')).toHaveTextContent('24');
-    expect(getByTestId('profile-count-mistakes')).toHaveTextContent('12');
-    expect(getByTestId('profile-count-badges')).toHaveTextContent('9');
+    expect(getByTestId('profile-hub-courses')).toBeTruthy();
+    expect(getByTestId('profile-hub-saved')).toBeTruthy();
+    expect(getByTestId('profile-hub-mistakes')).toBeTruthy();
     expect(getByTestId('profile-count-wallet')).toHaveTextContent('420');
+    expect(getByTestId('profile-count-downloads')).toHaveTextContent('3');
   });
 
   it('opens edit sheet and saves via PUT /api/me', async () => {
@@ -194,8 +194,8 @@ describe('ProfileScreen', () => {
 
     const { queryByTestId } = renderWithProviders(<ProfileScreen />);
 
-    expect(queryByTestId('profile-count-courses')).toBeNull();
-    expect(queryByTestId('profile-count-saved')).toBeNull();
+    expect(queryByTestId('profile-count-wallet')).toBeNull();
+    expect(queryByTestId('profile-count-downloads')).toBeNull();
   });
 
   it('navigates to premium from pro card', () => {

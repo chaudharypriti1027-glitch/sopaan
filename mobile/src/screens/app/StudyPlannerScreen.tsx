@@ -1,5 +1,7 @@
 import { Sparkles } from 'lucide-react-native';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useRoute } from '@react-navigation/native';
+import type { RouteProp } from '@react-navigation/native';
 import {
   ActivityIndicator,
   Alert,
@@ -28,6 +30,7 @@ import {
   useUpdatePlannerSession,
 } from '../../hooks';
 import type { PlannerSession } from '../../api/types';
+import type { MainStackParamList } from '../../navigation/types';
 import { useTheme } from '../../theme';
 
 function formatDateLabel(iso: string): string {
@@ -55,11 +58,19 @@ function sortSessions(sessions: PlannerSession[]): PlannerSession[] {
 }
 
 export function StudyPlannerScreen() {
+  const route = useRoute<RouteProp<MainStackParamList, 'StudyPlanner'>>();
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
-  const [selectedDate, setSelectedDate] = useState(todayDateString());
+  const initialDate = route.params?.date ?? todayDateString();
+  const [selectedDate, setSelectedDate] = useState(initialDate);
   const week = useMemo(() => weekDates(selectedDate), [selectedDate]);
+
+  useEffect(() => {
+    if (route.params?.date) {
+      setSelectedDate(route.params.date);
+    }
+  }, [route.params?.date]);
 
   const sessionsQuery = usePlannerSessions(selectedDate);
   const createSession = useCreatePlannerSession();
@@ -115,7 +126,6 @@ export function StudyPlannerScreen() {
   return (
     <Screen scroll contentContainerStyle={styles.content}>
       <SectionTitle
-        title="Study Planner"
         subtitle="Week view with timed sessions — add your own or let AI plan the day"
       />
 

@@ -57,7 +57,6 @@ describe('MockAnalysisScreen', () => {
 
     const { getByText } = renderWithProviders(<MockAnalysisScreen />);
 
-    expect(getByText('Mock analysis')).toBeTruthy();
     expect(getByText('Daily GS Mock')).toBeTruthy();
     expect(getByText('#52')).toBeTruthy();
     expect(getByText('You vs topper vs average')).toBeTruthy();

@@ -62,7 +62,7 @@ export function LiveClassViewerScreen() {
 
   const isLoadingMeta = classQuery.isLoading;
   const isJoiningLive = isLive && streamingConfigured && tokenQuery.isLoading;
-  const showComingSoon = streamingConfigured === false;
+  const showComingSoon = streamingConfigured === false && !hasRecording;
 
   useLiveClassOrientation(isLive && !showComingSoon);
 

@@ -73,7 +73,6 @@ export function PhysicalTestScreen() {
   return (
     <Screen scroll contentContainerStyle={styles.content}>
       <SectionTitle
-        title="Physical Test"
         subtitle={goal ? `Standards for ${goal}` : 'Police / Defence fitness standards vs your logs'}
       />
 
@@ -121,7 +120,7 @@ export function PhysicalTestScreen() {
         <Button label="Save log" onPress={handleLog} loading={createLog.isPending} fullWidth />
       </Card>
 
-      <Text style={styles.sectionLabel}>Recent logs</Text>
+      <SectionTitle title="Recent logs" />
       {logsQuery.isLoading ? (
         <ActivityIndicator color={theme.colors.brand.primary} />
       ) : (

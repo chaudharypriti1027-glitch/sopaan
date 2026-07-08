@@ -42,11 +42,19 @@ export function PremiumScreen() {
   const plansQuery = usePremiumPlans();
   const entitlementQuery = useSubscriptionEntitlement(Boolean(isPremium));
 
-  const [plan, setPlan] = useState<SubscriptionPlan>('yearly');
+  const [plan, setPlan] = useState<SubscriptionPlan>(
+    paywall?.plan === 'monthly' || paywall?.plan === 'yearly' ? paywall.plan : 'yearly',
+  );
   const [loading, setLoading] = useState(false);
 
   const plans = plansQuery.data?.plans ?? [];
   const selectedPlan = plans.find((item) => item.id === plan);
+
+  useEffect(() => {
+    if (paywall?.plan === 'monthly' || paywall?.plan === 'yearly') {
+      setPlan(paywall.plan);
+    }
+  }, [paywall?.plan]);
 
   useEffect(() => {
     if (isPremium || trackedView.current) {

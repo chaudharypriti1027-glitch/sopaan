@@ -17,7 +17,7 @@ export function RevisionCapsulesScreen() {
 
   return (
     <Screen scroll contentContainerStyle={styles.content}>
-      <SectionTitle title="Revision capsules" subtitle="Quick 5-minute reads between mocks" />
+      <SectionTitle subtitle="Quick 5-minute reads between mocks" />
 
       <QueryStateView
         isLoading={capsulesQuery.isLoading}

@@ -39,7 +39,6 @@ export function RoadmapScreen() {
   return (
     <Screen scroll contentContainerStyle={styles.content}>
       <SectionTitle
-        title="Goal roadmap"
         subtitle={`${roadmap.examName} · Target ${roadmap.targetYear}`}
       />
 

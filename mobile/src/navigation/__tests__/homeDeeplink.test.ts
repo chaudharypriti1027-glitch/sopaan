@@ -84,9 +84,9 @@ describe('navigateHomeDeeplink', () => {
     expect(mockStackNavigate).toHaveBeenCalledWith('AskAI');
   });
 
-  it('routes drill deeplinks to Practice', () => {
+  it('routes drill deeplinks to Practice with topic', () => {
     const navigation = createNavigation();
     navigateHomeDeeplink(navigation, '/drill/modern-history');
-    expect(mockNavigate).toHaveBeenCalledWith('Practice');
+    expect(mockNavigate).toHaveBeenCalledWith('Practice', { topic: 'modern history' });
   });
 });

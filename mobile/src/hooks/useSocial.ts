@@ -37,6 +37,17 @@ export function useCreateDoubt() {
   });
 }
 
+export function useVoteDoubt() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => doubtsApi.voteDoubt(id, 'post'),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.doubts.all });
+    },
+  });
+}
+
 export function useGroups(params?: PaginationParams & { examTag?: string }) {
   const { isAuthenticated } = useAuth();
 
@@ -85,9 +96,14 @@ export function useMentor(id: string | undefined) {
 }
 
 export function useBookMentor() {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: ({ id, slotStart }: { id: string; slotStart: string }) =>
       mentorsApi.bookMentor(id, slotStart),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.mentors.all });
+    },
   });
 }
 

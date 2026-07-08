@@ -3,18 +3,21 @@ import { render, type RenderOptions } from '@testing-library/react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from '../theme';
 import { PremiumDialogProvider } from '../components/premium/PremiumDialogProvider';
+import { trackTestQueryClient } from './queryCleanup';
 
 type WrapperProps = {
   children: ReactNode;
 };
 
 export function createTestQueryClient() {
-  return new QueryClient({
+  const client = new QueryClient({
     defaultOptions: {
-      queries: { retry: false },
-      mutations: { retry: false },
+      queries: { retry: false, gcTime: 0 },
+      mutations: { retry: false, gcTime: 0 },
     },
   });
+  trackTestQueryClient(client);
+  return client;
 }
 
 type RenderWithProvidersOptions = RenderOptions & {
@@ -26,6 +29,7 @@ export function renderWithProviders(
   options?: RenderWithProvidersOptions,
 ) {
   const queryClient = options?.queryClient ?? createTestQueryClient();
+  trackTestQueryClient(queryClient);
   const { queryClient: _ignored, ...renderOptions } = options ?? {};
 
   function Wrapper({ children }: WrapperProps) {

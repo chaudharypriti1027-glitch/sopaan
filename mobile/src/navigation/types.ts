@@ -1,4 +1,5 @@
 import type { NavigatorScreenParams } from '@react-navigation/native';
+import type { PremiumPlanId } from '../api/payments';
 import type { SubmitTestResponse } from '../api/types';
 import type { TierFeatureKey } from '../api/tier';
 import type { GameId } from '../games/types';
@@ -7,6 +8,7 @@ export type PremiumPaywallParams = {
   feature?: TierFeatureKey;
   paywallTitle?: string;
   paywallMessage?: string;
+  plan?: PremiumPlanId;
 };
 
 export type AuthStackParamList = {
@@ -17,20 +19,21 @@ export type AuthStackParamList = {
   Signup: undefined;
   Login: undefined;
   Otp: {
-    phone: string;
+    phone?: string;
+    email?: string;
     privacyConsent?: {
       policyVersion: string;
       aiProcessing: true;
       marketing?: boolean;
     };
   };
-  OtpLogin: undefined;
+  OtpLogin: { initialEmail?: string } | undefined;
   AdminPortal: undefined;
 };
 
 export type AppTabParamList = {
   Home: undefined;
-  Practice: undefined;
+  Practice: { topic?: string } | undefined;
   CurrentAffairs: { digestId?: string; affairId?: string } | undefined;
   Profile: undefined;
 };
@@ -70,8 +73,8 @@ export type MainStackParamList = {
   PhysicalTest: undefined;
   Roadmap: undefined;
   Readiness: undefined;
-  ProgressAnalytics: undefined;
-  TestSeries: undefined;
+  ProgressAnalytics: { weekKey?: string } | undefined;
+  TestSeries: { seriesId?: string; testId?: string } | undefined;
   RevisionCapsules: undefined;
   Vocabulary: undefined;
   Notifications: undefined;

@@ -23,11 +23,13 @@ export type LoginInput = {
 };
 
 export type OtpRequestInput = {
-  phone: string;
+  phone?: string;
+  email?: string;
 };
 
 export type OtpVerifyInput = {
-  phone: string;
+  phone?: string;
+  email?: string;
   code: string;
   referralCode?: string;
   installId?: string;

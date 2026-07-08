@@ -2,6 +2,8 @@ import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View, type ViewStyle } from 'react-native';
 import { denseTextProps } from '../a11y/textProps';
 import { useTheme } from '../theme';
+import { PREMIUM } from './premium/premiumStyles';
+import { platformShadow } from '../utils/platformShadow';
 
 export type SegTabOption<T extends string> = {
   key: T;
@@ -46,10 +48,12 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
     container: {
       flexDirection: 'row',
-      backgroundColor: theme.colors.brand.primaryMuted,
-      borderRadius: theme.radii.pill,
+      backgroundColor: PREMIUM.accentSoft,
+      borderRadius: 18,
       padding: 4,
       gap: 4,
+      borderWidth: 1,
+      borderColor: 'rgba(219,222,234,0.8)',
     },
     tab: {
       flex: 1,
@@ -57,23 +61,28 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       justifyContent: 'center',
       minHeight: 40,
       paddingVertical: theme.spacing.sm,
-      borderRadius: theme.radii.pill,
+      borderRadius: 14,
     },
     tabSelected: {
-      backgroundColor: theme.colors.brand.primary,
-      shadowColor: theme.colors.brand.primary,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.28,
-      shadowRadius: 10,
-      elevation: 3,
+      backgroundColor: '#FFFFFF',
+      ...platformShadow({
+        color: PREMIUM.accent,
+        offsetY: 2,
+        opacity: 0.14,
+        radius: 8,
+        elevation: 2,
+      }),
     },
     label: {
-      ...theme.typography.presets.bodyMedium,
-      color: theme.colors.text.tertiary,
+      fontSize: 13,
+      fontFamily: theme.typography.fonts.ui.semibold,
+      fontWeight: '600',
+      color: PREMIUM.sectionLabel,
     },
     labelSelected: {
-      color: theme.colors.brand.onPrimary,
-      fontFamily: theme.typography.fonts.ui.semibold,
+      color: PREMIUM.accent,
+      fontFamily: theme.typography.fonts.ui.bold,
+      fontWeight: '800',
     },
   });
 }

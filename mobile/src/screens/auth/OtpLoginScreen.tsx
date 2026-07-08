@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import {
   AuthAnimatedSection,
   AuthBrandHeader,
+  AuthFormCard,
   AuthPremiumField,
   AuthScreen,
   AuthTermsBox,
@@ -14,7 +15,7 @@ import {
   PrimaryButton,
   useShakeOnError,
 } from '../../components/auth';
-import { Text } from '../../components/Text';
+import { Text } from '../../components';
 import { authApi, parseApiError, privacyApi } from '../../api';
 import { formatOtpError } from '../../auth/otpErrors';
 import { formatIndianPhone, isValidIndianMobile } from '../../lib/phone';
@@ -54,10 +55,10 @@ export function OtpLoginScreen() {
       return;
     }
 
-    const phone = formatIndianPhone(digits);
     setLoading(true);
 
     try {
+      const phone = formatIndianPhone(digits);
       await authApi.requestOtp({ phone });
       navigation.navigate('Otp', {
         phone,
@@ -78,50 +79,54 @@ export function OtpLoginScreen() {
     <AuthScreen
       scrollProps={{ keyboardShouldPersistTaps: 'handled' }}
       header={
-        <AuthBrandHeader title={t('otp.phoneVerification')} subtitle={t('otp.subtitle')} />
+        <AuthBrandHeader title={t('otp.entryTitle')} subtitle={t('otp.entrySubtitle')} />
       }
       footer={
         <View style={styles.footer}>
           <PrimaryButton
-            label={t('otp.request')}
+            label={t('otp.continue')}
             loading={loading}
             disabled={!canSubmit}
             onPress={() => void handleSendOtp()}
             testID="otp-login-send"
           />
           <GhostButton
-            label={t('beta.backToEmailLogin')}
+            label={t('otp.useEmailInstead')}
             disabled={loading}
             onPress={() => navigation.navigate('Login')}
+            testID="otp-login-email-link"
           />
         </View>
       }
     >
       <Animated.View style={shakeStyle}>
-        <AuthAnimatedSection index={0}>
-          <AuthPremiumField
-            dense
-            variant="phone"
-            label={t('otp.phone')}
-            value={digits}
-            placeholder={t('otp.phonePlaceholder')}
-            onChangeText={(value) => {
-              setDigits(value);
-              if (error) setError(null);
-            }}
-            editable={!loading}
-            testID="otp-login-phone"
+        <AuthFormCard>
+          <AuthAnimatedSection index={0}>
+            <AuthPremiumField
+              dense
+              variant="phone"
+              label={t('otp.phone')}
+              value={digits}
+              placeholder={t('otp.phonePlaceholder')}
+              onChangeText={(value) => {
+                setDigits(value);
+                if (error) setError(null);
+              }}
+              editable={!loading}
+              testID="otp-login-phone"
+              autoFocus
+            />
+          </AuthAnimatedSection>
+
+          <AuthTermsBox
+            testID="otp-login-consent"
+            checked={acceptedTerms}
+            onToggle={() => setAcceptedTerms((v) => !v)}
+            policyVersion={policyVersion}
           />
-        </AuthAnimatedSection>
 
-        <AuthTermsBox
-          testID="otp-login-consent"
-          checked={acceptedTerms}
-          onToggle={() => setAcceptedTerms((v) => !v)}
-          policyVersion={policyVersion}
-        />
-
-        {error ? <Text style={styles.error}>{error}</Text> : null}
+          {error ? <Text style={styles.error}>{error}</Text> : null}
+        </AuthFormCard>
       </Animated.View>
     </AuthScreen>
   );
@@ -137,7 +142,6 @@ function createStyles() {
       color: '#C4634F',
       textAlign: 'center',
       marginTop: 4,
-      marginBottom: 8,
     },
   });
 }

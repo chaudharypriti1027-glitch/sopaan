@@ -10,6 +10,10 @@ const providers = Object.freeze({
 });
 
 function resolveProviderName() {
+  if (process.env.NODE_ENV === 'test') {
+    return 'dev';
+  }
+
   const configured = process.env.SMS_PROVIDER?.trim().toLowerCase();
 
   if (configured && providers[configured]) {

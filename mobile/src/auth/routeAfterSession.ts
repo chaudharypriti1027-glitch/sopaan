@@ -84,7 +84,7 @@ export function routeAfterAuthResult(navigation: RootNavigation, result: AuthRes
   );
 }
 
-/** Clear session stack and land on Login. */
+/** Clear session stack and land on phone OTP entry. */
 export function resetToLogin(navigation: RootNavigation) {
   navigation.dispatch(
     CommonActions.reset({
@@ -94,7 +94,7 @@ export function resetToLogin(navigation: RootNavigation) {
           name: 'Auth',
           state: {
             index: 0,
-            routes: [{ name: 'Login' }],
+            routes: [{ name: 'OtpLogin' }],
           },
         },
       ],

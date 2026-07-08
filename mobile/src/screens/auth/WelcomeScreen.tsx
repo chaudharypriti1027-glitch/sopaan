@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
-import { ArrowRight, ClipboardCheck, Sparkles, Trophy } from 'lucide-react-native';
+import { ArrowRight, Sparkles } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SopaanLogo } from '../../components';
 import { Text } from '../../components/Text';
@@ -28,8 +28,7 @@ export function WelcomeScreen() {
         end={{ x: 0.8, y: 1 }}
         style={styles.hero}
       >
-        <View style={[styles.decoGold]} pointerEvents="none" />
-        <View style={[styles.decoSage]} pointerEvents="none" />
+        <View style={styles.decoGold} pointerEvents="none" />
         <SopaanLogo size={82} />
         <Text style={styles.wordmark}>
           S<Text style={styles.wordmarkO}>O</Text>PAAN
@@ -38,38 +37,18 @@ export function WelcomeScreen() {
       </LinearGradient>
 
       <View style={styles.body}>
-        <View style={styles.features}>
-          <FeatureRow
-            tone="navy"
-            Icon={ClipboardCheck}
-            title={t('welcome.feature1Title')}
-            subtitle={t('welcome.feature1Subtitle')}
-          />
-          <FeatureRow
-            tone="gold"
-            Icon={Sparkles}
-            title={t('welcome.feature2Title')}
-            subtitle={t('welcome.feature2Subtitle')}
-          />
-          <FeatureRow
-            tone="sage"
-            Icon={Trophy}
-            title={t('welcome.feature3Title')}
-            subtitle={t('welcome.feature3Subtitle')}
-          />
+        <View style={styles.highlight}>
+          <View style={styles.highlightIcon}>
+            <Sparkles size={20} color={AUTH_UI.goldDeep} strokeWidth={2} />
+          </View>
+          <Text style={styles.highlightText}>{t('welcome.highlight')}</Text>
         </View>
 
         <View style={styles.cta}>
-          <View style={styles.dots}>
-            <View style={[styles.dot, styles.dotOn]} />
-            <View style={styles.dot} />
-            <View style={styles.dot} />
-          </View>
-
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={t('welcome.getStarted')}
-            onPress={() => navigation.navigate('Signup')}
+            onPress={() => navigation.navigate('OtpLogin')}
             style={({ pressed }) => [styles.getBtnWrap, pressed && styles.pressed]}
             testID="welcome-get-started"
           >
@@ -83,91 +62,11 @@ export function WelcomeScreen() {
               <ArrowRight size={19} color="#E3C97F" strokeWidth={2.2} />
             </LinearGradient>
           </Pressable>
-
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel={t('welcome.loginLink')}
-            onPress={() => navigation.navigate('Login')}
-            style={styles.signinRow}
-            testID="welcome-sign-in"
-          >
-            <Text style={styles.signinMuted}>{t('welcome.loginPrompt')} </Text>
-            <Text style={styles.signinStrong}>{t('welcome.loginLink')}</Text>
-          </Pressable>
         </View>
       </View>
     </View>
   );
 }
-
-type FeatureTone = 'navy' | 'gold' | 'sage';
-
-const TONE_STYLES: Record<FeatureTone, { bg: string; fg: string }> = {
-  navy: { bg: '#E9EBF3', fg: AUTH_UI.accent },
-  gold: { bg: '#F4EBD8', fg: AUTH_UI.goldDeep },
-  sage: { bg: '#E4EDE9', fg: AUTH_UI.sageDeep },
-};
-
-function FeatureRow({
-  tone,
-  Icon,
-  title,
-  subtitle,
-}: {
-  tone: FeatureTone;
-  Icon: typeof ClipboardCheck;
-  title: string;
-  subtitle: string;
-}) {
-  const toneStyle = TONE_STYLES[tone];
-  return (
-    <View style={featureRowStyles.row}>
-      <View style={[featureRowStyles.tile, { backgroundColor: toneStyle.bg }]}>
-        <Icon size={22} color={toneStyle.fg} strokeWidth={2} />
-      </View>
-      <View style={featureRowStyles.copy}>
-        <Text style={featureRowStyles.title}>{title}</Text>
-        <Text style={featureRowStyles.subtitle}>{subtitle}</Text>
-      </View>
-    </View>
-  );
-}
-
-const featureRowStyles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-  },
-  tile: {
-    width: 50,
-    height: 50,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-    shadowColor: AUTH_UI.shadowSm,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 2,
-  },
-  copy: {
-    flex: 1,
-  },
-  title: {
-    fontSize: 14.5,
-    fontWeight: '800',
-    letterSpacing: -0.2,
-    color: AUTH_UI.ink,
-  },
-  subtitle: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: AUTH_UI.muted,
-    marginTop: 2,
-  },
-});
 
 function createStyles(insets: { top: number; bottom: number }) {
   return StyleSheet.create({
@@ -176,8 +75,9 @@ function createStyles(insets: { top: number; bottom: number }) {
       backgroundColor: AUTH_UI.bg,
     },
     hero: {
-      paddingTop: insets.top + 24,
-      paddingBottom: 40,
+      flex: 1,
+      paddingTop: insets.top + 32,
+      paddingBottom: 36,
       alignItems: 'center',
       justifyContent: 'center',
       borderBottomLeftRadius: 40,
@@ -193,15 +93,6 @@ function createStyles(insets: { top: number; bottom: number }) {
       height: 220,
       borderRadius: 110,
       backgroundColor: 'rgba(194,154,78,0.22)',
-    },
-    decoSage: {
-      position: 'absolute',
-      bottom: -40,
-      left: -50,
-      width: 190,
-      height: 190,
-      borderRadius: 95,
-      backgroundColor: 'rgba(95,138,123,0.2)',
     },
     wordmark: {
       fontFamily: 'SpaceGrotesk_700Bold',
@@ -224,36 +115,42 @@ function createStyles(insets: { top: number; bottom: number }) {
       letterSpacing: 0.3,
       color: 'rgba(255,255,255,0.7)',
       marginTop: 4,
+      textAlign: 'center',
+      paddingHorizontal: 32,
     },
     body: {
-      flex: 1,
       paddingHorizontal: 26,
-      paddingTop: 26,
+      paddingTop: 24,
       paddingBottom: insets.bottom + 24,
+      gap: 20,
     },
-    features: {
-      gap: 18,
+    highlight: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      padding: 16,
+      borderRadius: 18,
+      backgroundColor: AUTH_UI.card,
+      borderWidth: 1,
+      borderColor: AUTH_UI.border,
+    },
+    highlightIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: AUTH_UI.goldSoft,
+    },
+    highlightText: {
+      flex: 1,
+      fontSize: 13,
+      fontWeight: '600',
+      lineHeight: 19,
+      color: AUTH_UI.muted,
     },
     cta: {
-      marginTop: 'auto',
       gap: 14,
-    },
-    dots: {
-      flexDirection: 'row',
-      gap: 7,
-      justifyContent: 'center',
-      marginBottom: 2,
-    },
-    dot: {
-      width: 7,
-      height: 7,
-      borderRadius: 4,
-      backgroundColor: AUTH_UI.border,
-    },
-    dotOn: {
-      width: 22,
-      borderRadius: 99,
-      backgroundColor: AUTH_UI.gold,
     },
     getBtnWrap: {
       alignSelf: 'stretch',
@@ -279,22 +176,6 @@ function createStyles(insets: { top: number; bottom: number }) {
       fontWeight: '800',
       letterSpacing: 0.2,
       color: '#FFFFFF',
-    },
-    signinRow: {
-      flexDirection: 'row',
-      justifyContent: 'center',
-      alignItems: 'center',
-      minHeight: 44,
-    },
-    signinMuted: {
-      fontSize: 13,
-      fontWeight: '600',
-      color: AUTH_UI.muted,
-    },
-    signinStrong: {
-      fontSize: 13,
-      fontWeight: '800',
-      color: AUTH_UI.accent,
     },
   });
 }

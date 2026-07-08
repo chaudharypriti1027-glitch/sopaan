@@ -32,6 +32,7 @@ export function useSubmitTest(testId: string) {
       void queryClient.invalidateQueries({ queryKey: queryKeys.attempts.all });
       void queryClient.invalidateQueries({ queryKey: queryKeys.tests.detail(testId) });
       void queryClient.invalidateQueries({ queryKey: queryKeys.account.summary() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.home.all });
     },
   });
 }

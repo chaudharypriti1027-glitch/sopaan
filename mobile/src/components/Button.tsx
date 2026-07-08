@@ -1,3 +1,4 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { useMemo, type ReactNode } from 'react';
 import {
   ActivityIndicator,
@@ -10,6 +11,7 @@ import {
 } from 'react-native';
 import { scalableTextProps } from '../a11y/textProps';
 import { useTheme } from '../theme';
+import { PREMIUM } from './premium/premiumStyles';
 
 export type ButtonVariant = 'primary' | 'gold' | 'ghost';
 export type ButtonSize = 'sm' | 'md' | 'lg';
@@ -26,6 +28,11 @@ type ButtonProps = {
   fullWidth?: boolean;
   testID?: string;
   accessibilityHint?: string;
+};
+
+const GRADIENTS = {
+  primary: ['#3A4578', '#232A4D', '#1A1F3B'] as const,
+  gold: ['#F0D48A', '#C29A4E', '#A67C33'] as const,
 };
 
 export function Button({
@@ -47,6 +54,45 @@ export function Button({
   const resolvedTestId =
     testID ?? `button-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}`;
 
+  const labelContent = loading ? (
+    <ActivityIndicator
+      color={variant === 'ghost' ? PREMIUM.accent : '#FFFFFF'}
+      size="small"
+    />
+  ) : (
+    <View style={styles.content}>
+      {icon}
+      <Text {...scalableTextProps} style={styles.label}>
+        {label}
+      </Text>
+    </View>
+  );
+
+  if (variant === 'ghost') {
+    return (
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={label}
+        accessibilityHint={accessibilityHint}
+        accessibilityState={{ disabled: isDisabled, busy: loading }}
+        testID={resolvedTestId}
+        disabled={isDisabled}
+        onPress={onPress}
+        style={({ pressed }) => [
+          styles.button,
+          fullWidth && styles.fullWidth,
+          isDisabled && styles.disabled,
+          pressed && !isDisabled && styles.pressed,
+          style,
+        ]}
+      >
+        {labelContent}
+      </Pressable>
+    );
+  }
+
+  const gradient = variant === 'gold' ? GRADIENTS.gold : GRADIENTS.primary;
+
   return (
     <Pressable
       accessibilityRole="button"
@@ -57,26 +103,21 @@ export function Button({
       disabled={isDisabled}
       onPress={onPress}
       style={({ pressed }) => [
-        styles.button,
+        styles.shell,
         fullWidth && styles.fullWidth,
         isDisabled && styles.disabled,
         pressed && !isDisabled && styles.pressed,
         style,
       ]}
     >
-      {loading ? (
-        <ActivityIndicator
-          color={variant === 'ghost' ? theme.colors.brand.primary : theme.colors.brand.onPrimary}
-          size="small"
-        />
-      ) : (
-        <View style={styles.content}>
-          {icon}
-          <Text {...scalableTextProps} style={styles.label}>
-            {label}
-          </Text>
-        </View>
-      )}
+      <LinearGradient
+        colors={[...gradient]}
+        start={{ x: 0.15, y: 0 }}
+        end={{ x: 0.85, y: 1 }}
+        style={styles.button}
+      >
+        {labelContent}
+      </LinearGradient>
     </Pressable>
   );
 }
@@ -92,38 +133,24 @@ function createStyles(
     lg: { py: theme.spacing.lg, px: theme.spacing['2xl'], fontSize: theme.typography.scale.fontSize.md },
   }[size];
 
-  const variantStyles = {
-    primary: {
-      backgroundColor: theme.colors.brand.primary,
-      borderColor: theme.colors.brand.primary,
-      labelColor: theme.colors.brand.onPrimary,
-      borderWidth: 0,
-    },
-    gold: {
-      backgroundColor: theme.colors.accent.gold,
-      borderColor: theme.colors.accent.gold,
-      labelColor: theme.colors.text.primary,
-      borderWidth: 0,
-    },
-    ghost: {
-      backgroundColor: 'transparent',
-      borderColor: theme.colors.border.default,
-      labelColor: theme.colors.brand.primary,
-      borderWidth: 1,
-    },
-  }[variant];
+  const labelColor =
+    variant === 'ghost' ? PREMIUM.accent : variant === 'gold' ? PREMIUM.ink : '#FFFFFF';
 
   return StyleSheet.create({
+    shell: {
+      borderRadius: theme.radii.pill,
+      overflow: 'hidden',
+    },
     button: {
       borderRadius: theme.radii.pill,
       paddingVertical: sizeMap.py,
       paddingHorizontal: sizeMap.px,
       minHeight: theme.a11y.minTouchTarget,
-      backgroundColor: variantStyles.backgroundColor,
-      borderColor: variantStyles.borderColor,
-      borderWidth: variantStyles.borderWidth,
       alignItems: 'center',
       justifyContent: 'center',
+      borderWidth: variant === 'ghost' ? 1 : 0,
+      borderColor: theme.colors.border.default,
+      backgroundColor: variant === 'ghost' ? 'transparent' : undefined,
     },
     fullWidth: {
       alignSelf: 'stretch',
@@ -140,9 +167,10 @@ function createStyles(
       gap: theme.spacing.sm,
     },
     label: {
-      fontFamily: theme.typography.fonts.ui.semibold,
+      fontFamily: theme.typography.fonts.ui.bold,
+      fontWeight: '800',
       fontSize: sizeMap.fontSize,
-      color: variantStyles.labelColor,
+      color: labelColor,
     },
   });
 }

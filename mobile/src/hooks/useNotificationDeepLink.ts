@@ -1,7 +1,4 @@
 import { useEffect } from 'react';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { MainStackParamList } from '../navigation/types';
 import {
   navigateFromNotificationPayload,
   type NotificationPayload,
@@ -38,8 +35,6 @@ function trackPushOpen(payload: NotificationPayload | null) {
 }
 
 export function useNotificationDeepLink() {
-  const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
-
   useEffect(() => {
     if (!isRemotePushSupported()) {
       return;
@@ -60,14 +55,14 @@ export function useNotificationDeepLink() {
 
       if (lastPayload) {
         trackPushOpen(lastPayload);
-        navigateFromNotificationPayload(navigation, lastPayload);
+        navigateFromNotificationPayload(lastPayload);
       }
 
       subscription = Notifications.addNotificationResponseReceivedListener((response) => {
         const payload = extractPayload(response);
         if (payload) {
           trackPushOpen(payload);
-          navigateFromNotificationPayload(navigation, payload);
+          navigateFromNotificationPayload(payload);
         }
       });
     })();
@@ -76,17 +71,7 @@ export function useNotificationDeepLink() {
       cancelled = true;
       subscription?.remove();
     };
-  }, [navigation]);
+  }, []);
 }
 
-export function openInAppNotification(
-  navigation: NativeStackNavigationProp<MainStackParamList>,
-  notification: { type: string; data?: NotificationPayload | null },
-) {
-  const payload: NotificationPayload = {
-    type: notification.type,
-    ...(notification.data ?? {}),
-  };
-
-  navigateFromNotificationPayload(navigation, payload);
-}
+export { openInAppNotification } from '../notifications/notificationDeepLinks';

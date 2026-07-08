@@ -42,7 +42,7 @@ function RecordedCard({
   const { t } = useTranslation('app', { keyPrefix: 'liveClasses' });
   const styles = useMemo(() => createCardStyles(theme), [theme]);
 
-  if (!item.recordingUrl) {
+  if (!item.recordingUrl || item.recordingStatus !== 'ready') {
     return null;
   }
 
@@ -153,7 +153,19 @@ export function LiveClassesScreen() {
   }, [refetch]);
 
   const openViewer = (liveClassId: string) => {
-    if (!data?.streamingConfigured) {
+    const allClasses = [
+      ...(data?.liveNow ? [data.liveNow] : []),
+      ...(data?.scheduled ?? []),
+      ...(data?.recorded ?? []),
+    ];
+    const item = allClasses.find((cls) => cls.id === liveClassId);
+    const isScheduled = item?.status === 'scheduled';
+    const hasReadyRecording =
+      item?.status === 'ended' &&
+      Boolean(item.recordingUrl) &&
+      item.recordingStatus === 'ready';
+
+    if (!data?.streamingConfigured && !hasReadyRecording && !isScheduled) {
       Alert.alert(t('comingSoonAlert'), data?.message ?? t('comingSoonDefault'));
       return;
     }
@@ -242,7 +254,6 @@ export function LiveClassesScreen() {
                 <Button
                   label={data.streamingConfigured ? t('joinLive') : t('previewUnavailable')}
                   onPress={() => openViewer(data.liveNow!.id)}
-                  disabled={!data.streamingConfigured}
                   fullWidth
                 />
               </LinearGradient>

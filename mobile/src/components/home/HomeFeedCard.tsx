@@ -30,7 +30,7 @@ export function HomeFeedCard({
   tint,
   testID,
 }: HomeFeedCardProps) {
-  const styles = useMemo(() => createStyles(Boolean(accentLeft)), [accentLeft]);
+  const styles = useMemo(() => createStyles(), []);
 
   const body = (
     <View
@@ -52,7 +52,6 @@ export function HomeFeedCard({
       {accentLeft ? (
         <View style={[styles.leftAccent, { backgroundColor: accentLeft }]} />
       ) : null}
-      <View style={styles.topSheen} pointerEvents="none" />
       <View style={[styles.content, contentStyle]}>{children}</View>
     </View>
   );
@@ -72,7 +71,7 @@ export function HomeFeedCard({
   );
 }
 
-function createStyles(hasLeftAccent: boolean) {
+function createStyles() {
   return StyleSheet.create({
     pressable: {
       borderRadius: HOME_UI.cardRadiusLg,
@@ -90,19 +89,10 @@ function createStyles(hasLeftAccent: boolean) {
       left: 0,
       top: 0,
       bottom: 0,
-      width: 4,
+      width: 3,
       borderTopLeftRadius: HOME_UI.cardRadiusLg,
       borderBottomLeftRadius: HOME_UI.cardRadiusLg,
       zIndex: 2,
-    },
-    topSheen: {
-      position: 'absolute',
-      top: hasLeftAccent ? 3 : 0,
-      left: hasLeftAccent ? 4 : 0,
-      right: 0,
-      height: 1,
-      backgroundColor: 'rgba(255,255,255,0.65)',
-      zIndex: 1,
     },
     content: {
       zIndex: 1,

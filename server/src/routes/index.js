@@ -41,6 +41,7 @@ import bannerRoutes from './bannerRoutes.js';
 import orderRoutes from './orderRoutes.js';
 import meRoutes from './meRoutes.js';
 import gamesRoutes from './gamesRoutes.js';
+import searchRoutes from './searchRoutes.js';
 
 const router = Router();
 
@@ -49,6 +50,7 @@ router.use('/banners', bannerRoutes);
 router.use('/me', meRoutes);
 router.use('/media', mediaRoutes);
 router.use('/games', gamesRoutes);
+router.use('/search', searchRoutes);
 router.use('/auth', authRoutes);
 router.use('/profile', profileRoutes);
 router.use('/exams', examRoutes);

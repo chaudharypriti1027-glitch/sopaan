@@ -32,6 +32,7 @@ export async function getDailyChallenge(user) {
 
     return {
       id: challenge._id.toString(),
+      testId: challenge.testId.toString(),
       title: challenge.title,
       qCount: challenge.qCount,
       rewardCoins: challenge.rewardCoins ?? 0,

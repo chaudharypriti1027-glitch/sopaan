@@ -5,13 +5,15 @@ import { AppError } from '../utils/AppError.js';
 import { buildPaginatedResult, parsePagination } from '../utils/pagination.js';
 import {
   average,
-  computeRankAndPercentile,
 } from '../utils/testHelpers.js';
-import { feedbackForAttempt } from './ai/coach.js';
+import { feedbackForAttempt, instantAttemptCoaching } from './ai/coach.js';
 import { recordAttemptOutcomes } from './adaptive/masteryService.js';
 import { handleAttemptRewards } from './gamificationService.js';
 import { createNotification, PUSH_TYPES } from './notificationService.js';
 import { recordFeatureUsage } from './quotaService.js';
+import { upsertHomeProgress } from './home/upsertHomeProgress.js';
+import { cacheDel, cacheInvalidatePrefix, stableCacheKey } from '../lib/cache.js';
+import { bustHomeFeedCache } from './home/buildHomeFeed.js';
 
 async function getTestForSubmit(testId, userId) {
   const test = await Test.findOne({ _id: testId });
@@ -42,6 +44,11 @@ function gradeAnswers(testQuestionIds, questions, submittedAnswers) {
 
   for (const questionId of testQuestionIds) {
     const question = questionMap.get(questionId.toString());
+
+    if (!question) {
+      throw new AppError('Test has invalid question references', 500, 'INTERNAL_ERROR');
+    }
+
     const submitted = submittedMap.get(questionId.toString());
     const selectedKey = submitted?.selectedKey?.toUpperCase() ?? null;
     const correct = Boolean(selectedKey && selectedKey === question?.correctKey);
@@ -71,11 +78,124 @@ function gradeAnswers(testQuestionIds, questions, submittedAnswers) {
   };
 }
 
-async function updateTestStats(test) {
-  const attempts = await Attempt.find({ testId: test._id }).select('score').lean();
-  test.stats.attempts = attempts.length;
-  test.stats.avgScore = Math.round(average(attempts.map((item) => item.score)) * 10) / 10;
-  await test.save();
+async function updateTestStats(test, newScore) {
+  const attempts = test.stats?.attempts ?? 0;
+  const avgScore = test.stats?.avgScore ?? 0;
+  const nextAttempts = attempts + 1;
+  const nextAvg =
+    nextAttempts > 0
+      ? Math.round((((avgScore * attempts) + newScore) / nextAttempts) * 10) / 10
+      : newScore;
+
+  await Test.findByIdAndUpdate(test._id, {
+    $set: {
+      'stats.attempts': nextAttempts,
+      'stats.avgScore': nextAvg,
+    },
+  });
+
+  test.stats.attempts = nextAttempts;
+  test.stats.avgScore = nextAvg;
+}
+
+async function computeAttemptRank(testId, score) {
+  const [betterCount, belowCount, totalCount] = await Promise.all([
+    Attempt.countDocuments({ testId, score: { $gt: score } }),
+    Attempt.countDocuments({ testId, score: { $lt: score } }),
+    Attempt.countDocuments({ testId }),
+  ]);
+
+  return {
+    rank: betterCount + 1,
+    percentile: totalCount > 0 ? Math.round((belowCount / totalCount) * 100) : 100,
+  };
+}
+
+async function enrichAttemptCoaching(attemptId, context) {
+  try {
+    const coaching = await feedbackForAttempt(context);
+    await Attempt.findByIdAndUpdate(attemptId, {
+      aiFeedback: coaching.feedback,
+      weakTopics: coaching.weakTopics,
+    });
+  } catch (err) {
+    console.warn(`[coach] background coaching failed for ${attemptId}:`, err.message);
+  }
+}
+
+async function invalidatePostSubmitCaches(userId) {
+  const userKey = String(userId);
+
+  await Promise.all([
+    cacheInvalidatePrefix('cache:leaderboard'),
+    cacheDel(stableCacheKey('cache:user-standing', { userId: userKey, period: 'all-time' })),
+    cacheDel(stableCacheKey('cache:user-standing', { userId: userKey, period: 'weekly' })),
+    cacheDel(stableCacheKey('cache:user-standing', { userId: userKey, period: 'daily' })),
+    bustHomeFeedCache(userId),
+  ]);
+}
+
+async function runPostSubmitSideEffects({
+  userId,
+  testId,
+  test,
+  attempt,
+  questions,
+  score,
+  accuracy,
+}) {
+  void enrichAttemptCoaching(attempt._id, { attempt, test, questions, userId });
+
+  try {
+    await Promise.all([
+      invalidatePostSubmitCaches(userId),
+      recordFeatureUsage(userId, 'mock_submit'),
+      updateTestStats(test, score),
+    ]);
+  } catch (err) {
+    console.warn(`[attempt] post-submit side effects failed for ${attempt._id}:`, err.message);
+  }
+
+  const { broadcastLiveMockLeaderboard } = await import('../realtime/index.js');
+  broadcastLiveMockLeaderboard(testId).catch((err) => {
+    console.warn(`[realtime] leaderboard broadcast failed for ${testId}:`, err.message);
+  });
+
+  const attemptCount = await Attempt.countDocuments({ userId });
+  if (attemptCount === 1) {
+    const { tryGrantReferralRewards } = await import('./referralService.js');
+    tryGrantReferralRewards(userId).catch((err) => {
+      console.warn(`[referral] reward grant failed for ${userId}:`, err.message);
+    });
+
+    const { trackFirstTest } = await import('./experimentService.js');
+    trackFirstTest(userId).catch((err) => {
+      console.warn(`[experiments] first_test track failed for ${userId}:`, err.message);
+    });
+  }
+
+  const previousBest = await Attempt.findOne({
+    userId,
+    testId,
+    _id: { $ne: attempt._id },
+  })
+    .sort({ rank: 1 })
+    .select('rank')
+    .lean();
+
+  if (attempt.rank && (!previousBest?.rank || attempt.rank < previousBest.rank)) {
+    await createNotification(userId, {
+      type: PUSH_TYPES.RANK_UP,
+      title: 'Rank up!',
+      body: `You reached rank #${attempt.rank} on ${test.title}.`,
+      data: {
+        rank: attempt.rank,
+        testId: test._id.toString(),
+        attemptId: attempt._id.toString(),
+        previousRank: previousBest?.rank ?? null,
+      },
+    });
+  }
 }
 
 export async function submitTest(userId, testId, submittedAnswers) {
@@ -119,68 +239,40 @@ export async function submitTest(userId, testId, submittedAnswers) {
     weakTopics,
   });
 
-  const allScores = (
-    await Attempt.find({ testId }).select('score').lean()
-  ).map((item) => item.score);
+  const instantCoaching = instantAttemptCoaching({ attempt, test, questions });
+  attempt.aiFeedback = instantCoaching.feedback;
+  attempt.weakTopics = instantCoaching.weakTopics;
 
-  const { rank, percentile } = computeRankAndPercentile(allScores, score);
+  const [{ rank, percentile }, rewards] = await Promise.all([
+    computeAttemptRank(test._id, score),
+    handleAttemptRewards(userId, attempt),
+  ]);
+
   attempt.rank = rank;
   attempt.percentile = percentile;
-
-  const coaching = await feedbackForAttempt({ attempt, test, questions, userId });
-  attempt.aiFeedback = coaching.feedback;
-  attempt.weakTopics = coaching.weakTopics;
   await attempt.save();
 
-  await recordFeatureUsage(userId, 'mock_submit');
-
-  await updateTestStats(test);
-
-  const { broadcastLiveMockLeaderboard } = await import('../realtime/index.js');
-  broadcastLiveMockLeaderboard(testId).catch((err) => {
-    console.warn(`[realtime] leaderboard broadcast failed for ${testId}:`, err.message);
+  await upsertHomeProgress(userId, {
+    kind: 'test',
+    refId: test._id,
+    title: test.title,
+    subtitle: test.subject ?? test.difficulty ?? '',
+    progressPct: accuracy,
+    accent: 'primary',
+    deeplink: `/stack/Quiz/${testId}`,
   });
 
-  const rewards = await handleAttemptRewards(userId, attempt);
-
-  const attemptCount = await Attempt.countDocuments({ userId });
-  if (attemptCount === 1) {
-    const { tryGrantReferralRewards } = await import('./referralService.js');
-    tryGrantReferralRewards(userId).catch((err) => {
-      console.warn(`[referral] reward grant failed for ${userId}:`, err.message);
-    });
-
-    const { trackFirstTest } = await import('./experimentService.js');
-    trackFirstTest(userId).catch((err) => {
-      console.warn(`[experiments] first_test track failed for ${userId}:`, err.message);
-    });
-  }
-
-  const previousBest = await Attempt.findOne({
+  void runPostSubmitSideEffects({
     userId,
     testId,
-    _id: { $ne: attempt._id },
-  })
-    .sort({ rank: 1 })
-    .select('rank')
-    .lean();
-
-  if (
-    attempt.rank &&
-    (!previousBest?.rank || attempt.rank < previousBest.rank)
-  ) {
-    await createNotification(userId, {
-      type: PUSH_TYPES.RANK_UP,
-      title: 'Rank up!',
-      body: `You reached rank #${attempt.rank} on ${test.title}.`,
-      data: {
-        rank: attempt.rank,
-        testId: test._id.toString(),
-        attemptId: attempt._id.toString(),
-        previousRank: previousBest?.rank ?? null,
-      },
-    });
-  }
+    test,
+    attempt,
+    questions,
+    score,
+    accuracy,
+  }).catch((err) => {
+    console.warn(`[attempt] post-submit background work failed:`, err.message);
+  });
 
   const questionMap = new Map(questions.map((q) => [q._id.toString(), q]));
 
@@ -198,9 +290,9 @@ export async function submitTest(userId, testId, submittedAnswers) {
       createdAt: attempt.createdAt,
     },
     coaching: {
-      feedback: coaching.feedback,
-      weakTopics: coaching.weakTopics,
-      actions: coaching.actions,
+      feedback: instantCoaching.feedback,
+      weakTopics: instantCoaching.weakTopics,
+      actions: instantCoaching.actions,
     },
     rewards,
     answers: gradedAnswers.map((answer) => {

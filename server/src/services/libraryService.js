@@ -10,6 +10,7 @@ import { AppError } from '../utils/AppError.js';
 import { sanitizeBookHtml } from '../utils/sanitizeBookHtml.js';
 import { loadUserDownloadMap } from './bookDownloadService.js';
 import { canAccessBook, canViewUnpublishedBook } from './libraryAccess.js';
+import { upsertHomeProgress } from './home/upsertHomeProgress.js';
 
 const LIBRARY_CACHE_TTL_SEC = 60;
 const PUBLISHED_FILTER = { status: 'published' };
@@ -402,7 +403,7 @@ export async function getPageByOrder(bookId, order, user) {
 }
 
 export async function upsertReadingProgress(bookId, body, user) {
-  await loadReadableBook(bookId, user);
+  const book = await loadReadableBook(bookId, user);
 
   const progress = await ReadingProgress.findOneAndUpdate(
     { userId: user._id, bookId },
@@ -415,6 +416,16 @@ export async function upsertReadingProgress(bookId, body, user) {
     },
     { upsert: true, new: true, setDefaultsOnInsert: true },
   ).lean();
+
+  await upsertHomeProgress(user._id, {
+    kind: 'video',
+    refId: book._id,
+    title: book.title,
+    subtitle: book.subject ?? '',
+    progressPct: progress.percent ?? 0,
+    accent: 'gold',
+    deeplink: `/stack/BookReader/${bookId}`,
+  });
 
   return toProgressDto(progress);
 }

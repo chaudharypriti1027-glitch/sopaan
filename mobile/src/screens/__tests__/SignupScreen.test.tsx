@@ -6,19 +6,9 @@ import type { Profile } from '../../types/auth';
 const mockNavigate = jest.fn();
 const mockUpdateMe = jest.fn();
 const mockSetProfile = jest.fn();
-const mockSignup = jest.fn();
-const mockRouteAfterSession = jest.fn();
 
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ navigate: mockNavigate }),
-}));
-
-jest.mock('../../auth/routeAfterSession', () => ({
-  routeAfterSession: (...args: unknown[]) => mockRouteAfterSession(...args),
-}));
-
-jest.mock('../../auth', () => ({
-  useAuth: () => ({ signup: mockSignup }),
+  useNavigation: () => ({ navigate: mockNavigate, replace: mockNavigate }),
 }));
 
 const profile = {
@@ -132,46 +122,15 @@ describe('SignupScreen post-OTP completion', () => {
   });
 });
 
-describe('SignupScreen email registration', () => {
+describe('SignupScreen guest redirect', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     authStoreState.status = 'guest';
     authStoreState.profile = null;
-    mockSignup.mockImplementation(async () => {
-      authStoreState.status = 'authed';
-      authStoreState.profile = {
-        id: '2',
-        name: 'New User',
-        email: 'new@example.com',
-        phone: '',
-        state: '',
-        targetExam: '',
-        language: 'en' as const,
-        createdAt: '',
-        onboardingComplete: false,
-      };
-    });
   });
 
-  it('routes to profile setup after creating an email account', async () => {
-    const { getByTestId } = renderWithProviders(<SignupScreen />);
-
-    fireEvent.changeText(getByTestId('signup-name-field'), 'New User');
-    fireEvent.changeText(getByTestId('signup-email-field'), 'new@example.com');
-    fireEvent.changeText(getByTestId('signup-password-field'), 'Password123!');
-    fireEvent.press(getByTestId('consent-policy'));
-    fireEvent.press(getByTestId('signup-create-account'));
-
-    await waitFor(() => {
-      expect(mockSignup).toHaveBeenCalled();
-      expect(mockRouteAfterSession).toHaveBeenCalledWith(
-        expect.any(Object),
-        expect.objectContaining({
-          name: 'New User',
-          email: 'new@example.com',
-          onboardingComplete: false,
-        }),
-      );
-    });
+  it('redirects guests to phone OTP login', () => {
+    renderWithProviders(<SignupScreen />);
+    expect(mockNavigate).toHaveBeenCalledWith('OtpLogin');
   });
 });

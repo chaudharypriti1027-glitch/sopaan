@@ -1,7 +1,8 @@
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import type { RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Lock, Radio, PlayCircle, Trophy } from 'lucide-react-native';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Button, Card, Pill, PremiumHeroCard, QueryStateView, Screen, SectionTitle } from '../../components';
 import { LiveMockLeaderboard } from '../../components/LiveMockLeaderboard';
@@ -64,14 +65,27 @@ function MockRow({
 
 export function TestSeriesScreen() {
   const navigation = useNavigation<SeriesNav>();
+  const route = useRoute<RouteProp<MainStackParamList, 'TestSeries'>>();
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   const { isOffline } = useNetworkStatus();
   const seriesQuery = useTestSeriesList({ limit: 20 });
   const enrollMutation = useEnrollTestSeries();
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [liveMockId, setLiveMockId] = useState<string | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(route.params?.seriesId ?? null);
+  const [liveMockId, setLiveMockId] = useState<string | null>(route.params?.testId ?? null);
+
+  useEffect(() => {
+    if (route.params?.seriesId) {
+      setActiveId(route.params.seriesId);
+    }
+  }, [route.params?.seriesId]);
+
+  useEffect(() => {
+    if (route.params?.testId) {
+      setLiveMockId(route.params.testId);
+    }
+  }, [route.params?.testId]);
 
   const activeSeries =
     seriesQuery.data?.items.find((s) => s.id === activeId) ?? seriesQuery.data?.items[0] ?? null;
@@ -85,7 +99,7 @@ export function TestSeriesScreen() {
 
   return (
     <Screen scroll contentContainerStyle={styles.content}>
-      <SectionTitle title="Test series" subtitle="Enroll and follow the mock schedule" />
+      <SectionTitle subtitle="Enroll and follow the mock schedule" />
 
       <QueryStateView
         isLoading={seriesQuery.isLoading}

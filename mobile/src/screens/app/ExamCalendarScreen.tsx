@@ -137,7 +137,7 @@ export function ExamCalendarScreen() {
         ),
       }}
     >
-      <SectionTitle title={t('examCalendar.title')} subtitle={t('examCalendar.subtitle')} />
+      <SectionTitle subtitle={t('examCalendar.subtitle')} />
 
       <QueryStateView
         isLoading={calendarQuery.isLoading}

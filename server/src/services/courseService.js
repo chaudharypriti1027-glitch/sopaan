@@ -5,6 +5,7 @@ import { AppError } from '../utils/AppError.js';
 import { buildPaginatedResult, parsePagination } from '../utils/pagination.js';
 import { publishedContentFilter } from '../models/publishableFields.js';
 import { buildContentLanguageQuery } from '../utils/resolveLanguage.js';
+import { upsertHomeProgress } from './home/upsertHomeProgress.js';
 
 function computeProgressPercent(completedCount, totalLessons) {
   if (!totalLessons) {
@@ -117,6 +118,16 @@ export async function updateCourseProgress(userId, courseId, { lessonId, complet
   );
 
   await progress.save();
+
+  await upsertHomeProgress(userId, {
+    kind: 'lesson',
+    refId: course._id,
+    title: course.title,
+    subtitle: course.subject ?? '',
+    progressPct: progress.progressPercent,
+    accent: 'teal',
+    deeplink: `/stack/CourseDetail/${courseId}`,
+  });
 
   return {
     courseId,

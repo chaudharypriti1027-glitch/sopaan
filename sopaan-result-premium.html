@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sopaan — Result (Premium)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#232A4D; --navy-2:#2E3766; --navy-deep:#1A1F3B; --navy-soft:#E9EBF3;
+  --gold:#C29A4E; --gold-lt:#E3C97F; --gold-deep:#A67C33; --gold-soft:#F4EBD8;
+  --sage:#5F8A7B; --sage-deep:#4C7264; --sage-soft:#E4EDE9;
+  --red:#C0503F; --red-soft:#FBE9E7;
+  --bg:#F4F1E9; --surface:#FFFFFF; --ink:#1C1E2E; --ink-2:#41435A; --muted:#87889A; --faint:#B3B4C2;
+  --line:#ECE8DD; --hair:#F3F0E8;
+  --sh:0 16px 40px -26px rgba(35,42,77,.4);
+  --sh-sm:0 10px 24px -16px rgba(35,42,77,.3);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:radial-gradient(120% 55% at 50% 0%,#efeade,#e4dfd0);display:flex;justify-content:center;align-items:flex-start;min-height:100vh;padding:30px 16px;color:var(--ink);-webkit-font-smoothing:antialiased;letter-spacing:-.1px}
+.num{font-family:'Space Grotesk',sans-serif;font-variant-numeric:tabular-nums;letter-spacing:0}
+.svg{fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+
+.phone{width:394px;height:854px;background:var(--bg);border-radius:50px;position:relative;overflow:hidden;box-shadow:0 54px 110px -34px rgba(35,42,77,.55),0 0 0 11px #0c0d15,0 0 0 13px #23252f}
+.notch{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:118px;height:31px;background:#0c0d15;border-radius:0 0 18px 18px;z-index:60}
+.notch::after{content:"";position:absolute;top:9px;right:24px;width:11px;height:11px;border-radius:50%;background:#15161f;box-shadow:inset 0 0 0 2px #2a2c38}
+.statusbar{position:absolute;top:0;left:0;right:0;height:54px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 26px 7px;font-size:13px;font-weight:600;z-index:50;color:#fff}
+.statusbar .r{display:flex;align-items:center;gap:6px}
+.statusbar svg{width:17px;height:17px;fill:#fff}
+.screen{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding-bottom:96px}
+.screen::-webkit-scrollbar{display:none}
+
+.rv{opacity:0;animation:rv .6s cubic-bezier(.2,.8,.3,1) forwards}
+@keyframes rv{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+/* HERO */
+.hero{background:linear-gradient(160deg,#2E3766 0%,#232A4D 55%,#1A1F3B 100%);padding:56px 20px 70px;position:relative;overflow:hidden;text-align:center;border-radius:0 0 34px 34px}
+.hero::before{content:"";position:absolute;top:-70px;right:-50px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(194,154,78,.22),transparent 66%)}
+.confetti{position:absolute;inset:0;z-index:1;pointer-events:none}
+.confetti i{position:absolute;top:-12px;width:7px;height:11px;border-radius:2px;opacity:0;animation:fall 3s ease-in forwards}
+@keyframes fall{0%{opacity:0;transform:translateY(-10px) rotate(0)}12%{opacity:1}100%{opacity:0;transform:translateY(360px) rotate(320deg)}}
+.htop{display:flex;align-items:center;justify-content:space-between;position:relative;z-index:3}
+.iconbtn{width:40px;height:40px;border-radius:13px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;color:#fff}
+.iconbtn svg{width:19px;height:19px}
+.htop .ttl{color:#fff;font-weight:800;font-size:16px}
+.badge-top{display:inline-flex;align-items:center;gap:6px;margin:14px auto 0;position:relative;z-index:3;background:linear-gradient(135deg,#E3C97F,#C29A4E);color:#2a2110;font-size:11px;font-weight:800;letter-spacing:.5px;border-radius:99px;padding:6px 13px;animation:pop .5s cubic-bezier(.2,.9,.3,1.3) .3s both}
+.badge-top svg{width:14px;height:14px;stroke:#2a2110}
+@keyframes pop{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}
+
+.ring-stage{position:relative;z-index:3;width:180px;height:180px;margin:14px auto 6px}
+.ring-stage svg{width:180px;height:180px;transform:rotate(-90deg)}
+.ring-stage .center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring-stage .center .pct{font-family:'Space Grotesk';font-weight:700;font-size:44px;color:#fff;line-height:1}
+.ring-stage .center .lbl{font-size:11px;color:rgba(255,255,255,.6);font-weight:700;letter-spacing:1px;margin-top:2px}
+.htitle{color:#fff;font-size:20px;font-weight:800;position:relative;z-index:3;letter-spacing:-.3px}
+.hsub{color:rgba(255,255,255,.68);font-size:12.5px;font-weight:600;margin-top:3px;position:relative;z-index:3}
+
+.body{padding:0 16px;margin-top:-46px;position:relative;z-index:5}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:22px;box-shadow:var(--sh)}
+.sec-head{font-size:12px;font-weight:800;letter-spacing:.4px;color:var(--faint);text-transform:uppercase;margin:22px 6px 11px}
+
+/* summary chips */
+.summary{display:flex;padding:16px 6px}
+.summary .s{flex:1;text-align:center;position:relative}
+.summary .s+.s::before{content:"";position:absolute;left:0;top:12%;height:76%;width:1px;background:var(--hair)}
+.summary .s .ic{width:34px;height:34px;border-radius:11px;display:flex;align-items:center;justify-content:center;margin:0 auto 7px}
+.summary .s .ic svg{width:17px;height:17px}
+.summary .s .v{font-family:'Space Grotesk';font-weight:700;font-size:18px}
+.summary .s .l{font-size:10px;color:var(--muted);font-weight:600;margin-top:2px}
+.i-sage{background:var(--sage-soft);color:var(--sage-deep)}.i-red{background:var(--red-soft);color:var(--red)}.i-navy{background:var(--navy-soft);color:var(--navy)}.i-gold{background:var(--gold-soft);color:var(--gold-deep)}
+
+/* reward row */
+.reward{display:flex;gap:12px;margin-top:12px}
+.reward .rc{flex:1;border-radius:18px;padding:15px;display:flex;align-items:center;gap:11px;color:#fff;position:relative;overflow:hidden;box-shadow:var(--sh-sm)}
+.reward .rc.xp{background:linear-gradient(135deg,#2E3766,#1A1F3B)}
+.reward .rc.co{background:linear-gradient(135deg,#C29A4E,#A67C33)}
+.reward .rc .ic{width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.16);display:flex;align-items:center;justify-content:center;flex:none}
+.reward .rc .ic svg{width:20px;height:20px;stroke:#fff}
+.reward .rc .v{font-family:'Space Grotesk';font-weight:700;font-size:19px;line-height:1}
+.reward .rc .l{font-size:10.5px;opacity:.85;font-weight:600;margin-top:2px}
+
+/* section breakdown */
+.brk{padding:6px 16px 10px}
+.brk .b{padding:13px 0}
+.brk .b+.b{border-top:1px solid var(--hair)}
+.brk .b .r1{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.brk .b .r1 .nm{font-size:13px;font-weight:800}
+.brk .b .r1 .pc{font-family:'Space Grotesk';font-weight:700;font-size:13px}
+.brk .b .bar{height:8px;border-radius:99px;background:var(--hair);overflow:hidden}
+.brk .b .bar i{display:block;height:100%;border-radius:99px;transform:scaleX(0);transform-origin:left;animation:grow 1.1s cubic-bezier(.2,.8,.3,1) forwards}
+@keyframes grow{to{transform:scaleX(1)}}
+.f-sage{background:linear-gradient(90deg,#6C9A8A,#4C7264)}.f-gold{background:linear-gradient(90deg,#D8B368,#C29A4E)}.f-navy{background:linear-gradient(90deg,#3A4680,#232A4D)}
+
+/* rank strip */
+.rankrow{display:flex;gap:12px;margin-top:12px}
+.rankrow .rk{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:var(--sh-sm);display:flex;align-items:center;gap:11px}
+.rankrow .rk .ic{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex:none}
+.rankrow .rk .ic svg{width:19px;height:19px}
+.rankrow .rk .v{font-family:'Space Grotesk';font-weight:700;font-size:16px}
+.rankrow .rk .l{font-size:10.5px;color:var(--muted);font-weight:600}
+
+/* AI coach */
+.coach{padding:16px;border-radius:22px;background:var(--gold-soft);border:1px solid #EADFC4;box-shadow:var(--sh-sm)}
+.coach .h{display:flex;align-items:center;gap:11px;margin-bottom:11px}
+.coach .h .ic{width:40px;height:40px;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center;color:var(--gold-deep);box-shadow:0 6px 14px -6px rgba(194,154,78,.5)}
+.coach .h .ic svg{width:21px;height:21px}
+.coach .h b{font-size:14px;font-weight:800}
+.coach .h .tag{margin-left:auto;font-size:9.5px;font-weight:800;color:#2a2110;background:linear-gradient(135deg,#E3C97F,#C29A4E);border-radius:99px;padding:3px 9px}
+.coach p{font-size:12.5px;color:#8a6a2f;font-weight:600;line-height:1.5}
+.coach .li{display:flex;align-items:flex-start;gap:9px;margin-top:9px}
+.coach .li svg{width:16px;height:16px;stroke:var(--gold-deep);flex:none;margin-top:1px}
+.coach .li span{font-size:12.5px;color:var(--ink-2);font-weight:600}
+
+/* actions */
+.actions{margin-top:20px;display:flex;flex-direction:column;gap:11px}
+.btn{display:flex;align-items:center;justify-content:center;gap:9px;padding:16px;border-radius:16px;font-size:14px;font-weight:800}
+.btn.pri{background:linear-gradient(150deg,#2E3766,#1F2648);color:#fff;box-shadow:0 16px 28px -12px rgba(35,42,77,.7)}
+.btn.pri svg{stroke:var(--gold-lt)}
+.btn.ghost{background:var(--surface);border:1px solid var(--line);color:var(--ink-2)}
+.btn svg{width:18px;height:18px}
+.btn-row{display:flex;gap:11px}
+.btn-row .btn{flex:1}
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="notch"></div>
+  <div class="statusbar"><span class="num">9:41</span>
+    <div class="r">
+      <svg viewBox="0 0 24 24"><path d="M2 17h2v3H2zM7 13h2v7H7zM12 9h2v11h-2zM17 5h2v15h-2z" stroke="none"/></svg>
+      <svg viewBox="0 0 24 24"><path d="M12 4C7 4 2.7 6 0 9l12 13L24 9c-2.7-3-7-5-12-5z" stroke="none"/></svg>
+      <svg viewBox="0 0 26 24"><rect x="1" y="7" width="20" height="11" rx="3" fill="none" stroke="#fff" stroke-width="1.6"/><rect x="3" y="9" width="16" height="7" rx="1.5" fill="#fff"/><rect x="22.5" y="10.5" width="2" height="4" rx="1" fill="#fff"/></svg>
+    </div>
+  </div>
+
+  <div class="screen">
+    <!-- HERO -->
+    <div class="hero">
+      <div class="confetti" id="conf"></div>
+      <div class="htop">
+        <div class="iconbtn"><svg class="svg" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></div>
+        <div class="ttl">Result</div>
+        <div class="iconbtn"><svg class="svg" viewBox="0 0 24 24"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M16 6l-4-4-4 4M12 2v13"/></svg></div>
+      </div>
+
+      <div class="badge-top"><svg class="svg" viewBox="0 0 24 24"><path d="M12 2l2.1 4.3 4.7.7-3.4 3.3.8 4.7L12 14l-4.2 2.3.8-4.7-3.4-3.3 4.7-.7z"/></svg>GREAT JOB!</div>
+
+      <div class="ring-stage">
+        <svg viewBox="0 0 180 180"><defs><linearGradient id="rg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E3C97F"/><stop offset="1" stop-color="#C29A4E"/></linearGradient></defs>
+          <circle cx="90" cy="90" r="78" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="12"/>
+          <circle id="scoreRing" cx="90" cy="90" r="78" fill="none" stroke="url(#rg)" stroke-width="12" stroke-linecap="round" stroke-dasharray="490" stroke-dashoffset="490"/>
+        </svg>
+        <div class="center"><div class="pct"><span data-count="80" data-suffix="%">0%</span></div><div class="lbl">ACCURACY</div></div>
+      </div>
+      <div class="htitle">SSC CGL — Quant Sectional</div>
+      <div class="hsub">16 of 20 correct · 12:30 taken</div>
+    </div>
+
+    <div class="body">
+      <!-- SUMMARY -->
+      <div class="card summary rv" style="animation-delay:.05s">
+        <div class="s"><div class="ic i-sage"><svg class="svg" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></div><div class="v" style="color:var(--sage-deep)" data-count="16">0</div><div class="l">Correct</div></div>
+        <div class="s"><div class="ic i-red"><svg class="svg" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></div><div class="v" style="color:var(--red)" data-count="3">0</div><div class="l">Wrong</div></div>
+        <div class="s"><div class="ic i-navy"><svg class="svg" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></div><div class="v" data-count="1">0</div><div class="l">Skipped</div></div>
+        <div class="s"><div class="ic i-gold"><svg class="svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><div class="v" style="color:var(--gold-deep)">12:30</div><div class="l">Time</div></div>
+      </div>
+
+      <!-- REWARDS -->
+      <div class="reward">
+        <div class="rc xp rv" style="animation-delay:.12s"><div class="ic"><svg class="svg" viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg></div><div><div class="v">+<span data-count="120">0</span></div><div class="l">XP earned</div></div></div>
+        <div class="rc co rv" style="animation-delay:.18s"><div class="ic"><svg class="svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M14.5 9.5A3 3 0 0 0 12 8c-1.7 0-3 1-3 2.3 0 3 6 1.5 6 4.4 0 1.4-1.3 2.3-3 2.3A3 3 0 0 1 9.2 15"/></svg></div><div><div class="v">+<span data-count="25">0</span></div><div class="l">Coins</div></div></div>
+      </div>
+
+      <!-- BREAKDOWN -->
+      <div class="sec-head">Topic breakdown</div>
+      <div class="card brk rv" style="animation-delay:.24s">
+        <div class="b"><div class="r1"><span class="nm">Averages</span><span class="pc" style="color:var(--sage-deep)">90%</span></div><div class="bar"><i class="f-sage" style="width:90%;animation-delay:.5s"></i></div></div>
+        <div class="b"><div class="r1"><span class="nm">Percentages</span><span class="pc" style="color:var(--sage-deep)">82%</span></div><div class="bar"><i class="f-sage" style="width:82%;animation-delay:.6s"></i></div></div>
+        <div class="b"><div class="r1"><span class="nm">Ratio & Proportion</span><span class="pc" style="color:var(--gold-deep)">70%</span></div><div class="bar"><i class="f-gold" style="width:70%;animation-delay:.7s"></i></div></div>
+        <div class="b"><div class="r1"><span class="nm">Time & Work</span><span class="pc" style="color:var(--red)">55%</span></div><div class="bar"><i class="f-navy" style="width:55%;animation-delay:.8s"></i></div></div>
+      </div>
+
+      <!-- RANK -->
+      <div class="rankrow rv" style="animation-delay:.3s">
+        <div class="rk"><div class="ic i-gold"><svg class="svg" viewBox="0 0 24 24"><path d="M18 2H6v7a6 6 0 0 0 12 0zM6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M8 22h8M12 15v7"/></svg></div><div><div class="v">#<span data-count="14">0</span></div><div class="l">Test rank</div></div></div>
+        <div class="rk"><div class="ic i-sage"><svg class="svg" viewBox="0 0 24 24"><path d="M3 3v18h18M7 14l3-3 3 3 5-6"/></svg></div><div><div class="v"><span data-count="88">0</span>th</div><div class="l">Percentile</div></div></div>
+      </div>
+
+      <!-- AI COACH -->
+      <div class="sec-head">AI coach</div>
+      <div class="coach rv" style="animation-delay:.36s">
+        <div class="h"><div class="ic"><svg class="svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/></svg></div><b>Your feedback</b><span class="tag">✦ AI</span></div>
+        <p>Strong on Averages & Percentages — that's your edge. Time & Work is dragging you down.</p>
+        <div class="li"><svg class="svg" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg><span>Revise Time & Work formulas — do a 10-question drill.</span></div>
+        <div class="li"><svg class="svg" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg><span>You skipped 1 — attempt all; there's no negative marking here.</span></div>
+      </div>
+
+      <!-- ACTIONS -->
+      <div class="actions rv" style="animation-delay:.42s">
+        <div class="btn pri"><svg class="svg" viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>Review solutions</div>
+        <div class="btn-row">
+          <div class="btn ghost"><svg class="svg" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5"/></svg>Retake</div>
+          <div class="btn ghost"><svg class="svg" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>More tests</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function countUp(el){const t=parseFloat(el.dataset.count||"0"),sfx=el.dataset.suffix||"",dur=1200,st=performance.now();function tk(n){const p=Math.min((n-st)/dur,1),e=1-Math.pow(1-p,3);el.textContent=Math.round(t*e)+sfx;if(p<1)requestAnimationFrame(tk);}requestAnimationFrame(tk);}
+function confetti(){const c=document.getElementById('conf'),cols=['#C29A4E','#E3C97F','#5F8A7B','#FFFFFF','#3A4680'];for(let i=0;i<22;i++){const s=document.createElement('i');s.style.background=cols[i%cols.length];s.style.left=(Math.random()*100)+'%';s.style.animationDelay=(Math.random()*1.2)+'s';s.style.animationDuration=(2.4+Math.random()*1.2)+'s';c.appendChild(s);}}
+window.addEventListener('load',()=>{
+  confetti();
+  setTimeout(()=>document.querySelectorAll('[data-count]').forEach(countUp),350);
+  const ring=document.getElementById('scoreRing');
+  setTimeout(()=>{ring.style.transition='stroke-dashoffset 1.4s cubic-bezier(.2,.8,.3,1)';ring.style.strokeDashoffset=490-(490*0.80);},450);
+});
+</script>
+</body>
+</html>

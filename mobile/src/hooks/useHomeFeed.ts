@@ -11,7 +11,12 @@ export function useHomeFeed() {
 
   const query = useQuery({
     queryKey: queryKeys.home.feed(),
-    queryFn: getHomeFeed,
+    queryFn: async () => {
+      const cached = queryClient.getQueryData<HomeFeed>(queryKeys.home.feed());
+      const etag = cached?.generatedAt ? `"${cached.generatedAt}"` : undefined;
+      const feed = await getHomeFeed(etag ? { ifNoneMatch: etag } : undefined);
+      return feed ?? cached!;
+    },
     enabled: isAuthenticated,
     staleTime: 60_000,
     /** Keep showing the last good feed when a background refetch fails (offline). */
