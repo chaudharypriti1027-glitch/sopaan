@@ -8,6 +8,7 @@ import { NumText } from '../NumText';
 import { useLiveClassCountdown } from '../../hooks/useLiveClassCountdown';
 import { useLiveClassReminder } from '../../hooks';
 import type { LiveClass } from '../../api/liveClasses';
+import { formatLiveClassWhenLong } from '../../content/liveClassesContent';
 import { useTheme } from '../../theme';
 import { LIVE } from './liveTheme';
 
@@ -68,15 +69,7 @@ export function LiveClassScheduledPanel({ liveClass }: LiveClassScheduledPanelPr
         )}
 
         {startsAt ? (
-          <Text style={styles.when}>
-            {new Date(startsAt).toLocaleString('en-IN', {
-              weekday: 'long',
-              day: 'numeric',
-              month: 'short',
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
-          </Text>
+          <Text style={styles.when}>{formatLiveClassWhenLong(startsAt)}</Text>
         ) : null}
 
         {liveClass.topic ? (

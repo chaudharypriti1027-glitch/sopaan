@@ -19,6 +19,7 @@ import { useNotificationDeepLink } from './src/hooks/useNotificationDeepLink';
 import { useReferralDeepLink } from './src/hooks/useReferralDeepLink';
 import { bootstrapReferralInstallTracking } from './src/referrals/referralStorage';
 import { useSocketConnection } from './src/hooks/useSocket';
+import { useRealtimeInbox } from './src/hooks/useRealtimeInbox';
 import { LanguageProvider } from './src/language/LanguageContext';
 import { AppErrorBoundary } from './src/errors/AppErrorBoundary';
 import { ReleaseGate } from './src/updates/ReleaseGate';
@@ -41,6 +42,7 @@ function NavigationShell() {
   useNotificationDeepLink();
   useReferralDeepLink();
   useSocketConnection();
+  useRealtimeInbox();
 
   return (
     <>

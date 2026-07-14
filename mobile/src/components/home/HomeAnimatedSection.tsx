@@ -1,14 +1,11 @@
 import { memo, type ReactNode } from 'react';
 import Animated, { FadeInDown, ReduceMotion, useReducedMotion } from 'react-native-reanimated';
+import { HOME_SECTION_MOTION } from '../../content/homeContent';
 
 type HomeAnimatedSectionProps = {
   index: number;
   children: ReactNode;
 };
-
-const BASE_MS = 260;
-const STAGGER_MS = 35;
-const MAX_STAGGER_INDEX = 4;
 
 /** Subtle premium enter — capped stagger, skipped when reduce-motion is on. */
 export const HomeAnimatedSection = memo(function HomeAnimatedSection({
@@ -21,12 +18,13 @@ export const HomeAnimatedSection = memo(function HomeAnimatedSection({
     return <>{children}</>;
   }
 
-  const delay = Math.min(index, MAX_STAGGER_INDEX) * STAGGER_MS;
+  const delay =
+    Math.min(index, HOME_SECTION_MOTION.maxStaggerIndex) * HOME_SECTION_MOTION.staggerMs;
 
   return (
     <Animated.View
       entering={FadeInDown.delay(delay)
-        .duration(BASE_MS)
+        .duration(HOME_SECTION_MOTION.baseMs)
         .reduceMotion(ReduceMotion.System)}
     >
       {children}

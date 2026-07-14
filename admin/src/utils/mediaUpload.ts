@@ -1,10 +1,9 @@
 import { getAccessToken } from '../api/storage';
-
-const API_BASE = import.meta.env.VITE_API_BASE ?? '';
+import { getApiOrigin } from '../realtime/socketOrigin';
 
 function resolveUrl(url: string) {
   if (/^https?:\/\//i.test(url)) return url;
-  return `${API_BASE}${url}`;
+  return `${getApiOrigin()}${url}`;
 }
 
 export function uploadWithProgress(

@@ -26,6 +26,9 @@ export function HomeHeroBackground() {
         end={{ x: 0.5, y: 1 }}
         style={styles.bottomVignette}
       />
+
+      <View style={styles.orbGold} />
+      <View style={styles.orbSage} />
     </View>
   );
 }
@@ -48,5 +51,23 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     height: 56,
+  },
+  orbGold: {
+    position: 'absolute',
+    top: -40,
+    right: -30,
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: 'rgba(194,154,78,0.12)',
+  },
+  orbSage: {
+    position: 'absolute',
+    bottom: 20,
+    left: -50,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: 'rgba(95,138,123,0.1)',
   },
 });

@@ -25,6 +25,7 @@ import { MentorsPage } from './pages/MentorsPage';
 import { StudentsPage } from './pages/StudentsPage';
 import { TestsPage } from './pages/TestsPage';
 import { QuestionsPage } from './pages/QuestionsPage';
+import { BooksPage } from './pages/BooksPage';
 import { ReviewQueuePage } from './pages/ReviewQueuePage';
 
 const queryClient = new QueryClient({
@@ -39,7 +40,9 @@ export default function App() {
       <AuthProvider>
         <ToastProvider>
           <ExamGenerateProvider>
-            <BrowserRouter>
+            <BrowserRouter
+              basename={import.meta.env.BASE_URL.replace(/\/$/, '') || undefined}
+            >
             <Routes>
               <Route path="/login" element={<LoginPage />} />
               <Route path="/invite" element={<InviteAcceptPage />} />
@@ -53,6 +56,7 @@ export default function App() {
                   <Route path="exams" element={<ExamsPage />} />
                   <Route path="courses" element={<CoursesPage />} />
                   <Route path="affairs" element={<CurrentAffairsPage />} />
+                  <Route path="books" element={<BooksPage />} />
                   <Route path="media" element={<MediaPage />} />
                   <Route path="students" element={<StudentsPage />} />
                   <Route path="mentors" element={<MentorsPage />} />

@@ -1,19 +1,27 @@
 import { GraduationCap } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Button, Card, PremiumHeroCard, QueryStateView, Screen, SectionTitle } from '../../components';
+import { useTranslation } from 'react-i18next';
+import {
+  Button,
+  FeatureScreenLayout,
+  PremiumFeatureCard,
+  PremiumHeroCard,
+  QueryStateView,
+  SectionTitle,
+} from '../../components';
 import { useBookMentor, useMentors, useNetworkStatus } from '../../hooks';
 import type { Mentor } from '../../api/mentors';
 import { useTheme } from '../../theme';
 
-function mentorName(mentor: Mentor): string {
+function mentorName(mentor: Mentor, fallback: string): string {
   if (mentor.name?.trim()) {
     return mentor.name;
   }
   if (mentor.userId && typeof mentor.userId === 'object' && 'name' in mentor.userId) {
-    return mentor.userId.name ?? 'Mentor';
+    return mentor.userId.name ?? fallback;
   }
-  return 'Mentor';
+  return fallback;
 }
 
 function formatSlot(iso: string): string {
@@ -27,6 +35,7 @@ function formatSlot(iso: string): string {
 }
 
 export function MentorsScreen() {
+  const { t } = useTranslation('app');
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
@@ -38,22 +47,21 @@ export function MentorsScreen() {
   const mentors = mentorsQuery.data?.items ?? [];
   const featured = mentors[0];
   const selected = mentors.find((m) => m.id === selectedId) ?? featured;
+  const mentorFallback = t('mentors.mentor');
 
   const handleBook = async (slotStart: string) => {
     if (!selected) return;
 
     try {
       await bookMentor.mutateAsync({ id: selected.id, slotStart });
-      Alert.alert('Booked', 'Your mentor session is confirmed.');
+      Alert.alert(t('mentors.booked'), t('mentors.bookedBody'));
     } catch {
-      Alert.alert('Booking failed', 'That slot may no longer be available.');
+      Alert.alert(t('mentors.bookingFailed'), t('mentors.bookingFailedBody'));
     }
   };
 
   return (
-    <Screen scroll contentContainerStyle={styles.content}>
-      <SectionTitle subtitle="Book 1:1 guidance from toppers" />
-
+    <FeatureScreenLayout title={t('mentors.title')} subtitle={t('mentors.subtitle')}>
       <QueryStateView
         isLoading={mentorsQuery.isLoading}
         isError={mentorsQuery.isError}
@@ -66,11 +74,11 @@ export function MentorsScreen() {
           {featured ? (
             <PremiumHeroCard
               icon={<GraduationCap size={24} color="#FFFFFF" strokeWidth={1.8} />}
-              eyebrow="Featured mentor"
-              title={mentorName(featured)}
+              eyebrow={t('mentors.featured')}
+              title={mentorName(featured, mentorFallback)}
               stats={[
-                { label: 'Rating', value: `★ ${featured.rating ?? 0}` },
-                { label: 'Sessions', value: String(featured.sessionsCount ?? 0) },
+                { label: t('mentors.rating'), value: `★ ${featured.rating ?? 0}` },
+                { label: t('mentors.sessionsLabel'), value: String(featured.sessionsCount ?? 0) },
               ]}
             >
               {featured.bio ? <Text style={styles.bio}>{featured.bio}</Text> : null}
@@ -78,30 +86,30 @@ export function MentorsScreen() {
             </PremiumHeroCard>
           ) : null}
 
-          <SectionTitle title="All mentors" />
+          <SectionTitle title={t('mentors.allMentors')} />
           <View style={styles.list}>
             {mentors.map((mentor) => (
               <Pressable key={mentor.id} onPress={() => setSelectedId(mentor.id)}>
-                <Card
+                <PremiumFeatureCard
                   style={
                     selected?.id === mentor.id
                       ? { ...styles.mentorCard, ...styles.mentorCardActive }
                       : styles.mentorCard
                   }
                 >
-                  <Text style={styles.mentorName}>{mentorName(mentor)}</Text>
+                  <Text style={styles.mentorName}>{mentorName(mentor, mentorFallback)}</Text>
                   <Text style={styles.mentorMeta}>
                     ★ {mentor.rating ?? 0} · {(mentor.expertise ?? []).slice(0, 2).join(', ')}
                   </Text>
-                </Card>
+                </PremiumFeatureCard>
               </Pressable>
             ))}
           </View>
 
           {selected ? (
             <View style={styles.section}>
-              <SectionTitle title="Book a slot" />
-              <Card style={styles.slots}>
+              <SectionTitle title={t('mentors.bookSlot')} />
+              <PremiumFeatureCard style={styles.slots}>
                 {(selected.availableSlots ?? selected.slots ?? []).length > 0 ? (
                   (selected.availableSlots ?? selected.slots ?? []).map((slot) => (
                     <Button
@@ -113,20 +121,19 @@ export function MentorsScreen() {
                     />
                   ))
                 ) : (
-                  <Text style={styles.emptySlots}>No open slots right now.</Text>
+                  <Text style={styles.emptySlots}>{t('mentors.noSlots')}</Text>
                 )}
-              </Card>
+              </PremiumFeatureCard>
             </View>
           ) : null}
         </>
       </QueryStateView>
-    </Screen>
+    </FeatureScreenLayout>
   );
 }
 
 function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
-    content: { gap: theme.spacing.lg, paddingBottom: theme.spacing['3xl'] },
     bio: { ...theme.typography.presets.body, color: 'rgba(255,255,255,0.85)', zIndex: 1 },
     expertise: { ...theme.typography.presets.caption, color: 'rgba(255,255,255,0.55)', zIndex: 1 },
     list: { gap: theme.spacing.sm },

@@ -1,5 +1,6 @@
 import { Test } from '../../models/Test.js';
 import { AppError } from '../../utils/AppError.js';
+import { CONTENT_DOMAINS, notifyStudentsContentUpdated } from '../contentSyncService.js';
 import { buildPaginatedResult, parsePagination } from '../../utils/pagination.js';
 
 export function formatPendingTest(doc) {
@@ -72,6 +73,10 @@ export async function reviewTest(testId, decision) {
 
   test.status = decision === 'approve' ? 'published' : 'rejected';
   await test.save();
+
+  if (decision === 'approve') {
+    notifyStudentsContentUpdated(CONTENT_DOMAINS.TESTS, { action: 'publish', testId: test._id.toString() });
+  }
 
   const populated = await test.populate('createdBy', 'name email');
   return formatPendingTest(populated.toObject());

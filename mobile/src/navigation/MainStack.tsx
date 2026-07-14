@@ -2,6 +2,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import { premiumStackScreenOptions } from '../components/premium/PremiumNavigationHeader';
 import { lazyScreen } from './lazyScreen';
+import { HIDDEN_STACK_HEADER } from './stackScreenOptions';
 import type { MainStackParamList } from './types';
 import { AppTabs } from './AppTabs';
 
@@ -21,6 +22,11 @@ export function MainStack() {
         options={{ headerShown: false }}
       />
       <Stack.Screen
+        name="TestReady"
+        getComponent={lazyScreen(() => require('../screens/app/TestReadyScreen'), 'TestReadyScreen')}
+        options={{ headerShown: false, animation: 'fade_from_bottom' }}
+      />
+      <Stack.Screen
         name="Quiz"
         getComponent={lazyScreen(() => require('../screens/app/QuizScreen'), 'QuizScreen')}
         options={{ title: t('quiz'), headerBackTitle: t('common:back') }}
@@ -36,12 +42,12 @@ export function MainStack() {
           () => require('../screens/app/ProgressAnalyticsScreen'),
           'ProgressAnalyticsScreen',
         )}
-        options={{ title: t('progressAnalytics') }}
+        options={HIDDEN_STACK_HEADER}
       />
       <Stack.Screen
         name="ExamCalendar"
         getComponent={lazyScreen(() => require('../screens/app/ExamCalendarScreen'), 'ExamCalendarScreen')}
-        options={{ title: t('examCalendar') }}
+        options={HIDDEN_STACK_HEADER}
       />
       <Stack.Screen
         name="ExamDetail"
@@ -51,7 +57,7 @@ export function MainStack() {
       <Stack.Screen
         name="Books"
         getComponent={lazyScreen(() => require('../screens/app/BooksScreen'), 'BooksScreen')}
-        options={{ title: t('books') }}
+        options={HIDDEN_STACK_HEADER}
       />
       <Stack.Screen
         name="BookReader"
@@ -61,17 +67,17 @@ export function MainStack() {
       <Stack.Screen
         name="Courses"
         getComponent={lazyScreen(() => require('../screens/app/CoursesScreen'), 'CoursesScreen')}
-        options={{ title: t('courses') }}
+        options={HIDDEN_STACK_HEADER}
       />
       <Stack.Screen
         name="CourseDetail"
         getComponent={lazyScreen(() => require('../screens/app/CourseDetailScreen'), 'CourseDetailScreen')}
-        options={{ title: t('course') }}
+        options={HIDDEN_STACK_HEADER}
       />
       <Stack.Screen
         name="LiveClasses"
         getComponent={lazyScreen(() => require('../screens/app/LiveClassesScreen'), 'LiveClassesScreen')}
-        options={{ title: t('liveClasses') }}
+        options={HIDDEN_STACK_HEADER}
       />
       <Stack.Screen
         name="LiveClassViewer"
@@ -87,42 +93,60 @@ export function MainStack() {
           () => require('../screens/app/CommunityTestsScreen'),
           'CommunityTestsScreen',
         )}
-        options={{ title: t('communityTests') }}
+        options={HIDDEN_STACK_HEADER}
       />
       <Stack.Screen
         name="CreateTest"
         getComponent={lazyScreen(() => require('../screens/app/CreateTestScreen'), 'CreateTestScreen')}
-        options={{ title: t('createTest') }}
+        options={HIDDEN_STACK_HEADER}
       />
       <Stack.Screen
         name="StudyPlanner"
         getComponent={lazyScreen(() => require('../screens/app/StudyPlannerScreen'), 'StudyPlannerScreen')}
-        options={{ title: t('studyPlanner') }}
+        options={HIDDEN_STACK_HEADER}
       />
       <Stack.Screen
         name="FocusTimer"
         getComponent={lazyScreen(() => require('../screens/app/FocusTimerScreen'), 'FocusTimerScreen')}
-        options={{ title: t('focusTimer') }}
+        options={HIDDEN_STACK_HEADER}
       />
       <Stack.Screen
         name="Wellness"
         getComponent={lazyScreen(() => require('../screens/app/WellnessScreen'), 'WellnessScreen')}
-        options={{ title: t('wellness') }}
+        options={HIDDEN_STACK_HEADER}
       />
       <Stack.Screen
         name="Rewards"
         getComponent={lazyScreen(() => require('../screens/app/RewardsScreen'), 'RewardsScreen')}
-        options={{ title: t('rewards') }}
+        options={HIDDEN_STACK_HEADER}
       />
       <Stack.Screen
         name="ReferEarn"
         getComponent={lazyScreen(() => require('../screens/app/ReferEarnScreen'), 'ReferEarnScreen')}
-        options={{ title: t('referEarn') }}
+        options={HIDDEN_STACK_HEADER}
       />
       <Stack.Screen
         name="Forum"
         getComponent={lazyScreen(() => require('../screens/app/ForumScreen'), 'ForumScreen')}
-        options={{ title: t('forum') }}
+        options={HIDDEN_STACK_HEADER}
+      />
+      <Stack.Screen
+        name="Friends"
+        getComponent={lazyScreen(() => require('../screens/app/FriendsScreen'), 'FriendsScreen')}
+        options={HIDDEN_STACK_HEADER}
+      />
+      <Stack.Screen
+        name="Messages"
+        getComponent={lazyScreen(() => require('../screens/app/MessagesScreen'), 'MessagesScreen')}
+        options={HIDDEN_STACK_HEADER}
+      />
+      <Stack.Screen
+        name="DirectMessage"
+        getComponent={lazyScreen(
+          () => require('../screens/app/DirectMessageScreen'),
+          'DirectMessageScreen',
+        )}
+        options={{ headerShown: false }}
       />
       <Stack.Screen
         name="GroupChat"
@@ -132,12 +156,12 @@ export function MainStack() {
       <Stack.Screen
         name="Mentors"
         getComponent={lazyScreen(() => require('../screens/app/MentorsScreen'), 'MentorsScreen')}
-        options={{ title: t('mentors') }}
+        options={HIDDEN_STACK_HEADER}
       />
       <Stack.Screen
         name="MockAnalysis"
         getComponent={lazyScreen(() => require('../screens/app/MockAnalysisScreen'), 'MockAnalysisScreen')}
-        options={{ title: t('mockAnalysis') }}
+        options={HIDDEN_STACK_HEADER}
       />
       <Stack.Screen
         name="AnswerEvaluation"
@@ -145,7 +169,7 @@ export function MainStack() {
           () => require('../screens/app/AnswerEvaluationScreen'),
           'AnswerEvaluationScreen',
         )}
-        options={{ title: t('answerEvaluation') }}
+        options={HIDDEN_STACK_HEADER}
       />
       <Stack.Screen
         name="CutoffsForms"
@@ -153,32 +177,37 @@ export function MainStack() {
           () => require('../screens/app/CutoffsFormsScreen'),
           'CutoffsFormsScreen',
         )}
-        options={{ title: t('cutoffsForms') }}
+        options={HIDDEN_STACK_HEADER}
       />
       <Stack.Screen
         name="Flashcards"
         getComponent={lazyScreen(() => require('../screens/app/FlashcardsScreen'), 'FlashcardsScreen')}
-        options={{ title: t('flashcards') }}
+        options={HIDDEN_STACK_HEADER}
       />
       <Stack.Screen
         name="PhysicalTest"
         getComponent={lazyScreen(() => require('../screens/app/PhysicalTestScreen'), 'PhysicalTestScreen')}
-        options={{ title: t('physicalTest') }}
+        options={HIDDEN_STACK_HEADER}
+      />
+      <Stack.Screen
+        name="ExamPlan"
+        getComponent={lazyScreen(() => require('../screens/app/ExamPlanScreen'), 'ExamPlanScreen')}
+        options={HIDDEN_STACK_HEADER}
       />
       <Stack.Screen
         name="Roadmap"
         getComponent={lazyScreen(() => require('../screens/app/RoadmapScreen'), 'RoadmapScreen')}
-        options={{ title: t('roadmap') }}
+        options={HIDDEN_STACK_HEADER}
       />
       <Stack.Screen
         name="Readiness"
         getComponent={lazyScreen(() => require('../screens/app/ReadinessScreen'), 'ReadinessScreen')}
-        options={{ title: t('readiness') }}
+        options={HIDDEN_STACK_HEADER}
       />
       <Stack.Screen
         name="TestSeries"
         getComponent={lazyScreen(() => require('../screens/app/TestSeriesScreen'), 'TestSeriesScreen')}
-        options={{ title: t('testSeries') }}
+        options={HIDDEN_STACK_HEADER}
       />
       <Stack.Screen
         name="RevisionCapsules"
@@ -186,12 +215,12 @@ export function MainStack() {
           () => require('../screens/app/RevisionCapsulesScreen'),
           'RevisionCapsulesScreen',
         )}
-        options={{ title: t('revisionCapsules') }}
+        options={HIDDEN_STACK_HEADER}
       />
       <Stack.Screen
         name="Vocabulary"
         getComponent={lazyScreen(() => require('../screens/app/VocabularyScreen'), 'VocabularyScreen')}
-        options={{ title: t('vocabulary') }}
+        options={HIDDEN_STACK_HEADER}
       />
       <Stack.Screen
         name="Notifications"
@@ -199,17 +228,17 @@ export function MainStack() {
           () => require('../screens/app/NotificationsScreen'),
           'NotificationsScreen',
         )}
-        options={{ title: t('notifications') }}
+        options={HIDDEN_STACK_HEADER}
       />
       <Stack.Screen
         name="Notes"
         getComponent={lazyScreen(() => require('../screens/app/NotesScreen'), 'NotesScreen')}
-        options={{ title: t('notes') }}
+        options={HIDDEN_STACK_HEADER}
       />
       <Stack.Screen
         name="Premium"
         getComponent={lazyScreen(() => require('../screens/app/PremiumScreen'), 'PremiumScreen')}
-        options={{ title: t('premium') }}
+        options={HIDDEN_STACK_HEADER}
       />
       <Stack.Screen
         name="ManageSubscription"
@@ -217,12 +246,12 @@ export function MainStack() {
           () => require('../screens/app/ManageSubscriptionScreen'),
           'ManageSubscriptionScreen',
         )}
-        options={{ title: t('manageSubscription') }}
+        options={HIDDEN_STACK_HEADER}
       />
       <Stack.Screen
         name="Settings"
         getComponent={lazyScreen(() => require('../screens/app/SettingsScreen'), 'SettingsScreen')}
-        options={{ title: t('settings') }}
+        options={HIDDEN_STACK_HEADER}
       />
       <Stack.Screen
         name="PrivacyPolicy"
@@ -240,7 +269,7 @@ export function MainStack() {
           () => require('../screens/app/SuccessStoriesScreen'),
           'SuccessStoriesScreen',
         )}
-        options={{ title: t('successStories') }}
+        options={HIDDEN_STACK_HEADER}
       />
       <Stack.Screen
         name="Leaderboard"
@@ -250,7 +279,7 @@ export function MainStack() {
       <Stack.Screen
         name="Search"
         getComponent={lazyScreen(() => require('../screens/app/SearchScreen'), 'SearchScreen')}
-        options={{ title: t('search') }}
+        options={HIDDEN_STACK_HEADER}
       />
       <Stack.Screen
         name="Games"
@@ -268,7 +297,7 @@ export function MainStack() {
           () => require('../screens/app/CurrentAffairReaderScreen'),
           'CurrentAffairReaderScreen',
         )}
-        options={{ title: t('currentAffairReader') }}
+        options={HIDDEN_STACK_HEADER}
       />
     </Stack.Navigator>
   );

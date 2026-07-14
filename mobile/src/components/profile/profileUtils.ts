@@ -2,9 +2,7 @@ import type { LucideIcon } from 'lucide-react-native';
 import {
   Award,
   Flame,
-  Lock,
   Medal,
-  Star,
   Target,
   Trophy,
   Zap,

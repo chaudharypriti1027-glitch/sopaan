@@ -17,23 +17,19 @@ import { FormField } from '../components/content/FormField';
 import { LiveControlRoom } from '../components/live/LiveControlRoom';
 import { CoverImageField } from '../components/media/MediaPicker';
 import { useToast } from '../components/Toast';
+import {
+  DEFAULT_LIVE_CLASS_FORM,
+  LIVE_ADMIN_COPY,
+  LIVE_ADMIN_TABS,
+  LIVE_CLASS_DURATION,
+  type LiveAdminTab,
+  type LiveClassFormState,
+} from '../content/liveClassesContent';
 import { connectAdminLiveSocket, disconnectAdminLiveSocket } from '../realtime/liveSocket';
+import { useAdminLiveClassesRealtime } from '../hooks/useAdminLiveClassesRealtime';
 import '../components/live/live-room.css';
 
-type LiveTab = 'room' | 'schedule' | 'upcoming' | 'recordings';
-
-const defaultForm = {
-  title: '',
-  description: '',
-  instructor: '',
-  exam: 'General',
-  topic: '',
-  startsAt: '',
-  durationMin: '60',
-  autoRecord: true,
-  notify: true,
-  coverUrl: '',
-};
+const copy = LIVE_ADMIN_COPY;
 
 function formatDuration(row: AdminLiveClass) {
   if (row.recordingDurationSec && row.recordingDurationSec > 0) {
@@ -51,13 +47,15 @@ function formatWhen(value?: string) {
 export function LiveClassesPage() {
   const { showToast } = useToast();
   const queryClient = useQueryClient();
-  const [tab, setTab] = useState<LiveTab>('room');
+  const [tab, setTab] = useState<LiveAdminTab>('upcoming');
   const [activeClassId, setActiveClassId] = useState<string | null>(null);
-  const [form, setForm] = useState(defaultForm);
+  const [form, setForm] = useState<LiveClassFormState>({ ...DEFAULT_LIVE_CLASS_FORM });
 
   const query = useQuery({
     queryKey: ['admin', 'live-classes'],
     queryFn: () => listAdminLiveClasses(),
+    refetchOnWindowFocus: true,
+    refetchInterval: (q) => ((q.state.data?.summary.liveCount ?? 0) > 0 ? 8_000 : false),
   });
 
   const recordingsQuery = useQuery({
@@ -66,12 +64,15 @@ export function LiveClassesPage() {
     enabled: tab === 'recordings',
   });
 
-  const items = query.data?.items ?? [];
+  const items = useMemo(() => query.data?.items ?? [], [query.data?.items]);
   const liveNow = items.find((row) => row.status === 'live') ?? null;
   const upcoming = items.filter((row) => row.status === 'scheduled');
   const recordings = (recordingsQuery.data?.items ?? items).filter(
     (row) => row.status === 'ended' && row.recordingUrl,
   );
+
+  const hasLiveClasses = (query.data?.summary.liveCount ?? 0) > 0;
+  useAdminLiveClassesRealtime(hasLiveClasses || tab === 'room');
 
   useEffect(() => {
     if (liveNow && tab === 'room' && !activeClassId) {
@@ -103,9 +104,9 @@ export function LiveClassesPage() {
   const createMutation = useMutation({
     mutationFn: (body: LiveClassCreateInput) => createAdminLiveClass(body),
     onSuccess: () => {
-      showToast('Live class scheduled');
-      queryClient.invalidateQueries({ queryKey: ['admin', 'live-classes'] });
-      setForm(defaultForm);
+      showToast(copy.toast.scheduled);
+      void queryClient.invalidateQueries({ queryKey: ['admin', 'live-classes'] });
+      setForm({ ...DEFAULT_LIVE_CLASS_FORM });
       setTab('upcoming');
     },
     onError: (err: Error) => showToast(err.message),
@@ -114,8 +115,8 @@ export function LiveClassesPage() {
   const startMutation = useMutation({
     mutationFn: (id: string) => startAdminLiveClass(id),
     onSuccess: (row) => {
-      showToast('Class is live');
-      queryClient.invalidateQueries({ queryKey: ['admin', 'live-classes'] });
+      showToast(copy.toast.live);
+      void queryClient.invalidateQueries({ queryKey: ['admin', 'live-classes'] });
       setActiveClassId(row.id);
       setTab('room');
     },
@@ -125,7 +126,7 @@ export function LiveClassesPage() {
   const endMutation = useMutation({
     mutationFn: (id: string) => endAdminLiveClass(id),
     onSuccess: () => {
-      showToast('Class ended · recording saved');
+      showToast(copy.toast.ended);
       queryClient.invalidateQueries({ queryKey: ['admin', 'live-classes'] });
       setActiveClassId(null);
       setTab('recordings');
@@ -136,7 +137,7 @@ export function LiveClassesPage() {
   const cancelMutation = useMutation({
     mutationFn: (id: string) => cancelAdminLiveClass(id),
     onSuccess: () => {
-      showToast('Class cancelled');
+      showToast(copy.toast.cancelled);
       queryClient.invalidateQueries({ queryKey: ['admin', 'live-classes'] });
     },
     onError: (err: Error) => showToast(err.message),
@@ -146,7 +147,7 @@ export function LiveClassesPage() {
     mutationFn: ({ id, published }: { id: string; published: boolean }) =>
       setAdminLiveClassRecordingPublished(id, published),
     onSuccess: (_row, vars) => {
-      showToast(vars.published ? 'Recording published' : 'Recording unpublished');
+      showToast(vars.published ? copy.toast.published : copy.toast.unpublished);
       queryClient.invalidateQueries({ queryKey: ['admin', 'live-classes'] });
     },
     onError: (err: Error) => showToast(err.message),
@@ -154,7 +155,7 @@ export function LiveClassesPage() {
 
   function handleCreate() {
     if (!form.title.trim() || !form.startsAt) {
-      showToast('Title and schedule are required');
+      showToast(copy.toast.required);
       return;
     }
 
@@ -162,10 +163,10 @@ export function LiveClassesPage() {
       title: form.title.trim(),
       description: form.description.trim() || undefined,
       instructor: form.instructor.trim() || undefined,
-      exam: form.exam.trim() || 'General',
+      exam: form.exam.trim() || DEFAULT_LIVE_CLASS_FORM.exam,
       topic: form.topic.trim() || undefined,
       startsAt: new Date(form.startsAt).toISOString(),
-      durationMin: Number(form.durationMin) || 60,
+      durationMin: Number(form.durationMin) || LIVE_CLASS_DURATION.default,
       coverUrl: form.coverUrl.trim() || undefined,
       autoRecord: form.autoRecord,
       notify: form.notify,
@@ -189,57 +190,39 @@ export function LiveClassesPage() {
 
   return (
     <div className="live-page">
-      <div className="sec-t">Live classes</div>
+      <div className="sec-t">{copy.pageTitle}</div>
 
       <div className="metrics">
         <div className="metric">
-          <div className="k">Live now</div>
+          <div className="k">{copy.metrics.liveNow}</div>
           <div className="v num">{query.data?.summary.liveCount ?? 0}</div>
         </div>
         <div className="metric">
-          <div className="k">Scheduled</div>
+          <div className="k">{copy.metrics.scheduled}</div>
           <div className="v num">{query.data?.summary.scheduledCount ?? 0}</div>
         </div>
         <div className="metric">
-          <div className="k">Recordings</div>
+          <div className="k">{copy.metrics.recordings}</div>
           <div className="v num">{query.data?.summary.recordingCount ?? 0}</div>
         </div>
         <div className="metric">
-          <div className="k">Watching now</div>
+          <div className="k">{copy.metrics.watchingNow}</div>
           <div className="v num">{query.data?.summary.watchingNow ?? 0}</div>
         </div>
       </div>
 
       <div className="subtabs">
-        <button
-          type="button"
-          className={`subtab ${tab === 'room' ? 'on' : ''}`}
-          onClick={() => setTab('room')}
-        >
-          {liveNow ? <span className="lv" /> : null}
-          Live now
-        </button>
-        <button
-          type="button"
-          className={`subtab ${tab === 'schedule' ? 'on' : ''}`}
-          onClick={() => setTab('schedule')}
-        >
-          Schedule
-        </button>
-        <button
-          type="button"
-          className={`subtab ${tab === 'upcoming' ? 'on' : ''}`}
-          onClick={() => setTab('upcoming')}
-        >
-          Upcoming
-        </button>
-        <button
-          type="button"
-          className={`subtab ${tab === 'recordings' ? 'on' : ''}`}
-          onClick={() => setTab('recordings')}
-        >
-          Recordings
-        </button>
+        {LIVE_ADMIN_TABS.map(({ key, labelKey }) => (
+          <button
+            key={key}
+            type="button"
+            className={`subtab ${tab === key ? 'on' : ''}`}
+            onClick={() => setTab(key)}
+          >
+            {key === 'room' && liveNow ? <span className="lv" /> : null}
+            {copy.tabs[labelKey]}
+          </button>
+        ))}
       </div>
 
       {tab === 'room' ? (
@@ -258,10 +241,10 @@ export function LiveClassesPage() {
         ) : (
           <div className="live-empty">
             {tokenQuery.isLoading || startMutation.isPending
-              ? 'Starting live room…'
+              ? copy.room.starting
               : liveNow
-                ? 'Unable to load host token. Check LiveKit configuration.'
-                : 'No class is live. Start one from Upcoming.'}
+                ? copy.room.tokenError
+                : copy.room.empty}
           </div>
         )
       ) : null}
@@ -269,10 +252,10 @@ export function LiveClassesPage() {
       {tab === 'schedule' ? (
         <div className="panel" style={{ maxWidth: 760 }}>
           <div className="ph">
-            <h3>Schedule a live class</h3>
+            <h3>{copy.schedule.title}</h3>
           </div>
           <div className="drawer-form" style={{ padding: '0 16px 16px' }}>
-            <FormField id="live-title" label="Title">
+            <FormField id="live-title" label={copy.fields.title}>
               <input
                 id="live-title"
                 className="form-input"
@@ -280,7 +263,7 @@ export function LiveClassesPage() {
                 onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
               />
             </FormField>
-            <FormField id="live-instructor" label="Educator">
+            <FormField id="live-instructor" label={copy.fields.educator}>
               <input
                 id="live-instructor"
                 className="form-input"
@@ -288,7 +271,7 @@ export function LiveClassesPage() {
                 onChange={(e) => setForm((f) => ({ ...f, instructor: e.target.value }))}
               />
             </FormField>
-            <FormField id="live-exam" label="Exam">
+            <FormField id="live-exam" label={copy.fields.exam}>
               <input
                 id="live-exam"
                 className="form-input"
@@ -296,7 +279,7 @@ export function LiveClassesPage() {
                 onChange={(e) => setForm((f) => ({ ...f, exam: e.target.value }))}
               />
             </FormField>
-            <FormField id="live-topic" label="Topic">
+            <FormField id="live-topic" label={copy.fields.topic}>
               <input
                 id="live-topic"
                 className="form-input"
@@ -304,7 +287,7 @@ export function LiveClassesPage() {
                 onChange={(e) => setForm((f) => ({ ...f, topic: e.target.value }))}
               />
             </FormField>
-            <FormField id="live-when" label="Date & time">
+            <FormField id="live-when" label={copy.fields.when}>
               <input
                 id="live-when"
                 type="datetime-local"
@@ -313,30 +296,30 @@ export function LiveClassesPage() {
                 onChange={(e) => setForm((f) => ({ ...f, startsAt: e.target.value }))}
               />
             </FormField>
-            <FormField id="live-duration" label="Duration (minutes)">
+            <FormField id="live-duration" label={copy.fields.duration}>
               <input
                 id="live-duration"
                 type="number"
-                min={15}
-                max={240}
+                min={LIVE_CLASS_DURATION.min}
+                max={LIVE_CLASS_DURATION.max}
                 className="form-input"
                 value={form.durationMin}
                 onChange={(e) => setForm((f) => ({ ...f, durationMin: e.target.value }))}
               />
             </FormField>
-            <FormField id="live-auto-record" label="Auto-record">
+            <FormField id="live-auto-record" label={copy.fields.autoRecord}>
               <select
                 id="live-auto-record"
                 className="form-input"
                 value={form.autoRecord ? 'on' : 'off'}
                 onChange={(e) => setForm((f) => ({ ...f, autoRecord: e.target.value === 'on' }))}
               >
-                <option value="on">On — save to recordings</option>
-                <option value="off">Off</option>
+                <option value="on">{copy.schedule.autoRecordOn}</option>
+                <option value="off">{copy.schedule.autoRecordOff}</option>
               </select>
             </FormField>
             <CoverImageField
-              label="Cover image"
+              label={copy.fields.cover}
               value={form.coverUrl}
               onChange={(url) => setForm((f) => ({ ...f, coverUrl: url }))}
             />
@@ -346,14 +329,14 @@ export function LiveClassesPage() {
                 checked={form.notify}
                 onChange={(e) => setForm((f) => ({ ...f, notify: e.target.checked }))}
               />
-              Notify students (push + in-app banner)
+              {copy.schedule.notifyLabel}
             </label>
             <ActionButton
               variant="gold"
               onClick={handleCreate}
               disabled={createMutation.isPending}
             >
-              Schedule &amp; notify students
+              {copy.schedule.submit}
             </ActionButton>
           </div>
         </div>
@@ -363,27 +346,34 @@ export function LiveClassesPage() {
         <>
           <div className="toolbar">
             <ActionButton variant="gold" onClick={() => setTab('schedule')}>
-              Schedule class
+              {copy.upcoming.scheduleBtn}
             </ActionButton>
           </div>
           <DataTable
             rows={[...(liveNow ? [liveNow] : []), ...upcoming]}
-            emptyMessage={query.isLoading ? 'Loading classes…' : 'No upcoming classes'}
+            emptyMessage={copy.upcoming.empty}
+            isLoading={query.isLoading}
+            error={query.isError ? query.error : undefined}
+            onRetry={() => void query.refetch()}
             columns={[
-              { key: 'title', header: 'Class', render: (row) => row.title },
-              { key: 'instructor', header: 'Educator', render: (row) => row.instructor },
+              { key: 'title', header: copy.upcoming.columns.class, render: (row) => row.title },
+              {
+                key: 'instructor',
+                header: copy.upcoming.columns.educator,
+                render: (row) => row.instructor,
+              },
               {
                 key: 'when',
-                header: 'When',
+                header: copy.upcoming.columns.when,
                 render: (row) =>
-                  row.status === 'live' ? 'Now' : formatWhen(row.startsAt ?? row.scheduledAt),
+                  row.status === 'live' ? copy.upcoming.now : formatWhen(row.startsAt ?? row.scheduledAt),
               },
               {
                 key: 'status',
-                header: 'Status',
+                header: copy.upcoming.columns.status,
                 render: (row) => (
                   <span className={`pill ${row.status === 'live' ? 'p-live' : 'p-draft'}`}>
-                    {row.status === 'live' ? 'Live' : 'Scheduled'}
+                    {row.status === 'live' ? copy.upcoming.statusLive : copy.upcoming.statusScheduled}
                   </span>
                 ),
               },
@@ -394,7 +384,7 @@ export function LiveClassesPage() {
                 render: (row) => (
                   <div className="act">
                     <button type="button" className="abtn pri" onClick={() => openRoom(row)}>
-                      {row.status === 'live' ? 'Open room' : 'Go live'}
+                      {row.status === 'live' ? copy.upcoming.openRoom : copy.upcoming.goLive}
                     </button>
                     {row.status === 'scheduled' ? (
                       <button
@@ -402,7 +392,7 @@ export function LiveClassesPage() {
                         className="abtn no"
                         onClick={() => cancelMutation.mutate(row.id)}
                       >
-                        Cancel
+                        {copy.upcoming.cancel}
                       </button>
                     ) : null}
                   </div>
@@ -416,23 +406,34 @@ export function LiveClassesPage() {
       {tab === 'recordings' ? (
         <DataTable
           rows={recordings}
-          emptyMessage={recordingsQuery.isLoading ? 'Loading recordings…' : 'No recordings yet'}
+          emptyMessage={copy.recordings.empty}
+          isLoading={recordingsQuery.isLoading}
+          error={recordingsQuery.isError ? recordingsQuery.error : undefined}
+          onRetry={() => void recordingsQuery.refetch()}
           columns={[
-            { key: 'title', header: 'Recording', render: (row) => row.title },
-            { key: 'instructor', header: 'Educator', render: (row) => row.instructor },
+            {
+              key: 'title',
+              header: copy.recordings.columns.recording,
+              render: (row) => row.title,
+            },
+            {
+              key: 'instructor',
+              header: copy.recordings.columns.educator,
+              render: (row) => row.instructor,
+            },
             {
               key: 'duration',
-              header: 'Duration',
+              header: copy.recordings.columns.duration,
               render: (row) => formatDuration(row),
             },
             {
               key: 'views',
-              header: 'Peak viewers',
+              header: copy.recordings.columns.peakViewers,
               render: (row) => row.viewersPeak ?? row.viewers ?? 0,
             },
             {
               key: 'status',
-              header: 'Status',
+              header: copy.recordings.columns.status,
               render: (row) => (
                 <span
                   className={`pill ${
@@ -444,10 +445,10 @@ export function LiveClassesPage() {
                   }`}
                 >
                   {row.recordingPublished
-                    ? 'Published'
+                    ? copy.recordings.statusPublished
                     : row.recordingStatus === 'ready'
-                      ? 'Ready'
-                      : row.recordingStatus ?? 'Pending'}
+                      ? copy.recordings.statusReady
+                      : row.recordingStatus ?? copy.recordings.statusPending}
                 </span>
               ),
             },
@@ -459,7 +460,7 @@ export function LiveClassesPage() {
                 <div className="act">
                   {row.recordingUrl ? (
                     <a className="abtn" href={row.recordingUrl} target="_blank" rel="noreferrer">
-                      Open
+                      {copy.recordings.open}
                     </a>
                   ) : null}
                   {row.recordingStatus === 'ready' ? (
@@ -470,7 +471,7 @@ export function LiveClassesPage() {
                         disabled={publishMutation.isPending}
                         onClick={() => publishMutation.mutate({ id: row.id, published: false })}
                       >
-                        Unpublish
+                        {copy.recordings.unpublish}
                       </button>
                     ) : (
                       <button
@@ -479,7 +480,7 @@ export function LiveClassesPage() {
                         disabled={publishMutation.isPending}
                         onClick={() => publishMutation.mutate({ id: row.id, published: true })}
                       >
-                        Publish
+                        {copy.recordings.publish}
                       </button>
                     )
                   ) : null}

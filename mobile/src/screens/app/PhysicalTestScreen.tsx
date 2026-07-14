@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import {
   AIBadge,
   AIGoldCard,
   Button,
-  Card,
   ComparisonBars,
-  Screen,
+  FeatureScreenLayout,
+  PremiumFeatureCard,
   SectionTitle,
   TextField,
   type ComparisonMetric,
@@ -20,6 +21,7 @@ import {
 import { useTheme } from '../../theme';
 
 export function PhysicalTestScreen() {
+  const { t } = useTranslation('app');
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
@@ -53,7 +55,7 @@ export function PhysicalTestScreen() {
   const handleLog = () => {
     const num = Number(value);
     if (!num || num <= 0) {
-      Alert.alert('Invalid value', 'Enter a positive number for your test result.');
+      Alert.alert(t('physicalTest.invalidValue'), t('physicalTest.invalidValueBody'));
       return;
     }
     createLog.mutate(
@@ -61,9 +63,9 @@ export function PhysicalTestScreen() {
       {
         onSuccess: () => {
           setValue('');
-          Alert.alert('Logged', 'Physical test result saved.');
+          Alert.alert(t('physicalTest.logged'), t('physicalTest.loggedBody'));
         },
-        onError: (err) => Alert.alert('Could not log', String(err)),
+        onError: (err) => Alert.alert(t('physicalTest.logFailed'), String(err)),
       },
     );
   };
@@ -71,25 +73,26 @@ export function PhysicalTestScreen() {
   const loading = planQuery.isLoading || profileQuery.isLoading;
 
   return (
-    <Screen scroll contentContainerStyle={styles.content}>
-      <SectionTitle
-        subtitle={goal ? `Standards for ${goal}` : 'Police / Defence fitness standards vs your logs'}
-      />
-
+    <FeatureScreenLayout
+      title={t('physicalTest.title')}
+      subtitle={
+        goal ? t('physicalTest.subtitleWithGoal', { goal }) : t('physicalTest.subtitleDefault')
+      }
+    >
       {loading ? (
         <ActivityIndicator color={theme.colors.brand.primary} />
       ) : (
         <>
           {metrics.length > 0 ? (
-            <Card style={styles.card}>
-              <Text style={styles.cardTitle}>Your progress vs standard</Text>
+            <PremiumFeatureCard style={styles.card}>
+              <Text style={styles.cardTitle}>{t('physicalTest.progressTitle')}</Text>
               <ComparisonBars metrics={metrics} />
-            </Card>
+            </PremiumFeatureCard>
           ) : null}
 
           {planTips.length > 0 ? (
             <AIGoldCard style={styles.card}>
-              <AIBadge label="AI fitness plan" />
+              <AIBadge label={t('physicalTest.fitnessPlan')} />
               {planTips.map((tip, i) => (
                 <Text key={i} style={styles.tip}>
                   • {tip}
@@ -100,52 +103,66 @@ export function PhysicalTestScreen() {
         </>
       )}
 
-      <Card style={styles.card}>
-        <Text style={styles.cardTitle}>Log a result</Text>
-        <TextField label="Test type" value={testType} onChangeText={setTestType} placeholder="1.6km_run" />
+      <PremiumFeatureCard style={styles.card}>
+        <Text style={styles.cardTitle}>{t('physicalTest.logResult')}</Text>
+        <TextField
+          label={t('physicalTest.testType')}
+          value={testType}
+          onChangeText={setTestType}
+          placeholder={t('physicalTest.testTypePlaceholder')}
+        />
         <View style={styles.row}>
           <View style={styles.half}>
             <TextField
-              label="Value"
+              label={t('physicalTest.value')}
               value={value}
               onChangeText={setValue}
               keyboardType="decimal-pad"
-              placeholder="7.5"
+              placeholder={t('physicalTest.valuePlaceholder')}
             />
           </View>
           <View style={styles.half}>
-            <TextField label="Unit" value={unit} onChangeText={setUnit} placeholder="min / m / count" />
+            <TextField
+              label={t('physicalTest.unit')}
+              value={unit}
+              onChangeText={setUnit}
+              placeholder={t('physicalTest.unitPlaceholder')}
+            />
           </View>
         </View>
-        <Button label="Save log" onPress={handleLog} loading={createLog.isPending} fullWidth />
-      </Card>
+        <Button
+          label={t('physicalTest.saveLog')}
+          onPress={handleLog}
+          loading={createLog.isPending}
+          fullWidth
+        />
+      </PremiumFeatureCard>
 
-      <SectionTitle title="Recent logs" />
+      <SectionTitle title={t('physicalTest.recentLogs')} />
       {logsQuery.isLoading ? (
         <ActivityIndicator color={theme.colors.brand.primary} />
       ) : (
         <View style={styles.logList}>
           {(logsQuery.data?.items ?? []).map((log) => (
-            <Card key={log.id} style={styles.logCard}>
+            <PremiumFeatureCard key={log.id} style={styles.logCard}>
               <Text style={styles.logType}>{log.testType.replace(/_/g, ' ')}</Text>
               <Text style={styles.logValue}>
                 {log.value} {log.unit}
               </Text>
               <Text style={styles.logDate}>{new Date(log.date).toLocaleDateString('en-IN')}</Text>
-            </Card>
+            </PremiumFeatureCard>
           ))}
           {(logsQuery.data?.items ?? []).length === 0 ? (
-            <Text style={styles.empty}>No logs yet — record your first attempt above.</Text>
+            <Text style={styles.empty}>{t('physicalTest.empty')}</Text>
           ) : null}
         </View>
       )}
-    </Screen>
+    </FeatureScreenLayout>
   );
 }
 
 function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
-    content: { gap: theme.spacing.lg, paddingBottom: theme.spacing['3xl'] },
     card: { gap: theme.spacing.md },
     cardTitle: {
       ...theme.typography.presets.bodyMedium,
@@ -155,14 +172,13 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     tip: { ...theme.typography.presets.body, color: theme.colors.text.secondary },
     row: { flexDirection: 'row', gap: theme.spacing.md },
     half: { flex: 1 },
-    sectionLabel: {
-      ...theme.typography.presets.bodyMedium,
-      fontFamily: theme.typography.fonts.ui.semibold,
-      color: theme.colors.text.primary,
-    },
     logList: { gap: theme.spacing.sm },
     logCard: { gap: theme.spacing.xs },
-    logType: { ...theme.typography.presets.caption, color: theme.colors.text.tertiary, textTransform: 'capitalize' },
+    logType: {
+      ...theme.typography.presets.caption,
+      color: theme.colors.text.tertiary,
+      textTransform: 'capitalize',
+    },
     logValue: {
       ...theme.typography.presets.bodyMedium,
       fontFamily: theme.typography.fonts.stat.semibold,

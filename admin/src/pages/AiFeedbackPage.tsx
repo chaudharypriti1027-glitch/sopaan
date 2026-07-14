@@ -89,9 +89,10 @@ export function AiFeedbackPage() {
 
       <DataTable<AiFeedbackItem>
         rows={rows}
-        emptyMessage={
-          feedbackQuery.isLoading ? 'Loading flagged evaluations…' : 'No flagged AI feedback'
-        }
+        emptyMessage="No flagged AI feedback"
+        isLoading={feedbackQuery.isLoading}
+        error={feedbackQuery.isError ? feedbackQuery.error : undefined}
+        onRetry={() => void feedbackQuery.refetch()}
         columns={[
           {
             key: 'question',

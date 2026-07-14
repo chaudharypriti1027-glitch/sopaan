@@ -1,5 +1,7 @@
+export { AiErrorBubble } from './AiErrorBubble';
 export { AI_UI } from './aiTheme';
 export { AiAvatar } from './AiAvatar';
+export { AiChatShell } from './AiChatShell';
 export { AiHeader } from './AiHeader';
 export { AiSegmentTabs, type AiTab } from './AiSegmentTabs';
 export { AiPromptCard } from './AiPromptCard';
@@ -9,4 +11,5 @@ export { AiAnswerBody } from './AiAnswerBody';
 export { AiAssistantCard } from './AiAssistantCard';
 export { AiComposer } from './AiComposer';
 export { AiHomeHero } from './AiHomeHero';
+export { AiImagePreview } from './AiImagePreview';
 export { historyToChatMessages, type AiChatMessage } from './historyToChatMessages';

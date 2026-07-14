@@ -73,6 +73,7 @@ export type McqQuestion = {
   options: string[];
   answer: string;
   label?: string;
+  explanation?: string;
 };
 
 export type ScrambleWord = {

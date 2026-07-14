@@ -2,11 +2,10 @@ import { useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Camera, ImagePlus, Mic, Send } from 'lucide-react-native';
+import { Camera, ImagePlus, Send } from 'lucide-react-native';
 import { scalableTextProps } from '../../a11y/textProps';
-import { GlassSurface } from '../GlassSurface';
 import { useTheme } from '../../theme';
-import { AI_UI } from './aiTheme';
+import { AI_UI, aiPremiumCard, aiPressFeedback } from './aiTheme';
 
 type AiComposerProps = {
   value: string;
@@ -39,52 +38,47 @@ export function AiComposer({
 
   return (
     <View style={styles.wrap}>
-      <View style={styles.shadowWrap}>
-        <GlassSurface tone="light" intensity={50} borderRadius={16} style={styles.bar}>
+      <View style={styles.bar}>
+        <View style={styles.tools}>
           <IconBtn onPress={onCamera} accessibilityLabel={cameraA11y}>
-            <Camera size={18} color={AI_UI.primaryMuted} strokeWidth={1.8} />
+            <Camera size={18} color={AI_UI.primary} strokeWidth={2} />
           </IconBtn>
           <IconBtn onPress={onGallery} accessibilityLabel={galleryA11y}>
-            <ImagePlus size={18} color={AI_UI.primaryMuted} strokeWidth={1.8} />
+            <ImagePlus size={18} color={AI_UI.primary} strokeWidth={2} />
           </IconBtn>
+        </View>
 
-          <TextInput
-            testID="ask-ai-input"
-            style={styles.input}
-            placeholder={placeholder}
-            placeholderTextColor={AI_UI.sub}
-            accessibilityLabel={placeholder}
-            value={value}
-            onChangeText={onChangeText}
-            multiline
-            maxLength={2000}
-            editable={!disabled}
-            {...scalableTextProps}
-          />
+        <TextInput
+          testID="ask-ai-input"
+          style={styles.input}
+          placeholder={placeholder}
+          placeholderTextColor={AI_UI.sub}
+          accessibilityLabel={placeholder}
+          value={value}
+          onChangeText={onChangeText}
+          multiline
+          maxLength={2000}
+          editable={!disabled}
+          {...scalableTextProps}
+        />
 
-          {canSend ? (
-            <Pressable
-              testID="ask-ai-send"
-              accessibilityRole="button"
-              accessibilityLabel={sendA11y}
-              onPress={onSend}
-              style={({ pressed }) => [pressed && styles.pressed]}
-            >
-              <LinearGradient
-                colors={[AI_UI.primary, AI_UI.gradientEnd]}
-                start={{ x: 0.15, y: 0 }}
-                end={{ x: 0.9, y: 1 }}
-                style={styles.sendBtn}
-              >
-                <Send size={15} color="#FFFFFF" strokeWidth={2.2} />
-              </LinearGradient>
-            </Pressable>
-          ) : (
-            <View style={styles.micBtn}>
-              <Mic size={18} color={AI_UI.primaryMuted} strokeWidth={1.8} />
-            </View>
-          )}
-        </GlassSurface>
+        <Pressable
+          testID="ask-ai-send"
+          accessibilityRole="button"
+          accessibilityLabel={sendA11y}
+          onPress={canSend ? onSend : undefined}
+          disabled={!canSend}
+          style={({ pressed }) => [pressed && canSend && aiPressFeedback]}
+        >
+          <LinearGradient
+            colors={canSend ? [AI_UI.primary, AI_UI.gradientEnd] : [AI_UI.primaryLight, AI_UI.primaryLight]}
+            start={{ x: 0.15, y: 0 }}
+            end={{ x: 0.9, y: 1 }}
+            style={[styles.sendBtn, !canSend && styles.sendBtnDisabled]}
+          >
+            <Send size={16} color={canSend ? '#FFFFFF' : AI_UI.sub} strokeWidth={2.3} />
+          </LinearGradient>
+        </Pressable>
       </View>
     </View>
   );
@@ -118,66 +112,62 @@ const iconStyles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: AI_UI.goldSoft,
+    borderWidth: 1,
+    borderColor: AI_UI.goldBorder,
   },
   pressed: {
-    backgroundColor: AI_UI.primaryLight,
+    opacity: 0.9,
   },
 });
 
 function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
     wrap: {
-      paddingHorizontal: theme.spacing.md,
-      paddingTop: theme.spacing.md,
-      paddingBottom: theme.spacing.xl,
-      backgroundColor: 'transparent',
-    },
-    shadowWrap: {
-      borderRadius: 16,
-      shadowColor: AI_UI.primary,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.08,
-      shadowRadius: 24,
-      elevation: 4,
+      paddingHorizontal: theme.spacing.lg,
+      paddingTop: theme.spacing.sm,
+      paddingBottom: theme.spacing.lg,
     },
     bar: {
+      ...aiPremiumCard(),
       flexDirection: 'row',
       alignItems: 'flex-end',
-      gap: 2,
-      paddingHorizontal: 8,
-      paddingVertical: 8,
+      gap: 8,
+      paddingHorizontal: 10,
+      paddingVertical: 10,
+      borderColor: AI_UI.goldBorder,
+    },
+    tools: {
+      flexDirection: 'row',
+      gap: 6,
+      paddingBottom: 2,
     },
     input: {
       flex: 1,
-      fontSize: 13.5,
-      lineHeight: 19,
+      fontSize: 14,
+      lineHeight: 20,
       fontFamily: theme.typography.fonts.ui.regular,
       color: AI_UI.ink,
-      maxHeight: 100,
+      maxHeight: 110,
       paddingVertical: 8,
-      paddingHorizontal: 8,
+      paddingHorizontal: 4,
+      minHeight: 40,
     },
     sendBtn: {
-      width: 36,
-      height: 36,
-      borderRadius: 12,
+      width: 40,
+      height: 40,
+      borderRadius: 14,
       alignItems: 'center',
       justifyContent: 'center',
       shadowColor: AI_UI.primary,
       shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.31,
-      shadowRadius: 14,
-      elevation: 3,
+      shadowOpacity: 0.28,
+      shadowRadius: 12,
+      elevation: 4,
     },
-    micBtn: {
-      width: 36,
-      height: 36,
-      borderRadius: 12,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    pressed: {
-      opacity: 0.9,
+    sendBtnDisabled: {
+      shadowOpacity: 0,
+      elevation: 0,
     },
   });
 }

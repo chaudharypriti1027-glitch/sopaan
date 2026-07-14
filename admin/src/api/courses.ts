@@ -1,5 +1,5 @@
 import { apiRequest } from './client';
-import type { AdminCourse, ContentListParams, PaginatedResponse, PublishStatus } from './contentTypes';
+import type { AdminCourse, AdminCourseLesson, ContentListParams, PaginatedResponse, PublishStatus } from './contentTypes';
 import { normalizeDoc, normalizeList } from './normalize';
 
 function toQuery(params: ContentListParams) {
@@ -12,15 +12,27 @@ function toQuery(params: ContentListParams) {
   return qs ? `?${qs}` : '';
 }
 
+export type CourseLessonInput = {
+  _id?: string;
+  title: string;
+  order: number;
+  videoUrl?: string;
+  durationSec?: number;
+  notes?: string;
+};
+
 export type CourseInput = {
   title: string;
   subject: string;
   examTags?: string[];
   isFree?: boolean;
+  lessons?: CourseLessonInput[];
   thumbnailColor?: string;
   thumbnailUrl?: string;
   status?: PublishStatus;
 };
+
+export type { AdminCourseLesson };
 
 export async function fetchCourses(params: ContentListParams = {}) {
   const data = await apiRequest<PaginatedResponse<AdminCourse>>(

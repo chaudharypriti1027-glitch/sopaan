@@ -5,6 +5,7 @@ import { renderWithProviders } from '../../test/render';
 const mockNavigate = jest.fn();
 const mockLogin = jest.fn();
 const mockSetSession = jest.fn();
+const mockCompleteGoogleLogin = jest.fn();
 
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({
@@ -17,8 +18,12 @@ jest.mock('../../auth/useGoogleSignIn', () => ({
   useGoogleSignIn: () => ({
     signInWithGoogle: jest.fn(),
     loading: false,
-    isConfigured: false,
+    isConfigured: true,
   }),
+}));
+
+jest.mock('../../auth/completeGoogleLogin', () => ({
+  completeGoogleLogin: (...args: unknown[]) => mockCompleteGoogleLogin(...args),
 }));
 
 jest.mock('../../api', () => ({
@@ -116,4 +121,13 @@ describe('LoginScreen', () => {
     });
   });
 
+  it('starts Google sign-in from the Google button', async () => {
+    const { getByTestId } = renderLogin();
+
+    fireEvent.press(getByTestId('login-google'));
+
+    await waitFor(() => {
+      expect(mockCompleteGoogleLogin).toHaveBeenCalled();
+    });
+  });
 });

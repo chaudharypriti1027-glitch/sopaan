@@ -8,9 +8,14 @@ import { getStreamingProvider, isStreamingConfigured, safeCreateStreamingRoom } 
 import { normalizeUserRole, isAdminRole } from '../constants/userRoles.js';
 import { dispatchNotificationToMatchingStudents } from './notifications/notificationDispatchService.js';
 import { NOTIFICATION_TYPES } from './notifications/notificationTypes.js';
-import { clearLiveClassRoomState } from '../realtime/liveNamespace.js';
+import { clearLiveClassRoomState, getLiveClassPresenceCount } from '../realtime/liveNamespace.js';
+import {
+  CONTENT_DOMAINS,
+  notifyStudentsContentUpdated,
+} from './contentSyncService.js';
 
 const LIVE_CLASS_NOTIFICATION_TYPE = NOTIFICATION_TYPES.LIVE_CLASS_SCHEDULED;
+const LIVE_CLASS_LIVE_NOTIFICATION_TYPE = NOTIFICATION_TYPES.LIVE_CLASS_LIVE;
 
 function resolveRoomName(doc) {
   return doc.roomName ?? doc.streamingRoomId;
@@ -151,6 +156,28 @@ async function notifyLiveClassScheduled(liveClass) {
   );
 }
 
+async function notifyLiveClassLive(liveClass) {
+  await dispatchNotificationToMatchingStudents(
+    {},
+    {
+      type: LIVE_CLASS_LIVE_NOTIFICATION_TYPE,
+      title: `Live now: ${liveClass.title}`,
+      body: `${liveClass.instructor ?? 'Faculty'} is live. Tap to join.`,
+      data: {
+        link: 'LiveClasses',
+        banner: true,
+        liveClassId: liveClass._id.toString(),
+        coverImageUrl: liveClass.coverUrl ?? liveClass.thumbnailUrl ?? null,
+      },
+    },
+    { limit: 1000 },
+  );
+}
+
+function syncLiveClasses(action, liveClassId) {
+  notifyStudentsContentUpdated(CONTENT_DOMAINS.LIVE_CLASSES, { action, liveClassId });
+}
+
 export async function listAdminLiveClasses(query = {}) {
   const { limit, offset } = parsePagination(query, { defaultLimit: 50, maxLimit: 100 });
   const filter = query.status ? { status: query.status } : {};
@@ -166,7 +193,20 @@ export async function listAdminLiveClasses(query = {}) {
     }),
   ]);
 
-  const items = classes.map((doc) => formatLiveClass(doc));
+  const items = classes.map((doc) => {
+    const formatted = formatLiveClass(doc);
+
+    if (doc.status === 'live') {
+      const presence = getLiveClassPresenceCount(doc._id.toString());
+      if (presence > 0) {
+        formatted.viewers = presence;
+        formatted.attendeeCount = presence;
+        formatted.viewersPeak = Math.max(formatted.viewersPeak ?? 0, presence);
+      }
+    }
+
+    return formatted;
+  });
 
   return {
     items,
@@ -313,6 +353,7 @@ export async function createLiveClass(userId, data) {
     await notifyLiveClassScheduled(liveClass);
   }
 
+  syncLiveClasses('create', liveClass._id.toString());
   return formatLiveClass(liveClass.toObject());
 }
 
@@ -358,6 +399,7 @@ export async function patchAdminLiveClass(userId, id, data) {
   }
 
   await liveClass.save();
+  syncLiveClasses(data.status === 'cancelled' ? 'cancel' : 'update', liveClass._id.toString());
   return formatLiveClass(liveClass.toObject());
 }
 
@@ -412,6 +454,8 @@ export async function startLiveClass(userId, id) {
   }
 
   await liveClass.save();
+  await notifyLiveClassLive(liveClass);
+  syncLiveClasses('live', liveClass._id.toString());
   return formatLiveClass(liveClass.toObject());
 }
 
@@ -454,6 +498,7 @@ export async function endLiveClass(userId, id) {
   liveClass.endedAt = new Date();
   await liveClass.save();
   clearLiveClassRoomState(liveClass._id.toString());
+  syncLiveClasses('end', liveClass._id.toString());
 
   return formatLiveClass(liveClass.toObject());
 }
@@ -479,6 +524,7 @@ export async function setRecordingPublished(userId, id, published) {
 
   liveClass.recordingPublished = Boolean(published);
   await liveClass.save();
+  syncLiveClasses(published ? 'recording-published' : 'recording-unpublished', liveClass._id.toString());
 
   return formatLiveClass(liveClass.toObject());
 }

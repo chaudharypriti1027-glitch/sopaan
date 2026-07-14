@@ -6,12 +6,12 @@ import { RefreshControl, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import {
   Card,
+  FeatureScreenLayout,
   PremiumEmptyState,
   PremiumHeroCard,
   PremiumListRow,
+  PremiumSectionLabel,
   QueryStateView,
-  Screen,
-  SectionTitle,
 } from '../../components';
 import { useGroupedNotifications, useMarkNotificationRead, useNetworkStatus } from '../../hooks';
 import { openInAppNotification } from '../../hooks/useNotificationDeepLink';
@@ -52,7 +52,7 @@ export function NotificationsScreen() {
 
     return (
       <View style={styles.section}>
-        <SectionTitle title={title} />
+        <PremiumSectionLabel title={title} compact />
         <Card padded={false}>
           {items.map((item, index) => (
             <PremiumListRow
@@ -73,12 +73,13 @@ export function NotificationsScreen() {
   };
 
   return (
-    <Screen
-      scroll
+    <FeatureScreenLayout
+      title={t('notifications.title')}
+      subtitle={t('notifications.subtitle')}
       scrollProps={{
         refreshControl: <RefreshControl refreshing={isRefetching} onRefresh={() => void refetch()} />,
       }}
-      contentContainerStyle={styles.content}
+      contentStyle={styles.content}
     >
       <PremiumHeroCard
         icon={<HomeSlotIcon slot="featured" Icon={Bell} tone="gold" />}
@@ -106,7 +107,7 @@ export function NotificationsScreen() {
           />
         ) : null}
       </QueryStateView>
-    </Screen>
+    </FeatureScreenLayout>
   );
 }
 

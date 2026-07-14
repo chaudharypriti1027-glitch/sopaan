@@ -15,7 +15,15 @@ export * as notificationsApi from './notifications';
 export * as plannerApi from './planner';
 export * as aiApi from './ai';
 export * as analyticsApi from './analytics';
-export type { GenerateTestInput, AskDoubtInput, EvaluateAnswerInput, ReportAiFeedbackInput } from './ai';
+export type {
+  GenerateTestInput,
+  AskDoubtInput,
+  EvaluateAnswerInput,
+  ReportAiFeedbackInput,
+  PracticeSuggestion,
+  PracticeSuggestionsInput,
+  PracticeSuggestionsResponse,
+} from './ai';
 export type { AnalyticsRange, ProgressAnalytics } from './analytics';
 export * as booksApi from './books';
 export * as revisionCapsulesApi from './revisionCapsules';
@@ -91,6 +99,8 @@ export type {
   CreatePlannerSessionInput,
   PlannerSessionsParams,
 } from './planner';
+export * as examPlanApi from './examPlan';
+export type { ExamPlanResponse } from './examPlan';
 export * from './home';
 export type { HomeFeed, ContinueItem, AINudge, TestCard, AffairCard } from '../types/home';
 export type {

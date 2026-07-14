@@ -1,35 +1,30 @@
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Bell, BellOff, ChevronRight, PlayCircle, Radio, Sparkles, Users } from 'lucide-react-native';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo } from 'react';
 import {
   Alert,
   Pressable,
-  RefreshControl,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
-import { Button, QueryStateView, Screen, SectionTitle } from '../../components';
+import {
+  Button,
+  FeatureScreenLayout,
+  PremiumFeatureCard,
+  QueryStateView,
+  SectionTitle,
+} from '../../components';
 import { LIVE } from '../../components/live/liveTheme';
+import { formatLiveClassWhen } from '../../content/liveClassesContent';
 import { useLiveClassReminder, useLiveClasses, useNetworkStatus } from '../../hooks';
 import type { MainStackParamList } from '../../navigation/types';
 import type { LiveClass } from '../../api/liveClasses';
 import { useTheme } from '../../theme';
 import { platformShadow } from '../../utils/platformShadow';
-
-function formatWhen(iso?: string): string {
-  if (!iso) return '';
-  return new Date(iso).toLocaleString('en-IN', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
 
 function RecordedCard({
   item,
@@ -48,7 +43,7 @@ function RecordedCard({
 
   return (
     <Pressable accessibilityRole="button" onPress={() => onOpen(item.id)}>
-      <View style={styles.card}>
+      <PremiumFeatureCard style={styles.card}>
         <View style={[styles.accent, { backgroundColor: item.thumbnailColor ?? LIVE.gold }]} />
         <View style={styles.body}>
           <Text style={styles.eyebrow}>{item.examTag}</Text>
@@ -62,7 +57,7 @@ function RecordedCard({
             <ChevronRight size={16} color={LIVE.faint} />
           </View>
         </View>
-      </View>
+      </PremiumFeatureCard>
     </Pressable>
   );
 }
@@ -94,7 +89,7 @@ function ScheduledCard({
   };
 
   return (
-    <View style={styles.card}>
+    <PremiumFeatureCard style={styles.card}>
       <View style={[styles.accent, { backgroundColor: item.thumbnailColor ?? LIVE.navy }]} />
       <View style={styles.body}>
         <Pressable accessibilityRole="button" onPress={() => onOpen(item.id)}>
@@ -103,7 +98,7 @@ function ScheduledCard({
           <Text style={styles.meta}>
             {item.instructor} · {t('durationMin', { count: item.durationMin })}
           </Text>
-          <Text style={styles.when}>{formatWhen(item.startsAt ?? item.scheduledAt)}</Text>
+          <Text style={styles.when}>{formatLiveClassWhen(item.startsAt ?? item.scheduledAt)}</Text>
         </Pressable>
         <View style={styles.actions}>
           <Pressable onPress={toggleReminder} style={styles.reminderBtn} hitSlop={8}>
@@ -122,7 +117,7 @@ function ScheduledCard({
           </Pressable>
         </View>
       </View>
-    </View>
+    </PremiumFeatureCard>
   );
 }
 
@@ -135,22 +130,12 @@ export function LiveClassesScreen() {
   const { isOffline } = useNetworkStatus();
   const liveQuery = useLiveClasses();
   const { refetch, isFetching, data, isLoading, isError } = liveQuery;
-  const [refreshing, setRefreshing] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
       void refetch();
     }, [refetch]),
   );
-
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    try {
-      await refetch();
-    } finally {
-      setRefreshing(false);
-    }
-  }, [refetch]);
 
   const openViewer = (liveClassId: string) => {
     const allClasses = [
@@ -174,19 +159,10 @@ export function LiveClassesScreen() {
   };
 
   return (
-    <Screen
-      scroll
-      contentContainerStyle={styles.content}
-      scrollProps={{
-        refreshControl: (
-          <RefreshControl
-            refreshing={refreshing || isFetching}
-            onRefresh={() => void onRefresh()}
-            tintColor={LIVE.gold}
-            colors={[LIVE.gold]}
-          />
-        ),
-      }}
+    <FeatureScreenLayout
+      title={t('title')}
+      subtitle={t('subtitle')}
+      contentStyle={styles.shellBody}
     >
       <LinearGradient
         colors={[LIVE.listBgTop, LIVE.listBg, LIVE.listBgMid]}
@@ -195,20 +171,12 @@ export function LiveClassesScreen() {
         pointerEvents="none"
       />
 
-      <View style={styles.body}>
-      <View style={styles.hero}>
-        <Text style={styles.heroTitle}>{t('title')}</Text>
-        <Text style={styles.heroSubtitle}>{t('subtitle')}</Text>
-      </View>
-
       {data?.comingSoon ? (
         <View style={styles.comingSoon}>
           <Sparkles size={20} color={LIVE.gold} />
           <View style={styles.comingSoonText}>
             <Text style={styles.comingSoonTitle}>{t('comingSoon')}</Text>
-            <Text style={styles.comingSoonBody}>
-              {data.message ?? t('comingSoonDefault')}
-            </Text>
+            <Text style={styles.comingSoonBody}>{data.message ?? t('comingSoonDefault')}</Text>
           </View>
         </View>
       ) : null}
@@ -234,7 +202,7 @@ export function LiveClassesScreen() {
                 <View style={styles.liveHeader}>
                   <View style={styles.livePill}>
                     <View style={styles.liveDot} />
-                    <Text style={styles.livePillText}>LIVE</Text>
+                    <Text style={styles.livePillText}>{t('liveBadge')}</Text>
                   </View>
                   <Radio size={18} color={LIVE.goldLt} />
                 </View>
@@ -264,9 +232,9 @@ export function LiveClassesScreen() {
             <SectionTitle title={t('scheduled')} />
             <View style={styles.list}>
               {(data?.scheduled ?? []).length === 0 ? (
-                <View style={styles.emptyCard}>
+                <PremiumFeatureCard style={styles.emptyCard}>
                   <Text style={styles.empty}>{t('noUpcoming')}</Text>
-                </View>
+                </PremiumFeatureCard>
               ) : (
                 (data?.scheduled ?? []).map((item) => (
                   <ScheduledCard key={item.id} item={item} onOpen={openViewer} />
@@ -287,8 +255,7 @@ export function LiveClassesScreen() {
           ) : null}
         </>
       </QueryStateView>
-      </View>
-    </Screen>
+    </FeatureScreenLayout>
   );
 }
 
@@ -297,9 +264,7 @@ function createCardStyles(theme: ReturnType<typeof useTheme>['theme']) {
     card: {
       flexDirection: 'row',
       overflow: 'hidden',
-      backgroundColor: '#FFFFFF',
-      borderRadius: 22,
-      borderWidth: 1,
+      padding: 0,
       borderColor: '#ECE8DD',
       ...platformShadow({ color: LIVE.navy, offsetY: 12, opacity: 0.14, radius: 20, elevation: 4 }),
     },
@@ -342,28 +307,13 @@ function createCardStyles(theme: ReturnType<typeof useTheme>['theme']) {
 
 function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
-    content: { gap: theme.spacing.lg, paddingBottom: theme.spacing['3xl'] },
+    shellBody: {
+      backgroundColor: LIVE.listBg,
+      position: 'relative',
+      overflow: 'hidden',
+    },
     bg: {
       ...StyleSheet.absoluteFillObject,
-    },
-    body: {
-      gap: theme.spacing.lg,
-      zIndex: 1,
-    },
-    hero: {
-      gap: 4,
-      marginBottom: 4,
-    },
-    heroTitle: {
-      fontSize: 24,
-      fontFamily: theme.typography.fonts.ui.bold,
-      fontWeight: '800',
-      letterSpacing: -0.3,
-      color: LIVE.ink,
-    },
-    heroSubtitle: {
-      ...theme.typography.presets.body,
-      color: LIVE.muted,
     },
     comingSoon: {
       flexDirection: 'row',
@@ -374,6 +324,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       borderColor: LIVE.gold,
       borderRadius: 18,
       padding: theme.spacing.lg,
+      zIndex: 1,
     },
     comingSoonText: { flex: 1, gap: theme.spacing.xs },
     comingSoonTitle: {
@@ -382,7 +333,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       color: LIVE.ink,
     },
     comingSoonBody: { ...theme.typography.presets.caption, color: LIVE.muted },
-    section: { gap: theme.spacing.md },
+    section: { gap: theme.spacing.md, zIndex: 1 },
     liveCard: {
       gap: theme.spacing.sm,
       borderRadius: 22,
@@ -423,13 +374,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     liveViewers: { flexDirection: 'row', alignItems: 'center', gap: 6 },
     liveViewerText: { ...theme.typography.presets.caption, color: 'rgba(255,255,255,0.85)' },
     list: { gap: theme.spacing.md },
-    emptyCard: {
-      backgroundColor: '#FFFFFF',
-      borderRadius: 22,
-      borderWidth: 1,
-      borderColor: '#ECE8DD',
-      padding: theme.spacing.lg,
-    },
+    emptyCard: { padding: theme.spacing.lg },
     empty: { ...theme.typography.presets.body, color: LIVE.muted },
   });
 }

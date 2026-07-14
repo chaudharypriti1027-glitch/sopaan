@@ -2,8 +2,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
   Easing,
+  FadeInDown,
   ReduceMotion,
   useAnimatedStyle,
   useSharedValue,
@@ -13,10 +15,13 @@ import Animated, {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
+import { AUTH_MOTIVATION_COUNT } from '../../content/authMotivationContent';
+import { AuthMotivationTicker } from '../auth/AuthMotivationTicker';
 import { SopaanLogo } from '../SopaanLogo';
 import { Text } from '../Text';
 import { PREMIUM } from '../premium/premiumStyles';
 import { platformShadow } from '../../utils/platformShadow';
+import { SplashValueChips } from './SplashValueChips';
 
 const LOADER_TRACK_WIDTH = 200;
 const LOADING_PHASE_MS = 2000;
@@ -144,6 +149,7 @@ function ClimbBar({
 
 export function PremiumSplashScene({ reducedMotion }: PremiumSplashSceneProps) {
   const { t } = useTranslation('auth');
+  const insets = useSafeAreaInsets();
   const [loadingPhase, setLoadingPhase] = useState(0);
 
   const loadingMessages = useMemo(
@@ -151,6 +157,15 @@ export function PremiumSplashScene({ reducedMotion }: PremiumSplashSceneProps) {
     [t],
   );
 
+  const motivationLines = useMemo(
+    () =>
+      Array.from({ length: AUTH_MOTIVATION_COUNT }, (_, index) =>
+        t(`brand.motivations.${index}`),
+      ),
+    [t],
+  );
+
+  const badgeOpacity = useSharedValue(reducedMotion ? 1 : 0);
   const logoOpacity = useSharedValue(reducedMotion ? 1 : 0);
   const logoScale = useSharedValue(reducedMotion ? 1 : 0.55);
   const logoFloat = useSharedValue(0);
@@ -189,6 +204,10 @@ export function PremiumSplashScene({ reducedMotion }: PremiumSplashSceneProps) {
   useEffect(() => {
     if (reducedMotion) return;
 
+    badgeOpacity.value = withTiming(1, {
+      duration: 520,
+      easing: Easing.out(Easing.cubic),
+    });
     logoOpacity.value = withTiming(1, {
       duration: 680,
       easing: Easing.out(Easing.cubic),
@@ -332,6 +351,7 @@ export function PremiumSplashScene({ reducedMotion }: PremiumSplashSceneProps) {
     );
   }, [
     cornerOpacity,
+    badgeOpacity,
     loaderGlow,
     loaderX,
     logoFloat,
@@ -420,11 +440,16 @@ export function PremiumSplashScene({ reducedMotion }: PremiumSplashSceneProps) {
     opacity: cornerOpacity.value,
   }));
 
+  const badgeStyle = useAnimatedStyle(() => ({
+    opacity: badgeOpacity.value,
+    transform: [{ translateY: (1 - badgeOpacity.value) * -8 }],
+  }));
+
   const messageStyle = useAnimatedStyle(() => ({
     opacity: messageOpacity.value,
   }));
 
-  const styles = useMemo(() => createStyles(), []);
+  const styles = useMemo(() => createStyles(insets.top), [insets.top]);
 
   return (
     <LinearGradient
@@ -432,8 +457,13 @@ export function PremiumSplashScene({ reducedMotion }: PremiumSplashSceneProps) {
       start={{ x: 0.12, y: 0 }}
       end={{ x: 0.88, y: 1 }}
       style={styles.root}
+      testID="splash-brand-scene"
     >
       <View style={styles.vignette} pointerEvents="none" />
+
+      <Animated.View style={[styles.topBadge, badgeStyle]}>
+        <Text style={styles.topBadgeText}>{t('brand.premiumBadge')}</Text>
+      </Animated.View>
 
       <Animated.View style={[styles.orbTop, orbTopStyle]} pointerEvents="none" />
       <Animated.View style={[styles.orbBottom, orbBottomStyle]} pointerEvents="none" />
@@ -481,6 +511,22 @@ export function PremiumSplashScene({ reducedMotion }: PremiumSplashSceneProps) {
           </Animated.View>
         </Animated.View>
 
+        {!reducedMotion ? (
+          <Animated.View
+            entering={FadeInDown.duration(480).delay(560).reduceMotion(ReduceMotion.System)}
+            style={styles.brandBand}
+          >
+            <AuthMotivationTicker
+              tone="splash"
+              title={t('brand.motivationTitle')}
+              lines={motivationLines}
+              seed="splash"
+              testID="splash-motivation"
+            />
+            <SplashValueChips testID="splash-value-chips" />
+          </Animated.View>
+        ) : null}
+
         <Animated.View style={[styles.loaderBlock, statusStyle]}>
           {!reducedMotion ? (
             <View style={styles.climbRow}>
@@ -519,10 +565,36 @@ export function PremiumSplashScene({ reducedMotion }: PremiumSplashSceneProps) {
   );
 }
 
-function createStyles() {
+function createStyles(topInset: number) {
   return StyleSheet.create({
     root: {
       flex: 1,
+    },
+    topBadge: {
+      position: 'absolute',
+      top: topInset + 16,
+      alignSelf: 'center',
+      zIndex: 4,
+      paddingHorizontal: 14,
+      paddingVertical: 6,
+      borderRadius: 99,
+      backgroundColor: 'rgba(245,158,11,0.18)',
+      borderWidth: 1,
+      borderColor: 'rgba(245,158,11,0.38)',
+    },
+    topBadgeText: {
+      fontFamily: 'PlusJakartaSans_700Bold',
+      fontSize: 10,
+      fontWeight: '800',
+      letterSpacing: 0.65,
+      textTransform: 'uppercase',
+      color: '#E3C97F',
+    },
+    brandBand: {
+      alignItems: 'center',
+      gap: 12,
+      width: '100%',
+      marginBottom: 20,
     },
     vignette: {
       ...StyleSheet.absoluteFillObject,
@@ -660,7 +732,7 @@ function createStyles() {
     wordmarkWrap: {
       alignItems: 'center',
       gap: 10,
-      marginBottom: 52,
+      marginBottom: 24,
     },
     wordmark: {
       fontFamily: 'SpaceGrotesk_700Bold',

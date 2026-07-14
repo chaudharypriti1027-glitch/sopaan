@@ -146,7 +146,10 @@ export function ExamsPage() {
 
       <DataTable
         rows={resource.rows}
-        emptyMessage={resource.query.isLoading ? 'Loading exams…' : 'No exams found'}
+        emptyMessage="No exams found"
+        isLoading={resource.query.isLoading}
+        error={resource.query.isError ? resource.query.error : undefined}
+        onRetry={() => void resource.query.refetch()}
         columns={[
           { key: 'name', header: 'Name', render: (row) => row.name },
           { key: 'code', header: 'Code', render: (row) => row.code },

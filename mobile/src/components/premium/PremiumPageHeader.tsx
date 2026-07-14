@@ -1,6 +1,7 @@
 import { useMemo, type ReactNode } from 'react';
-import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { ArrowLeft } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '../Text';
 import { useTheme } from '../../theme';
@@ -11,6 +12,8 @@ type PremiumPageHeaderProps = {
   subtitle?: string;
   eyebrow?: string;
   rightAction?: ReactNode;
+  onBack?: () => void;
+  backA11y?: string;
   /** Extra bottom padding when a card floats over the header. */
   floatCard?: boolean;
   /** When false, skip negative horizontal margin (use on full-bleed parents). */
@@ -23,6 +26,8 @@ export function PremiumPageHeader({
   subtitle,
   eyebrow,
   rightAction,
+  onBack,
+  backA11y = 'Go back',
   floatCard = false,
   fullBleed = true,
   style,
@@ -43,6 +48,17 @@ export function PremiumPageHeader({
     >
       <View style={styles.decorA} />
       <View style={styles.decorB} />
+
+      {onBack ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={backA11y}
+          onPress={onBack}
+          style={({ pressed }) => [styles.backBtn, pressed && styles.backBtnPressed]}
+        >
+          <ArrowLeft size={18} color="#FFFFFF" strokeWidth={2.5} />
+        </Pressable>
+      ) : null}
 
       <View style={styles.topbar}>
         <View style={styles.titleWrap}>
@@ -87,6 +103,20 @@ function createStyles(
       height: 160,
       borderRadius: 80,
       backgroundColor: 'rgba(255,255,255,0.06)',
+    },
+    backBtn: {
+      width: 36,
+      height: 36,
+      borderRadius: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: 'rgba(255,255,255,0.12)',
+      marginBottom: 10,
+      zIndex: 2,
+    },
+    backBtnPressed: {
+      opacity: 0.85,
+      transform: [{ scale: 0.96 }],
     },
     topbar: {
       flexDirection: 'row',

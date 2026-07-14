@@ -260,7 +260,10 @@ export function NotificationsPage() {
       <div className="sec-t">Recent sends</div>
       <DataTable
         rows={recentQuery.data?.items ?? []}
-        emptyMessage={recentQuery.isLoading ? 'Loading sends…' : 'No notifications sent yet'}
+        emptyMessage="No notifications sent yet"
+        isLoading={recentQuery.isLoading}
+        error={recentQuery.isError ? recentQuery.error : undefined}
+        onRetry={() => void recentQuery.refetch()}
         columns={[
           { key: 'title', header: 'Title', render: (row) => row.title },
           {

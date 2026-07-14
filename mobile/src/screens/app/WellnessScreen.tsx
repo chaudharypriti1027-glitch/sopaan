@@ -1,12 +1,20 @@
 import { Pause, Play } from 'lucide-react-native';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Card, Pill, QueryStateView, Screen, SectionTitle, TimerRing } from '../../components';
+import { useTranslation } from 'react-i18next';
+import {
+  FeatureScreenLayout,
+  Pill,
+  PremiumFeatureCard,
+  QueryStateView,
+  TimerRing,
+} from '../../components';
 import { useNetworkStatus, useWellnessSessions } from '../../hooks';
 import type { WellnessSession } from '../../api/wellness';
 import { useTheme } from '../../theme';
 
 export function WellnessScreen() {
+  const { t } = useTranslation('app');
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const { isOffline } = useNetworkStatus();
@@ -44,9 +52,6 @@ export function WellnessScreen() {
       }
     }, 500);
     return clearTimer;
-    // `remainingSec` is intentionally excluded — it's read once to seed
-    // `endAtRef` and updated by the interval itself; including it would
-    // restart the countdown on every tick.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [playing, active]);
 
@@ -65,13 +70,9 @@ export function WellnessScreen() {
   const totalSec = active ? active.durationMin * 60 : 0;
 
   return (
-    <Screen scroll contentContainerStyle={styles.content}>
-      <SectionTitle
-        subtitle="Calm sessions for breathing, pre-exam nerves, sleep, and focus reset"
-      />
-
+    <FeatureScreenLayout title={t('wellness.title')} subtitle={t('wellness.subtitle')}>
       {active ? (
-        <Card style={styles.playerCard}>
+        <PremiumFeatureCard style={styles.playerCard}>
           <Text style={styles.activeTitle}>{active.title}</Text>
           <TimerRing totalSec={totalSec} remainingSec={remainingSec} size={140} strokeWidth={8} />
           <Pressable onPress={togglePlay} style={styles.playBtn}>
@@ -81,10 +82,16 @@ export function WellnessScreen() {
               <Play size={32} color={theme.colors.brand.primary} />
             )}
           </Pressable>
-          <Pressable onPress={() => { setActive(null); setPlaying(false); clearTimer(); }}>
-            <Text style={styles.endLink}>End session</Text>
+          <Pressable
+            onPress={() => {
+              setActive(null);
+              setPlaying(false);
+              clearTimer();
+            }}
+          >
+            <Text style={styles.endLink}>{t('wellness.endSession')}</Text>
           </Pressable>
-        </Card>
+        </PremiumFeatureCard>
       ) : null}
 
       <QueryStateView
@@ -97,28 +104,30 @@ export function WellnessScreen() {
       >
         <View style={styles.list}>
           {(sessionsQuery.data?.items ?? []).map((session) => (
-            <Card key={session.id} style={styles.sessionCard}>
+            <PremiumFeatureCard key={session.id} style={styles.sessionCard}>
               <View style={styles.sessionHeader}>
                 <Text style={styles.sessionTitle}>{session.title}</Text>
-                <Pill label={`${session.durationMin} min`} variant="muted" />
+                <Pill
+                  label={t('wellness.durationMin', { count: session.durationMin })}
+                  variant="muted"
+                />
               </View>
               <Text style={styles.category}>{session.category.replace(/-/g, ' ')}</Text>
               <Text style={styles.description}>{session.description}</Text>
               <Pressable onPress={() => startSession(session)} style={styles.startRow}>
                 <Play size={18} color={theme.colors.brand.primary} />
-                <Text style={styles.startLabel}>Play session</Text>
+                <Text style={styles.startLabel}>{t('wellness.playSession')}</Text>
               </Pressable>
-            </Card>
+            </PremiumFeatureCard>
           ))}
         </View>
       </QueryStateView>
-    </Screen>
+    </FeatureScreenLayout>
   );
 }
 
 function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
-    content: { gap: theme.spacing.lg, paddingBottom: theme.spacing['3xl'] },
     playerCard: { alignItems: 'center', gap: theme.spacing.md },
     activeTitle: {
       ...theme.typography.presets.h3,
@@ -128,7 +137,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     playBtn: { padding: theme.spacing.sm },
     endLink: { ...theme.typography.presets.caption, color: theme.colors.text.tertiary },
     list: { gap: theme.spacing.md },
-    sessionCard: { gap: theme.spacing.sm },
+    sessionCard: { gap: theme.spacing.sm, padding: theme.spacing.md },
     sessionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
     sessionTitle: {
       ...theme.typography.presets.bodyMedium,
@@ -142,7 +151,12 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       textTransform: 'capitalize',
     },
     description: { ...theme.typography.presets.body, color: theme.colors.text.secondary },
-    startRow: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm, marginTop: theme.spacing.xs },
+    startRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.sm,
+      marginTop: theme.spacing.xs,
+    },
     startLabel: { ...theme.typography.presets.bodyMedium, color: theme.colors.brand.primary },
   });
 }

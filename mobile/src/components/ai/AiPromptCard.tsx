@@ -2,18 +2,20 @@ import { useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { ChevronRight, type LucideIcon } from 'lucide-react-native';
 import { PremiumIcon } from '../premium/PremiumIcon';
+import type { PremiumIconTone } from '../premium/premiumIconTokens';
 import { Text } from '../Text';
 import { useTheme } from '../../theme';
-import { AI_UI } from './aiTheme';
+import { AI_UI, aiPremiumCard, aiPressFeedback } from './aiTheme';
 
 type AiPromptCardProps = {
   Icon: LucideIcon;
+  tone: PremiumIconTone;
   text: string;
   tag: string;
   onPress: () => void;
 };
 
-export function AiPromptCard({ Icon, text, tag, onPress }: AiPromptCardProps) {
+export function AiPromptCard({ Icon, text, tag, tone, onPress }: AiPromptCardProps) {
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
@@ -21,14 +23,15 @@ export function AiPromptCard({ Icon, text, tag, onPress }: AiPromptCardProps) {
     <Pressable
       accessibilityRole="button"
       onPress={onPress}
-      style={({ pressed }) => [styles.card, pressed && styles.pressed]}
+      style={({ pressed }) => [styles.card, pressed && aiPressFeedback]}
     >
-      <PremiumIcon Icon={Icon} tone="lavender" size="md" filled />
+      <View style={styles.accent} />
+      <PremiumIcon Icon={Icon} tone={tone} size="md" filled />
       <View style={styles.copy}>
         <Text style={styles.text}>{text}</Text>
         <Text style={styles.tag}>{tag}</Text>
       </View>
-      <ChevronRight size={16} color={AI_UI.primaryMuted} strokeWidth={2.5} />
+      <ChevronRight size={16} color={AI_UI.goldDeep} strokeWidth={2.5} />
     </Pressable>
   );
 }
@@ -36,28 +39,25 @@ export function AiPromptCard({ Icon, text, tag, onPress }: AiPromptCardProps) {
 function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
     card: {
+      ...aiPremiumCard(),
       flexDirection: 'row',
       alignItems: 'center',
       gap: theme.spacing.md,
       paddingHorizontal: theme.spacing.md,
-      paddingVertical: theme.spacing.md,
-      borderRadius: 20,
-      backgroundColor: AI_UI.card,
-      borderWidth: 1,
-      borderColor: AI_UI.border,
-      shadowColor: AI_UI.primary,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.06,
-      shadowRadius: 12,
-      elevation: 2,
+      paddingVertical: 14,
+      overflow: 'hidden',
     },
-    pressed: {
-      opacity: 0.94,
-      borderColor: AI_UI.borderStrong,
+    accent: {
+      position: 'absolute',
+      left: 0,
+      top: 0,
+      bottom: 0,
+      width: 3,
+      backgroundColor: AI_UI.gold,
     },
     copy: {
       flex: 1,
-      gap: 2,
+      gap: 3,
     },
     text: {
       fontSize: 14,
@@ -67,7 +67,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       color: AI_UI.ink,
     },
     tag: {
-      fontSize: 11,
+      fontSize: 10.5,
       fontFamily: theme.typography.fonts.ui.bold,
       fontWeight: '700',
       letterSpacing: 0.4,

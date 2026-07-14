@@ -51,3 +51,23 @@ export function waitForPresence(socket, classId, minCount = 2, timeoutMs = 8_000
     socket.on(LIVE_NS_EVENTS.PRESENCE, handler);
   });
 }
+
+export function waitForSocketConnect(socket, timeoutMs = 12_000) {
+  if (socket.connected) {
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('socket connect timeout')), timeoutMs);
+
+    socket.once('connect', () => {
+      clearTimeout(timer);
+      resolve(undefined);
+    });
+
+    socket.once('connect_error', (err) => {
+      clearTimeout(timer);
+      reject(err);
+    });
+  });
+}

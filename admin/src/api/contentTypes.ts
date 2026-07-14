@@ -28,12 +28,25 @@ export interface AdminExam {
   updatedAt?: string;
 }
 
+export interface AdminCourseLesson {
+  id?: string;
+  _id?: string;
+  title: string;
+  order: number;
+  videoUrl?: string;
+  durationSec?: number;
+  notes?: string;
+  materialUrl?: string;
+  materialName?: string;
+}
+
 export interface AdminCourse {
   id: string;
   title: string;
   subject: string;
   examTags?: string[];
   isFree?: boolean;
+  lessons?: AdminCourseLesson[];
   thumbnailColor?: string;
   thumbnailUrl?: string;
   status: PublishStatus;
@@ -45,10 +58,13 @@ export interface AdminCurrentAffair {
   id: string;
   title: string;
   summary?: string;
+  body?: string;
   category?: string;
   source?: string;
+  sourceUrl?: string;
   publishedAt: string;
   imageColor?: string;
+  imageUrl?: string;
   quizQuestions?: string[];
   status: PublishStatus;
   createdAt?: string;

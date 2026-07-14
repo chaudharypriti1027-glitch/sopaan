@@ -1,3 +1,4 @@
+import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import express from 'express';
@@ -138,10 +139,32 @@ app.get('/admin/login-hint.json', (_req, res) => {
   res.json({ email });
 });
 
-app.get(['/admin', '/admin/'], (_req, res) => {
+app.use(
+  '/admin',
+  express.static(adminPublicDir, {
+    index: false,
+    fallthrough: true,
+    maxAge: env.isProduction ? '1h' : 0,
+  }),
+);
+
+app.get(/^\/admin(\/.*)?$/, (_req, res) => {
+  if (!fs.existsSync(adminIndexHtml)) {
+    res.status(503).type('html').send(`<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Sopaan Admin</title></head>
+<body style="font-family:system-ui,sans-serif;max-width:36rem;margin:3rem auto;padding:0 1rem">
+  <h1>Admin console not built</h1>
+  <p>Build the React admin, then restart the API server:</p>
+  <pre style="background:#f4f4f5;padding:1rem;border-radius:8px">npm run build:admin</pre>
+  <p>For local development with hot reload, run <code>npm run dev:admin</code> and open
+  <a href="http://localhost:5173">http://localhost:5173</a>.</p>
+</body>
+</html>`);
+    return;
+  }
   res.sendFile(adminIndexHtml);
 });
-app.use('/admin', express.static(adminPublicDir, { index: 'index.html' }));
 
 const uploadsDir = path.join(__dirname, '../uploads');
 app.use('/uploads', express.static(uploadsDir, { fallthrough: true, maxAge: env.isProduction ? '7d' : 0 }));

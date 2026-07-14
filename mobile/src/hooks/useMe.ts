@@ -30,10 +30,15 @@ export function useUpdateMe() {
 
   return useMutation({
     mutationFn: (input: UpdateMeInput) => updateMe(input),
-    onSuccess: async (profile) => {
+    onSuccess: async (profile, variables) => {
       await setProfile(profile);
       queryClient.setQueryData(queryKeys.account.me(), profile);
       void queryClient.invalidateQueries({ queryKey: queryKeys.account.summary() });
+      if (variables.targetExam !== undefined || variables.examDate !== undefined) {
+        void queryClient.invalidateQueries({ queryKey: queryKeys.examPlan.all });
+        void queryClient.invalidateQueries({ queryKey: queryKeys.home.all });
+        void queryClient.invalidateQueries({ queryKey: queryKeys.profile.all });
+      }
     },
   });
 }

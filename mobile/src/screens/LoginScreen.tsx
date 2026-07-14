@@ -1,25 +1,31 @@
 import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import Animated from 'react-native-reanimated';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
 import type { CompositeNavigationProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import {
   AuthAnimatedSection,
-  AuthBrandHeader,
+  AuthDivider,
+  AuthErrorBanner,
+  AuthFooterLink,
   AuthFormCard,
+  AuthFormIntro,
   AuthPremiumField,
+  AuthPremiumHero,
   AuthScreen,
-  GhostButton,
+  AuthTrustNote,
+  LoginMethodTiles,
+  LoginPerkStrip,
   PrimaryButton,
   useShakeOnError,
 } from '../components/auth';
-import { Text } from '../components/Text';
 import { authApi, parseApiError } from '../api';
+import { completeGoogleLogin } from '../auth/completeGoogleLogin';
 import { completeStudentLogin, isAdminAppAccessError } from '../auth/studentSession';
+import { useGoogleSignIn } from '../auth/useGoogleSignIn';
 import type { AuthStackParamList, RootStackParamList } from '../navigation/types';
-import { AUTH_UI } from '../components/auth/authTheme';
 
 type LoginNav = CompositeNavigationProp<
   NativeStackNavigationProp<AuthStackParamList, 'Login'>,
@@ -39,11 +45,14 @@ export function LoginScreen() {
   const [emailError, setEmailError] = useState<string | undefined>();
   const [passwordError, setPasswordError] = useState<string | undefined>();
   const [formError, setFormError] = useState<string | null>(null);
+  const { signInWithGoogle, loading: googleLoading, isConfigured: googleConfigured } =
+    useGoogleSignIn();
 
   const shakeStyle = useShakeOnError(formError);
   const emailValid = EMAIL_PATTERN.test(email.trim());
   const passwordValid = password.length >= 8;
-  const canEmailLogin = emailValid && passwordValid && !loginLoading;
+  const busy = loginLoading || googleLoading;
+  const canEmailLogin = emailValid && passwordValid && !busy;
 
   const validateEmail = () => {
     const trimmed = email.trim();
@@ -104,23 +113,37 @@ export function LoginScreen() {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setFormError(null);
+
+    if (!googleConfigured) {
+      setFormError(t('signup.comingSoonMessage'));
+      return;
+    }
+
+    await completeGoogleLogin(
+      navigation as Parameters<typeof completeGoogleLogin>[0],
+      signInWithGoogle,
+      {
+        onError: setFormError,
+      },
+    );
+  };
+
   return (
-    <AuthScreen
-      scrollProps={{ keyboardShouldPersistTaps: 'handled' }}
-      header={
-        <AuthBrandHeader title={t('login.emailTitle')} subtitle={t('login.emailSubtitle')} />
-      }
-      footer={
-        <GhostButton
-          label={t('login.usePhoneInstead')}
-          disabled={loginLoading}
-          onPress={() => navigation.navigate('OtpLogin')}
-          testID="login-use-phone"
-        />
-      }
-    >
-      <Animated.View style={shakeStyle}>
-        <AuthFormCard>
+    <AuthScreen scrollProps={{ keyboardShouldPersistTaps: 'handled' }}>
+      <AuthPremiumHero variant="login" />
+
+      <Animated.View entering={FadeInDown.duration(440).delay(80)} style={shakeStyle}>
+        <AuthFormCard overlap premium>
+          <AuthFormIntro
+            eyebrow={t('login.formEyebrow')}
+            title={t('login.emailTitle')}
+            subtitle={t('login.emailSubtitle')}
+          />
+
+          <LoginPerkStrip />
+
           <AuthAnimatedSection index={0}>
             <AuthPremiumField
               dense
@@ -134,7 +157,7 @@ export function LoginScreen() {
                 if (formError) setFormError(null);
               }}
               error={emailError}
-              editable={!loginLoading}
+              editable={!busy}
               testID="login-email"
             />
           </AuthAnimatedSection>
@@ -152,21 +175,47 @@ export function LoginScreen() {
               }}
               placeholder={t('login.passwordPlaceholder')}
               error={passwordError}
-              editable={!loginLoading}
+              editable={!busy}
               testID="login-password"
             />
           </AuthAnimatedSection>
 
-          {formError ? <Text style={styles.formError}>{formError}</Text> : null}
+          {formError ? (
+            <AuthErrorBanner message={formError} testID="login-form-error" />
+          ) : null}
 
-          <PrimaryButton
-            label={t('login.submit')}
-            loading={loginLoading}
-            disabled={!canEmailLogin}
-            onPress={handlePasswordLogin}
-            style={styles.submitBtn}
-          />
+          <AuthAnimatedSection index={2}>
+            <PrimaryButton
+              label={t('login.submit')}
+              loading={loginLoading}
+              disabled={!canEmailLogin}
+              onPress={handlePasswordLogin}
+              style={styles.submitBtn}
+            />
+          </AuthAnimatedSection>
+
+          <AuthDivider label={t('login.dividerOr')} />
+
+          <AuthAnimatedSection index={3}>
+            <LoginMethodTiles
+              onGooglePress={() => void handleGoogleSignIn()}
+              onPhonePress={() => navigation.navigate('OtpLogin')}
+              googleDisabled={busy}
+              phoneDisabled={busy}
+            />
+          </AuthAnimatedSection>
         </AuthFormCard>
+
+        <View style={styles.footer}>
+          <AuthFooterLink
+            muted={t('login.newHere')}
+            strong={t('login.signupLink')}
+            onPress={() => navigation.navigate('Signup')}
+            testID="login-signup-link"
+            accessibilityLabel={t('login.createAccountA11y')}
+          />
+          <AuthTrustNote message={t('brand.secureNote')} testID="login-trust-note" />
+        </View>
       </Animated.View>
     </AuthScreen>
   );
@@ -174,13 +223,12 @@ export function LoginScreen() {
 
 function createStyles() {
   return StyleSheet.create({
-    formError: {
-      fontSize: 12,
-      color: '#C4634F',
-      textAlign: 'center',
-      marginBottom: 8,
-    },
     submitBtn: {
+      marginTop: 4,
+    },
+    footer: {
+      gap: 12,
+      alignItems: 'center',
       marginTop: 4,
     },
   });

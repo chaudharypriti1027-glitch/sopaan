@@ -20,7 +20,7 @@ import { useAuthStore, type BootstrapResult } from '../store/auth';
 
 type SplashNav = NativeStackNavigationProp<RootStackParamList, 'Splash'>;
 
-const BRAND_HOLD_MS = 1100;
+const BRAND_HOLD_MS = 1280;
 const REDUCED_MOTION_DELAY_MS = 120;
 const EXIT_MS = 420;
 
@@ -30,7 +30,7 @@ function wait(ms: number) {
   });
 }
 
-function resetToOtpLogin(navigation: SplashNav) {
+function resetToWelcome(navigation: SplashNav) {
   navigation.reset({
     index: 0,
     routes: [
@@ -38,7 +38,7 @@ function resetToOtpLogin(navigation: SplashNav) {
         name: 'Auth',
         state: {
           index: 0,
-          routes: [{ name: 'OtpLogin' }],
+          routes: [{ name: 'Welcome' }],
         },
       },
     ],
@@ -89,7 +89,7 @@ function routeAfterBootstrap(navigation: SplashNav, result: BootstrapResult) {
   }
 
   if (result.kind === 'guest') {
-    resetToOtpLogin(navigation);
+    resetToWelcome(navigation);
     return;
   }
 
@@ -152,7 +152,7 @@ export function SplashScreen() {
       if (result.kind === 'authed' && isOnboardingComplete(result.profile)) {
         void queryClient.prefetchQuery({
           queryKey: queryKeys.home.feed(),
-          queryFn: getHomeFeed,
+          queryFn: () => getHomeFeed(),
           staleTime: 60_000,
         });
       }

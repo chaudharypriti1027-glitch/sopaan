@@ -19,6 +19,7 @@ import {
 import {
   LIVE_NS_EVENTS,
   SOCKET_EVENTS,
+  type DirectChatMessage,
   type GroupChatError,
   type GroupChatMessage,
   type LiveChatMessage,
@@ -195,6 +196,102 @@ export function useGroupChat(groupId?: string) {
     error,
     sendMessage,
     reportMessage,
+    currentUserId: user?.id,
+    connected,
+  };
+}
+
+export type DirectMessageInput = {
+  text?: string;
+  messageType?: 'text' | 'image' | 'document';
+  attachmentUrl?: string;
+  attachmentName?: string;
+  attachmentMimeType?: string;
+};
+
+export function useDirectChat(conversationId?: string) {
+  const connected = useSocketStatus();
+  const { user } = useAuth();
+  const [messages, setMessages] = useState<DirectChatMessage[]>([]);
+  const [error, setError] = useState<GroupChatError | null>(null);
+
+  useEffect(() => {
+    const socket = getSocket();
+
+    if (!conversationId || !socket) {
+      return;
+    }
+
+    const onHistory = (history: DirectChatMessage[]) => {
+      setMessages(history);
+    };
+
+    const onMessage = (message: DirectChatMessage) => {
+      if (message.conversationId === conversationId) {
+        setMessages((current) =>
+          current.some((entry) => entry.id === message.id) ? current : [...current, message],
+        );
+      }
+    };
+
+    const onError = (payload: GroupChatError) => {
+      if (!payload.conversationId || payload.conversationId === conversationId) {
+        setError(payload);
+      }
+    };
+
+    socket.on(SOCKET_EVENTS.DM_HISTORY, onHistory);
+    socket.on(SOCKET_EVENTS.DM_MESSAGE_NEW, onMessage);
+    socket.on(SOCKET_EVENTS.DM_ERROR, onError);
+
+    const join = () => {
+      socket.emit(SOCKET_EVENTS.DM_JOIN, { conversationId });
+    };
+
+    if (socket.connected) {
+      join();
+    } else {
+      socket.once('connect', join);
+    }
+
+    const rejoin = () => join();
+    onSocketReconnect(rejoin);
+
+    return () => {
+      socket.off(SOCKET_EVENTS.DM_HISTORY, onHistory);
+      socket.off(SOCKET_EVENTS.DM_MESSAGE_NEW, onMessage);
+      socket.off(SOCKET_EVENTS.DM_ERROR, onError);
+      socket.off('connect', join);
+      offSocketReconnect();
+      socket.emit(SOCKET_EVENTS.DM_LEAVE, { conversationId });
+    };
+  }, [conversationId, connected]);
+
+  const sendMessage = useCallback(
+    (input: DirectMessageInput): boolean => {
+      const socket = getSocket();
+      if (!conversationId || !socket?.connected) {
+        return false;
+      }
+
+      setError(null);
+      socket.emit(SOCKET_EVENTS.DM_MESSAGE, {
+        conversationId,
+        text: input.text ?? '',
+        messageType: input.messageType ?? 'text',
+        attachmentUrl: input.attachmentUrl,
+        attachmentName: input.attachmentName,
+        attachmentMimeType: input.attachmentMimeType,
+      });
+      return true;
+    },
+    [conversationId],
+  );
+
+  return {
+    messages,
+    error,
+    sendMessage,
     currentUserId: user?.id,
     connected,
   };

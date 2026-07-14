@@ -1,23 +1,30 @@
 import { useEffect, useMemo, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import Animated from 'react-native-reanimated';
+import { StyleSheet } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import {
   AuthAnimatedSection,
-  AuthBrandHeader,
+  AuthDivider,
   AuthFormCard,
+  AuthFormIntro,
   AuthPremiumField,
+  AuthPremiumHero,
   AuthScreen,
+  AuthSocialButton,
   AuthTermsBox,
+  AuthTrustNote,
   GhostButton,
   PrimaryButton,
   useShakeOnError,
 } from '../../components/auth';
 import { Text } from '../../components';
 import { authApi, parseApiError, privacyApi } from '../../api';
+import type { SignupInput } from '../../api/auth';
+import { completeGoogleLogin } from '../../auth/completeGoogleLogin';
 import { formatOtpError } from '../../auth/otpErrors';
+import { useGoogleSignIn } from '../../auth/useGoogleSignIn';
 import { formatIndianPhone, isValidIndianMobile } from '../../lib/phone';
 import type { AuthStackParamList } from '../../navigation/types';
 
@@ -27,6 +34,8 @@ export function OtpLoginScreen() {
   const navigation = useNavigation<OtpLoginNav>();
   const { t } = useTranslation('auth');
   const styles = useMemo(() => createStyles(), []);
+  const { signInWithGoogle, loading: googleLoading, isConfigured: googleConfigured } =
+    useGoogleSignIn();
 
   const [digits, setDigits] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
@@ -40,7 +49,18 @@ export function OtpLoginScreen() {
 
   const shakeStyle = useShakeOnError(error);
   const phoneValid = isValidIndianMobile(digits);
-  const canSubmit = phoneValid && acceptedTerms && !loading;
+  const busy = loading || googleLoading;
+  const canSubmit = phoneValid && acceptedTerms && !busy;
+
+  const privacyConsent = useMemo(
+    () =>
+      ({
+        policyVersion,
+        aiProcessing: true,
+        marketing: false,
+      }) satisfies NonNullable<SignupInput['privacyConsent']>,
+    [policyVersion],
+  );
 
   const handleSendOtp = async () => {
     setError(null);
@@ -62,11 +82,7 @@ export function OtpLoginScreen() {
       await authApi.requestOtp({ phone });
       navigation.navigate('Otp', {
         phone,
-        privacyConsent: {
-          policyVersion,
-          aiProcessing: true,
-          marketing: false,
-        },
+        privacyConsent,
       });
     } catch (err) {
       setError(formatOtpError(parseApiError(err)));
@@ -75,32 +91,41 @@ export function OtpLoginScreen() {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setError(null);
+
+    if (!acceptedTerms) {
+      setError(t('otp.consentRequired'));
+      return;
+    }
+
+    if (!googleConfigured) {
+      setError(t('signup.comingSoonMessage'));
+      return;
+    }
+
+    await completeGoogleLogin(
+      navigation as Parameters<typeof completeGoogleLogin>[0],
+      signInWithGoogle,
+      {
+        privacyConsent,
+        onError: setError,
+      },
+    );
+  };
+
   return (
-    <AuthScreen
-      scrollProps={{ keyboardShouldPersistTaps: 'handled' }}
-      header={
-        <AuthBrandHeader title={t('otp.entryTitle')} subtitle={t('otp.entrySubtitle')} />
-      }
-      footer={
-        <View style={styles.footer}>
-          <PrimaryButton
-            label={t('otp.continue')}
-            loading={loading}
-            disabled={!canSubmit}
-            onPress={() => void handleSendOtp()}
-            testID="otp-login-send"
+    <AuthScreen scrollProps={{ keyboardShouldPersistTaps: 'handled' }}>
+      <AuthPremiumHero variant="otp" />
+
+      <Animated.View entering={FadeInDown.duration(440).delay(80)} style={shakeStyle}>
+        <AuthFormCard overlap>
+          <AuthFormIntro
+            eyebrow={t('otp.formEyebrow')}
+            title={t('otp.entryTitle')}
+            subtitle={t('otp.entrySubtitle')}
           />
-          <GhostButton
-            label={t('otp.useEmailInstead')}
-            disabled={loading}
-            onPress={() => navigation.navigate('Login')}
-            testID="otp-login-email-link"
-          />
-        </View>
-      }
-    >
-      <Animated.View style={shakeStyle}>
-        <AuthFormCard>
+
           <AuthAnimatedSection index={0}>
             <AuthPremiumField
               dense
@@ -112,11 +137,13 @@ export function OtpLoginScreen() {
                 setDigits(value);
                 if (error) setError(null);
               }}
-              editable={!loading}
+              editable={!busy}
               testID="otp-login-phone"
               autoFocus
             />
           </AuthAnimatedSection>
+
+          {error ? <Text style={styles.error}>{error}</Text> : null}
 
           <AuthTermsBox
             testID="otp-login-consent"
@@ -125,8 +152,33 @@ export function OtpLoginScreen() {
             policyVersion={policyVersion}
           />
 
-          {error ? <Text style={styles.error}>{error}</Text> : null}
+          <PrimaryButton
+            label={t('otp.continue')}
+            loading={loading}
+            disabled={!canSubmit}
+            onPress={() => void handleSendOtp()}
+            testID="otp-login-send"
+          />
+
+          <AuthDivider label={t('login.dividerOr')} />
+
+          <AuthSocialButton
+            label={t('login.continueGoogle')}
+            variant="google"
+            disabled={busy || !acceptedTerms}
+            onPress={() => void handleGoogleSignIn()}
+            testID="otp-login-google"
+          />
+
+          <GhostButton
+            label={t('otp.useEmailInstead')}
+            disabled={busy}
+            onPress={() => navigation.navigate('Login')}
+            testID="otp-login-email-link"
+          />
         </AuthFormCard>
+
+        <AuthTrustNote message={t('brand.secureNote')} testID="otp-login-trust-note" />
       </Animated.View>
     </AuthScreen>
   );
@@ -134,14 +186,13 @@ export function OtpLoginScreen() {
 
 function createStyles() {
   return StyleSheet.create({
-    footer: {
-      gap: 10,
-    },
     error: {
       fontSize: 12,
       color: '#C4634F',
       textAlign: 'center',
-      marginTop: 4,
+      marginTop: 2,
+      marginBottom: 8,
+      fontWeight: '600',
     },
   });
 }

@@ -1,9 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { fetchAdminStats, fetchAttemptsSeries } from '../api/admin';
+import { useAuth } from '../auth/AuthContext';
+import { QueryErrorBanner } from '../components/QueryErrorBanner';
 import { MetricCard } from '../components/MetricCard';
 import { AttemptsChart } from '../components/dashboard/AttemptsChart';
 import { ContentMixDonut } from '../components/dashboard/ContentMixDonut';
 import { PriorityCard } from '../components/dashboard/PriorityCard';
+import { SystemStatusCard } from '../components/dashboard/SystemStatusCard';
 import { useAdminDashboardSocket } from '../hooks/useAdminDashboardSocket';
 
 const METRIC_ICONS = {
@@ -60,6 +63,7 @@ const METRIC_ICONS = {
 
 export function DashboardPage() {
   useAdminDashboardSocket();
+  const { user } = useAuth();
 
   const statsQuery = useQuery({
     queryKey: ['admin', 'stats'],
@@ -83,7 +87,7 @@ export function DashboardPage() {
     <div>
       <div className="greet">
         <div>
-          <h2>Welcome back, Admin</h2>
+          <h2>Welcome back, {user?.name?.split(' ')[0] ?? 'Admin'}</h2>
           <p>Here&apos;s what needs your attention today · {dateLabel}</p>
         </div>
         <span className="rolechip">
@@ -94,6 +98,12 @@ export function DashboardPage() {
           ADMIN · PRO
         </span>
       </div>
+
+      <SystemStatusCard />
+
+      {statsQuery.isError ? (
+        <QueryErrorBanner error={statsQuery.error} onRetry={() => void statsQuery.refetch()} />
+      ) : null}
 
       <div className="prio">
         <PriorityCard
@@ -232,7 +242,12 @@ export function DashboardPage() {
             <h3>Mock attempts</h3>
             <span className="sub">Last 14 days</span>
           </div>
-          {attemptsQuery.isLoading ? (
+          {attemptsQuery.isError ? (
+            <QueryErrorBanner
+              error={attemptsQuery.error}
+              onRetry={() => void attemptsQuery.refetch()}
+            />
+          ) : attemptsQuery.isLoading ? (
             <p className="page-sub">Loading chart…</p>
           ) : (
             <AttemptsChart series={attemptsQuery.data?.series ?? []} />

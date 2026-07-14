@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from 'react';
 import { fetchAdminStats } from '../api/admin';
+import { ApiError } from '../api/types';
 import { clearSession, getAccessToken, getStoredUser } from '../api/storage';
 import type { AuthUser } from '../api/types';
 import { disconnectAdminSocket } from '../realtime/adminSocket';
@@ -66,8 +67,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         }
       })
-      .catch(() => {
-        if (!cancelled) logout();
+      .catch((err: unknown) => {
+        if (!cancelled) {
+          if (err instanceof ApiError && err.status === 401) {
+            logout();
+          } else {
+            const stored = staffUserFromStorage();
+            if (stored) setUser(stored);
+          }
+        }
       })
       .finally(() => {
         if (!cancelled) setLoading(false);

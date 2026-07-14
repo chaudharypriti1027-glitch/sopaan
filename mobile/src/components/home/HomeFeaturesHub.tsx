@@ -13,6 +13,11 @@ import {
   type HomeFeatureLink,
   type HomeFeatureSectionKey,
 } from '../../navigation/homeFeatureConfig';
+import {
+  HOME_EXPLORE_GRID,
+  HOME_EXPLORE_TAB_LABEL_KEYS,
+  HOME_PREMIUM_STRIP,
+} from '../../content/homeContent';
 import { toneForText } from '../../utils/iconTone';
 import { useTheme } from '../../theme';
 import type { HomeFeed } from '../../types/home';
@@ -20,22 +25,12 @@ import { featureLinkPremiumTone } from './homeIcons';
 import { resolveHomeIcon } from './homeUtils';
 import { HOME_UI, homeFeedCard, homePressFeedback } from './homeTheme';
 
-const GRID_COLUMNS = 5;
 const SECTION_PAD = HOME_UI.horizontalPad;
-const CARD_PAD = 12;
-const TILE_GAP = 6;
 
 type HomeFeaturesHubProps = {
   quickActions: HomeFeed['quickActions'];
   onFeaturePress: (link: HomeFeatureLink) => void;
   onShortcutPress: (deeplink: string) => void;
-};
-
-const TAB_LABEL_KEYS: Record<HomeFeatureSectionKey, string> = {
-  learning: 'home.exploreTabLearning',
-  prep: 'home.exploreTabPrep',
-  community: 'home.exploreTabCommunity',
-  tools: 'home.exploreTabTools',
 };
 
 export function HomeFeaturesHub({
@@ -51,8 +46,11 @@ export function HomeFeaturesHub({
   const [activeSection, setActiveSection] = useState<HomeFeatureSectionKey>('learning');
 
   const tileWidth = useMemo(() => {
-    const contentWidth = screenWidth - SECTION_PAD * 2 - CARD_PAD * 2;
-    return Math.floor((contentWidth - TILE_GAP * (GRID_COLUMNS - 1)) / GRID_COLUMNS);
+    const contentWidth = screenWidth - SECTION_PAD * 2 - HOME_EXPLORE_GRID.cardPad * 2;
+    return Math.floor(
+      (contentWidth - HOME_EXPLORE_GRID.tileGap * (HOME_EXPLORE_GRID.columns - 1)) /
+        HOME_EXPLORE_GRID.columns,
+    );
   }, [screenWidth]);
 
   const section = HOME_FEATURE_SECTIONS.find((entry) => entry.titleKey === activeSection);
@@ -60,7 +58,7 @@ export function HomeFeaturesHub({
     () =>
       HOME_FEATURE_SECTION_KEYS.map((key) => ({
         key,
-        label: t(`app:${TAB_LABEL_KEYS[key]}`),
+        label: t(`app:home.${HOME_EXPLORE_TAB_LABEL_KEYS[key]}`),
       })),
     [t],
   );
@@ -147,17 +145,17 @@ export function HomeFeaturesHub({
           accessibilityRole="button"
           onPress={() => openPaywall()}
           style={({ pressed }) => [styles.proStrip, pressed && homePressFeedback]}
-          testID="home-explore-premium"
+          testID={HOME_PREMIUM_STRIP.testID}
         >
           <HomeSlotIcon slot="shortcut" Icon={Crown} tone="gold" />
           <View style={styles.proCopy}>
-            <Text style={styles.proTitle}>{t('app:home.premiumStripTitle')}</Text>
+            <Text style={styles.proTitle}>{t(`app:home.${HOME_PREMIUM_STRIP.titleKey}`)}</Text>
             <Text style={styles.proSubtitle} numberOfLines={1}>
-              {t('app:home.premiumStripSubtitle')}
+              {t(`app:home.${HOME_PREMIUM_STRIP.subtitleKey}`)}
             </Text>
           </View>
           <HomePremiumButton
-            label={t('app:home.premiumStripCta')}
+            label={t(`app:home.${HOME_PREMIUM_STRIP.ctaKey}`)}
             variant="outline"
             size="sm"
             onPress={() => openPaywall()}
@@ -201,7 +199,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       overflow: 'hidden',
     },
     cardInner: {
-      padding: CARD_PAD + 2,
+      padding: HOME_EXPLORE_GRID.cardPad + 2,
       gap: 12,
     },
     tabs: {
@@ -210,7 +208,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     grid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap: TILE_GAP + 2,
+      gap: HOME_EXPLORE_GRID.tileGap + 2,
     },
     tile: {
       alignItems: 'center',

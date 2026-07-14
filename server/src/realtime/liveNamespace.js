@@ -3,6 +3,8 @@ import { isAdminRole, normalizeUserRole } from '../constants/userRoles.js';
 import { appendLiveChatMessage, getLiveChatHistory } from './liveChatStore.js';
 import { LIVE_NS_EVENTS, LIVE_REACTION_EMOJIS } from './liveEvents.js';
 import { checkChatRateLimit, sanitizeChatMessage } from './moderation.js';
+import { getAdminNamespace, getLiveNamespace } from './io.js';
+import { ADMIN_NS_EVENTS, ADMIN_STAFF_ROOM } from './adminEvents.js';
 
 const raisedHandsByClass = new Map();
 const pinnedByClass = new Map();
@@ -85,7 +87,33 @@ function presencePayload(liveNs, classId) {
 }
 
 function broadcastPresence(liveNs, classId) {
-  liveNs.to(classId).emit(LIVE_NS_EVENTS.PRESENCE, presencePayload(liveNs, classId));
+  const payload = presencePayload(liveNs, classId);
+  liveNs.to(classId).emit(LIVE_NS_EVENTS.PRESENCE, payload);
+  notifyAdminLivePresence(classId, payload);
+}
+
+function notifyAdminLivePresence(classId, payload) {
+  const adminNs = getAdminNamespace();
+  if (!adminNs) {
+    return;
+  }
+
+  adminNs.to(ADMIN_STAFF_ROOM).emit(ADMIN_NS_EVENTS.LIVE_PRESENCE, {
+    classId,
+    count: payload.count,
+    at: new Date().toISOString(),
+  });
+}
+
+/** Socket room size for a live class (real-time viewer count). */
+export function getLiveClassPresenceCount(classId) {
+  const liveNs = getLiveNamespace();
+  if (!liveNs || !classId) {
+    return 0;
+  }
+
+  const room = liveNs.adapter.rooms.get(String(classId));
+  return room?.size ?? 0;
 }
 
 function emitToHosts(liveNs, classId, event, payload) {

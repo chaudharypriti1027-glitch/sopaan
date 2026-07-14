@@ -1,10 +1,12 @@
 import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Avatar, Card, QueryStateView, Screen, SectionTitle } from '../../components';
+import { useTranslation } from 'react-i18next';
+import { Avatar, FeatureScreenLayout, PremiumFeatureCard, QueryStateView } from '../../components';
 import { useNetworkStatus, useSuccessStories } from '../../hooks';
 import { useTheme } from '../../theme';
 
 export function SuccessStoriesScreen() {
+  const { t } = useTranslation('app');
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const { isOffline } = useNetworkStatus();
@@ -13,9 +15,7 @@ export function SuccessStoriesScreen() {
   const stories = storiesQuery.data?.items ?? [];
 
   return (
-    <Screen scroll contentContainerStyle={styles.content}>
-      <SectionTitle subtitle="Real journeys from Sopaan learners" />
-
+    <FeatureScreenLayout title={t('successStories.title')} subtitle={t('successStories.subtitle')}>
       <QueryStateView
         isLoading={storiesQuery.isLoading}
         isError={storiesQuery.isError}
@@ -26,7 +26,7 @@ export function SuccessStoriesScreen() {
       >
         <View style={styles.list}>
           {stories.map((story) => (
-            <Card key={story.id} style={styles.card}>
+            <PremiumFeatureCard key={story.id} style={styles.card}>
               <Avatar name={story.name} size="md" />
               <View style={styles.body}>
                 <Text style={styles.name}>{story.name}</Text>
@@ -35,17 +35,16 @@ export function SuccessStoriesScreen() {
                 </Text>
                 <Text style={styles.quote}>&ldquo;{story.quote}&rdquo;</Text>
               </View>
-            </Card>
+            </PremiumFeatureCard>
           ))}
         </View>
       </QueryStateView>
-    </Screen>
+    </FeatureScreenLayout>
   );
 }
 
 function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
-    content: { gap: theme.spacing.lg, paddingBottom: theme.spacing['3xl'] },
     list: { gap: theme.spacing.md },
     card: { flexDirection: 'row', gap: theme.spacing.md },
     body: { flex: 1, gap: theme.spacing.xs },

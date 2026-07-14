@@ -12,8 +12,11 @@ import {
   reviewTestSchema,
   generateExamSchema,
   examCreateSchema,
+  examUpdateSchema,
   courseCreateSchema,
   currentAffairCreateSchema,
+  currentAffairUpdateSchema,
+  attemptsDaysQuerySchema,
   mentorCreateSchema,
   mentorUpdateSchema,
   mentorStatusSchema,
@@ -74,8 +77,9 @@ const validateEmptyBody = validate(emptyMutationBodySchema);
 router.use(requireAuth, staffOnly);
 router.use(auditAdminMutations);
 
-router.get('/stats/attempts', asyncHandler(adminController.getAttemptsStats));
+router.get('/stats/attempts', validate(attemptsDaysQuerySchema, 'query'), asyncHandler(adminController.getAttemptsStats));
 router.get('/stats', asyncHandler(adminController.getStats));
+router.get('/system-check', asyncHandler(adminController.getSystemCheck));
 
 router.get(
   '/tests/pending',
@@ -134,9 +138,9 @@ router.post(
 );
 
 router.get('/exams', validate(adminContentQuerySchema, 'query'), asyncHandler(adminController.listExams));
-router.get('/exams/:id', asyncHandler(adminController.getExam));
+router.get('/exams/:id', validateId, asyncHandler(adminController.getExam));
 router.post('/exams', validate(examCreateSchema), asyncHandler(adminController.createExam));
-router.put('/exams/:id', asyncHandler(adminController.updateExam));
+router.put('/exams/:id', validateId, validate(examUpdateSchema), asyncHandler(adminController.updateExam));
 router.patch(
   '/exams/:id/status',
   validate(publishStatusSchema),
@@ -147,7 +151,7 @@ router.delete('/exams/:id', validateId, asyncHandler(adminController.deleteExam)
 router.get('/courses', validate(adminContentQuerySchema, 'query'), asyncHandler(adminController.listCourses));
 router.get('/courses/:id', asyncHandler(adminController.getCourse));
 router.post('/courses', validate(courseCreateSchema), asyncHandler(adminController.createCourse));
-router.put('/courses/:id', asyncHandler(adminController.updateCourse));
+router.put('/courses/:id', validate(courseCreateSchema.partial()), asyncHandler(adminController.updateCourse));
 router.patch(
   '/courses/:id/status',
   validate(publishStatusSchema),
@@ -160,13 +164,18 @@ router.get(
   validate(adminContentQuerySchema, 'query'),
   asyncHandler(adminController.listCurrentAffairs),
 );
-router.get('/current-affairs/:id', asyncHandler(adminController.getCurrentAffair));
+router.get('/current-affairs/:id', validateId, asyncHandler(adminController.getCurrentAffair));
 router.post(
   '/current-affairs',
   validate(currentAffairCreateSchema),
   asyncHandler(adminController.createCurrentAffair),
 );
-router.put('/current-affairs/:id', asyncHandler(adminController.updateCurrentAffair));
+router.put(
+  '/current-affairs/:id',
+  validateId,
+  validate(currentAffairUpdateSchema),
+  asyncHandler(adminController.updateCurrentAffair),
+);
 router.patch(
   '/current-affairs/:id/status',
   validate(publishStatusSchema),

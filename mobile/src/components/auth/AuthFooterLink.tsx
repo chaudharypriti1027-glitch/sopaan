@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import { Text } from '../Text';
-import { AUTH_UI } from './authTheme';
+import { AUTH_FONTS, AUTH_UI } from './authTheme';
 import { platformShadow } from '../../utils/platformShadow';
 
 type AuthFooterLinkProps = {
@@ -30,8 +30,12 @@ export function AuthFooterLink({
       onPress={onPress}
       style={({ pressed }) => [styles.link, pressed && styles.pressed]}
     >
-      <Text style={styles.muted}>{muted} </Text>
-      <Text style={styles.strong}>{strong}</Text>
+      <Text variant="label" style={styles.muted}>
+        {muted}{' '}
+      </Text>
+      <Text variant="label" style={styles.strong}>
+        {strong}
+      </Text>
     </Pressable>
   );
 }
@@ -64,14 +68,12 @@ function createStyles() {
       backgroundColor: AUTH_UI.bg,
     },
     muted: {
-      fontSize: 13,
       color: AUTH_UI.label,
-      fontWeight: '600',
+      fontFamily: AUTH_FONTS.semibold,
     },
     strong: {
-      fontSize: 13,
-      fontWeight: '800',
       color: AUTH_UI.accent,
+      fontFamily: AUTH_FONTS.bold,
       textDecorationLine: 'underline',
     },
   });

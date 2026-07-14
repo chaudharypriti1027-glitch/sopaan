@@ -11,7 +11,7 @@ import {
 import { useCallback, useMemo } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { Button, Card, Pill, PremiumHeroCard, QueryStateView, Screen } from '../../components';
+import { Button, Card, FeatureScreenLayout, Pill, PremiumHeroCard, QueryStateView } from '../../components';
 import { PREMIUM, PremiumIcon, PremiumSectionLabel } from '../../components/premium';
 import { useAuth } from '../../auth';
 import {
@@ -143,7 +143,11 @@ export function ManageSubscriptionScreen() {
     : t('manageSubscription.heroTitle');
 
   return (
-    <Screen scroll contentContainerStyle={styles.content}>
+    <FeatureScreenLayout
+      title={t('manageSubscription.title')}
+      subtitle={t('manageSubscription.subtitle')}
+      contentStyle={styles.content}
+    >
       <QueryStateView
         isLoading={entitlementQuery.isLoading}
         isError={entitlementQuery.isError}
@@ -297,7 +301,7 @@ export function ManageSubscriptionScreen() {
 
         <Text style={styles.footerNote}>{t('manageSubscription.footerNote')}</Text>
       </QueryStateView>
-    </Screen>
+    </FeatureScreenLayout>
   );
 }
 

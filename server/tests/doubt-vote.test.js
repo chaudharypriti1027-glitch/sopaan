@@ -4,7 +4,6 @@ import app from '../src/app.js';
 import { DoubtPost } from '../src/models/DoubtPost.js';
 import { clearTestDatabase, setupTestDatabase, teardownTestDatabase } from './helpers/db.js';
 import { createTestUser } from './helpers/fixtures.js';
-import { withPrivacyConsent } from './helpers/privacy.js';
 
 describe('Doubt vote API', () => {
   beforeAll(async () => {

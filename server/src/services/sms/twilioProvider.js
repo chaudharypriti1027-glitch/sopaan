@@ -1,5 +1,6 @@
 import { AppError } from '../../utils/AppError.js';
 import { logger } from '../../observability/logger.js';
+import { getTwilioCredentials } from '../../config/twilioConfig.js';
 import { buildOtpSmsBody } from './otpSmsCopy.js';
 
 /** Twilio SMS provider — configure TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER. */
@@ -7,12 +8,11 @@ export const twilioSmsProvider = {
   name: 'twilio',
 
   async sendOtp(phone, code) {
-    const accountSid = process.env.TWILIO_ACCOUNT_SID?.trim();
-    const authToken = process.env.TWILIO_AUTH_TOKEN?.trim();
+    const creds = getTwilioCredentials();
     const fromNumber = process.env.TWILIO_FROM_NUMBER?.trim();
 
-    if (!accountSid || !authToken || !fromNumber) {
-      logger.error('[sms][twilio] missing Twilio credentials');
+    if (!creds || !fromNumber) {
+      logger.error('[sms][twilio] missing Twilio credentials or TWILIO_FROM_NUMBER');
       throw new AppError('SMS delivery is not configured', 503, 'SMS_UNAVAILABLE');
     }
 
@@ -23,11 +23,11 @@ export const twilioSmsProvider = {
     });
 
     const response = await fetch(
-      `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`,
+      `https://api.twilio.com/2010-04-01/Accounts/${creds.accountSid}/Messages.json`,
       {
         method: 'POST',
         headers: {
-          Authorization: `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString('base64')}`,
+          Authorization: `Basic ${Buffer.from(`${creds.accountSid}:${creds.authToken}`).toString('base64')}`,
           'Content-Type': 'application/x-www-form-urlencoded',
         },
         body,

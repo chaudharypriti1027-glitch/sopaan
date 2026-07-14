@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { deleteMedia, fetchMedia, type AdminMedia } from '../api/media';
 import { ActionButton } from '../components/ActionButton';
+import { QueryErrorBanner } from '../components/QueryErrorBanner';
 import { MediaThumb } from '../components/media/MediaPicker';
 import { useToast } from '../components/Toast';
 import {
@@ -112,7 +113,9 @@ export function MediaPage() {
         </div>
       ) : null}
 
-      {query.isLoading ? (
+      {query.isError ? (
+        <QueryErrorBanner error={query.error} onRetry={() => void query.refetch()} />
+      ) : query.isLoading ? (
         <p className="empty-note">Loading media…</p>
       ) : items.length === 0 ? (
         <p className="empty-note">No media uploaded yet.</p>

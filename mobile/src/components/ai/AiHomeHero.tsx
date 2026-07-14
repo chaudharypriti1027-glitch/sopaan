@@ -7,27 +7,29 @@ import { useTheme } from '../../theme';
 import { AI_UI } from './aiTheme';
 
 type AiHomeHeroProps = {
+  eyebrow: string;
   title: string;
   subtitle: string;
 };
 
-export function AiHomeHero({ title, subtitle }: AiHomeHeroProps) {
+export function AiHomeHero({ eyebrow, title, subtitle }: AiHomeHeroProps) {
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   return (
     <View style={styles.wrap}>
+      <View style={styles.glow} />
       <View style={styles.iconShell}>
         <LinearGradient
-          colors={[AI_UI.primaryLight, '#C0C4DB']}
-          start={{ x: 0.2, y: 0 }}
-          end={{ x: 0.85, y: 1 }}
+          colors={[...AI_UI.heroGradient]}
+          start={{ x: 0.15, y: 0 }}
+          end={{ x: 0.9, y: 1 }}
           style={styles.iconGradient}
         >
-          <View style={styles.glow} />
-          <Sparkles size={32} color={AI_UI.primary} />
+          <Sparkles size={30} color={AI_UI.gold} strokeWidth={2.2} />
         </LinearGradient>
       </View>
+      <Text style={styles.eyebrow}>{eyebrow}</Text>
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.subtitle}>{subtitle}</Text>
     </View>
@@ -38,40 +40,53 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
     wrap: {
       alignItems: 'center',
-      paddingTop: 28,
-      paddingBottom: 32,
-      gap: 8,
+      paddingTop: 20,
+      paddingBottom: 24,
+      gap: 6,
+      position: 'relative',
+    },
+    glow: {
+      position: 'absolute',
+      top: 8,
+      width: 120,
+      height: 120,
+      borderRadius: 60,
+      backgroundColor: AI_UI.goldSoft,
+      opacity: 0.45,
     },
     iconShell: {
-      marginBottom: 12,
+      marginBottom: 8,
+      zIndex: 1,
     },
     iconGradient: {
-      width: 76,
-      height: 76,
-      borderRadius: 24,
+      width: 72,
+      height: 72,
+      borderRadius: 22,
       alignItems: 'center',
       justifyContent: 'center',
       borderWidth: 1.5,
-      borderColor: 'rgba(194,154,78,0.25)',
+      borderColor: 'rgba(194,154,78,0.3)',
       overflow: 'hidden',
       shadowColor: AI_UI.primary,
-      shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 0.13,
-      shadowRadius: 28,
-      elevation: 4,
+      shadowOffset: { width: 0, height: 10 },
+      shadowOpacity: 0.18,
+      shadowRadius: 24,
+      elevation: 5,
     },
-    glow: {
-      ...StyleSheet.absoluteFillObject,
-      backgroundColor: 'transparent',
-      // radial glow approximated
-      opacity: 0.35,
+    eyebrow: {
+      fontSize: 11,
+      fontFamily: theme.typography.fonts.ui.bold,
+      fontWeight: '800',
+      letterSpacing: 0.5,
+      textTransform: 'uppercase',
+      color: AI_UI.goldDeep,
     },
     title: {
       fontSize: 22,
       lineHeight: 28,
       fontFamily: theme.typography.fonts.ui.bold,
       fontWeight: '800',
-      letterSpacing: -0.3,
+      letterSpacing: -0.35,
       color: AI_UI.ink,
       textAlign: 'center',
     },
@@ -82,7 +97,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       fontWeight: '600',
       color: AI_UI.sub,
       textAlign: 'center',
-      maxWidth: 260,
+      maxWidth: 280,
     },
   });
 }

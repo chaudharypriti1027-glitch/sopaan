@@ -11,7 +11,7 @@ import {
   View,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { Button, Card, Pill, PremiumHeroCard, Screen, SectionTitle } from '../../components';
+import { Button, Card, FeatureScreenLayout, Pill, PremiumHeroCard, PremiumSectionLabel } from '../../components';
 import { useExams, useExam, useGoalRoadmap, useProfile } from '../../hooks';
 import type { MainStackParamList } from '../../navigation/types';
 import type { Exam } from '../../api/types';
@@ -68,18 +68,24 @@ export function CutoffsFormsScreen() {
 
   if (isLoading) {
     return (
-      <Screen style={styles.centered}>
+      <FeatureScreenLayout
+        title={t('cutoffsForms.title')}
+        subtitle={t('cutoffsForms.subtitleGeneric')}
+        contentStyle={styles.centered}
+      >
         <ActivityIndicator size="large" color={theme.colors.brand.primary} />
-      </Screen>
+      </FeatureScreenLayout>
     );
   }
 
   return (
-    <Screen scroll contentContainerStyle={styles.content}>
-      <SectionTitle
-        subtitle={exam ? t('cutoffsForms.subtitle', { exam: exam.name }) : t('cutoffsForms.subtitleGeneric')}
-      />
-
+    <FeatureScreenLayout
+      title={t('cutoffsForms.title')}
+      subtitle={
+        exam ? t('cutoffsForms.subtitle', { exam: exam.name }) : t('cutoffsForms.subtitleGeneric')
+      }
+      contentStyle={styles.content}
+    >
       {exam ? (
         <PremiumHeroCard
           icon={<TrendingUp size={24} color="#FFFFFF" strokeWidth={1.8} />}
@@ -102,7 +108,7 @@ export function CutoffsFormsScreen() {
       ) : null}
 
       <View style={styles.section}>
-        <SectionTitle title={t('cutoffsForms.cutoffsTitle')} />
+        <PremiumSectionLabel title={t('cutoffsForms.cutoffsTitle')} compact />
         {cutoffs.length > 0 ? (
           <Card padded={false}>
             {cutoffs.map((row, index) => (
@@ -126,7 +132,7 @@ export function CutoffsFormsScreen() {
       </View>
 
       <View style={styles.section}>
-        <SectionTitle title={t('cutoffsForms.formsTitle')} />
+        <PremiumSectionLabel title={t('cutoffsForms.formsTitle')} compact />
         <Card style={styles.formsCard}>
           {applyDates.length > 0 ? (
             applyDates.map((entry) => (
@@ -164,7 +170,7 @@ export function CutoffsFormsScreen() {
         fullWidth
         onPress={() => navigation.navigate('ExamCalendar')}
       />
-    </Screen>
+    </FeatureScreenLayout>
   );
 }
 

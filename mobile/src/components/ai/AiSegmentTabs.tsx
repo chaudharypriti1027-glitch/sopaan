@@ -1,15 +1,15 @@
 import { useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { ClipboardCheck, Sparkles } from 'lucide-react-native';
 import { Text } from '../Text';
 import { useTheme } from '../../theme';
-import { AI_UI } from './aiTheme';
-
-type AiTab = 'ask' | 'evaluate';
+import type { AskAiTab } from '../../content/askAiContent';
+import { AI_UI, aiPressFeedback } from './aiTheme';
 
 type AiSegmentTabsProps = {
-  value: AiTab;
-  onChange: (tab: AiTab) => void;
+  value: AskAiTab;
+  onChange: (tab: AskAiTab) => void;
   askLabel: string;
   evaluateLabel: string;
 };
@@ -34,16 +34,26 @@ export function AiSegmentTabs({ value, onChange, askLabel, evaluateLabel }: AiSe
             accessibilityRole="button"
             accessibilityState={{ selected }}
             onPress={() => onChange(tab)}
-            style={[styles.tab, selected && styles.tabSelected]}
+            style={({ pressed }) => [styles.tab, selected && styles.tabSelected, pressed && aiPressFeedback]}
           >
-            <Icon
-              size={15}
-              color={selected ? '#FFFFFF' : AI_UI.sub}
-              strokeWidth={selected ? 2.25 : 1.9}
-            />
-            <Text style={[styles.tabLabel, selected && styles.tabLabelSelected]}>
-              {tab === 'ask' ? askLabel : evaluateLabel}
-            </Text>
+            {selected ? (
+              <LinearGradient
+                colors={[AI_UI.primary, AI_UI.gradientEnd]}
+                start={{ x: 0.1, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.tabGradient}
+              >
+                <Icon size={15} color="#FFFFFF" strokeWidth={2.25} />
+                <Text style={[styles.tabLabel, styles.tabLabelSelected]}>
+                  {tab === 'ask' ? askLabel : evaluateLabel}
+                </Text>
+              </LinearGradient>
+            ) : (
+              <View style={styles.tabInner}>
+                <Icon size={15} color={AI_UI.sub} strokeWidth={1.9} />
+                <Text style={styles.tabLabel}>{tab === 'ask' ? askLabel : evaluateLabel}</Text>
+              </View>
+            )}
           </Pressable>
         );
       })}
@@ -57,27 +67,38 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       flexDirection: 'row',
       padding: 4,
       borderRadius: 16,
-      backgroundColor: AI_UI.primaryLight,
-      borderWidth: 1.5,
-      borderColor: AI_UI.border,
+      backgroundColor: AI_UI.card,
+      borderWidth: 1,
+      borderColor: AI_UI.goldBorder,
+      gap: 4,
     },
     tab: {
       flex: 1,
+      borderRadius: 12,
+      overflow: 'hidden',
+    },
+    tabSelected: {
+      shadowColor: AI_UI.primary,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.22,
+      shadowRadius: 14,
+      elevation: 3,
+    },
+    tabGradient: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
       gap: 6,
-      paddingVertical: 10,
+      paddingVertical: 11,
       paddingHorizontal: 8,
-      borderRadius: 12,
     },
-    tabSelected: {
-      backgroundColor: AI_UI.primary,
-      shadowColor: AI_UI.primary,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.25,
-      shadowRadius: 18,
-      elevation: 3,
+    tabInner: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      paddingVertical: 11,
+      paddingHorizontal: 8,
     },
     tabLabel: {
       fontSize: 13,
@@ -91,4 +112,4 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   });
 }
 
-export type { AiTab };
+export type { AskAiTab as AiTab };

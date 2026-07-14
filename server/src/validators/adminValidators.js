@@ -90,6 +90,12 @@ export const examCreateSchema = z.object({
   status: z.enum(['draft', 'published']).optional(),
 });
 
+export const examUpdateSchema = examCreateSchema
+  .partial()
+  .refine((data) => Object.keys(data).length > 0, {
+    message: 'At least one field is required',
+  });
+
 export const courseCreateSchema = z.object({
   title: z.string().trim().min(1),
   subject: z.string().trim().min(1),
@@ -100,26 +106,41 @@ export const courseCreateSchema = z.object({
       z.object({
         title: z.string(),
         order: z.number().int().min(1),
-        videoUrl: z.string().optional(),
+        videoUrl: z.string().trim().url().optional().or(z.literal('')),
         durationSec: z.number().optional(),
         notes: z.string().optional(),
+        materialUrl: z.string().trim().url().optional().or(z.literal('')),
+        materialName: z.string().trim().optional(),
       })
     )
     .optional(),
   thumbnailColor: z.string().optional(),
-  thumbnailUrl: z.string().trim().url().optional(),
+  thumbnailUrl: z.string().trim().url().optional().or(z.literal('')),
   status: z.enum(['draft', 'published']).optional(),
 });
 
 export const currentAffairCreateSchema = z.object({
   title: z.string().trim().min(1),
   summary: z.string().trim().optional(),
+  body: z.string().trim().optional(),
   category: z.string().trim().optional(),
   source: z.string().trim().optional(),
+  sourceUrl: z.string().trim().url().optional().or(z.literal('')),
   publishedAt: z.coerce.date(),
   imageColor: z.string().optional(),
+  imageUrl: z.string().trim().url().optional().or(z.literal('')),
   quizQuestions: z.array(z.string()).optional(),
   status: z.enum(['draft', 'published']).optional(),
+});
+
+export const currentAffairUpdateSchema = currentAffairCreateSchema
+  .partial()
+  .refine((data) => Object.keys(data).length > 0, {
+    message: 'At least one field is required',
+  });
+
+export const attemptsDaysQuerySchema = z.object({
+  days: z.coerce.number().int().min(1).max(90).optional().default(14),
 });
 
 export const mentorCreateSchema = z

@@ -3,14 +3,16 @@ import type { RouteProp } from '@react-navigation/native';
 import { BarChart2, Medal, Sparkles } from 'lucide-react-native';
 import { useMemo } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import {
   AIBadge,
   BarChart,
-  Card,
   ComparisonBars,
+  FeatureScreenLayout,
+  PremiumFeatureCard,
   PremiumHeroCard,
+  PremiumScreen,
   RankRing,
-  Screen,
   SectionTitle,
 } from '../../components';
 import { useAttempt, useAttempts } from '../../hooks';
@@ -19,13 +21,17 @@ import { useTheme } from '../../theme';
 
 type MockAnalysisRoute = RouteProp<MainStackParamList, 'MockAnalysis'>;
 
-function formatMinutes(sec: number): string {
+function formatMinutes(sec: number, t: (key: string, opts?: Record<string, unknown>) => string): string {
   const m = Math.floor(sec / 60);
   const s = sec % 60;
-  return s > 0 ? `${m}m ${s}s` : `${m}m`;
+  if (s > 0) {
+    return t('mockAnalysis.timeFormat', { minutes: m, seconds: s });
+  }
+  return t('mockAnalysis.timeMinutes', { minutes: m });
 }
 
 export function MockAnalysisScreen() {
+  const { t } = useTranslation('app');
   const route = useRoute<MockAnalysisRoute>();
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -40,16 +46,21 @@ export function MockAnalysisScreen() {
 
   const comparisonMetrics = comparison
     ? [
-        { label: 'Score', you: comparison.you.score, topper: comparison.topper.score, average: comparison.average.score },
         {
-          label: 'Accuracy',
+          label: t('mockAnalysis.score'),
+          you: comparison.you.score,
+          topper: comparison.topper.score,
+          average: comparison.average.score,
+        },
+        {
+          label: t('mockAnalysis.accuracy'),
           you: comparison.you.accuracy,
           topper: comparison.topper.accuracy,
           average: comparison.average.accuracy,
           unit: '%',
         },
         {
-          label: 'Time',
+          label: t('mockAnalysis.time'),
           you: Math.round(comparison.you.totalTimeSec / 60),
           topper: Math.round(comparison.topper.totalTimeSec / 60),
           average: Math.round(comparison.average.totalTimeSec / 60),
@@ -65,42 +76,43 @@ export function MockAnalysisScreen() {
 
   if (attemptsQuery.isLoading || attemptQuery.isLoading) {
     return (
-      <Screen style={styles.centered}>
+      <PremiumScreen style={styles.centered}>
         <ActivityIndicator size="large" color={theme.colors.brand.primary} />
-      </Screen>
+      </PremiumScreen>
     );
   }
 
   if (!attemptId || !attempt) {
     return (
-      <Screen style={styles.centered}>
-        <Text style={styles.emptyTitle}>No mock attempt yet</Text>
-        <Text style={styles.emptySubtitle}>Complete a mock test to see detailed analysis.</Text>
-      </Screen>
+      <FeatureScreenLayout title={t('mockAnalysis.title')}>
+        <View style={styles.emptyWrap}>
+          <Text style={styles.emptyTitle}>{t('mockAnalysis.noAttempt')}</Text>
+          <Text style={styles.emptySubtitle}>{t('mockAnalysis.noAttemptBody')}</Text>
+        </View>
+      </FeatureScreenLayout>
     );
   }
 
   return (
-    <Screen scroll contentContainerStyle={styles.content}>
-      <SectionTitle
-        subtitle={attempt.test?.title ?? 'Performance breakdown'}
-      />
-
+    <FeatureScreenLayout
+      title={t('mockAnalysis.title')}
+      subtitle={attempt.test?.title ?? t('mockAnalysis.subtitleDefault')}
+    >
       <PremiumHeroCard
         icon={<Medal size={24} color="#FFFFFF" strokeWidth={1.8} />}
-        eyebrow="Overall percentile"
-        title={`${attempt.percentile ?? 0}th percentile`}
+        eyebrow={t('mockAnalysis.overallPercentile')}
+        title={t('mockAnalysis.percentileValue', { value: attempt.percentile ?? 0 })}
         stats={[
-          { label: 'Rank', value: `#${attempt.rank ?? '—'}` },
-          { label: 'Accuracy', value: `${attempt.accuracy ?? 0}%` },
-          { label: 'Time', value: formatMinutes(attempt.totalTimeSec ?? 0) },
+          { label: t('mockAnalysis.rank'), value: `#${attempt.rank ?? '—'}` },
+          { label: t('mockAnalysis.accuracy'), value: `${attempt.accuracy ?? 0}%` },
+          { label: t('mockAnalysis.time'), value: formatMinutes(attempt.totalTimeSec ?? 0, t) },
         ]}
       >
         <View style={styles.heroRingWrap}>
           <RankRing
             value={attempt.percentile ?? 0}
             max={100}
-            label="Percentile"
+            label={t('mockAnalysis.percentile')}
             size={104}
             variant="gold"
             trackColor="rgba(255,255,255,0.15)"
@@ -112,61 +124,61 @@ export function MockAnalysisScreen() {
 
       {comparisonMetrics.length > 0 ? (
         <View style={styles.section}>
-          <SectionTitle title="You vs topper vs average" />
-          <Card>
+          <SectionTitle title={t('mockAnalysis.comparison')} />
+          <PremiumFeatureCard>
             <ComparisonBars metrics={comparisonMetrics} />
-          </Card>
+          </PremiumFeatureCard>
         </View>
       ) : null}
 
       {sectionChartData.length > 0 ? (
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <SectionTitle title="Time per section" />
+            <SectionTitle title={t('mockAnalysis.timePerSection')} />
             <BarChart2 size={18} color={theme.colors.text.tertiary} />
           </View>
-          <Card>
+          <PremiumFeatureCard>
             <BarChart data={sectionChartData} variant="teal" height={180} />
-            <Text style={styles.chartCaption}>Minutes spent per subject</Text>
-          </Card>
+            <Text style={styles.chartCaption}>{t('mockAnalysis.chartCaption')}</Text>
+          </PremiumFeatureCard>
         </View>
       ) : null}
 
       {attempt.aiFeedback ? (
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <SectionTitle title="AI insight" />
-            <AIBadge label="Coach" />
+            <SectionTitle title={t('mockAnalysis.aiInsight')} />
+            <AIBadge label={t('mockAnalysis.coachBadge')} />
           </View>
-          <Card style={styles.insightCard}>
+          <PremiumFeatureCard style={styles.insightCard}>
             <Sparkles size={18} color={theme.colors.brand.primary} />
             <Text style={styles.insightText}>{attempt.aiFeedback}</Text>
-          </Card>
+          </PremiumFeatureCard>
         </View>
       ) : null}
 
       {attempt.weakTopics && attempt.weakTopics.length > 0 ? (
         <View style={styles.section}>
-          <SectionTitle title="Weak topics" />
-          <Card>
+          <SectionTitle title={t('mockAnalysis.weakTopics')} />
+          <PremiumFeatureCard>
             <Text style={styles.weakTopics}>{attempt.weakTopics.join(' · ')}</Text>
-          </Card>
+          </PremiumFeatureCard>
         </View>
       ) : null}
-    </Screen>
+    </FeatureScreenLayout>
   );
 }
 
 function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
-    content: {
-      gap: theme.spacing.lg,
-      paddingBottom: theme.spacing['3xl'],
-    },
     centered: {
       alignItems: 'center',
       justifyContent: 'center',
       padding: theme.spacing.xl,
+    },
+    emptyWrap: {
+      alignItems: 'center',
+      gap: theme.spacing.sm,
     },
     emptyTitle: {
       ...theme.typography.presets.h3,
@@ -176,7 +188,6 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       ...theme.typography.presets.body,
       color: theme.colors.text.secondary,
       textAlign: 'center',
-      marginTop: theme.spacing.sm,
     },
     heroRingWrap: {
       alignItems: 'center',

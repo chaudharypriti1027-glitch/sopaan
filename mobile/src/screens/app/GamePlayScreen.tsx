@@ -5,9 +5,18 @@ import { useCallback, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import type { GameCoaching, GameReviewItem } from '../../api/games';
 import { Button, Text } from '../../components';
-import { GamePlayHeader, GameResultCard, GamesPlayCard, GAMES_UI } from '../../components/games';
+import {
+  GameAiCoachSection,
+  GamePlayHeader,
+  GameResultCard,
+  GamesPlayCard,
+  GAMES_UI,
+} from '../../components/games';
 import { getGameById } from '../../games/content';
+import { normalizeGameComplete, type GameCompleteResult } from '../../games/completion';
+import { AffairQuizGame } from '../../games/AffairQuizGame';
 import { renderGameById } from '../../games/registry';
 import { useCompleteGame, useGameProgress } from '../../hooks';
 import type { MainStackParamList } from '../../navigation/types';
@@ -21,7 +30,7 @@ export function GamePlayScreen() {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation('app');
   const styles = useMemo(() => createStyles(insets.bottom), [insets.bottom]);
-  const { gameId, sessionId = 0 } = route.params;
+  const { gameId, sessionId = 0, affairId } = route.params;
   const completeGame = useCompleteGame();
   const { recordComplete } = useGameProgress();
 
@@ -31,22 +40,25 @@ export function GamePlayScreen() {
   const [coinsAwarded, setCoinsAwarded] = useState<number | null>(null);
   const [xpAwarded, setXpAwarded] = useState<number | null>(null);
   const [rewardFailed, setRewardFailed] = useState(false);
+  const [coaching, setCoaching] = useState<GameCoaching | null>(null);
+  const [review, setReview] = useState<GameReviewItem[]>([]);
 
-  const handleComplete = useCallback(
-    (finalScore: number) => {
-      setScore(finalScore);
-      setFinished(true);
-      setRewardFailed(false);
-      setCoinsAwarded(null);
-      setXpAwarded(null);
-      void recordComplete(gameId, finalScore);
-
+  const submitCompletion = useCallback(
+    (payload: GameCompleteResult) => {
       completeGame.mutate(
-        { gameId, score: finalScore },
+        {
+          gameId,
+          score: payload.score,
+          affairId,
+          gameTitle: game?.title,
+          answers: payload.answers,
+        },
         {
           onSuccess: (data) => {
             setCoinsAwarded(data.coinsAwarded);
             setXpAwarded(data.xpAwarded);
+            setCoaching(data.coaching);
+            setReview(data.review ?? []);
           },
           onError: () => {
             setRewardFailed(true);
@@ -54,24 +66,45 @@ export function GamePlayScreen() {
         },
       );
     },
-    [completeGame, gameId, recordComplete],
+    [affairId, completeGame, game?.title, gameId],
+  );
+
+  const handleComplete = useCallback(
+    (result: number | GameCompleteResult) => {
+      const payload = normalizeGameComplete(result);
+      setScore(payload.score);
+      setFinished(true);
+      setRewardFailed(false);
+      setCoinsAwarded(null);
+      setXpAwarded(null);
+      setCoaching(null);
+      setReview([]);
+      void recordComplete(gameId, payload.score);
+      submitCompletion(payload);
+    },
+    [gameId, recordComplete, submitCompletion],
   );
 
   const playAgain = () => {
-    navigation.replace('GamePlay', { gameId, sessionId: Date.now() });
+    navigation.replace('GamePlay', {
+      gameId,
+      sessionId: Date.now(),
+      ...(affairId ? { affairId } : {}),
+    });
   };
 
   const retryRewards = () => {
-    completeGame.mutate(
-      { gameId, score },
-      {
-        onSuccess: (data) => {
-          setCoinsAwarded(data.coinsAwarded);
-          setXpAwarded(data.xpAwarded);
-          setRewardFailed(false);
-        },
+    submitCompletion({ score });
+  };
+
+  const openPractice = () => {
+    navigation.navigate('AppTabs', {
+      screen: 'Practice',
+      params: {
+        weakTopics: coaching?.weakTopics,
+        openForm: true,
       },
-    );
+    });
   };
 
   if (!game) {
@@ -116,11 +149,21 @@ export function GamePlayScreen() {
           onAllGames={() => navigation.navigate('Games')}
           onRetry={retryRewards}
         />
+
+        {coaching ? (
+          <GameAiCoachSection coaching={coaching} review={review} onPracticePress={openPractice} />
+        ) : completeGame.isPending ? (
+          <Text style={styles.aiLoading}>{t('games.aiCoachLoading')}</Text>
+        ) : null}
       </ScrollView>
     );
   }
 
-  const gameView = renderGameById(gameId, { sessionKey, onComplete: handleComplete });
+  const gameView = affairId ? (
+    <AffairQuizGame key={sessionKey} affairId={affairId} onComplete={handleComplete} />
+  ) : (
+    renderGameById(gameId, { sessionKey, onComplete: handleComplete })
+  );
 
   return (
     <View style={styles.root}>
@@ -130,10 +173,7 @@ export function GamePlayScreen() {
         coinReward={game.coinReward}
         onBack={() => navigation.goBack()}
       />
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.playContent}
-      >
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.playContent}>
         <GamesPlayCard>
           {gameView ?? (
             <View style={styles.centered}>
@@ -168,10 +208,17 @@ function createStyles(bottomInset: number) {
     },
     resultContent: {
       flexGrow: 1,
-      justifyContent: 'center',
       paddingHorizontal: 20,
       paddingTop: 24,
       paddingBottom: 24 + bottomInset,
+      gap: 4,
+    },
+    aiLoading: {
+      textAlign: 'center',
+      marginTop: 16,
+      fontSize: 13,
+      fontWeight: '600',
+      color: GAMES_UI.muted,
     },
   });
 }

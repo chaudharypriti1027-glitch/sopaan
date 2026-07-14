@@ -39,3 +39,21 @@ export async function getDigestByDate(req, res) {
 
   res.status(200).json(digest);
 }
+
+export async function getAffairStudyPack(req, res) {
+  const result = await currentAffairService.getAffairStudyPack(req.params.id);
+  res.status(200).json(result);
+}
+
+export async function getAffairQuizGame(req, res) {
+  const result = await currentAffairService.getAffairQuizGame(req.params.id);
+  res.status(200).json(result);
+}
+
+export async function getAffairAiSummary(req, res) {
+  const query = getValidatedQuery(req);
+  const result = await currentAffairService.getAffairAiSummary(req.params.id, {
+    language: query.language ?? 'en',
+  });
+  res.status(200).json(result);
+}

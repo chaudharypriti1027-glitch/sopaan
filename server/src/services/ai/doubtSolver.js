@@ -15,6 +15,12 @@ import {
   recordAiDoubtCacheHit,
 } from '../semantic/doubtSemanticService.js';
 
+const MIN_ANSWER_CHARS = 18;
+
+function buildConciseSuffix() {
+  return 'Reply in the shortest form that fully answers the question. Skip Explanation and Exam tip sections when they add no value.';
+}
+
 async function findExactCacheMatch(normalizedQuestion, language) {
   const doc = await AiDoubtCache.findOne({ queryText: normalizedQuestion, language })
     .select('explanation')
@@ -37,12 +43,105 @@ function scheduleSemanticCache({ queryText, explanation, language, userId }) {
   });
 }
 
+function buildExamSuffix(targetExam) {
+  const exam = targetExam?.trim();
+  if (!exam) {
+    return '';
+  }
+
+  return `The student is preparing for ${exam}. Tailor depth, terminology, and examples to this exam.`;
+}
+
+function buildUserPrompt({ question, imageBase64 }) {
+  if (imageBase64) {
+    return question.trim()
+      ? `Solve the exam question shown in the image. Additional context from the student: ${question}`
+      : 'Solve the exam question shown in the image.';
+  }
+
+  return question;
+}
+
+function isWeakAnswer(text) {
+  const trimmed = text.trim();
+  if (/^answer\s*:/i.test(trimmed) && trimmed.length >= MIN_ANSWER_CHARS) {
+    return false;
+  }
+
+  if (trimmed.length < MIN_ANSWER_CHARS) {
+    return true;
+  }
+
+  const lower = trimmed.toLowerCase();
+  return (
+    lower.startsWith("i can't") ||
+    lower.startsWith('i cannot') ||
+    lower.includes('as an ai') ||
+    lower === 'n/a'
+  );
+}
+
+async function generateFreshExplanation({
+  prompt,
+  imageBase64,
+  language,
+  userId,
+  targetExam,
+  skipCache,
+  imageAttached,
+}) {
+  const useQualityModel = Boolean(skipCache || imageAttached);
+  const dynamicSuffix = [
+    respondInLanguageSuffix(language),
+    buildExamSuffix(targetExam),
+    buildConciseSuffix(),
+  ]
+    .filter(Boolean)
+    .join('\n');
+
+  const content = imageBase64
+    ? buildMessageContent({ text: prompt, imageBase64 })
+    : undefined;
+
+  const explanation = await complete({
+    stableSystem: DOUBT_SOLVER_RUBRIC,
+    dynamicSystemSuffix: dynamicSuffix,
+    user: prompt,
+    content,
+    tier: useQualityModel ? 'quality' : 'fast',
+    feature: 'doubt_solver',
+    userId,
+    maxTokens: imageAttached ? 1400 : 900,
+    timeoutMs: 75_000,
+  });
+
+  let trimmed = explanation.trim();
+
+  if (isWeakAnswer(trimmed)) {
+    const retry = await complete({
+      stableSystem: DOUBT_SOLVER_RUBRIC,
+      dynamicSystemSuffix: `${dynamicSuffix}\nYour previous reply was incomplete. Give a direct Answer: line first, then at most 3 short explanation bullets. Stay under 180 words.`,
+      user: `${prompt}\n\nProvide a complete but concise exam-style solution.`,
+      content,
+      tier: 'quality',
+      feature: 'doubt_solver',
+      userId,
+      maxTokens: 1100,
+      timeoutMs: 75_000,
+    });
+    trimmed = retry.trim();
+  }
+
+  return trimmed;
+}
+
 export async function solveDoubt({
   question,
   imageBase64,
   language = 'en',
   userId,
   skipCache = false,
+  targetExam,
 }) {
   const startedAt = Date.now();
   const normalizedQuestion = question.trim();
@@ -68,6 +167,7 @@ export async function solveDoubt({
       explanation: payload.explanation,
       fromCache: payload.fromCache ?? false,
       suggestedMatch: payload.suggestedMatch,
+      cacheSource: payload.cacheSource ?? null,
       answerId: saved?.id,
       responseMs,
     };
@@ -124,24 +224,22 @@ export async function solveDoubt({
     }
   }
 
-  const prompt = imageBase64
-    ? `The student scanned a printed exam question. Read the question from the image and any text below, then solve it.\n\nAdditional context: ${question}`
-    : question;
+  const prompt = buildUserPrompt({ question, imageBase64 });
 
   try {
-    const explanation = await complete({
-      stableSystem: DOUBT_SOLVER_RUBRIC,
-      dynamicSystemSuffix: respondInLanguageSuffix(language),
-      user: prompt,
-      content: buildMessageContent({ text: prompt, imageBase64 }),
-      tier: 'fast',
-      feature: 'doubt_solver',
+    const trimmed = await generateFreshExplanation({
+      prompt,
+      imageBase64,
+      language,
       userId,
-      maxTokens: 1200,
-      timeoutMs: 60_000,
+      targetExam,
+      skipCache,
+      imageAttached,
     });
 
-    const trimmed = explanation.trim();
+    if (!trimmed) {
+      throw new AppError('AI returned an empty answer', 502, 'AI_GENERATION_FAILED');
+    }
 
     if (!imageAttached && normalizedQuestion && trimmed) {
       scheduleSemanticCache({

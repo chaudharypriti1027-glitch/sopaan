@@ -5,6 +5,7 @@ import {
   extractRecordingFromEgressInfo,
   verifyLiveKitWebhook,
 } from './livekit.js';
+import { CONTENT_DOMAINS, notifyStudentsContentUpdated } from './contentSyncService.js';
 
 function resolveRoomName(egressInfo) {
   return egressInfo?.roomName ?? egressInfo?.room_name ?? null;
@@ -65,6 +66,11 @@ export async function processEgressEnded(egressInfo) {
   }
 
   await liveClass.save();
+
+  notifyStudentsContentUpdated(CONTENT_DOMAINS.LIVE_CLASSES, {
+    action: 'recording-ready',
+    liveClassId: liveClass._id.toString(),
+  });
 
   logger.info('live egress recording finalized', {
     liveClassId: liveClass._id.toString(),

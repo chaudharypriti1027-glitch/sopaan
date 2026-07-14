@@ -37,8 +37,19 @@ export function useLiveClassChat(liveClassId?: string, { isHost = true } = {}) {
       return;
     }
 
-    const onConnect = () => setConnected(true);
+    const onConnect = () => {
+      setConnected(true);
+      setError(null);
+      join();
+    };
     const onDisconnect = () => setConnected(false);
+    const onConnectError = (err: Error) => {
+      setConnected(false);
+      setError({
+        code: 'CONNECT_ERROR',
+        message: err.message || 'Could not connect to live room',
+      });
+    };
 
     const onHistory = ({ classId, messages: history }: { classId: string; messages: LiveChatMessage[] }) => {
       if (classId === liveClassId) {
@@ -103,6 +114,7 @@ export function useLiveClassChat(liveClassId?: string, { isHost = true } = {}) {
 
     socket.on('connect', onConnect);
     socket.on('disconnect', onDisconnect);
+    socket.on('connect_error', onConnectError);
     socket.on(LIVE_NS_EVENTS.CHAT_HISTORY, onHistory);
     socket.on(LIVE_NS_EVENTS.CHAT_MESSAGE, onMessage);
     socket.on(LIVE_NS_EVENTS.PRESENCE, onPresence);
@@ -117,13 +129,12 @@ export function useLiveClassChat(liveClassId?: string, { isHost = true } = {}) {
 
     if (socket.connected) {
       join();
-    } else {
-      socket.once('connect', join);
     }
 
     return () => {
       socket.off('connect', onConnect);
       socket.off('disconnect', onDisconnect);
+      socket.off('connect_error', onConnectError);
       socket.off(LIVE_NS_EVENTS.CHAT_HISTORY, onHistory);
       socket.off(LIVE_NS_EVENTS.CHAT_MESSAGE, onMessage);
       socket.off(LIVE_NS_EVENTS.PRESENCE, onPresence);
@@ -131,7 +142,6 @@ export function useLiveClassChat(liveClassId?: string, { isHost = true } = {}) {
       socket.off(LIVE_NS_EVENTS.HAND_NOTIFY, onHandNotify);
       socket.off(LIVE_NS_EVENTS.HOST_ANNOUNCEMENT, onAnnouncement);
       socket.off(LIVE_NS_EVENTS.ERROR, onError);
-      socket.off('connect', join);
       socket.emit(LIVE_NS_EVENTS.LEAVE, { classId: liveClassId });
     };
   }, [liveClassId, isHost]);

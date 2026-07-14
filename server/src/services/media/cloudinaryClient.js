@@ -75,3 +75,66 @@ export async function uploadImageToCloudinary({
   const payload = await response.json();
   return payload.secure_url;
 }
+
+function extensionForRawMime(mimeType, filename) {
+  if (filename?.includes('.')) {
+    return filename.split('.').pop();
+  }
+
+  if (mimeType === 'application/pdf') return 'pdf';
+  if (mimeType === 'text/plain') return 'txt';
+  if (mimeType.includes('word')) return 'docx';
+  if (mimeType.includes('sheet')) return 'xlsx';
+  return 'bin';
+}
+
+/**
+ * Upload a document buffer to Cloudinary raw storage.
+ * @returns {Promise<string>} secure_url
+ */
+export async function uploadRawToCloudinary({
+  buffer,
+  mimeType,
+  folder,
+  filename,
+}) {
+  const config = getCloudinaryConfig();
+  if (!config) {
+    throw new AppError('File upload is not configured', 503, 'STORAGE_UNAVAILABLE');
+  }
+
+  const timestamp = Math.floor(Date.now() / 1000);
+  const params = {
+    folder,
+    timestamp,
+  };
+
+  const signature = signCloudinaryParams(params, config.apiSecret);
+  const form = new FormData();
+  const safeName = filename ?? `upload.${extensionForRawMime(mimeType, filename)}`;
+
+  form.append('file', new Blob([buffer], { type: mimeType }), safeName);
+  form.append('api_key', config.apiKey);
+  form.append('signature', signature);
+
+  for (const [key, value] of Object.entries(params)) {
+    form.append(key, String(value));
+  }
+
+  const response = await fetch(
+    `https://api.cloudinary.com/v1_1/${config.cloudName}/raw/upload`,
+    { method: 'POST', body: form },
+  );
+
+  if (!response.ok) {
+    const detail = await response.text().catch(() => '');
+    logger.error('[cloudinary] raw upload failed', {
+      status: response.status,
+      detail: detail.slice(0, 200),
+    });
+    throw new AppError('Failed to upload file', 503, 'STORAGE_UNAVAILABLE');
+  }
+
+  const payload = await response.json();
+  return payload.secure_url;
+}

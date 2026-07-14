@@ -2,7 +2,7 @@ import { Award, Coins } from 'lucide-react-native';
 import { useMemo } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { Button, Card, Pill, PremiumHeroCard, Screen, SectionTitle } from '../../components';
+import { Button, Card, FeatureScreenLayout, Pill, PremiumHeroCard, PremiumSectionLabel } from '../../components';
 import { useBadges, useProfile, useRedeemReward, useRewardsList } from '../../hooks';
 import { useFormat } from '../../i18n/useFormat';
 import { toneColors, toneForIndex } from '../../utils/iconTone';
@@ -42,7 +42,12 @@ export function RewardsScreen() {
   const loading = profileQuery.isLoading || rewardsQuery.isLoading;
 
   return (
-    <Screen scroll contentContainerStyle={styles.content} testID="rewards-screen">
+    <FeatureScreenLayout
+      title={t('rewards.title')}
+      subtitle={t('rewards.subtitle')}
+      contentStyle={styles.content}
+    >
+      <View testID="rewards-screen">
 
       <PremiumHeroCard
         icon={<Coins size={24} color="#FFFFFF" strokeWidth={1.8} />}
@@ -50,7 +55,7 @@ export function RewardsScreen() {
         title={formatNumber(coins)}
       />
 
-      <SectionTitle title={t('rewards.badges')} />
+      <PremiumSectionLabel title={t('rewards.badges')} compact />
       {badgesQuery.isLoading ? (
         <ActivityIndicator color={theme.colors.brand.primary} />
       ) : badges.length === 0 ? (
@@ -71,7 +76,7 @@ export function RewardsScreen() {
         </View>
       )}
 
-      <SectionTitle title={t('rewards.redeemSection')} />
+      <PremiumSectionLabel title={t('rewards.redeemSection')} compact />
       {loading ? (
         <ActivityIndicator color={theme.colors.brand.primary} />
       ) : (
@@ -102,7 +107,8 @@ export function RewardsScreen() {
           })}
         </View>
       )}
-    </Screen>
+      </View>
+    </FeatureScreenLayout>
   );
 }
 

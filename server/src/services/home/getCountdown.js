@@ -1,5 +1,8 @@
 import { Goal } from '../../models/Goal.js';
+import { getOrCreateProfile } from '../profileService.js';
 import { daysUntilIst, formatIstLongDateLabel } from '../../utils/date.js';
+import { normalizeExamTrack } from '../../utils/examTrack.js';
+import { resolveExamTrackForUser } from '../../utils/resolveExamTrackForUser.js';
 import { safeHomeCall } from './safe.js';
 
 export function buildCountdownFromGoal(goal, now = new Date()) {
@@ -8,9 +11,11 @@ export function buildCountdownFromGoal(goal, now = new Date()) {
   }
 
   const daysLeft = daysUntilIst(goal.examDate, now);
+  const examName =
+    normalizeExamTrack(goal.examName) || goal.examName?.trim() || 'Your exam';
 
   return {
-    examName: goal.examName ?? 'Your exam',
+    examName,
     daysLeft: Math.max(0, daysLeft),
     dateLabel: formatIstLongDateLabel(goal.examDate),
   };
@@ -18,11 +23,26 @@ export function buildCountdownFromGoal(goal, now = new Date()) {
 
 export async function getCountdown(user) {
   return safeHomeCall('getCountdown', async () => {
-    if (!user?.activeGoalId) {
-      return null;
+    const profile = user?._id ? await getOrCreateProfile(user._id) : null;
+
+    if (user?.activeGoalId) {
+      const goal = await Goal.findById(user.activeGoalId).lean();
+      const fromGoal = buildCountdownFromGoal(goal);
+
+      if (fromGoal) {
+        return fromGoal;
+      }
     }
 
-    const goal = await Goal.findById(user.activeGoalId).lean();
-    return buildCountdownFromGoal(goal);
+    const examTrack = resolveExamTrackForUser(user, profile);
+
+    if (user?.examDate && examTrack) {
+      return buildCountdownFromGoal({
+        examName: examTrack,
+        examDate: user.examDate,
+      });
+    }
+
+    return null;
   }, null);
 }

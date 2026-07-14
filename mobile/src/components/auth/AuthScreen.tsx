@@ -11,7 +11,8 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useResponsiveLayout } from '../../layout/responsive';
-import { AUTH_UI } from './authTheme';
+import { AUTH_SPACING, AUTH_UI } from './authTheme';
+import { AuthScreenAmbient } from './AuthScreenAmbient';
 
 type AuthScreenProps = {
   children: ReactNode;
@@ -58,9 +59,7 @@ export function AuthScreen({
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
       >
-        <View style={[styles.decoGold, styles.pointerNone]} />
-        <View style={[styles.decoSage, styles.pointerNone]} />
-        <View style={[styles.decoNavy, styles.pointerNone]} />
+        <AuthScreenAmbient />
 
         {scroll ? (
           <ScrollView
@@ -92,36 +91,6 @@ function createStyles(
     flex: {
       flex: 1,
     },
-    decoGold: {
-      position: 'absolute',
-      top: -90,
-      right: wideWeb ? '8%' : -70,
-      width: wideWeb ? 300 : 240,
-      height: wideWeb ? 300 : 240,
-      borderRadius: 150,
-      backgroundColor: AUTH_UI.goldSoft,
-      opacity: 0.9,
-    },
-    decoSage: {
-      position: 'absolute',
-      bottom: 100,
-      left: wideWeb ? '6%' : -80,
-      width: wideWeb ? 260 : 210,
-      height: wideWeb ? 260 : 210,
-      borderRadius: 130,
-      backgroundColor: AUTH_UI.sageSoft,
-      opacity: 0.85,
-    },
-    decoNavy: {
-      position: 'absolute',
-      top: '38%',
-      left: -120,
-      width: 180,
-      height: 180,
-      borderRadius: 90,
-      backgroundColor: AUTH_UI.accentSoft,
-      opacity: 0.35,
-    },
     scroll: {
       flex: 1,
     },
@@ -145,13 +114,13 @@ function createStyles(
       width: '100%',
       maxWidth: wideWeb ? 440 : undefined,
       alignSelf: 'center',
+      gap: AUTH_SPACING.section,
     },
     body: {
       gap: 0,
     },
     footer: {
-      marginTop: 18,
-      gap: 8,
+      gap: AUTH_SPACING.footer,
     },
     pointerNone: {
       pointerEvents: 'none',

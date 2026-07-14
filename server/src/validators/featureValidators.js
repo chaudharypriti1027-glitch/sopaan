@@ -20,6 +20,8 @@ export const plannerSessionSchema = z.object({
   type: z.string().trim().min(1),
   reason: z.string().trim().optional(),
   motivation: z.string().trim().optional(),
+  actionType: z.string().trim().optional().nullable(),
+  actionResourceId: z.string().trim().optional().nullable(),
   completed: z.boolean().optional(),
 });
 
@@ -37,6 +39,16 @@ export const focusLogSchema = z.object({
   breaksTaken: z.number().int().min(0).default(0),
   sessions: z.number().int().min(0).default(1),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+});
+
+const gameAnswerSchema = z.object({
+  questionId: z.string().trim().min(1),
+  prompt: z.string().trim().optional(),
+  topic: z.string().trim().optional(),
+  selected: z.string().trim().optional(),
+  correct: z.boolean(),
+  correctAnswer: z.string().trim().optional(),
+  explanation: z.string().trim().optional(),
 });
 
 export const gameCompleteSchema = z.object({
@@ -61,7 +73,10 @@ export const gameCompleteSchema = z.object({
     'code-breaker',
     'story-builder',
   ]),
-  score: z.number().int().min(0).max(1000),
+  score: z.number().int().min(0).max(100),
+  affairId: z.string().trim().optional(),
+  gameTitle: z.string().trim().optional(),
+  answers: z.array(gameAnswerSchema).max(50).optional(),
 });
 
 export const physicalLogSchema = z.object({

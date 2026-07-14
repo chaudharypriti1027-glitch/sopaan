@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { TextField } from '../TextField';
 import type { LiveChatMessage } from '../../realtime/events';
 import { useTheme } from '../../theme';
@@ -18,6 +19,7 @@ export function LiveClassChatPanel({
   onSend,
 }: LiveClassChatPanelProps) {
   const { theme } = useTheme();
+  const { t } = useTranslation('app', { keyPrefix: 'liveClassViewer' });
   const styles = useMemo(() => createStyles(theme), [theme]);
   const [draft, setDraft] = useState('');
   const [open, setOpen] = useState(true);
@@ -36,7 +38,7 @@ export function LiveClassChatPanel({
   if (!open) {
     return (
       <Pressable onPress={() => setOpen(true)} style={styles.collapsed}>
-        <Text style={styles.collapsedLabel}>Show class chat ({messages.length})</Text>
+        <Text style={styles.collapsedLabel}>{t('showChat', { count: messages.length })}</Text>
       </Pressable>
     );
   }
@@ -44,10 +46,12 @@ export function LiveClassChatPanel({
   return (
     <View style={styles.root}>
       <View style={styles.header}>
-        <Text style={styles.title}>Class chat</Text>
-        <Text style={styles.status}>{connected ? 'Live' : 'Reconnecting…'}</Text>
+        <Text style={styles.title}>{t('chatTitle')}</Text>
+        <Text style={styles.status}>
+          {connected ? t('chatConnected') : t('reconnecting')}
+        </Text>
         <Pressable onPress={() => setOpen(false)} hitSlop={8}>
-          <Text style={styles.hide}>Hide</Text>
+          <Text style={styles.hide}>{t('hideChat')}</Text>
         </Pressable>
       </View>
 
@@ -61,7 +65,7 @@ export function LiveClassChatPanel({
 
           return (
             <View style={[styles.bubble, mine ? styles.bubbleMine : styles.bubbleOther]}>
-              <Text style={styles.author}>{mine ? 'You' : item.userName}</Text>
+              <Text style={styles.author}>{mine ? t('you') : item.userName}</Text>
               <Text style={styles.text}>{item.text}</Text>
             </View>
           );
@@ -72,12 +76,12 @@ export function LiveClassChatPanel({
         <TextField
           value={draft}
           onChangeText={setDraft}
-          placeholder="Say something…"
+          placeholder={t('saySomething')}
           onSubmitEditing={submit}
           returnKeyType="send"
         />
         <Pressable accessibilityRole="button" onPress={submit} style={styles.sendBtn}>
-          <Text style={styles.sendLabel}>Send</Text>
+          <Text style={styles.sendLabel}>{t('send')}</Text>
         </Pressable>
       </View>
     </View>

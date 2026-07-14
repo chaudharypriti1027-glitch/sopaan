@@ -10,6 +10,8 @@ export function useCourses(params?: PaginationParams) {
   return useQuery({
     queryKey: queryKeys.courses.list(queryParams),
     queryFn: () => coursesApi.listCourses(queryParams),
+    staleTime: 60_000,
+    refetchOnMount: 'always',
   });
 }
 

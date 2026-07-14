@@ -4,7 +4,16 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Lock, Radio, PlayCircle, Trophy } from 'lucide-react-native';
 import { useMemo, useState, useEffect } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Button, Card, Pill, PremiumHeroCard, QueryStateView, Screen, SectionTitle } from '../../components';
+import { useTranslation } from 'react-i18next';
+import {
+  Button,
+  FeatureScreenLayout,
+  Pill,
+  PremiumFeatureCard,
+  PremiumHeroCard,
+  QueryStateView,
+  SectionTitle,
+} from '../../components';
 import { LiveMockLeaderboard } from '../../components/LiveMockLeaderboard';
 import { useEnrollTestSeries, useNetworkStatus, useTestSeriesList } from '../../hooks';
 import type { MockScheduleState, TestSeriesMock } from '../../api/testSeries';
@@ -13,10 +22,10 @@ import { useTheme } from '../../theme';
 
 type SeriesNav = NativeStackNavigationProp<MainStackParamList, 'TestSeries'>;
 
-function stateLabel(state: MockScheduleState): string {
-  if (state === 'locked') return 'Locked';
-  if (state === 'live') return 'Live';
-  return 'Available';
+function stateLabel(state: MockScheduleState, t: (key: string) => string): string {
+  if (state === 'locked') return t('testSeries.stateLocked');
+  if (state === 'live') return t('testSeries.stateLive');
+  return t('testSeries.stateAvailable');
 }
 
 function stateVariant(state: MockScheduleState): 'muted' | 'gold' | 'teal' {
@@ -34,11 +43,13 @@ function MockRow({
   enrolled: boolean;
   onStart: () => void;
 }) {
+  const { t } = useTranslation('app');
   const { theme } = useTheme();
   const styles = useMemo(() => createMockStyles(theme), [theme]);
 
   const Icon = mock.state === 'locked' ? Lock : mock.state === 'live' ? Radio : PlayCircle;
   const canStart = enrolled && mock.state !== 'locked';
+  const unlockDate = new Date(mock.unlockDate).toLocaleDateString('en-IN');
 
   return (
     <Pressable
@@ -52,18 +63,23 @@ function MockRow({
         />
       </View>
       <View style={styles.info}>
-        <Text style={styles.title}>Mock {mock.index}: {mock.title}</Text>
+        <Text style={styles.title}>
+          {t('testSeries.mockTitle', { index: mock.index, title: mock.title })}
+        </Text>
         <Text style={styles.meta}>
-          Unlocks {new Date(mock.unlockDate).toLocaleDateString('en-IN')}
-          {mock.durationSec ? ` · ${Math.round(mock.durationSec / 60)} min` : ''}
+          {t('testSeries.unlocks', { date: unlockDate })}
+          {mock.durationSec
+            ? ` · ${t('testSeries.durationMin', { count: Math.round(mock.durationSec / 60) })}`
+            : ''}
         </Text>
       </View>
-      <Pill label={stateLabel(mock.state)} variant={stateVariant(mock.state)} />
+      <Pill label={stateLabel(mock.state, t)} variant={stateVariant(mock.state)} />
     </Pressable>
   );
 }
 
 export function TestSeriesScreen() {
+  const { t } = useTranslation('app');
   const navigation = useNavigation<SeriesNav>();
   const route = useRoute<RouteProp<MainStackParamList, 'TestSeries'>>();
   const { theme } = useTheme();
@@ -98,9 +114,7 @@ export function TestSeriesScreen() {
   };
 
   return (
-    <Screen scroll contentContainerStyle={styles.content}>
-      <SectionTitle subtitle="Enroll and follow the mock schedule" />
-
+    <FeatureScreenLayout title={t('testSeries.title')} subtitle={t('testSeries.subtitle')}>
       <QueryStateView
         isLoading={seriesQuery.isLoading}
         isError={seriesQuery.isError}
@@ -140,14 +154,14 @@ export function TestSeriesScreen() {
               title={activeSeries.title}
               trailing={
                 activeSeries.enrolled ? (
-                  <Pill label="Enrolled" variant="teal" />
+                  <Pill label={t('testSeries.enrolled')} variant="teal" />
                 ) : undefined
               }
-              stats={[{ label: 'Mocks', value: String(activeSeries.mockCount) }]}
+              stats={[{ label: t('testSeries.mocks'), value: String(activeSeries.mockCount) }]}
             >
               {!activeSeries.enrolled ? (
                 <Button
-                  label={enrollMutation.isPending ? 'Enrolling…' : 'Enroll free'}
+                  label={enrollMutation.isPending ? t('testSeries.enrolling') : t('testSeries.enrollFree')}
                   variant="gold"
                   onPress={() => handleEnroll(activeSeries.id)}
                   disabled={enrollMutation.isPending}
@@ -155,8 +169,8 @@ export function TestSeriesScreen() {
               ) : null}
             </PremiumHeroCard>
 
-            <Card style={styles.scheduleCard}>
-              <SectionTitle title="Mock schedule" />
+            <PremiumFeatureCard style={styles.scheduleCard}>
+              <SectionTitle title={t('testSeries.mockSchedule')} />
               <View style={styles.schedule}>
                 {activeSeries.mocks.map((mock) => (
                   <MockRow
@@ -176,22 +190,25 @@ export function TestSeriesScreen() {
               {liveMock || liveMockId ? (
                 <LiveMockLeaderboard
                   testId={liveMock?.testId ?? liveMockId ?? ''}
-                  title={liveMock ? `Live: ${liveMock.title}` : 'Live leaderboard'}
+                  title={
+                    liveMock
+                      ? t('testSeries.liveTitle', { title: liveMock.title })
+                      : t('testSeries.liveLeaderboard')
+                  }
                 />
               ) : null}
-            </Card>
+            </PremiumFeatureCard>
           </View>
         ) : (
-          <Text style={styles.empty}>No test series available yet.</Text>
+          <Text style={styles.empty}>{t('testSeries.empty')}</Text>
         )}
       </QueryStateView>
-    </Screen>
+    </FeatureScreenLayout>
   );
 }
 
 function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
-    content: { gap: theme.spacing.lg, paddingBottom: theme.spacing['3xl'] },
     seriesList: { flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.sm },
     seriesChip: {
       paddingHorizontal: theme.spacing.md,

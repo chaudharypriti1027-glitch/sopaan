@@ -1,6 +1,7 @@
 import { Sparkles } from 'lucide-react-native';
 import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { Card } from '../Card';
 import { useTheme } from '../../theme';
 
@@ -10,15 +11,17 @@ type LiveClassComingSoonProps = {
 
 export function LiveClassComingSoon({ message }: LiveClassComingSoonProps) {
   const { theme } = useTheme();
+  const { t } = useTranslation('app', { keyPrefix: 'liveClasses' });
+  const { t: tViewer } = useTranslation('app', { keyPrefix: 'liveClassViewer' });
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   return (
     <View style={styles.wrap}>
       <Card style={styles.card}>
         <Sparkles size={24} color={theme.colors.accent.gold} />
-        <Text style={styles.title}>Coming Soon</Text>
+        <Text style={styles.title}>{t('comingSoon')}</Text>
         <Text style={styles.body}>
-          {message ?? 'Full live classroom launching soon. Schedule reminders still work.'}
+          {message ?? tViewer('comingSoonBodyExtended')}
         </Text>
       </Card>
     </View>

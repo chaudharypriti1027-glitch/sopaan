@@ -2,6 +2,7 @@ export { PRACTICE_UI, avatarToneForIndex } from './practiceTheme';
 export type { PracticeAvatarTone } from './practiceTheme';
 export { PracticeHeader } from './PracticeHeader';
 export { PracticeAiCard } from './PracticeAiCard';
+export type { PracticeTestMode } from './PracticeAiCard';
 export { PracticeChip } from './PracticeChip';
 export { PracticeTabBar } from './PracticeTabBar';
 export type { PracticeTab } from './PracticeTabBar';
@@ -12,3 +13,8 @@ export {
   PracticeEmptyState,
 } from './PracticeTestList';
 export { PracticeStatsRow } from './PracticeStatsRow';
+export { PracticeGoalHub } from './PracticeGoalHub';
+export { PracticeFocusChips } from './PracticeFocusChips';
+export { PracticeAiOptionList } from './PracticeAiOptionList';
+export { PracticeLoadingList } from './PracticeLoadingList';
+export { practiceFadeIn, practiceFadeInDown } from './practiceMotion';

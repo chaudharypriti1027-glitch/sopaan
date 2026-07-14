@@ -10,6 +10,17 @@ export { useExperiments } from '../experiments';
 export { queryKeys } from './queryKeys';
 export { useProfile, useUpdateProfile, useUpdateGoal, useReadiness } from './useProfile';
 export { useGoalRoadmap } from './useGoal';
+export { useExamPlan, useRefreshExamPlan } from './useExamPlan';
+export {
+  useFriends,
+  useFriendRequests,
+  useSearchStudents,
+  useSendFriendRequest,
+  useRespondFriendRequest,
+  useRemoveFriend,
+  useConversations,
+  useOpenConversation,
+} from './useFriends';
 export { useExams, useExam, useExamCalendar } from './useExams';
 export { useTests, useTest, useSubmitTest } from './useTests';
 export {
@@ -32,10 +43,12 @@ export {
   useCreateCommunityTest,
 } from './useSocial';
 export { useGenerateTest } from './useGenerateTest';
+export { usePracticeSuggestions } from './usePracticeSuggestions';
 export { useAskDoubt, useAiDoubtHistory, useEvaluateAnswer, useReportAiFeedback } from './useAi';
 export { useAttempts, useAttempt } from './useAttempts';
 export { useCourses, useCourse, useEnrollCourse, useUpdateCourseProgress } from './useCourses';
-export { useCurrentAffairs, useCurrentAffair } from './useCurrentAffairs';
+export { useCurrentAffairs, useCurrentAffair, useCurrentAffairAiSummary } from './useCurrentAffairs';
+export { useDailyRoutine, useAffairStudyPack, useAffairQuizGame } from './useDailyRoutine';
 export { useNotifications, useMarkNotificationRead } from './useNotifications';
 export { useNotificationDeepLink, openInAppNotification } from './useNotificationDeepLink';
 export { usePushNotifications, useUpdatePushSettings, enablePushNotifications, disablePushNotifications } from './usePushNotifications';
@@ -44,9 +57,11 @@ export {
   useSocketStatus,
   useLiveMockLeaderboard,
   useGroupChat,
+  useDirectChat,
   useLiveClassChat,
   refreshRealtimeAuth,
 } from './useSocket';
+export { useRealtimeInbox } from './useRealtimeInbox';
 export {
   usePlannerSessions,
   useCreatePlannerSession,

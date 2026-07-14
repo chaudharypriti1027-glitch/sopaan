@@ -20,10 +20,13 @@ function toQuery(params: ContentListParams) {
 export type CurrentAffairInput = {
   title: string;
   summary?: string;
+  body?: string;
   category?: string;
   source?: string;
+  sourceUrl?: string;
   publishedAt: string;
   imageColor?: string;
+  imageUrl?: string;
   status?: PublishStatus;
 };
 

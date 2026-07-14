@@ -33,7 +33,13 @@ export type AuthStackParamList = {
 
 export type AppTabParamList = {
   Home: undefined;
-  Practice: { topic?: string } | undefined;
+  Practice: {
+    topic?: string;
+    subject?: string;
+    activeTab?: 'sectional' | 'mock' | 'pyq';
+    openForm?: boolean;
+    weakTopics?: string[];
+  } | undefined;
   CurrentAffairs: { digestId?: string; affairId?: string } | undefined;
   Profile: undefined;
 };
@@ -42,6 +48,14 @@ export type MainStackParamList = {
   AppTabs: NavigatorScreenParams<AppTabParamList>;
   AskAI: { initialPrompt?: string } | undefined;
   Quiz: { testId: string };
+  TestReady: {
+    testId: string;
+    subject?: string;
+    topic?: string;
+    difficulty?: 'easy' | 'medium' | 'hard';
+    examTag?: string;
+    questionCount?: number;
+  };
   Result: {
     attemptId: string;
     testId: string;
@@ -65,6 +79,9 @@ export type MainStackParamList = {
   ReferEarn: undefined;
   Rewards: undefined;
   Forum: undefined;
+  Friends: undefined;
+  Messages: undefined;
+  DirectMessage: { conversationId: string; friendUserId: string; friendName: string };
   Mentors: undefined;
   MockAnalysis: { attemptId?: string };
   AnswerEvaluation: undefined;
@@ -72,6 +89,7 @@ export type MainStackParamList = {
   Flashcards: undefined;
   PhysicalTest: undefined;
   Roadmap: undefined;
+  ExamPlan: undefined;
   Readiness: undefined;
   ProgressAnalytics: { weekKey?: string } | undefined;
   TestSeries: { seriesId?: string; testId?: string } | undefined;
@@ -88,7 +106,7 @@ export type MainStackParamList = {
   Leaderboard: { testId?: string } | undefined;
   Search: undefined;
   Games: undefined;
-  GamePlay: { gameId: GameId; sessionId?: number };
+  GamePlay: { gameId: GameId; sessionId?: number; affairId?: string };
   CurrentAffairReader: { affairId: string };
 };
 

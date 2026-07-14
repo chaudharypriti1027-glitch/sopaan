@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
+  downloadLessonMaterial,
   downloadLessonNotes,
   downloadLessonVideo,
   listDownloads,
@@ -70,6 +71,28 @@ export function useLessonDownloads(courseId: string) {
     }
   };
 
+  const downloadMaterial = async (input: {
+    lessonId: string;
+    lessonTitle: string;
+    materialUrl: string;
+    materialName?: string;
+  }) => {
+    const key = `${courseId}:${input.lessonId}:material`;
+    setActiveKey(key);
+    try {
+      await downloadLessonMaterial({
+        courseId,
+        lessonId: input.lessonId,
+        lessonTitle: input.lessonTitle,
+        materialUrl: input.materialUrl,
+        materialName: input.materialName,
+      });
+      await refresh();
+    } finally {
+      setActiveKey(null);
+    }
+  };
+
   const remove = async (lessonId: string, kind: DownloadKind) => {
     await removeDownload(courseId, lessonId, kind);
     await refresh();
@@ -80,6 +103,7 @@ export function useLessonDownloads(courseId: string) {
     getStatus,
     downloadVideo,
     downloadNotes,
+    downloadMaterial,
     remove,
     refresh,
   };

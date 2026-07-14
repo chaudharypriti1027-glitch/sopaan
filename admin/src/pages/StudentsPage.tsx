@@ -146,7 +146,10 @@ export function StudentsPage() {
 
       <DataTable
         rows={rows}
-        emptyMessage={query.isLoading ? 'Loading students…' : 'No students found'}
+        emptyMessage="No students found"
+        isLoading={query.isLoading}
+        error={query.isError ? query.error : undefined}
+        onRetry={() => void query.refetch()}
         columns={[
           {
             key: 'name',

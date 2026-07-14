@@ -12,7 +12,6 @@ const OFFLINE_QUERY_ROOTS = new Set([
   'revision-capsules',
   'notes',
   'home',
-  'live-classes',
 ]);
 
 function isRetryableQueryError(error: unknown): boolean {

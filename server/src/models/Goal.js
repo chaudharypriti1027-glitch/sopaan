@@ -11,7 +11,6 @@ const goalSchema = new mongoose.Schema(
     examId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Exam',
-      required: true,
     },
     examName: {
       type: String,

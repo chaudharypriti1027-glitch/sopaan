@@ -1,7 +1,11 @@
+import { useQuery } from '@tanstack/react-query';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { NAV_GROUPS } from '../../navigation';
+import { fetchAdminStats } from '../../api/admin';
 import { useAuth } from '../../auth/AuthContext';
 import { ADMIN_ONLY_NAV_IDS } from '../../auth/roles';
+import { navBadgesFromStats } from '../../content/navBadges';
+import { NAV_GROUPS } from '../../navigation';
+import { BrandMark } from '../BrandMark';
 import { LogOutIcon, NavIcon } from '../icons/NavIcon';
 import '../ui.css';
 
@@ -15,6 +19,14 @@ export function Sidebar() {
     .slice(0, 2)
     .toUpperCase();
 
+  const statsQuery = useQuery({
+    queryKey: ['admin', 'stats'],
+    queryFn: fetchAdminStats,
+    staleTime: 30_000,
+  });
+
+  const badges = navBadgesFromStats(statsQuery.data);
+
   const handleLogout = () => {
     logout();
     navigate('/login', { replace: true });
@@ -23,16 +35,7 @@ export function Sidebar() {
   return (
     <aside className="side">
       <div className="brand">
-        <div className="mk">
-          <svg viewBox="0 0 24 24" aria-hidden>
-            <rect x="4" y="16.5" width="16" height="4" rx="1.4" fill="#1A1F3B" />
-            <rect x="6.5" y="11" width="11" height="4" rx="1.4" fill="#2E3766" />
-            <rect x="9" y="5.5" width="6" height="4" rx="1.4" fill="#3A4680" />
-          </svg>
-        </div>
-        <div className="nm">
-          Sopaan<span>ADMIN CONSOLE</span>
-        </div>
+        <BrandMark size="md" variant="light" />
       </div>
 
       {NAV_GROUPS.map((group) => {
@@ -42,19 +45,23 @@ export function Sidebar() {
         return (
           <div className="navgrp" key={group.title}>
             <div className="gl">{group.title}</div>
-            {items.map((item) => (
-              <NavLink
-                key={item.id}
-                to={item.path}
-                end={item.path === '/'}
-                className={({ isActive }) => `nav${isActive ? ' on' : ''}`}
-              >
-                <NavIcon id={item.id} />
-                {item.label}
-                {item.live ? <span className="badge live">LIVE</span> : null}
-                {item.badge ? <span className="badge">{item.badge}</span> : null}
-              </NavLink>
-            ))}
+            {items.map((item) => {
+              const liveBadge =
+                item.id in badges ? badges[item.id as keyof typeof badges] : item.badge;
+              return (
+                <NavLink
+                  key={item.id}
+                  to={item.path}
+                  end={item.path === '/'}
+                  className={({ isActive }) => `nav${isActive ? ' on' : ''}`}
+                >
+                  <NavIcon id={item.id} />
+                  {item.label}
+                  {item.live ? <span className="badge live">LIVE</span> : null}
+                  {liveBadge ? <span className="badge">{liveBadge}</span> : null}
+                </NavLink>
+              );
+            })}
           </div>
         );
       })}

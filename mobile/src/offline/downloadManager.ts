@@ -1,10 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system';
+import { fileExtensionFromUrl, resolveContentUrl } from '../lib/lessonMaterial';
 
 const MANIFEST_KEY = 'sopaan_download_manifest_v1';
 const DOWNLOAD_DIR = `${FileSystem.documentDirectory ?? ''}sopaan-lessons/`;
 
-export type DownloadKind = 'video' | 'notes';
+export type DownloadKind = 'video' | 'notes' | 'material';
 export type DownloadStatus = 'downloading' | 'completed' | 'failed';
 
 export type DownloadRecord = {
@@ -100,7 +101,7 @@ export async function downloadLessonVideo(input: {
   const key = downloadKey(input.courseId, input.lessonId, 'video');
   await ensureDownloadDir();
 
-  const extension = input.videoUrl.split('?')[0]?.split('.').pop() ?? 'mp4';
+  const extension = fileExtensionFromUrl(resolveContentUrl(input.videoUrl), 'mp4');
   const localUri = `${DOWNLOAD_DIR}${key.replace(/:/g, '_')}.${extension}`;
 
   const pending: DownloadRecord = {
@@ -116,7 +117,55 @@ export async function downloadLessonVideo(input: {
   await upsertRecord(pending);
 
   try {
-    const result = await FileSystem.downloadAsync(input.videoUrl, localUri);
+    const result = await FileSystem.downloadAsync(resolveContentUrl(input.videoUrl), localUri);
+    const completed: DownloadRecord = {
+      ...pending,
+      localUri: result.uri,
+      status: 'completed',
+      updatedAt: new Date().toISOString(),
+    };
+    await upsertRecord(completed);
+    return completed;
+  } catch (error) {
+    const failed: DownloadRecord = {
+      ...pending,
+      status: 'failed',
+      errorMessage: error instanceof Error ? error.message : 'Download failed',
+      updatedAt: new Date().toISOString(),
+    };
+    await upsertRecord(failed);
+    throw error;
+  }
+}
+
+export async function downloadLessonMaterial(input: {
+  courseId: string;
+  lessonId: string;
+  lessonTitle: string;
+  materialUrl: string;
+  materialName?: string;
+}): Promise<DownloadRecord> {
+  const key = downloadKey(input.courseId, input.lessonId, 'material');
+  await ensureDownloadDir();
+
+  const remoteUrl = resolveContentUrl(input.materialUrl);
+  const extension = fileExtensionFromUrl(remoteUrl, 'pdf');
+  const localUri = `${DOWNLOAD_DIR}${key.replace(/:/g, '_')}.${extension}`;
+
+  const pending: DownloadRecord = {
+    key,
+    courseId: input.courseId,
+    lessonId: input.lessonId,
+    lessonTitle: input.lessonTitle,
+    kind: 'material',
+    localUri,
+    status: 'downloading',
+    updatedAt: new Date().toISOString(),
+  };
+  await upsertRecord(pending);
+
+  try {
+    const result = await FileSystem.downloadAsync(remoteUrl, localUri);
     const completed: DownloadRecord = {
       ...pending,
       localUri: result.uri,

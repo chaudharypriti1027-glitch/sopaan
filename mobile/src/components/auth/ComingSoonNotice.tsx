@@ -3,7 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import { Clock3 } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { Text } from '../Text';
-import { AUTH_UI } from './authTheme';
+import { AUTH_SPACING, AUTH_UI } from './authTheme';
 
 type ComingSoonNoticeProps = {
   title?: string;
@@ -18,10 +18,14 @@ export function ComingSoonNotice({ title, body }: ComingSoonNoticeProps) {
     <View style={styles.root}>
       <View style={styles.badge}>
         <Clock3 size={14} color={AUTH_UI.accent} />
-        <Text style={styles.badgeText}>{t('beta.badge')}</Text>
+        <Text variant="eyebrow" style={styles.badgeText}>
+          {t('beta.badge')}
+        </Text>
       </View>
-      <Text style={styles.title}>{title ?? t('beta.comingSoonTitle')}</Text>
-      <Text style={styles.body}>{body ?? t('beta.comingSoonBody')}</Text>
+      <Text variant="bodyMedium" style={styles.title}>
+        {title ?? t('beta.comingSoonTitle')}
+      </Text>
+      <Text variant="caption" color="secondary" style={styles.body}>{body ?? t('beta.comingSoonBody')}</Text>
     </View>
   );
 }
@@ -29,7 +33,7 @@ export function ComingSoonNotice({ title, body }: ComingSoonNoticeProps) {
 function createStyles() {
   return StyleSheet.create({
     root: {
-      gap: 6,
+      gap: AUTH_SPACING.stack,
       padding: 14,
       borderRadius: AUTH_UI.inputRadius,
       backgroundColor: AUTH_UI.focusRing,
@@ -50,21 +54,13 @@ function createStyles() {
       borderColor: AUTH_UI.borderHover,
     },
     badgeText: {
-      fontSize: 10,
-      fontWeight: '800',
       color: AUTH_UI.accent,
-      letterSpacing: 0.4,
-      textTransform: 'uppercase',
     },
     title: {
-      fontSize: 14,
-      fontWeight: '700',
       color: AUTH_UI.ink,
     },
     body: {
-      fontSize: 12,
       lineHeight: 18,
-      color: AUTH_UI.muted,
     },
   });
 }

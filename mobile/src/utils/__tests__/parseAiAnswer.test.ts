@@ -12,6 +12,30 @@ describe('parseAiAnswer', () => {
     const blocks = parseAiAnswer('- First point\n- Second point');
     expect(blocks[0]?.type).toBe('bullet');
   });
+
+  it('parses structured answer, explanation, and tip sections', () => {
+    const blocks = parseAiAnswer(
+      'Answer: Option B — 25%\nExplanation:\n- Use simple interest formula\n- Divide principal by rate\nExam tip: Remember rate is per year.',
+    );
+
+    expect(blocks[0]).toEqual({ type: 'answer', text: 'Option B — 25%' });
+    expect(blocks[1]?.type).toBe('explanation');
+    expect(blocks[2]).toEqual({
+      type: 'tip',
+      text: 'Remember rate is per year.',
+    });
+  });
+
+  it('keeps multi-line explanation bullets under the explanation block', () => {
+    const blocks = parseAiAnswer(
+      'Answer: 42\nExplanation:\n- First step\n- Second step',
+    );
+
+    expect(blocks[1]).toEqual({
+      type: 'explanation',
+      bullets: ['First step', 'Second step'],
+    });
+  });
 });
 
 describe('historyToChatMessages', () => {

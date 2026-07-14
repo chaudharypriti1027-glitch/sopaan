@@ -31,6 +31,8 @@ export function useUpdateGoal() {
     mutationFn: (input: UpdateGoalInput) => profileApi.updateGoal(input),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.profile.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.examPlan.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.home.all });
     },
   });
 }

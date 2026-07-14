@@ -1,15 +1,18 @@
 /** Target exams shown as onboarding chips (maps to Profile.targetExam). */
 export const TARGET_EXAM_OPTIONS = [
-  { label: 'SSC', value: 'SSC CGL', emoji: '📋' },
-  { label: 'Banking', value: 'IBPS PO', emoji: '🏦' },
-  { label: 'Railway', value: 'RRB NTPC', emoji: '🚆' },
-  { label: 'Defence', value: 'CDS', emoji: '⚔️' },
-  { label: 'Teaching', value: 'CTET', emoji: '📚' },
-  { label: 'State PSC', value: 'State PSC', emoji: '📍' },
-  { label: 'UPSC', value: 'UPSC CSE', emoji: '🏛️' },
-  { label: 'Police', value: 'Police Constable', emoji: '🛡️' },
-  { label: 'Other', value: 'Other', emoji: '✨' },
+  { label: 'SSC', value: 'SSC CGL', description: 'CGL / CHSL' },
+  { label: 'Banking', value: 'IBPS PO', description: 'PO / Clerk' },
+  { label: 'Railway', value: 'RRB NTPC', description: 'NTPC / Group D' },
+  { label: 'Defence', value: 'CDS', description: 'CDS / AFCAT' },
+  { label: 'Teaching', value: 'CTET', description: 'CTET / TET' },
+  { label: 'State PSC', value: 'State PSC', description: 'State services' },
+  { label: 'UPSC', value: 'UPSC CSE', description: 'Civil Services' },
+  { label: 'Police', value: 'Police Constable', description: 'Constable / SI' },
+  { label: 'Other', value: 'Other', description: 'Type your exam name' },
 ] as const;
+
+/** Sentinel value for the “Other” chip — use resolveTargetExam() before saving. */
+export const OTHER_EXAM_VALUE = 'Other';
 
 export const INDIAN_STATES_ALL = [
   'Andhra Pradesh',
@@ -56,7 +59,7 @@ export const EDUCATION_LEVEL_OPTIONS = [
 ];
 
 export const LANGUAGE_OPTIONS = [
-  { id: 'en' as const, title: 'English', subtitle: 'English' },
+  { id: 'en' as const, title: 'English', subtitle: 'Default language' },
   { id: 'hi' as const, title: 'Hindi', subtitle: 'हिन्दी' },
   { id: 'gu' as const, title: 'Gujarati', subtitle: 'ગુજરાતી' },
 ];

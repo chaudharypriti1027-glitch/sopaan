@@ -5,6 +5,8 @@ import { platformShadow } from '../../utils/platformShadow';
 
 export const HOME_UI = {
   bg: '#F6F3EB',
+  bgTop: '#F9F6EF',
+  bgBottom: '#F0EBE2',
   surface: '#FFFFFF',
   ink: '#1C1E2E',
   muted: '#87889A',

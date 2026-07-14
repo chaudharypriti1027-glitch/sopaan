@@ -28,6 +28,7 @@ import {
   useLocalDownloadIds,
   useNetworkStatus,
 } from '../../hooks';
+import { useFocusRefetch } from '../../hooks/useFocusRefetch';
 import type { MainStackParamList } from '../../navigation/types';
 import { useTheme } from '../../theme';
 
@@ -84,6 +85,15 @@ export function BooksScreen() {
   );
 
   const subjectsQuery = useLibrarySubjects();
+
+  useFocusRefetch(() => {
+    void popularQuery.refetch();
+    void notesQuery.refetch();
+    if (isSearching) {
+      void searchQuery.refetch();
+    }
+    void subjectsQuery.refetch();
+  });
 
   const activeBooksQuery = isSearching ? searchQuery : popularQuery;
   const books = useMemo(() => {

@@ -15,7 +15,9 @@ export function PracticeChip({ label, variant = 'white' }: PracticeChipProps) {
 
   return (
     <View style={styles.chip}>
-      <Text style={styles.label}>{label}</Text>
+      <Text style={styles.label} numberOfLines={2}>
+        {label}
+      </Text>
     </View>
   );
 }
@@ -47,16 +49,18 @@ function createStyles(variant: PracticeChipVariant) {
   return StyleSheet.create({
     chip: {
       paddingHorizontal: 12,
-      paddingVertical: 4,
+      paddingVertical: 6,
       borderRadius: 999,
       backgroundColor: palette.bg,
       borderWidth: 1,
       borderColor: palette.border,
+      maxWidth: '100%',
     },
     label: {
-      fontSize: 11,
-      fontWeight: '600',
+      fontSize: 12,
+      fontWeight: '700',
       color: palette.text,
+      lineHeight: 16,
     },
   });
 }

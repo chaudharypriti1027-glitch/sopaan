@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View, type ViewStyle } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { Phone } from 'lucide-react-native';
-import { AUTH_UI } from './authTheme';
+import { AUTH_FONTS, AUTH_UI } from './authTheme';
 
 type AuthSocialButtonProps = {
   label: string;
@@ -150,8 +150,8 @@ function createStyles() {
       backgroundColor: AUTH_UI.sageSoft,
     },
     label: {
+      fontFamily: AUTH_FONTS.bold,
       fontSize: 13,
-      fontWeight: '700',
       color: AUTH_UI.label,
     },
     disabled: {

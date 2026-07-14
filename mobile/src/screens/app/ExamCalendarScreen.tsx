@@ -10,25 +10,19 @@ import {
   View,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { Card, DateChip, QueryStateView, Screen, SectionTitle } from '../../components';
+import { Card, DateChip, FeatureScreenLayout, PremiumSectionLabel, QueryStateView } from '../../components';
 import { listReminderKeys, toggleReminder } from '../../calendar/reminders';
+import {
+  EXAM_CALENDAR_GROUP_ORDER,
+  mapExamCalendarGroup,
+  type ExamCalendarGroup,
+} from '../../content/examCalendarContent';
 import { useExamCalendar, useNetworkStatus } from '../../hooks';
 import type { ExamCalendarEntry } from '../../api/types';
 import type { MainStackParamList } from '../../navigation/types';
 import { useTheme } from '../../theme';
 
 type CalendarNav = NativeStackNavigationProp<MainStackParamList, 'ExamCalendar'>;
-
-type CalendarGroup = 'openJobs' | 'upcoming' | 'results' | 'other';
-
-const GROUP_ORDER: CalendarGroup[] = ['openJobs', 'upcoming', 'results', 'other'];
-
-function mapGroup(type: ExamCalendarEntry['type']): CalendarGroup {
-  if (type === 'open' || type === 'apply') return 'openJobs';
-  if (type === 'result') return 'results';
-  if (type === 'other') return 'other';
-  return 'upcoming';
-}
 
 function formatChipDate(iso: string): string {
   return new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
@@ -105,7 +99,7 @@ export function ExamCalendarScreen() {
   }, [loadReminders]);
 
   const grouped = useMemo(() => {
-    const groups: Record<CalendarGroup, ExamCalendarEntry[]> = {
+    const groups: Record<ExamCalendarGroup, ExamCalendarEntry[]> = {
       openJobs: [],
       upcoming: [],
       results: [],
@@ -113,7 +107,7 @@ export function ExamCalendarScreen() {
     };
 
     for (const entry of calendarQuery.data?.items ?? []) {
-      groups[mapGroup(entry.type)].push(entry);
+      groups[mapExamCalendarGroup(entry.type)].push(entry);
     }
 
     return groups;
@@ -125,20 +119,19 @@ export function ExamCalendarScreen() {
   };
 
   return (
-    <Screen
-      scroll
-      contentContainerStyle={styles.content}
+    <FeatureScreenLayout
+      title={t('examCalendar.title')}
+      subtitle={t('examCalendar.subtitle')}
+      contentStyle={styles.content}
       scrollProps={{
         refreshControl: (
           <RefreshControl
             refreshing={calendarQuery.isRefetching}
-            onRefresh={() => calendarQuery.refetch()}
+            onRefresh={() => void calendarQuery.refetch()}
           />
         ),
       }}
     >
-      <SectionTitle subtitle={t('examCalendar.subtitle')} />
-
       <QueryStateView
         isLoading={calendarQuery.isLoading}
         isError={calendarQuery.isError}
@@ -147,13 +140,13 @@ export function ExamCalendarScreen() {
         hasData={(calendarQuery.data?.items.length ?? 0) > 0}
         onRetry={() => void calendarQuery.refetch()}
       >
-        {GROUP_ORDER.map((group) => {
+        {EXAM_CALENDAR_GROUP_ORDER.map((group) => {
           const items = grouped[group];
           if (!items.length) return null;
 
           return (
             <View key={group} style={styles.section}>
-              <SectionTitle title={groupLabels[group]} />
+              <PremiumSectionLabel title={groupLabels[group]} compact />
               <Card style={styles.groupCard}>
                 {items.map((entry) => {
                   const key = `${entry.examId}:${entry.date}`;
@@ -174,7 +167,7 @@ export function ExamCalendarScreen() {
           );
         })}
       </QueryStateView>
-    </Screen>
+    </FeatureScreenLayout>
   );
 }
 

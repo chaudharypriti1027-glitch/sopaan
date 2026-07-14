@@ -5,6 +5,15 @@ import { Mentor } from '../../models/Mentor.js';
 import { AppError } from '../../utils/AppError.js';
 import { buildPaginatedResult, parsePagination } from '../../utils/pagination.js';
 import { withAuditOnCreate, withAuditOnUpdate } from '../../models/publishableFields.js';
+import { notifyStudentsContentUpdated } from '../contentSyncService.js';
+
+function syncContentDomain(domain, action) {
+  if (!domain) {
+    return;
+  }
+
+  notifyStudentsContentUpdated(domain, { action });
+}
 
 const auditPopulate = [
   { path: 'createdBy', select: 'name email' },
@@ -27,7 +36,7 @@ function buildAdminFilters(query, extraFilter, { textSearch = true } = {}) {
 
 function crudHandlers(
   Model,
-  { populate, searchFilter, useTextSort = true, withAudit = true, textSearch = true } = {},
+  { populate, searchFilter, useTextSort = true, withAudit = true, textSearch = true, contentDomain } = {},
 ) {
   const populates = [...(withAudit ? auditPopulate : []), ...(populate ? [populate] : [])];
 
@@ -69,6 +78,7 @@ function crudHandlers(
     async create(data, userId) {
       const payload = userId ? withAuditOnCreate(data, userId) : data;
       const doc = await Model.create(payload);
+      syncContentDomain(contentDomain, 'create');
       return this.getById(doc._id);
     },
 
@@ -83,6 +93,7 @@ function crudHandlers(
         throw new AppError(`${Model.modelName} not found`, 404, 'NOT_FOUND');
       }
 
+      syncContentDomain(contentDomain, 'update');
       return this.getById(id);
     },
 
@@ -97,21 +108,27 @@ function crudHandlers(
         throw new AppError(`${Model.modelName} not found`, 404, 'NOT_FOUND');
       }
 
+      syncContentDomain(contentDomain, 'delete');
       return { id, deleted: true };
     },
   };
 }
 
+import { CONTENT_DOMAINS } from '../contentSyncService.js';
+
 export const examAdmin = crudHandlers(Exam, {
   searchFilter: (query) => (query.category ? { category: query.category } : {}),
+  contentDomain: CONTENT_DOMAINS.EXAMS,
 });
 
 export const courseAdmin = crudHandlers(Course, {
   searchFilter: (query) => (query.subject ? { subject: { $regex: query.subject, $options: 'i' } } : {}),
+  contentDomain: CONTENT_DOMAINS.COURSES,
 });
 
 export const currentAffairAdmin = crudHandlers(CurrentAffair, {
   searchFilter: (query) => (query.category ? { category: query.category } : {}),
+  contentDomain: CONTENT_DOMAINS.CURRENT_AFFAIRS,
 });
 
 export const mentorAdmin = crudHandlers(Mentor, {

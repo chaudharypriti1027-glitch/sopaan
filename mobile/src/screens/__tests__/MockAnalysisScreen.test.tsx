@@ -9,6 +9,10 @@ jest.mock('@react-navigation/native', () => ({
   useRoute: () => ({
     params: { attemptId: 'attempt-1' },
   }),
+  useNavigation: () => ({
+    canGoBack: () => false,
+    goBack: jest.fn(),
+  }),
 }));
 
 jest.mock('../../hooks', () => ({

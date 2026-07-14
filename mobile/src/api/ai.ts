@@ -4,10 +4,32 @@ import { getAppLanguage } from './language';
 export type GenerateTestInput = {
   subject: string;
   topic: string;
-  difficulty: 'easy' | 'medium' | 'hard';
+  difficulty?: 'easy' | 'medium' | 'hard';
   count: number;
   examTag: string;
   language?: 'en' | 'hi';
+  adaptive?: boolean;
+};
+
+export type PracticeSuggestion = {
+  subject: string;
+  topic: string;
+  difficulty: 'easy' | 'medium' | 'hard';
+  mode: 'standard' | 'adaptive';
+  count: number;
+  reason: string;
+};
+
+export type PracticeSuggestionsInput = {
+  examTag?: string;
+  subject?: string;
+  topic?: string;
+  language?: 'en' | 'hi';
+};
+
+export type PracticeSuggestionsResponse = {
+  suggestions: PracticeSuggestion[];
+  source: 'ai' | 'heuristic';
 };
 
 type RawTest = {
@@ -39,6 +61,20 @@ export async function generateTest(input: GenerateTestInput): Promise<{ id: stri
   };
 }
 
+export async function getPracticeSuggestions(
+  input: PracticeSuggestionsInput,
+): Promise<PracticeSuggestionsResponse> {
+  const { data } = await apiClient.post<PracticeSuggestionsResponse>(
+    '/ai/practice-suggestions',
+    {
+      ...input,
+      language: input.language ?? getAppLanguage(),
+    },
+    { timeout: 35_000 },
+  );
+  return data;
+}
+
 export type AskDoubtInput = {
   question: string;
   imageBase64?: string;
@@ -57,6 +93,7 @@ export type AskDoubtMatch = {
 export type AskDoubtResponse = {
   explanation: string;
   fromCache?: boolean;
+  cacheSource?: string | null;
   answerId?: string;
   responseMs?: number;
   suggestedMatch?: AskDoubtMatch;

@@ -6,6 +6,7 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import type { CompositeNavigationProp } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
@@ -26,6 +27,7 @@ import {
 import { useHomeFeed } from '../hooks/useHomeFeed';
 import { useHomeBanner } from '../hooks/useHomeBanner';
 import { useLiveClasses } from '../hooks';
+import { useFocusRefetch } from '../hooks/useFocusRefetch';
 import { useHomeAvatar } from '../components/profile/useHomeAvatar';
 import { navigateHomeDeeplink } from '../navigation/homeDeeplink';
 import { navigateHomeFeature } from '../navigation/navigateHomeFeature';
@@ -56,7 +58,7 @@ function HomeStudentScreen() {
   const styles = useMemo(() => createStyles(), []);
 
   const { data: feed, isLoading, isError, isOffline, refetch, isRefetching } = useHomeFeed();
-  const { data: banner } = useHomeBanner();
+  const { data: banner, refetch: refetchBanner } = useHomeBanner();
   const { data: liveClasses, refetch: refetchLiveClasses } = useLiveClasses();
   const liveNow = liveClasses?.liveNow;
   const { display: homeAvatarDisplay } = useHomeAvatar(
@@ -66,6 +68,12 @@ function HomeStudentScreen() {
   useScreenPerf('Home', {
     isContentReady: Boolean(feed ?? isError),
     isInteractive: Boolean(feed) || isError,
+  });
+
+  useFocusRefetch(() => {
+    void refetchLiveClasses();
+    void refetchBanner();
+    void refetch();
   });
 
   const handleDeeplink = useCallback(
@@ -163,6 +171,12 @@ function HomeStudentScreen() {
 
   return (
     <View style={styles.safe}>
+      <LinearGradient
+        colors={[HOME_UI.bgTop, HOME_UI.bg, HOME_UI.bgBottom]}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
       {isOffline ? <HomeOfflineBanner /> : null}
       <ScrollView
         style={styles.scroll}
@@ -189,7 +203,7 @@ function HomeStudentScreen() {
           studyActive={feed.continue.some((item) => item.progressPct >= 10)}
           onNotificationsPress={handleNotificationsPress}
           onAvatarPress={handleAvatarPress}
-          onGoalPress={() => handleDeeplink('/stack/Readiness')}
+          onGoalPress={() => handleDeeplink('/stack/ExamPlan')}
           onRankCtaPress={() => handleDeeplink('/tabs/Practice')}
         />
 

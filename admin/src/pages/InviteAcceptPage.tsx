@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { acceptTeamInviteSignup, fetchTeamInvite } from '../api/team';
 import { persistSession } from '../api/storage';
-import { ActionButton } from '../components/ActionButton';
+import { BrandMark } from '../components/BrandMark';
 import { FormField } from '../components/content/FormField';
 import { isStaffRole } from '../auth/roles';
 import { useAuth } from '../auth/AuthContext';
+import '../styles/login.css';
 
 export function InviteAcceptPage() {
   const navigate = useNavigate();
@@ -85,8 +86,10 @@ export function InviteAcceptPage() {
 
   if (loadingInvite) {
     return (
-      <div className="login-wrap">
-        <div className="login-card">
+      <div className="login-loading">
+        <div className="login-loading-card">
+          <BrandMark size="sm" variant="dark" showTagline={false} />
+          <div className="login-spinner" aria-hidden />
           <p>Loading invite…</p>
         </div>
       </div>
@@ -95,52 +98,76 @@ export function InviteAcceptPage() {
 
   if (error && !email) {
     return (
-      <div className="login-wrap">
-        <div className="login-card">
-          <h1>Invalid invite</h1>
+      <div className="login-loading">
+        <div className="login-form-card" style={{ width: 'min(100%, 420px)' }}>
+          <BrandMark size="sm" variant="dark" showTagline={false} />
+          <h2 style={{ marginTop: 18 }}>Invalid invite</h2>
           <p>{error}</p>
-          <ActionButton variant="gold" onClick={() => navigate('/login')}>
+          <button type="button" className="login-submit" onClick={() => navigate('/login')}>
             Go to login
-          </ActionButton>
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="login-wrap">
-      <form className="login-card" onSubmit={handleSubmit}>
-        <h1>Join Sopaan Admin</h1>
-        <p>
-          Create your account as <strong>{role}</strong> for {email}.
-        </p>
-        {error ? <div className="login-error">{error}</div> : null}
-        <FormField id="invite-name" label="Full name">
-          <input
-            id="invite-name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            autoComplete="name"
-          />
-        </FormField>
-        <FormField id="invite-email" label="Email">
-          <input id="invite-email" type="email" value={email} readOnly />
-        </FormField>
-        <FormField id="invite-password" label="Password">
-          <input
-            id="invite-password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            autoComplete="new-password"
-          />
-        </FormField>
-        <ActionButton variant="gold" type="submit" disabled={submitting}>
-          {submitting ? 'Creating account…' : 'Create account'}
-        </ActionButton>
-      </form>
+    <div className="login-screen">
+      <section className="login-hero">
+        <div className="login-hero-inner">
+          <BrandMark size="lg" variant="light" />
+          <h1>
+            You&apos;re invited to <em>Sopaan Admin</em>
+          </h1>
+          <p className="login-hero-lead">
+            Complete your account to join the team as <strong>{role}</strong> and start managing
+            content, students, and live classes.
+          </p>
+        </div>
+      </section>
+
+      <section className="login-panel">
+        <div className="login-form-wrap">
+          <form className="login-form-card" onSubmit={handleSubmit}>
+            <BrandMark size="sm" variant="dark" showTagline={false} />
+            <h2>Create your account</h2>
+            <p>
+              Signing up as <strong>{role}</strong> for {email}
+            </p>
+
+            {error ? <div className="login-error">{error}</div> : null}
+
+            <FormField id="invite-name" label="Full name">
+              <input
+                id="invite-name"
+                className="form-input"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                autoComplete="name"
+              />
+            </FormField>
+            <FormField id="invite-email" label="Email">
+              <input id="invite-email" className="form-input" type="email" value={email} readOnly />
+            </FormField>
+            <FormField id="invite-password" label="Password">
+              <input
+                id="invite-password"
+                className="form-input"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                autoComplete="new-password"
+              />
+            </FormField>
+
+            <button type="submit" className="login-submit" disabled={submitting}>
+              {submitting ? 'Creating account…' : 'Create account'}
+            </button>
+          </form>
+        </div>
+      </section>
     </div>
   );
 }

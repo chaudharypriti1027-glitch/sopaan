@@ -235,6 +235,9 @@ export function RolesPage() {
           ]}
           rows={rows}
           emptyMessage="No team members yet"
+          isLoading={teamQuery.isLoading}
+          error={teamQuery.isError ? teamQuery.error : undefined}
+          onRetry={() => void teamQuery.refetch()}
         />
       </div>
     </div>

@@ -10,18 +10,28 @@
     "admin"
   ],
   "scripts": {
+    "clean:metadata": "node scripts/clean-appledouble.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "lint": "npm run lint -w @sopaan/server && npm run lint -w @sopaan/mobile",
-    "test": "npm run test -w @sopaan/server && npm run test -w @sopaan/mobile",
+    "dev:admin": "npm run dev -w @sopaan/admin",
+    "build:admin": "npm run build -w @sopaan/admin",
+    "lint": "npm run clean:metadata && npm run lint -w @sopaan/server && npm run lint -w @sopaan/mobile && npm run lint -w @sopaan/admin",
+    "test": "npm run clean:metadata && npm run test -w @sopaan/server && npm run test -w @sopaan/mobile",
     "typecheck": "npm run typecheck -w @sopaan/mobile",
-    "validate": "npm run typecheck && npm run test && npm run i18n:check -w @sopaan/mobile"
+    "validate": "npm run clean:metadata && npm run lint && npm run build:admin && npm run typecheck && npm run test && npm run i18n:check -w @sopaan/mobile"
   },
   "devDependencies": {
-    "prettier": "^3.5.3",
-    "react": "19.0.0"
+    "prettier": "^3.5.3"
   },
   "engines": {
     "node": ">=20"
+  },
+  "overrides": {
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "@sopaan/admin": {
+      "react": "19.0.0",
+      "react-dom": "19.0.0"
+    }
   }
 }

@@ -1,10 +1,19 @@
 import { useRoute } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
-import { CheckCircle2, Circle, Download, FileText, GraduationCap, Trash2 } from 'lucide-react-native';
+import { CheckCircle2, Circle, Download, FileText, GraduationCap, Paperclip, Trash2 } from 'lucide-react-native';
 import { useMemo } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Button, Card, PremiumHeroCard, QueryStateView, Screen, SectionTitle } from '../../components';
+import { Alert, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import {
+  Button,
+  FeatureScreenLayout,
+  PremiumFeatureCard,
+  PremiumHeroCard,
+  QueryStateView,
+  SectionTitle,
+} from '../../components';
 import { useCourse, useLessonDownloads, useNetworkStatus, useUpdateCourseProgress } from '../../hooks';
+import { resolveLessonMaterial } from '../../lib/lessonMaterial';
 import type { MainStackParamList } from '../../navigation/types';
 import { useTheme } from '../../theme';
 
@@ -15,6 +24,7 @@ function lessonId(lesson: { id?: string; _id?: string }): string {
 }
 
 export function CourseDetailScreen() {
+  const { t } = useTranslation('app');
   const route = useRoute<CourseDetailRoute>();
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -31,7 +41,7 @@ export function CourseDetailScreen() {
 
   const toggleLesson = (id: string, isCompleted: boolean) => {
     if (isOffline) {
-      Alert.alert('Offline', 'Lesson progress syncs when you are back online.');
+      Alert.alert(t('courseDetail.offlineTitle'), t('courseDetail.offlineBody'));
       return;
     }
 
@@ -48,7 +58,7 @@ export function CourseDetailScreen() {
     videoUrl?: string;
   }) => {
     if (!input.videoUrl) {
-      Alert.alert('No video', 'This lesson does not have a downloadable video.');
+      Alert.alert(t('courseDetail.noVideo'), t('courseDetail.noVideoBody'));
       return;
     }
 
@@ -58,7 +68,9 @@ export function CourseDetailScreen() {
         lessonTitle: input.lessonTitle,
         videoUrl: input.videoUrl,
       })
-      .catch(() => Alert.alert('Download failed', 'Try again when you have a stable connection.'));
+      .catch(() =>
+        Alert.alert(t('courseDetail.downloadFailed'), t('courseDetail.downloadFailedBody')),
+      );
   };
 
   const handleDownloadNotes = (input: {
@@ -67,7 +79,7 @@ export function CourseDetailScreen() {
     notes?: string;
   }) => {
     if (!input.notes?.trim()) {
-      Alert.alert('No notes', 'This lesson does not have notes to download.');
+      Alert.alert(t('courseDetail.noNotes'), t('courseDetail.noNotesBody'));
       return;
     }
 
@@ -77,11 +89,38 @@ export function CourseDetailScreen() {
         lessonTitle: input.lessonTitle,
         notes: input.notes,
       })
-      .catch(() => Alert.alert('Save failed', 'Could not save lesson notes offline.'));
+      .catch(() => Alert.alert(t('courseDetail.saveFailed'), t('courseDetail.saveFailedBody')));
+  };
+
+  const handleDownloadMaterial = (input: {
+    lessonId: string;
+    lessonTitle: string;
+    materialUrl: string;
+    materialName?: string;
+  }) => {
+    void downloads
+      .downloadMaterial(input)
+      .catch(() =>
+        Alert.alert(t('courseDetail.downloadFailed'), t('courseDetail.downloadFailedBody')),
+      );
+  };
+
+  const handleOpenMaterial = async (input: { localUri?: string; remoteUrl: string }) => {
+    const target = input.localUri ?? input.remoteUrl;
+    try {
+      const supported = await Linking.canOpenURL(target);
+      if (!supported) {
+        Alert.alert(t('courseDetail.cannotOpenFile'), t('courseDetail.cannotOpenFileBody'));
+        return;
+      }
+      await Linking.openURL(target);
+    } catch {
+      Alert.alert(t('courseDetail.cannotOpenFile'), t('courseDetail.cannotOpenFileOffline'));
+    }
   };
 
   return (
-    <Screen scroll contentContainerStyle={styles.content}>
+    <FeatureScreenLayout title={course?.title ?? t('courseDetail.defaultSubject')}>
       <QueryStateView
         isLoading={courseQuery.isLoading}
         isError={courseQuery.isError}
@@ -94,19 +133,25 @@ export function CourseDetailScreen() {
           <>
             <PremiumHeroCard
               icon={<GraduationCap size={24} color="#FFFFFF" strokeWidth={1.8} />}
-              eyebrow={course.subject ?? 'Course'}
+              eyebrow={course.subject ?? t('courseDetail.defaultSubject')}
               title={course.title}
               stats={[
                 {
-                  label: 'Progress',
+                  label: t('courseDetail.progress'),
                   value: `${Math.round(course.progress?.progressPercent ?? course.progressPercent ?? 0)}%`,
                 },
-                { label: 'Completed', value: `${completed.size}/${(course.lessons ?? []).length}` },
+                {
+                  label: t('courseDetail.completed'),
+                  value: `${completed.size}/${(course.lessons ?? []).length}`,
+                },
               ]}
             />
 
-            <SectionTitle title="Lessons" subtitle="Download videos and notes for offline study" />
-            <Card style={styles.lessons}>
+            <SectionTitle
+              title={t('courseDetail.lessons')}
+              subtitle={t('courseDetail.lessonsSubtitle')}
+            />
+            <PremiumFeatureCard style={styles.lessons}>
               {[...(course.lessons ?? [])]
                 .sort((a, b) => a.order - b.order)
                 .map((lesson) => {
@@ -114,6 +159,11 @@ export function CourseDetailScreen() {
                   const done = completed.has(id);
                   const videoStatus = downloads.getStatus(id, 'video');
                   const notesStatus = downloads.getStatus(id, 'notes');
+                  const materialStatus = downloads.getStatus(id, 'material');
+                  const material = resolveLessonMaterial(lesson);
+                  const materialRecord = downloads.records.find(
+                    (record) => record.lessonId === id && record.kind === 'material',
+                  );
 
                   return (
                     <View key={id} style={styles.lessonRow}>
@@ -127,7 +177,9 @@ export function CourseDetailScreen() {
                           <Text style={styles.lessonTitle}>{lesson.title}</Text>
                           {lesson.durationSec ? (
                             <Text style={styles.lessonMeta}>
-                              {Math.round(lesson.durationSec / 60)} min
+                              {t('courseDetail.durationMin', {
+                                count: Math.round(lesson.durationSec / 60),
+                              })}
                             </Text>
                           ) : null}
                         </View>
@@ -144,7 +196,7 @@ export function CourseDetailScreen() {
                             </Pressable>
                           ) : (
                             <Button
-                              label={videoStatus === 'downloading' ? '…' : 'Video'}
+                              label={videoStatus === 'downloading' ? '…' : t('courseDetail.video')}
                               size="sm"
                               variant="ghost"
                               icon={<Download size={14} color={theme.colors.brand.primary} />}
@@ -171,7 +223,7 @@ export function CourseDetailScreen() {
                             </Pressable>
                           ) : (
                             <Button
-                              label={notesStatus === 'downloading' ? '…' : 'Notes'}
+                              label={notesStatus === 'downloading' ? '…' : t('courseDetail.notes')}
                               size="sm"
                               variant="ghost"
                               icon={<FileText size={14} color={theme.colors.brand.primary} />}
@@ -187,21 +239,54 @@ export function CourseDetailScreen() {
                             />
                           )
                         ) : null}
+
+                        {material ? (
+                          materialStatus === 'completed' ? (
+                            <Pressable
+                              onPress={() =>
+                                void handleOpenMaterial({
+                                  localUri: materialRecord?.localUri,
+                                  remoteUrl: material.url,
+                                })
+                              }
+                              onLongPress={() => void downloads.remove(id, 'material')}
+                              style={styles.downloadBtn}
+                            >
+                              <Paperclip size={16} color={theme.colors.semantic.success} />
+                            </Pressable>
+                          ) : (
+                            <Button
+                              label={materialStatus === 'downloading' ? '…' : t('courseDetail.pdf')}
+                              size="sm"
+                              variant="ghost"
+                              icon={<Download size={14} color={theme.colors.brand.primary} />}
+                              onPress={() =>
+                                handleDownloadMaterial({
+                                  lessonId: id,
+                                  lessonTitle: lesson.title,
+                                  materialUrl: material.url,
+                                  materialName: material.name,
+                                })
+                              }
+                              loading={materialStatus === 'downloading'}
+                              disabled={materialStatus === 'downloading'}
+                            />
+                          )
+                        ) : null}
                       </View>
                     </View>
                   );
                 })}
-            </Card>
+            </PremiumFeatureCard>
           </>
         ) : null}
       </QueryStateView>
-    </Screen>
+    </FeatureScreenLayout>
   );
 }
 
 function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
-    content: { gap: theme.spacing.lg, paddingBottom: theme.spacing['3xl'] },
     lessons: { gap: theme.spacing.md },
     lessonRow: {
       flexDirection: 'row',

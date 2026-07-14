@@ -4,6 +4,7 @@ import { AppError } from '../utils/AppError.js';
 import { markReferralOnboardingComplete } from './referralService.js';
 import { uploadAvatarImage } from './media/avatarStorage.js';
 import { bustHomeFeedCache } from './home/buildHomeFeed.js';
+import { syncUserGoal } from './goalSyncService.js';
 import { CourseProgress } from '../models/CourseProgress.js';
 import { Badge } from '../models/Badge.js';
 import { Attempt } from '../models/Attempt.js';
@@ -133,6 +134,11 @@ export async function updateMe(userId, updates) {
 
   if (!wasComplete && user.onboardingComplete) {
     await markReferralOnboardingComplete(userId);
+  }
+
+  if (updates.targetExam !== undefined || updates.examDate !== undefined) {
+    await syncUserGoal(userId);
+    await bustHomeFeedCache(userId);
   }
 
   return user.toProfile();

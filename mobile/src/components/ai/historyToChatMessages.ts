@@ -2,13 +2,20 @@ import type { AiDoubtHistoryItem } from '../../api/ai';
 
 export type AiChatMessage = {
   id: string;
-  role: 'user' | 'assistant';
+  role: 'user' | 'assistant' | 'error';
   text: string;
   fromCache?: boolean;
+  cacheSource?: string | null;
   answerId?: string;
   responseMs?: number;
   inputSummary?: string;
+  imageUri?: string;
+  imageBase64?: string | null;
   saved?: boolean;
+  retryPayload?: {
+    question: string;
+    imageBase64?: string | null;
+  };
 };
 
 export function historyToChatMessages(items: AiDoubtHistoryItem[]): AiChatMessage[] {

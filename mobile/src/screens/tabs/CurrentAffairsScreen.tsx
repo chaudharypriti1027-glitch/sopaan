@@ -31,9 +31,11 @@ import {
   isPublishedToday,
   isTrendingAffair,
   sortAffairs,
+  hasAffairQuiz,
   type CaSortMode,
 } from '../../components/currentAffairs/caUtils';
 import { toggleSavedAffair, listSavedAffairIds } from '../../affairs/savedAffairs';
+import { cacheAffair, removeCachedAffair } from '../../affairs/offlineAffairCache';
 import { currentAffairsApi } from '../../api';
 import { useCurrentAffairs, useGroupedNotifications, useProfile } from '../../hooks';
 import { useFormat } from '../../i18n/useFormat';
@@ -137,7 +139,7 @@ export function CurrentAffairsScreen() {
   const savedIdSet = useMemo(() => new Set(savedIds), [savedIds]);
   const isInitialLoad = affairsQuery.isLoading && !affairsQuery.data;
   const showError = affairsQuery.isError && !affairsQuery.data;
-  const hasQuiz = rawItems.some((item) => item.quizQuestions && item.quizQuestions.length > 0);
+  const hasQuiz = rawItems.some((item) => hasAffairQuiz(item));
 
   const monthLabel = useCallback(
     (value: string) => {
@@ -172,10 +174,23 @@ export function CurrentAffairsScreen() {
 
   const handleToggleSave = useCallback(
     async (id: string) => {
-      await toggleSavedAffair(id);
+      const wasSaved = savedIdSet.has(id);
+      const nowSaved = await toggleSavedAffair(id);
+
+      if (nowSaved) {
+        try {
+          const affair = await currentAffairsApi.getCurrentAffair(id);
+          await cacheAffair(affair);
+        } catch {
+          /* cache on next open */
+        }
+      } else if (wasSaved) {
+        await removeCachedAffair(id);
+      }
+
       await refreshSaved();
     },
-    [refreshSaved],
+    [refreshSaved, savedIdSet],
   );
 
   const openArticle = useCallback(
@@ -230,6 +245,16 @@ export function CurrentAffairsScreen() {
 
       <View style={styles.feedSection}>
         <Text style={styles.sortLabel}>{sortLabel}</Text>
+
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => navigation.getParent()?.navigate('Books')}
+          style={({ pressed }) => [styles.studyCard, pressed && styles.studyCardPressed]}
+          testID="ca-study-pdfs"
+        >
+          <Text style={styles.studyTitle}>{t('currentAffairs.studyPdfsTitle')}</Text>
+          <Text style={styles.studySubtitle}>{t('currentAffairs.studyPdfsSubtitle')}</Text>
+        </Pressable>
 
         {hasQuiz ? (
           <CaQuizBanner onPress={() => navigation.navigate('Practice')} />
@@ -320,6 +345,29 @@ function createStyles() {
       color: CA_UI.muted,
       letterSpacing: 0.2,
       marginBottom: 12,
+    },
+    studyCard: {
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: CA_UI.border,
+      backgroundColor: CA_UI.surface,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      marginBottom: 12,
+      gap: 4,
+    },
+    studyCardPressed: {
+      opacity: 0.94,
+    },
+    studyTitle: {
+      fontSize: 14,
+      fontWeight: '800',
+      color: CA_UI.text,
+    },
+    studySubtitle: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: CA_UI.muted,
     },
     loader: { marginVertical: 24 },
     errorBox: {

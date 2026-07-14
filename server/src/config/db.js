@@ -14,8 +14,12 @@ const connectionOptions = {
 
 let eventsRegistered = false;
 let shutdownHandlersRegistered = false;
+let shuttingDown = false;
 
 function log(event, message) {
+  if (process.env.NODE_ENV === 'test') {
+    return;
+  }
   console.log(`[mongodb] ${event}: ${message}`);
 }
 
@@ -79,12 +83,19 @@ export async function connectDatabase() {
 }
 
 export async function disconnectDatabase() {
-  if (mongoose.connection.readyState === 0) {
+  const state = mongoose.connection.readyState;
+  if (state === 0 || state === 3) {
     return;
   }
 
-  await mongoose.connection.close();
-  log('shutdown', 'Connection closed gracefully');
+  try {
+    await mongoose.connection.close();
+    log('shutdown', 'Connection closed gracefully');
+  } catch (err) {
+    if (!/not running|connection closed/i.test(err.message)) {
+      throw err;
+    }
+  }
 }
 
 export function registerDatabaseShutdownHandlers(onShutdown) {
@@ -95,7 +106,19 @@ export function registerDatabaseShutdownHandlers(onShutdown) {
   shutdownHandlersRegistered = true;
 
   const shutdown = async (signal) => {
+    if (shuttingDown) {
+      return;
+    }
+
+    shuttingDown = true;
     log('signal', `Received ${signal}, shutting down`);
+
+    const forceExit =
+      env.isDevelopment &&
+      setTimeout(() => {
+        log('shutdown', 'Force exit after watch restart');
+        process.exit(0);
+      }, 750);
 
     try {
       if (onShutdown) {
@@ -103,8 +126,14 @@ export function registerDatabaseShutdownHandlers(onShutdown) {
       }
 
       await disconnectDatabase();
+      if (forceExit) {
+        clearTimeout(forceExit);
+      }
       process.exit(0);
     } catch (err) {
+      if (forceExit) {
+        clearTimeout(forceExit);
+      }
       log('shutdown_error', err.message);
       process.exit(1);
     }

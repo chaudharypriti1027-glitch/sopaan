@@ -1,6 +1,8 @@
 import { Hand } from 'lucide-react-native';
 import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { LIVE_REACTION_EMOJIS } from '../../content/liveClassesContent';
 import { useTheme } from '../../theme';
 
 type LiveClassReactionsBarProps = {
@@ -10,8 +12,6 @@ type LiveClassReactionsBarProps = {
   onReaction: (emoji: string) => void;
 };
 
-const REACTIONS = ['👍', '🔥', '👏'] as const;
-
 export function LiveClassReactionsBar({
   handRaised,
   onRaiseHand,
@@ -19,26 +19,27 @@ export function LiveClassReactionsBar({
   onReaction,
 }: LiveClassReactionsBarProps) {
   const { theme } = useTheme();
+  const { t } = useTranslation('app', { keyPrefix: 'liveClassViewer' });
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   return (
     <View style={styles.root}>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={handRaised ? 'Lower hand' : 'Raise hand'}
+        accessibilityLabel={handRaised ? t('lowerHand') : t('raiseHand')}
         onPress={handRaised ? onLowerHand : onRaiseHand}
         style={[styles.raiseBtn, handRaised ? styles.raiseBtnActive : null]}
       >
         <Hand size={18} color={theme.colors.brand.onPrimary} />
-        <Text style={styles.raiseLabel}>{handRaised ? 'Lower hand' : 'Raise hand'}</Text>
+        <Text style={styles.raiseLabel}>{handRaised ? t('lowerHand') : t('raiseHand')}</Text>
       </Pressable>
 
       <View style={styles.emojiRow}>
-        {REACTIONS.map((emoji) => (
+        {LIVE_REACTION_EMOJIS.map((emoji) => (
           <Pressable
             key={emoji}
             accessibilityRole="button"
-            accessibilityLabel={`React ${emoji}`}
+            accessibilityLabel={t('reactA11y', { emoji })}
             onPress={() => onReaction(emoji)}
             style={styles.emojiBtn}
           >

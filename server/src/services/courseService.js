@@ -18,7 +18,7 @@ function computeProgressPercent(completedCount, totalLessons) {
 export async function listCourses(query, userId) {
   const { limit, offset } = parsePagination(query);
   const languageFilter = buildContentLanguageQuery(query.language);
-  const filters = { ...publishedContentFilter, ...languageFilter };
+  const filters = { $and: [publishedContentFilter, languageFilter] };
 
   const [courses, total] = await Promise.all([
     Course.find(filters)

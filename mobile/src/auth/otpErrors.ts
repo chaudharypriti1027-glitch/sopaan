@@ -34,7 +34,11 @@ export function formatOtpError(error: ApiError): string {
   }
 
   if (error.code === 'SMS_TRIAL_RESTRICTED') {
-    return 'SMS is not enabled for this number yet. Please try again later or contact support.';
+    return 'This number cannot receive SMS on our trial SMS account. Use email login, verify the number in Twilio Console, or contact support.';
+  }
+
+  if (error.code === 'SMS_GEO_RESTRICTED') {
+    return 'SMS to this country is not enabled yet. Please use email login or contact support.';
   }
 
   return error.message;

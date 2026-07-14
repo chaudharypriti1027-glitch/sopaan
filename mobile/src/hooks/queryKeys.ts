@@ -42,6 +42,10 @@ export const queryKeys = {
     all: ['current-affairs'] as const,
     list: (params?: unknown) => [...queryKeys.currentAffairs.all, 'list', params] as const,
     detail: (id: string) => [...queryKeys.currentAffairs.all, 'detail', id] as const,
+    studyPack: (id: string) => [...queryKeys.currentAffairs.all, 'study-pack', id] as const,
+    quizGame: (id: string) => [...queryKeys.currentAffairs.all, 'quiz-game', id] as const,
+    aiSummary: (id: string, language?: string) =>
+      [...queryKeys.currentAffairs.all, 'ai-summary', id, language] as const,
   },
   notifications: {
     all: ['notifications'] as const,
@@ -50,6 +54,24 @@ export const queryKeys = {
   planner: {
     all: ['planner'] as const,
     sessions: (params?: unknown) => [...queryKeys.planner.all, 'sessions', params] as const,
+  },
+  examPlan: {
+    all: ['exam-plan'] as const,
+    detail: () => [...queryKeys.examPlan.all, 'detail'] as const,
+  },
+  dailyRoutine: {
+    all: ['daily-routine'] as const,
+    today: () => [...queryKeys.dailyRoutine.all, 'today'] as const,
+  },
+  friends: {
+    all: ['friends'] as const,
+    list: (params?: unknown) => [...queryKeys.friends.all, 'list', params] as const,
+    requests: (params?: unknown) => [...queryKeys.friends.all, 'requests', params] as const,
+    search: (q: string) => [...queryKeys.friends.all, 'search', q] as const,
+  },
+  conversations: {
+    all: ['conversations'] as const,
+    list: (params?: unknown) => [...queryKeys.conversations.all, 'list', params] as const,
   },
   analytics: {
     all: ['analytics'] as const,

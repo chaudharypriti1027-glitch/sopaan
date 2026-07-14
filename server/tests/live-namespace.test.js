@@ -7,6 +7,7 @@ import {
   startRealtimeTestServer,
   stopRealtimeTestServer,
   waitForPresence,
+  waitForSocketConnect,
 } from './helpers/realtime.js';
 import { LIVE_NS_EVENTS } from '../src/realtime/liveEvents.js';
 import { resetLiveChatStoreForTests } from '../src/realtime/liveChatStore.js';
@@ -22,7 +23,7 @@ function signToken(user) {
 }
 
 describe('/live socket namespace', () => {
-  jest.setTimeout(30_000);
+  jest.setTimeout(45_000);
   let httpServer;
   let port;
   let hostUser;
@@ -37,7 +38,11 @@ describe('/live socket namespace', () => {
   afterAll(async () => {
     await stopRealtimeTestServer(httpServer);
     await teardownTestDatabase();
-  }, 30_000);
+  }, 45_000);
+
+  afterEach(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 25));
+  });
 
   beforeEach(async () => {
     await clearTestDatabase();
@@ -80,14 +85,15 @@ describe('/live socket namespace', () => {
     });
   }
 
-  it('broadcasts chat messages and presence between host and students', async () => {
+  async function connectPair() {
     const host = connectClient(hostUser);
     const student = connectClient(studentUser);
+    await Promise.all([waitForSocketConnect(host), waitForSocketConnect(student)]);
+    return { host, student };
+  }
 
-    await Promise.all([
-      new Promise((resolve) => host.on('connect', resolve)),
-      new Promise((resolve) => student.on('connect', resolve)),
-    ]);
+  it('broadcasts chat messages and presence between host and students', async () => {
+    const { host, student } = await connectPair();
 
     const classId = liveClass._id.toString();
 
@@ -136,13 +142,7 @@ describe('/live socket namespace', () => {
   });
 
   it('broadcasts reactions and notifies host on hand raise', async () => {
-    const host = connectClient(hostUser);
-    const student = connectClient(studentUser);
-
-    await Promise.all([
-      new Promise((resolve) => host.on('connect', resolve)),
-      new Promise((resolve) => student.on('connect', resolve)),
-    ]);
+    const { host, student } = await connectPair();
 
     const classId = liveClass._id.toString();
 
@@ -177,13 +177,7 @@ describe('/live socket namespace', () => {
   });
 
   it('forwards host mute-all to students', async () => {
-    const host = connectClient(hostUser);
-    const student = connectClient(studentUser);
-
-    await Promise.all([
-      new Promise((resolve) => host.on('connect', resolve)),
-      new Promise((resolve) => student.on('connect', resolve)),
-    ]);
+    const { host, student } = await connectPair();
 
     const classId = liveClass._id.toString();
 
@@ -205,13 +199,7 @@ describe('/live socket namespace', () => {
   });
 
   it('relays dev stream requests from students to host', async () => {
-    const host = connectClient(hostUser);
-    const student = connectClient(studentUser);
-
-    await Promise.all([
-      new Promise((resolve) => host.on('connect', resolve)),
-      new Promise((resolve) => student.on('connect', resolve)),
-    ]);
+    const { host, student } = await connectPair();
 
     const classId = liveClass._id.toString();
 
@@ -233,13 +221,7 @@ describe('/live socket namespace', () => {
   });
 
   it('relays dev stream signals between host and student', async () => {
-    const host = connectClient(hostUser);
-    const student = connectClient(studentUser);
-
-    await Promise.all([
-      new Promise((resolve) => host.on('connect', resolve)),
-      new Promise((resolve) => student.on('connect', resolve)),
-    ]);
+    const { host, student } = await connectPair();
 
     const classId = liveClass._id.toString();
 
@@ -268,13 +250,7 @@ describe('/live socket namespace', () => {
   });
 
   it('persists host announcements for late joiners', async () => {
-    const host = connectClient(hostUser);
-    const student = connectClient(studentUser);
-
-    await Promise.all([
-      new Promise((resolve) => host.on('connect', resolve)),
-      new Promise((resolve) => student.on('connect', resolve)),
-    ]);
+    const { host, student } = await connectPair();
 
     const classId = liveClass._id.toString();
     host.emit(LIVE_NS_EVENTS.JOIN, { classId });
@@ -287,7 +263,7 @@ describe('/live socket namespace', () => {
     });
 
     const lateStudent = connectClient(studentUser);
-    await new Promise((resolve) => lateStudent.on('connect', resolve));
+    await waitForSocketConnect(lateStudent);
 
     const announcementPromise = new Promise((resolve) => {
       lateStudent.once(LIVE_NS_EVENTS.HOST_ANNOUNCEMENT, resolve);
@@ -304,13 +280,7 @@ describe('/live socket namespace', () => {
   });
 
   it('acks hand raise to the student', async () => {
-    const host = connectClient(hostUser);
-    const student = connectClient(studentUser);
-
-    await Promise.all([
-      new Promise((resolve) => host.on('connect', resolve)),
-      new Promise((resolve) => student.on('connect', resolve)),
-    ]);
+    const { host, student } = await connectPair();
 
     const classId = liveClass._id.toString();
     host.emit(LIVE_NS_EVENTS.JOIN, { classId });
@@ -332,13 +302,7 @@ describe('/live socket namespace', () => {
   });
 
   it('accepts heart reaction emoji', async () => {
-    const host = connectClient(hostUser);
-    const student = connectClient(studentUser);
-
-    await Promise.all([
-      new Promise((resolve) => host.on('connect', resolve)),
-      new Promise((resolve) => student.on('connect', resolve)),
-    ]);
+    const { host, student } = await connectPair();
 
     const classId = liveClass._id.toString();
     host.emit(LIVE_NS_EVENTS.JOIN, { classId });

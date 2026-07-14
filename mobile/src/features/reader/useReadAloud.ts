@@ -58,6 +58,8 @@ export function useReadAloud({
 
   const chapterProgress = useMemo(
     () => getChapterProgress(queueRef.current, idx, current?.chapterId),
+    // queueLength invalidates progress when the read-aloud queue is rebuilt.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- queueLength is an intentional cache buster
     [current?.chapterId, idx, queueLength],
   );
 

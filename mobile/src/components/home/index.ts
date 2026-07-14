@@ -20,6 +20,8 @@ export { HomeAIHub } from './HomeAIHub';
 export { HomeLiveNowBanner } from './HomeLiveNowBanner';
 export { HomeTopBanner } from './HomeTopBanner';
 export { HomeHeroScroll } from './HomeHeroScroll';
+export { HomeExamCountdownBanner } from './HomeExamCountdownBanner';
+export { HomeExamHubCard } from './HomeExamHubCard';
 export { HOME_UI } from './homeTheme';
 export { GoalDots } from './GoalDots';
 export { HomeSectionHeader } from './HomeSectionHeader';

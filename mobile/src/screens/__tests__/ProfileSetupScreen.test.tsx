@@ -109,6 +109,25 @@ describe('ProfileSetupScreen', () => {
     mockPickImageAsset.mockResolvedValue(null);
   });
 
+  it('persists custom exam when Other is selected', async () => {
+    const { getByTestId, getByText } = renderWithProviders(<ProfileSetupScreen />);
+
+    fireEvent.press(getByTestId('exam-chip-other'));
+    fireEvent.changeText(getByTestId('custom-exam-name'), 'MPPSC');
+
+    await act(async () => {
+      fireEvent.press(getByTestId('profile-setup-next'));
+    });
+
+    await waitFor(() => {
+      expect(mockUpdateMe).toHaveBeenCalledWith({
+        targetExam: 'MPPSC',
+        examDate: null,
+      });
+      expect(getByText('About you')).toBeTruthy();
+    });
+  });
+
   it('persists goal on Next and moves to the You step', async () => {
     const { getByTestId, getByText } = renderWithProviders(<ProfileSetupScreen />);
 

@@ -2,15 +2,21 @@ import { useMemo, useState } from 'react';
 import {
   Alert,
   Modal,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   View,
 } from 'react-native';
-import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { useTranslation } from 'react-i18next';
 import { ChipSelect } from '../ChipSelect';
+import { ExamDatePickerField } from '../profileSetup/ExamDatePickerField';
+import { parseExamDate, toExamDatePayload } from '../profileSetup/examDateUtils';
+import { TargetExamGrid } from '../profileSetup/TargetExamGrid';
+import {
+  isValidTargetExam,
+  resolveTargetExam,
+  splitTargetExam,
+} from '../../utils/examTarget';
 import { Field, PrimaryButton } from '../auth';
 import { Text } from '../Text';
 import type {
@@ -25,31 +31,7 @@ import {
   INDIAN_STATES_ALL,
   LANGUAGE_OPTIONS,
   PROFILE_CATEGORY_OPTIONS,
-  TARGET_EXAM_OPTIONS,
 } from '../../screens/profileSetup/constants';
-import { useFormat } from '../../i18n/useFormat';
-
-function parseExamDate(value?: string): Date | null {
-  if (!value) {
-    return null;
-  }
-
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? null : parsed;
-}
-
-function formatExamDate(value: string | undefined, notSetLabel: string, formatDate: (value: Date, options?: Intl.DateTimeFormatOptions) => string) {
-  const date = parseExamDate(value);
-  if (!date) {
-    return notSetLabel;
-  }
-
-  return formatDate(date, {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  });
-}
 
 type ProfileEditSheetProps = {
   visible: boolean;
@@ -68,13 +50,14 @@ type ProfileEditSheetProps = {
 };
 
 export function ProfileEditSheet({ visible, profile, loading, onClose, onSave }: ProfileEditSheetProps) {
-  const { t } = useTranslation(['app', 'common']);
-  const { formatDate } = useFormat();
+  const { t } = useTranslation(['app', 'common', 'auth']);
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
+  const initialExam = splitTargetExam(profile.targetExam);
   const [name, setName] = useState(profile.name);
-  const [targetExam, setTargetExam] = useState(profile.targetExam);
+  const [examSelection, setExamSelection] = useState(initialExam.selection);
+  const [customExamName, setCustomExamName] = useState(initialExam.customName);
   const [examDate, setExamDate] = useState<Date | null>(() => parseExamDate(profile.examDate));
   const [state, setState] = useState(profile.state);
   const [stateQuery, setStateQuery] = useState('');
@@ -84,7 +67,6 @@ export function ProfileEditSheet({ visible, profile, loading, onClose, onSave }:
     profile.educationLevel ?? '',
   );
   const [language, setLanguage] = useState<ProfileLanguage>(profile.language);
-  const [showDatePicker, setShowDatePicker] = useState(false);
 
   const filteredStates = useMemo(() => {
     const query = stateQuery.trim().toLowerCase();
@@ -96,34 +78,25 @@ export function ProfileEditSheet({ visible, profile, loading, onClose, onSave }:
   }, [stateQuery]);
 
   const resetForm = () => {
+    const split = splitTargetExam(profile.targetExam);
     setName(profile.name);
-    setTargetExam(profile.targetExam);
+    setExamSelection(split.selection);
+    setCustomExamName(split.customName);
     setExamDate(parseExamDate(profile.examDate));
     setState(profile.state);
     setStateQuery('');
     setCategory(profile.category ?? '');
     setEducationLevel(profile.educationLevel ?? '');
     setLanguage(profile.language);
-    setShowDatePicker(false);
     setStatePickerOpen(false);
-  };
-
-  const handleDateChange = (event: DateTimePickerEvent, selected?: Date) => {
-    if (Platform.OS === 'android') {
-      setShowDatePicker(false);
-    }
-
-    if (event.type !== 'dismissed' && selected) {
-      setExamDate(selected);
-    }
   };
 
   const handleSave = () => {
     const trimmedName = name.trim();
     const trimmedState = state.trim();
-    const trimmedExam = targetExam.trim();
+    const trimmedExam = resolveTargetExam(examSelection, customExamName);
 
-    if (!trimmedName || !trimmedState || !trimmedExam) {
+    if (!trimmedName || !trimmedState || !isValidTargetExam(examSelection, customExamName)) {
       Alert.alert(t('app:profile.editMissingTitle'), t('app:profile.editMissingBody'));
       return;
     }
@@ -131,7 +104,7 @@ export function ProfileEditSheet({ visible, profile, loading, onClose, onSave }:
     void onSave({
       name: trimmedName,
       targetExam: trimmedExam,
-      examDate: examDate ? examDate.toISOString().slice(0, 10) : null,
+      examDate: toExamDatePayload(examDate),
       state: trimmedState,
       ...(category ? { category } : {}),
       ...(educationLevel ? { educationLevel } : {}),
@@ -171,39 +144,22 @@ export function ProfileEditSheet({ visible, profile, loading, onClose, onSave }:
           <Text variant="label" color="secondary">
             {t('app:profile.targetExam')}
           </Text>
-          <View style={styles.chipRow}>
-            {TARGET_EXAM_OPTIONS.map((option) => (
-              <ChipSelect
-                key={option.value}
-                label={option.label}
-                emoji={option.emoji}
-                selected={targetExam === option.value}
-                onPress={() => setTargetExam(option.value)}
-              />
-            ))}
-          </View>
+          <TargetExamGrid
+            selection={examSelection}
+            customName={customExamName}
+            onSelectionChange={setExamSelection}
+            onCustomNameChange={setCustomExamName}
+          />
 
-          <Pressable
-            accessibilityRole="button"
-            onPress={() => setShowDatePicker(true)}
-            style={styles.selectorCard}
-          >
-            <Text variant="caption" color="secondary">
-              {t('app:profile.editExamDate')}
-            </Text>
-            <Text variant="bodyMedium">
-              {formatExamDate(examDate?.toISOString(), t('app:profile.notSet'), formatDate)}
-            </Text>
-          </Pressable>
-          {showDatePicker ? (
-            <DateTimePicker
-              value={examDate ?? new Date()}
-              mode="date"
-              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-              minimumDate={new Date()}
-              onChange={handleDateChange}
-            />
-          ) : null}
+          <Text variant="label" color="secondary">
+            {t('auth:profileSetup.examDateLabel')}
+          </Text>
+          <ExamDatePickerField
+            value={examDate}
+            onChange={setExamDate}
+            optionalLabel={t('app:profile.notSet')}
+            testID="edit-profile-exam-date"
+          />
 
           <Pressable
             accessibilityRole="button"
@@ -214,7 +170,9 @@ export function ProfileEditSheet({ visible, profile, loading, onClose, onSave }:
             <Text variant="caption" color="secondary">
               {t('app:profile.stateLabel')}
             </Text>
-            <Text variant="bodyMedium">{state || t('app:profile.selectState')}</Text>
+            <Text variant="bodyMedium" color={state ? 'primary' : 'secondary'}>
+              {state || t('app:profile.selectState')}
+            </Text>
           </Pressable>
 
           <Text variant="label" color="secondary">
@@ -227,6 +185,7 @@ export function ProfileEditSheet({ visible, profile, loading, onClose, onSave }:
                 label={option}
                 selected={category === option}
                 onPress={() => setCategory(option)}
+                style={styles.categoryChip}
               />
             ))}
           </View>
@@ -241,6 +200,7 @@ export function ProfileEditSheet({ visible, profile, loading, onClose, onSave }:
                 label={option.label}
                 selected={educationLevel === option.value}
                 onPress={() => setEducationLevel(option.value)}
+                style={styles.categoryChip}
               />
             ))}
           </View>
@@ -261,6 +221,9 @@ export function ProfileEditSheet({ visible, profile, loading, onClose, onSave }:
                 ]}
               >
                 <Text variant="bodyMedium">{option.title}</Text>
+                <Text variant="caption" color="secondary" style={styles.languageSubtitle}>
+                  {option.subtitle}
+                </Text>
               </Pressable>
             ))}
           </View>
@@ -347,6 +310,10 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       flexWrap: 'wrap',
       gap: theme.spacing.sm,
     },
+    categoryChip: {
+      minWidth: '30%',
+      flexGrow: 1,
+    },
     selectorCard: {
       borderRadius: theme.radii.card,
       borderWidth: 1,
@@ -369,6 +336,10 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       borderColor: theme.colors.border.default,
       backgroundColor: theme.colors.surface.default,
       padding: theme.spacing.md,
+      gap: 2,
+    },
+    languageSubtitle: {
+      textAlign: 'center',
     },
     languageCardSelected: {
       borderColor: theme.colors.brand.primary,

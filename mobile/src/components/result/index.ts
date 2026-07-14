@@ -7,4 +7,5 @@ export { ResultTopicBreakdown } from './ResultTopicBreakdown';
 export { ResultRankRow } from './ResultRankRow';
 export { ResultCoachPanel } from './ResultCoachPanel';
 export { ResultActionBar } from './ResultActionBar';
+export { ResultExplanationBlock } from './ResultExplanationBlock';
 export { ResultSectionLabel } from './ResultSectionLabel';

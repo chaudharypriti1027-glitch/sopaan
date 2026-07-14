@@ -32,6 +32,7 @@ const STACK_NO_PARAM: (keyof MainStackParamList)[] = [
   'Flashcards',
   'ExamCalendar',
   'Readiness',
+  'ExamPlan',
   'Notifications',
   'Search',
   'Premium',
@@ -115,7 +116,12 @@ export function navigateHomeDeeplink(navigation: HomeNav, deeplink: string) {
 
     if (paramKey && param) {
       if (stackScreen === 'GamePlay') {
-        navigateMainStack(navigation, stackScreen, { gameId: param as GameId });
+        const [gameIdPart, queryPart] = param.split('?');
+        const affairId = queryPart?.match(/affairId=([^&]+)/)?.[1];
+        navigateMainStack(navigation, stackScreen, {
+          gameId: gameIdPart as GameId,
+          ...(affairId ? { affairId: decodeURIComponent(affairId) } : {}),
+        });
         return;
       }
       navigateMainStack(navigation, stackScreen, { [paramKey]: param });

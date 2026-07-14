@@ -25,6 +25,7 @@ import {
 import {
   ResultActionBar,
   ResultCoachPanel,
+  ResultExplanationBlock,
   ResultHero,
   ResultRankRow,
   ResultRewardRow,
@@ -37,6 +38,7 @@ import { queryKeys } from '../../hooks/queryKeys';
 import { useFormat } from '../../i18n/useFormat';
 import type { MainStackParamList } from '../../navigation/types';
 import { captureAndShareCard } from '../../share/captureAndShareCard';
+import { shareResultReport } from '../../share/shareResultReport';
 import { ShareMilestoneCard } from '../../share/ShareMilestoneCard';
 import type { ShareCardData } from '../../share/types';
 import { shareCardTokens } from '../../share/cardTokens';
@@ -93,7 +95,18 @@ const ReviewAnswerCard = memo(function ReviewAnswerCard({
         })}
       </View>
       {item.question?.explanation ? (
-        <Text style={styles.explanation}>{item.question.explanation}</Text>
+        <ResultExplanationBlock
+          explanation={item.question.explanation}
+          correctKey={correctKey}
+          selectedKey={item.selectedKey}
+          wasCorrect={item.correct}
+          solutionLabel={t('result.solutionLabel')}
+          yourAnswerLabel={t('result.yourAnswer')}
+          correctLabel={t('result.correctStatus')}
+          wrongLabel={t('result.wrongStatus')}
+          correctAnswerLabel={t('result.correctAnswer')}
+          formulaLabel={t('askAi.formula')}
+        />
       ) : null}
       {!item.correct && item.questionId ? (
         <RelatedQuestions questionId={item.questionId} limit={3} />
@@ -221,6 +234,23 @@ function ResultScreenContent({ params }: { params: MainStackParamList['Result'] 
     }
   }, [referralQuery.data?.code, referralQuery.data?.webLink, shareData, t]);
 
+  const handleDownloadReport = useCallback(async () => {
+    try {
+      await shareResultReport({
+        testTitle,
+        subject: testDetail?.subject,
+        topic: testDetail?.topic,
+        examTag: testDetail?.examTag,
+        result,
+      });
+    } catch (err) {
+      Alert.alert(
+        t('result.reportErrorTitle'),
+        err instanceof Error ? err.message : t('result.reportErrorMessage'),
+      );
+    }
+  }, [result, t, testDetail?.examTag, testDetail?.subject, testDetail?.topic, testTitle]);
+
   const handleReviewLayout = useCallback((event: LayoutChangeEvent) => {
     reviewY.current = event.nativeEvent.layout.y;
   }, []);
@@ -274,7 +304,15 @@ function ResultScreenContent({ params }: { params: MainStackParamList['Result'] 
           feedback={coaching.feedback}
           weakTopics={coaching.weakTopics}
           actions={coaching.actions}
-          onPracticePress={() => navigation.navigate('AppTabs', { screen: 'Practice' })}
+          onPracticePress={() =>
+            navigation.navigate('AppTabs', {
+              screen: 'Practice',
+              params: {
+                weakTopics: coaching.weakTopics,
+                openForm: true,
+              },
+            })
+          }
         />
 
         <ResultActionBar
@@ -282,6 +320,7 @@ function ResultScreenContent({ params }: { params: MainStackParamList['Result'] 
           onRetake={() => navigation.replace('Quiz', { testId })}
           onMoreTests={() => navigation.navigate('AppTabs', { screen: 'Practice' })}
           onMockAnalysis={() => navigation.navigate('MockAnalysis', { attemptId })}
+          onDownloadReport={() => void handleDownloadReport()}
         />
       </View>
 
@@ -413,11 +452,6 @@ function createReviewStyles(theme: ReturnType<typeof useTheme>['theme']) {
     },
     reviewOptions: {
       gap: theme.spacing.sm,
-    },
-    explanation: {
-      ...theme.typography.presets.caption,
-      color: theme.colors.text.secondary,
-      fontStyle: 'italic',
     },
     errorCard: {
       gap: theme.spacing.md,

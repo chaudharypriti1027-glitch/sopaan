@@ -1,10 +1,11 @@
-import i18n from 'i18next';
+import i18n, { changeLanguage } from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import { DEFAULT_LOCALE, NAMESPACE_LIST, type AppLocale } from './config';
 import { enResources } from './locales/en';
 import { hiResources } from './locales/hi';
 import { guResources } from './locales/gu';
 
+// i18next's default singleton exposes `.use()` for plugin registration.
 void i18n.use(initReactI18next).init({
   resources: {
     en: enResources,
@@ -23,7 +24,7 @@ void i18n.use(initReactI18next).init({
 export default i18n;
 
 export async function changeAppLocale(locale: AppLocale): Promise<void> {
-  await i18n.changeLanguage(locale);
+  await changeLanguage(locale);
 }
 
 export function getCurrentLocale(): AppLocale {

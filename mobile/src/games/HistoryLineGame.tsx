@@ -26,8 +26,14 @@ export function HistoryLineGame({ onComplete }: HistoryLineGameProps) {
   const [events, setEvents] = useState(() => shuffle(correctOrder));
   const [checked, setChecked] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [attempts, setAttempts] = useState(0);
+  const [revealed, setRevealed] = useState(false);
 
   const move = (from: number, direction: -1 | 1) => {
+    if (revealed) {
+      return;
+    }
+
     const to = from + direction;
     if (to < 0 || to >= events.length) {
       return;
@@ -39,15 +45,39 @@ export function HistoryLineGame({ onComplete }: HistoryLineGameProps) {
     setFeedback(null);
   };
 
+  const finishWithScore = (score: number) => {
+    setTimeout(() => onComplete(score), 800);
+  };
+
+  const revealAnswer = () => {
+    setRevealed(true);
+    setEvents(correctOrder);
+    setChecked(true);
+    setFeedback('Correct chronological order shown — review and continue.');
+    finishWithScore(35);
+  };
+
   const checkOrder = () => {
+    if (revealed) {
+      return;
+    }
+
     const correct = isChronological(events);
     setChecked(true);
     if (correct) {
       setFeedback('Perfect chronological order!');
-      setTimeout(() => onComplete(100), 800);
-    } else {
-      setFeedback('Not quite — swap events until years go earliest → latest.');
+      finishWithScore(100);
+      return;
     }
+
+    const nextAttempts = attempts + 1;
+    setAttempts(nextAttempts);
+    if (nextAttempts >= 3) {
+      revealAnswer();
+      return;
+    }
+
+    setFeedback('Not quite — swap events until years go earliest → latest.');
   };
 
   return (
@@ -68,16 +98,19 @@ export function HistoryLineGame({ onComplete }: HistoryLineGameProps) {
               <Pressable
                 accessibilityRole="button"
                 onPress={() => move(index, -1)}
-                disabled={index === 0}
-                style={[styles.moveBtn, index === 0 && styles.moveDisabled]}
+                disabled={index === 0 || revealed}
+                style={[styles.moveBtn, (index === 0 || revealed) && styles.moveDisabled]}
               >
                 <Text style={styles.moveText}>↑</Text>
               </Pressable>
               <Pressable
                 accessibilityRole="button"
                 onPress={() => move(index, 1)}
-                disabled={index === events.length - 1}
-                style={[styles.moveBtn, index === events.length - 1 && styles.moveDisabled]}
+                disabled={index === events.length - 1 || revealed}
+                style={[
+                  styles.moveBtn,
+                  (index === events.length - 1 || revealed) && styles.moveDisabled,
+                ]}
               >
                 <Text style={styles.moveText}>↓</Text>
               </Pressable>
@@ -92,7 +125,14 @@ export function HistoryLineGame({ onComplete }: HistoryLineGameProps) {
         </Text>
       ) : null}
 
-      <Button label="Check Order →" onPress={checkOrder} fullWidth />
+      {!revealed ? (
+        <View style={styles.actionRow}>
+          {attempts >= 2 ? (
+            <Button label="Show answer" variant="ghost" onPress={revealAnswer} />
+          ) : null}
+          <Button label="Check Order →" onPress={checkOrder} fullWidth={attempts < 2} />
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -171,6 +211,9 @@ function createStyles() {
     },
     feedbackOk: {
       color: GAMES_UI.green,
+    },
+    actionRow: {
+      gap: 10,
     },
   });
 }

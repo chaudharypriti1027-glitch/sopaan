@@ -3,6 +3,7 @@ import * as adminTestModerationService from '../services/admin/adminTestModerati
 import * as adminCrudService from '../services/admin/adminCrudService.js';
 import * as adminQuestionService from '../services/admin/adminQuestionService.js';
 import { questionImportBodySchema } from '../validators/questionImportValidators.js';
+import { getValidatedQuery } from '../middleware/validate.js';
 import { AppError } from '../utils/AppError.js';
 import { generateMultiSectionExam } from '../services/ai/testGenerator.js';
 import * as aiFeedbackService from '../services/ai/aiFeedbackService.js';
@@ -19,9 +20,9 @@ import * as adminMediaService from '../services/admin/adminMediaService.js';
 import * as adminMentorService from '../services/admin/adminMentorService.js';
 import * as liveClassService from '../services/liveClassService.js';
 import { verifyMediaUploadToken } from '../services/media/mediaObjectStorage.js';
-import { getValidatedQuery } from '../middleware/validate.js';
 import { listPublicPlans } from '../config/premiumPlans.js';
 import * as platformSettingsService from '../services/platformSettingsService.js';
+import * as adminSystemCheckService from '../services/admin/adminSystemCheckService.js';
 
 export async function getStats(_req, res) {
   const result = await adminStatsService.getAdminStats();
@@ -29,8 +30,13 @@ export async function getStats(_req, res) {
 }
 
 export async function getAttemptsStats(req, res) {
-  const days = Number(req.query.days) || 14;
-  const result = await adminReportsService.getAttemptsSeries(days);
+  const { days } = getValidatedQuery(req);
+  const result = await adminReportsService.getAttemptsSeries(days ?? 14);
+  res.status(200).json(result);
+}
+
+export async function getSystemCheck(_req, res) {
+  const result = await adminSystemCheckService.getAdminSystemCheck();
   res.status(200).json(result);
 }
 
@@ -241,9 +247,26 @@ export async function updateCurrentAffair(req, res) {
 }
 
 export async function setCurrentAffairStatus(req, res) {
-  res.status(200).json(
-    await adminCrudService.currentAffairAdmin.setStatus(req.params.id, req.body.status, req.user._id),
+  const previous = await adminCrudService.currentAffairAdmin.getById(req.params.id);
+  const result = await adminCrudService.currentAffairAdmin.setStatus(
+    req.params.id,
+    req.body.status,
+    req.user._id,
   );
+
+  if (req.body.status === 'published' && previous.status !== 'published') {
+    const { dispatchNotificationToMatchingStudents, NOTIFICATION_TYPES } = await import(
+      '../services/notificationService.js'
+    );
+    await dispatchNotificationToMatchingStudents({}, {
+      type: NOTIFICATION_TYPES.NEW_CURRENT_AFFAIRS,
+      title: 'New current affairs',
+      body: result.title,
+      data: { affairId: result._id?.toString?.() ?? result.id },
+    });
+  }
+
+  res.status(200).json(result);
 }
 
 export async function deleteCurrentAffair(req, res) {
@@ -552,5 +575,8 @@ export async function listAuditLogs(req, res) {
 }
 
 export async function recordAuditTest(_req, res) {
-  res.status(200).json({ ok: true, message: 'Test audit action recorded' });
+  res.status(200).json({
+    ok: true,
+    message: 'Test audit action recorded — check the audit log below',
+  });
 }

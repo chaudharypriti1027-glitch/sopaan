@@ -40,6 +40,8 @@ const mockAuthUser = {
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({
     navigate: mockNavigate,
+    canGoBack: () => false,
+    goBack: jest.fn(),
   }),
   useRoute: () => ({
     params: undefined,
@@ -101,9 +103,9 @@ describe('PremiumScreen', () => {
   });
 
   it('renders paywall plans and tracks paywall view', () => {
-    const { getByText, getByTestId } = renderWithProviders(<PremiumScreen />);
+    const { getAllByText, getByText, getByTestId } = renderWithProviders(<PremiumScreen />);
 
-    expect(getByText('Sopaan Pro')).toBeTruthy();
+    expect(getAllByText('Sopaan Pro').length).toBeGreaterThanOrEqual(1);
     expect(getByText('Choose a plan')).toBeTruthy();
     expect(getByText('Monthly')).toBeTruthy();
     expect(getByText('Yearly')).toBeTruthy();
@@ -131,9 +133,9 @@ describe('PremiumScreen', () => {
   it('renders active subscription state for premium users', () => {
     mockAuthUser.isPremium = true;
 
-    const { getByText } = renderWithProviders(<PremiumScreen />);
+    const { getAllByText, getByText } = renderWithProviders(<PremiumScreen />);
 
-    expect(getByText("You're on Sopaan Pro")).toBeTruthy();
+    expect(getAllByText("You're on Sopaan Pro").length).toBeGreaterThanOrEqual(1);
     expect(getByText('Manage subscription')).toBeTruthy();
 
     fireEvent.press(getByText('Manage subscription'));

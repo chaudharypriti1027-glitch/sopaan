@@ -90,6 +90,108 @@ describe('admin content resources', () => {
     expect(await Course.countDocuments()).toBe(1);
   });
 
+  it('creates a course with lessons and updates them', async () => {
+    const token = await loginAdmin();
+
+    const created = await request(app)
+      .post('/api/admin/courses')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        title: 'Reasoning Mastery',
+        subject: 'Reasoning',
+        isFree: true,
+        status: 'draft',
+        lessons: [
+          {
+            title: 'Intro to puzzles',
+            order: 1,
+            notes: 'Key patterns for SSC',
+            durationSec: 900,
+          },
+        ],
+      })
+      .expect(201);
+
+    const courseId = created.body.id ?? created.body._id;
+    expect(created.body.lessons).toHaveLength(1);
+    expect(created.body.lessons[0].title).toBe('Intro to puzzles');
+
+    const lessonId = created.body.lessons[0]._id ?? created.body.lessons[0].id;
+
+    const updated = await request(app)
+      .put(`/api/admin/courses/${courseId}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        lessons: [
+          {
+            _id: lessonId,
+            title: 'Intro to puzzles (updated)',
+            order: 1,
+            videoUrl: 'https://cdn.example.com/lesson-1.mp4',
+            durationSec: 1200,
+            notes: 'Updated notes',
+          },
+          {
+            title: 'Seating arrangement',
+            order: 2,
+            notes: 'Practice set included',
+          },
+        ],
+      })
+      .expect(200);
+
+    expect(updated.body.lessons).toHaveLength(2);
+    expect(updated.body.lessons[0].videoUrl).toContain('lesson-1.mp4');
+  });
+
+  it('stores downloadable lesson material for students', async () => {
+    const token = await loginAdmin();
+    const materialUrl = 'http://localhost:4000/uploads/media/test-notes.pdf';
+
+    const created = await request(app)
+      .post('/api/admin/courses')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        title: 'GK Capsule',
+        subject: 'GK',
+        isFree: true,
+        status: 'published',
+        lessons: [
+          {
+            title: 'Weekly digest PDF',
+            order: 1,
+            materialUrl,
+            materialName: 'gk-week-1.pdf',
+            notes: 'Read the attached PDF before the quiz.',
+          },
+        ],
+      })
+      .expect(201);
+
+    const courseId = created.body.id ?? created.body._id;
+    expect(created.body.lessons[0].materialUrl).toBe(materialUrl);
+    expect(created.body.lessons[0].materialName).toBe('gk-week-1.pdf');
+
+    const student = await createTestUser({
+      email: `student-material-${Date.now()}@test.com`,
+      password: 'Password123!',
+      role: 'student',
+    });
+
+    const login = await request(app)
+      .post('/api/auth/login')
+      .send({ email: student.email, password: 'Password123!' })
+      .expect(200);
+
+    const detail = await request(app)
+      .get(`/api/courses/${courseId}`)
+      .set('Authorization', `Bearer ${login.body.token}`)
+      .expect(200);
+
+    expect(detail.body.lessons[0].materialUrl).toBe(materialUrl);
+    expect(detail.body.lessons[0].materialName).toBe('gk-week-1.pdf');
+  });
+
   it('generates AI summary and quiz for a current affair', async () => {
     const token = await loginAdmin();
 

@@ -157,7 +157,10 @@ export function QuestionsPage() {
 
       <DataTable
         rows={rows}
-        emptyMessage={query.isLoading ? 'Loading questions…' : 'No questions found'}
+        emptyMessage="No questions found"
+        isLoading={query.isLoading}
+        error={query.isError ? query.error : undefined}
+        onRetry={() => void query.refetch()}
         columns={[
           {
             key: 'text',

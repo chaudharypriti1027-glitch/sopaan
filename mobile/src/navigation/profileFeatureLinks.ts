@@ -55,6 +55,7 @@ export const PROFILE_FEATURE_SECTIONS: ProfileFeatureSection[] = [
     links: [
       { route: 'ExamCalendar', icon: Calendar, tone: 'gold', labelKey: 'examCalendar' },
       { route: 'Readiness', icon: Target, tone: 'primary', labelKey: 'readiness' },
+      { route: 'ExamPlan', icon: Sparkles, tone: 'gold', labelKey: 'examPlan' },
       { route: 'Roadmap', icon: Zap, tone: 'teal', labelKey: 'roadmap' },
       { route: 'StudyPlanner', icon: PenLine, tone: 'coral', labelKey: 'studyPlanner' },
       { route: 'PhysicalTest', icon: Trophy, tone: 'gold', labelKey: 'physicalTest' },
@@ -66,6 +67,8 @@ export const PROFILE_FEATURE_SECTIONS: ProfileFeatureSection[] = [
     titleKey: 'community',
     links: [
       { route: 'Forum', icon: MessageCircle, tone: 'primary', labelKey: 'forum' },
+      { route: 'Friends', icon: Users, tone: 'teal', labelKey: 'friends' },
+      { route: 'Messages', icon: MessageCircle, tone: 'gold', labelKey: 'messages' },
       { route: 'Mentors', icon: Users, tone: 'gold', labelKey: 'mentors' },
       { route: 'LiveClasses', icon: Video, tone: 'coral', labelKey: 'liveClasses' },
       { route: 'CommunityTests', icon: Radio, tone: 'teal', labelKey: 'communityTests' },

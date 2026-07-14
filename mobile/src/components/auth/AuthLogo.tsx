@@ -29,7 +29,6 @@ function createStyles() {
   return StyleSheet.create({
     wrap: {
       alignItems: 'center',
-      marginBottom: 18,
     },
     logo: {
       width: 70,

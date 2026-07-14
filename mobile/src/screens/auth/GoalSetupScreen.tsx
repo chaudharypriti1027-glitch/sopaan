@@ -17,12 +17,14 @@ import {
   AUTH_UI,
   AuthAnimatedSection,
   AuthBrandHeader,
+  AuthPremiumField,
   AuthProgressDots,
   AuthScreen,
   AuthStepLabel,
   GhostButton,
   PrimaryButton,
 } from '../../components/auth';
+import { AUTH_SPACING } from '../../components/auth/authTheme';
 import { ChipSelect, GoalCard } from '../../components';
 import { useAuth } from '../../auth';
 import { useOnboarding } from '../../auth/OnboardingContext';
@@ -32,6 +34,7 @@ import {
   type CareerGoal,
 } from '../../auth/onboardingData';
 import { parseApiError } from '../../api';
+import { isValidTargetExam } from '../../utils/examTarget';
 import type { AuthStackParamList } from '../../navigation/types';
 
 type GoalNav = NativeStackNavigationProp<AuthStackParamList, 'GoalSetup'>;
@@ -73,24 +76,60 @@ export function GoalSetupScreen() {
     (item) => !examCategory || item.categories.includes(examCategory),
   );
 
-  const [selectedGoal, setSelectedGoal] = useState<CareerGoal | null>(
-    goal
-      ? (CAREER_GOALS.find((g) => g.id === goal.careerId) ??
-          CAREER_GOALS.find((g) => g.examTrack === goal.examTrack) ??
-          null)
-      : null,
-  );
+  const [selectedGoal, setSelectedGoal] = useState<CareerGoal | null>(() => {
+    if (!goal) {
+      return null;
+    }
+
+    const byCareer = goal.careerId
+      ? CAREER_GOALS.find((item) => item.id === goal.careerId)
+      : null;
+
+    if (byCareer) {
+      return byCareer;
+    }
+
+    const byTrack = CAREER_GOALS.find((item) => item.examTrack === goal.examTrack);
+    if (byTrack) {
+      return byTrack;
+    }
+
+    return CAREER_GOALS.find((item) => item.id === 'other-govt-job') ?? null;
+  });
   const yearOptions = getTargetYearOptions();
   const [targetYear, setTargetYear] = useState(goal?.targetYear ?? yearOptions[1]);
+  const [customExamName, setCustomExamName] = useState(() => {
+    if (!goal?.examTrack) {
+      return '';
+    }
+
+    const predefined = CAREER_GOALS.find(
+      (item) => item.examTrack === goal.examTrack && item.id !== 'other-govt-job',
+    );
+
+    if (predefined) {
+      return '';
+    }
+
+    return goal.examTrack;
+  });
   const [loading, setLoading] = useState(false);
 
+  const isOtherGoal = selectedGoal?.id === 'other-govt-job';
+  const canContinue =
+    Boolean(selectedGoal) && (!isOtherGoal || isValidTargetExam('Other', customExamName));
+
   const handleContinue = async () => {
-    if (!selectedGoal) return;
+    if (!selectedGoal || !canContinue) return;
+
+    const examTrack = isOtherGoal
+      ? customExamName.trim()
+      : selectedGoal.examTrack;
 
     const payload = {
       careerId: selectedGoal.id,
       careerLabel: selectedGoal.title,
-      examTrack: selectedGoal.examTrack,
+      examTrack,
       targetYear,
     };
 
@@ -128,7 +167,7 @@ export function GoalSetupScreen() {
             label={t('common:continue')}
             testID="goal-setup-continue"
             loading={loading}
-            disabled={!selectedGoal}
+            disabled={!canContinue}
             onPress={handleContinue}
           />
         </View>
@@ -169,6 +208,19 @@ export function GoalSetupScreen() {
             ))}
           </View>
         </AuthAnimatedSection>
+
+        {isOtherGoal ? (
+          <AuthAnimatedSection index={2}>
+            <AuthPremiumField
+              label={t('auth:profileSetup.customExamLabel')}
+              value={customExamName}
+              onChangeText={setCustomExamName}
+              placeholder={t('auth:profileSetup.customExamPlaceholder')}
+              autoCapitalize="characters"
+              testID="goal-setup-custom-exam"
+            />
+          </AuthAnimatedSection>
+        ) : null}
       </View>
     </AuthScreen>
   );
@@ -180,7 +232,7 @@ function createStyles() {
       gap: 20,
     },
     footer: {
-      gap: 10,
+      gap: AUTH_SPACING.footer,
     },
     grid: {
       flexDirection: 'row',

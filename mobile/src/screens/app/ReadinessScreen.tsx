@@ -2,13 +2,15 @@ import { useNavigation } from '@react-navigation/native';
 import { Target } from 'lucide-react-native';
 import { useMemo } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import {
   Button,
-  Card,
+  FeatureScreenLayout,
+  PremiumFeatureCard,
   PremiumHeroCard,
+  PremiumScreen,
   ProgressBar,
   RankRing,
-  Screen,
   SectionTitle,
   ShareMilestoneButton,
 } from '../../components';
@@ -17,6 +19,7 @@ import { useProfile, useReadiness } from '../../hooks';
 import { useTheme } from '../../theme';
 
 export function ReadinessScreen() {
+  const { t } = useTranslation('app');
   const navigation = useNavigation();
   const { user } = useAuth();
   const { theme } = useTheme();
@@ -29,39 +32,38 @@ export function ReadinessScreen() {
 
   if (profileQuery.isLoading || readinessQuery.isLoading) {
     return (
-      <Screen style={styles.centered}>
+      <PremiumScreen style={styles.centered}>
         <ActivityIndicator size="large" color={theme.colors.brand.primary} />
-      </Screen>
+      </PremiumScreen>
     );
   }
 
   if (!hasGoal || !data) {
     return (
-      <Screen style={styles.centered}>
-        <Text style={styles.empty}>Set your exam goal to see readiness score.</Text>
-        <Button label="Go back" variant="ghost" onPress={() => navigation.goBack()} />
-      </Screen>
+      <FeatureScreenLayout title={t('readiness.title')}>
+        <View style={styles.emptyWrap}>
+          <Text style={styles.empty}>{t('readiness.setGoalEmpty')}</Text>
+          <Button label={t('readiness.goBack')} variant="ghost" onPress={() => navigation.goBack()} />
+        </View>
+      </FeatureScreenLayout>
     );
   }
 
   const cutoff = data.cutoffGap;
+  const headerSubtitle = `${data.examTrack}${data.targetYear ? ` · ${data.targetYear}` : ''}`;
 
   return (
-    <Screen scroll contentContainerStyle={styles.content}>
-      <SectionTitle
-        subtitle={`${data.examTrack}${data.targetYear ? ` · ${data.targetYear}` : ''}`}
-      />
-
+    <FeatureScreenLayout title={t('readiness.title')} subtitle={headerSubtitle}>
       <PremiumHeroCard
         icon={<Target size={24} color="#FFFFFF" strokeWidth={1.8} />}
-        eyebrow="Goal readiness"
-        title={`${data.score}% ready`}
+        eyebrow={t('readiness.goalReady')}
+        title={t('readiness.readyTitle', { score: data.score })}
       >
         <View style={styles.heroRingWrap}>
           <RankRing
             value={data.score}
             max={100}
-            label="Goal ready"
+            label={t('readiness.goalReady')}
             size={110}
             variant="gold"
             trackColor="rgba(255,255,255,0.15)"
@@ -70,7 +72,9 @@ export function ReadinessScreen() {
           />
         </View>
         <Text style={styles.assessed}>
-          Updated {new Date(data.assessedAt).toLocaleDateString('en-IN')}
+          {t('readiness.updated', {
+            date: new Date(data.assessedAt).toLocaleDateString('en-IN'),
+          })}
         </Text>
       </PremiumHeroCard>
 
@@ -79,19 +83,19 @@ export function ReadinessScreen() {
         variant="gold"
         data={{
           kind: 'readiness',
-          userName: user?.name ?? 'Sopaan student',
+          userName: user?.name ?? t('profile.sopaanStudent'),
           headline: `${data.score}%`,
-          subtitle: `${data.examTrack}${data.targetYear ? ` · ${data.targetYear}` : ''}`,
+          subtitle: headerSubtitle,
           metrics: data.byArea.slice(0, 3).map((area) => ({
             label: area.name,
             value: `${area.pct}%`,
           })),
-          footerNote: 'Tracking my exam readiness on Sopaan',
+          footerNote: t('readiness.footerNote'),
         }}
       />
 
-      <SectionTitle title="Area breakdown" />
-      <Card style={styles.areas}>
+      <SectionTitle title={t('readiness.areaBreakdown')} />
+      <PremiumFeatureCard style={styles.areas}>
         {data.byArea.map((area) => (
           <ProgressBar
             key={area.name}
@@ -102,12 +106,12 @@ export function ReadinessScreen() {
             variant={area.pct >= 70 ? 'teal' : area.pct >= 50 ? 'gold' : 'primary'}
           />
         ))}
-      </Card>
+      </PremiumFeatureCard>
 
       {cutoff ? (
         <View style={styles.section}>
-          <SectionTitle title="Cutoff gap" />
-          <Card style={styles.cutoffCard}>
+          <SectionTitle title={t('readiness.cutoffGap')} />
+          <PremiumFeatureCard style={styles.cutoffCard}>
             {cutoff.note ? (
               <Text style={styles.cutoffNote}>{cutoff.note}</Text>
             ) : (
@@ -115,47 +119,56 @@ export function ReadinessScreen() {
                 <View style={styles.cutoffRow}>
                   <View style={styles.cutoffStat}>
                     <Text style={styles.cutoffValue}>{cutoff.current}</Text>
-                    <Text style={styles.cutoffLabel}>Your proxy</Text>
+                    <Text style={styles.cutoffLabel}>{t('readiness.yourProxy')}</Text>
                   </View>
                   <Target size={20} color={theme.colors.text.tertiary} />
                   <View style={styles.cutoffStat}>
                     <Text style={styles.cutoffValue}>{cutoff.target ?? '—'}</Text>
                     <Text style={styles.cutoffLabel}>
-                      Target {cutoff.category ?? ''} {cutoff.year ?? ''}
+                      {t('readiness.target', {
+                        category: cutoff.category ?? '',
+                        year: cutoff.year ?? '',
+                      })}
                     </Text>
                   </View>
                 </View>
                 {cutoff.gap != null && cutoff.gap > 0 ? (
                   <Text style={styles.gapText}>
-                    You need ~{cutoff.gap} more marks to reach the cutoff benchmark.
+                    {t('readiness.gapNeeded', { gap: cutoff.gap })}
                   </Text>
                 ) : (
-                  <Text style={styles.gapGood}>You are at or above the cutoff benchmark.</Text>
+                  <Text style={styles.gapGood}>{t('readiness.gapGood')}</Text>
                 )}
               </>
             )}
-          </Card>
+          </PremiumFeatureCard>
         </View>
       ) : null}
 
       {(data.focusNext ?? []).length > 0 ? (
         <View style={styles.section}>
-          <SectionTitle title="Focus next" />
-          <Card style={styles.focusCard}>
+          <SectionTitle title={t('readiness.focusNext')} />
+          <PremiumFeatureCard style={styles.focusCard}>
             {data.focusNext!.map((item) => (
-              <Text key={item} style={styles.focusItem}>• {item}</Text>
+              <Text key={item} style={styles.focusItem}>
+                • {item}
+              </Text>
             ))}
-          </Card>
+          </PremiumFeatureCard>
         </View>
       ) : null}
-    </Screen>
+    </FeatureScreenLayout>
   );
 }
 
 function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
-    content: { gap: theme.spacing.lg, paddingBottom: theme.spacing['3xl'] },
-    centered: { alignItems: 'center', justifyContent: 'center', padding: theme.spacing.xl, gap: theme.spacing.md },
+    centered: { alignItems: 'center', justifyContent: 'center' },
+    emptyWrap: {
+      alignItems: 'center',
+      gap: theme.spacing.md,
+      paddingVertical: theme.spacing.xl,
+    },
     empty: { ...theme.typography.presets.body, color: theme.colors.text.secondary, textAlign: 'center' },
     heroRingWrap: { alignItems: 'center', zIndex: 1 },
     assessed: {

@@ -71,7 +71,10 @@ export function TestsPage() {
 
       <DataTable
         rows={rows}
-        emptyMessage={query.isLoading ? 'Loading pending tests…' : 'No tests pending review'}
+        emptyMessage="No tests pending review"
+        isLoading={query.isLoading}
+        error={query.isError ? query.error : undefined}
+        onRetry={() => void query.refetch()}
         columns={[
           {
             key: 'title',

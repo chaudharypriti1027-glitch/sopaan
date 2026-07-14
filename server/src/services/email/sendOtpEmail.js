@@ -2,6 +2,14 @@ import nodemailer from 'nodemailer';
 import { env } from '../../config/env.js';
 import { AppError } from '../../utils/AppError.js';
 import { logger } from '../../observability/logger.js';
+import { buildOtpEmailHtml, buildOtpEmailSubject, buildOtpEmailText } from './otpEmailCopy.js';
+
+export function isEmailOtpConfigured() {
+  const host = process.env.SMTP_HOST?.trim();
+  const user = process.env.SMTP_USER?.trim();
+  const pass = process.env.SMTP_PASS?.trim();
+  return Boolean(host && user && pass);
+}
 
 function smtpConfig() {
   const host = process.env.SMTP_HOST?.trim();
@@ -19,6 +27,7 @@ function smtpConfig() {
     host,
     port,
     secure,
+    requireTLS: !secure && port === 587,
     auth: { user, pass },
   };
 }
@@ -39,20 +48,9 @@ export async function sendOtpEmail(to, code) {
     process.env.SMTP_USER?.trim() ||
     'Sopaan <noreply@sopaan.app>';
 
-  const subject = 'Your Sopaan login code';
-  const text = [
-    'Hi,',
-    '',
-    `Your Sopaan login code is: ${code}`,
-    '',
-    `This code expires in 5 minutes.`,
-    '',
-    'Do not share this code with anyone. Sopaan will never ask for your OTP over phone or chat.',
-    '',
-    'If you did not request this, you can safely ignore this email.',
-    '',
-    '— Team Sopaan',
-  ].join('\n');
+  const subject = buildOtpEmailSubject();
+  const text = buildOtpEmailText(code);
+  const html = buildOtpEmailHtml(code);
 
   if (!config || env.isTest) {
     if (env.isProduction && !config) {
@@ -70,7 +68,9 @@ export async function sendOtpEmail(to, code) {
       to: normalizedTo,
       subject,
       text,
+      html,
     });
+    logger.info('[email][smtp] OTP sent', { to: normalizedTo });
   } catch (err) {
     logger.error('[email][smtp] OTP send failed', { to: normalizedTo, message: err.message });
     throw new AppError('Failed to send OTP email', 503, 'EMAIL_UNAVAILABLE');

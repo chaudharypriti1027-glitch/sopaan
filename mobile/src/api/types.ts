@@ -135,6 +135,8 @@ export type Course = {
     videoUrl?: string;
     durationSec?: number;
     notes?: string;
+    materialUrl?: string;
+    materialName?: string;
   }[];
   progress?: {
     completedLessons?: string[];
@@ -282,6 +284,11 @@ export type CurrentAffair = {
   imageColor?: string;
   state?: string;
   quizQuestions?: string[];
+  quizQuestionCount?: number;
+  shortAnswer?: string | null;
+  examTip?: string | null;
+  keyPoints?: string[];
+  cachedAt?: string;
   [key: string]: unknown;
 };
 
@@ -306,6 +313,8 @@ export type PlannerSession = {
   motivation?: string;
   completed: boolean;
   date?: string;
+  actionType?: string | null;
+  actionResourceId?: string | null;
 };
 
 export type PlannerSessionsResponse = {

@@ -10,12 +10,14 @@ import {
   Text,
   View,
 } from 'react-native';
-import { BackButton, Button, Screen, SectionTitle, TextField } from '../../components';
+import { useTranslation } from 'react-i18next';
+import { BackButton, Button, FeatureScreenLayout, TextField } from '../../components';
 import { useGroupChat } from '../../hooks/useSocket';
 import type { MainStackParamList } from '../../navigation/types';
 import { useTheme } from '../../theme';
 
 export function GroupChatScreen() {
+  const { t } = useTranslation('app');
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
   const route = useRoute<{ key: string; name: 'GroupChat'; params: MainStackParamList['GroupChat'] }>();
   const { groupId, groupName } = route.params;
@@ -33,17 +35,17 @@ export function GroupChatScreen() {
     }
 
     if (!sendMessage(text)) {
-      Alert.alert('Not connected', 'Reconnecting… Please try again in a moment.');
+      Alert.alert(t('groupChat.notConnected'), t('groupChat.notConnectedBody'));
       return;
     }
     setDraft('');
   };
 
   const confirmReport = (messageId: string) => {
-    Alert.alert('Report message?', 'Our moderators will review this message.', [
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert(t('groupChat.reportTitle'), t('groupChat.reportBody'), [
+      { text: t('groupChat.cancel'), style: 'cancel' },
       {
-        text: 'Report',
+        text: t('groupChat.report'),
         style: 'destructive',
         onPress: () => reportMessage(messageId),
       },
@@ -51,11 +53,12 @@ export function GroupChatScreen() {
   };
 
   return (
-    <Screen style={styles.screen} padded={false}>
-      <View style={styles.header}>
-        <BackButton onPress={() => navigation.goBack()} />
-        <SectionTitle title={groupName} subtitle={connected ? 'Connected' : 'Reconnecting…'} />
-      </View>
+    <FeatureScreenLayout
+      title={groupName}
+      subtitle={connected ? t('groupChat.connected') : t('groupChat.reconnecting')}
+      contentStyle={styles.layout}
+    >
+      <BackButton onPress={() => navigation.goBack()} />
 
       {error && error.code !== 'REPORTED' ? (
         <Text style={styles.error}>{error.message}</Text>
@@ -67,6 +70,7 @@ export function GroupChatScreen() {
       <FlatList
         data={messages}
         keyExtractor={(item) => item.id}
+        style={styles.list}
         contentContainerStyle={styles.messages}
         renderItem={({ item }) => {
           const mine = item.userId === currentUserId;
@@ -74,7 +78,7 @@ export function GroupChatScreen() {
           return (
             <View style={[styles.bubble, mine ? styles.bubbleMine : styles.bubbleOther]}>
               <View style={styles.bubbleHeader}>
-                <Text style={styles.author}>{mine ? 'You' : item.userName}</Text>
+                <Text style={styles.author}>{mine ? t('groupChat.you') : item.userName}</Text>
                 {!mine ? (
                   <Pressable onPress={() => confirmReport(item.id)} hitSlop={8}>
                     <Flag size={14} color={theme.colors.text.tertiary} />
@@ -89,41 +93,44 @@ export function GroupChatScreen() {
 
       <View style={styles.composer}>
         <TextField
-          placeholder="Message your study group…"
+          placeholder={t('groupChat.placeholder')}
           value={draft}
           onChangeText={setDraft}
           multiline
           style={styles.input}
         />
-        <Button label="Send" onPress={submit} disabled={!connected || !draft.trim()} />
+        <Button
+          label={t('groupChat.send')}
+          onPress={submit}
+          disabled={!connected || !draft.trim()}
+        />
       </View>
-    </Screen>
+    </FeatureScreenLayout>
   );
 }
 
 function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
-    screen: { flex: 1 },
-    header: {
-      paddingHorizontal: theme.spacing.lg,
-      paddingTop: theme.spacing.md,
+    layout: {
+      flex: 1,
       gap: theme.spacing.sm,
+      paddingBottom: theme.spacing.md,
     },
-    back: { ...theme.typography.presets.bodyMedium, color: theme.colors.brand.primary },
     error: {
       ...theme.typography.presets.caption,
       color: theme.colors.semantic.error,
-      paddingHorizontal: theme.spacing.lg,
     },
     success: {
       ...theme.typography.presets.caption,
       color: theme.colors.semantic.success,
-      paddingHorizontal: theme.spacing.lg,
+    },
+    list: {
+      flex: 1,
     },
     messages: {
-      padding: theme.spacing.lg,
       gap: theme.spacing.sm,
       flexGrow: 1,
+      paddingVertical: theme.spacing.sm,
     },
     bubble: {
       maxWidth: '85%',
@@ -147,10 +154,10 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     },
     messageText: { ...theme.typography.presets.body, color: theme.colors.text.primary },
     composer: {
-      padding: theme.spacing.lg,
       gap: theme.spacing.sm,
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: theme.colors.border.subtle,
+      paddingTop: theme.spacing.sm,
       backgroundColor: theme.colors.surface.default,
     },
     input: { minHeight: 44, maxHeight: 120, textAlignVertical: 'top' },

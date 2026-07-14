@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { disconnectAdminSocket, onAdminDashboardCounters } from '../realtime/adminSocket';
+import { onAdminDashboardCounters } from '../realtime/adminSocket';
 
 export function useAdminDashboardSocket() {
   const queryClient = useQueryClient();
@@ -18,7 +18,6 @@ export function useAdminDashboardSocket() {
 
     return () => {
       unsubscribe();
-      disconnectAdminSocket();
     };
   }, [queryClient]);
 }

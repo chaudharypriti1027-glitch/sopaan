@@ -3,7 +3,7 @@ import * as currentAffairController from '../controllers/currentAffairController
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { validate } from '../middleware/validate.js';
 import { cacheHeaders } from '../middleware/cacheHeaders.js';
-import { currentAffairsQuerySchema, digestDateQuerySchema } from '../validators/contentValidators.js';
+import { currentAffairsQuerySchema, digestDateQuerySchema, paginationQuerySchema } from '../validators/contentValidators.js';
 
 const router = Router();
 
@@ -24,6 +24,14 @@ router.get(
   cacheHeaders('currentAffairsList'),
   validate(currentAffairsQuerySchema, 'query'),
   asyncHandler(currentAffairController.listCurrentAffairs)
+);
+router.get('/:id/study-pack', asyncHandler(currentAffairController.getAffairStudyPack));
+router.get('/:id/quiz-game', asyncHandler(currentAffairController.getAffairQuizGame));
+router.get(
+  '/:id/ai-summary',
+  cacheHeaders('currentAffairDetail'),
+  validate(paginationQuerySchema, 'query'),
+  asyncHandler(currentAffairController.getAffairAiSummary),
 );
 router.get('/:id', asyncHandler(currentAffairController.getCurrentAffair));
 

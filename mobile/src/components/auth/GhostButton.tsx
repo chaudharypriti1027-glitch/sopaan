@@ -70,14 +70,14 @@ function createStyles() {
     button: {
       minHeight: 48,
       borderRadius: AUTH_UI.btnRadius,
-      borderWidth: 1.5,
+      borderWidth: 1,
       borderColor: AUTH_UI.border,
       backgroundColor: AUTH_UI.card,
       alignItems: 'center',
       justifyContent: 'center',
       paddingVertical: 13,
       paddingHorizontal: 16,
-      marginTop: 10,
+      marginTop: 6,
     },
     fullWidth: {
       alignSelf: 'stretch',

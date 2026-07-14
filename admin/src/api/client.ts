@@ -8,7 +8,9 @@ import type { ApiError as ApiErrorType, RefreshResponse } from './types';
 import { ApiError } from './types';
 import { getApiOrigin } from '../realtime/socketOrigin';
 
-const API_BASE = getApiOrigin();
+function apiUrl(path: string) {
+  return `${getApiOrigin()}${path}`;
+}
 
 let refreshPromise: Promise<boolean> | null = null;
 
@@ -16,7 +18,7 @@ async function refreshAccessToken(): Promise<boolean> {
   const refreshToken = getRefreshToken();
   if (!refreshToken) return false;
 
-  const res = await fetch(`${API_BASE}/api/auth/refresh`, {
+  const res = await fetch(apiUrl('/api/auth/refresh'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ refreshToken }),
@@ -65,7 +67,7 @@ export async function apiRequest<T>(
     headers.set('Authorization', `Bearer ${token}`);
   }
 
-  const res = await fetch(`${API_BASE}${path}`, { ...init, headers });
+  const res = await fetch(apiUrl(path), { ...init, headers });
 
   if (res.status === 401 && retryOn401 && getRefreshToken()) {
     const refreshed = await ensureRefreshed();
@@ -102,5 +104,5 @@ export async function apiRequest<T>(
   return res.json() as Promise<T>;
 }
 
-export { ApiError as isApiError };
+export { ApiError };
 export type { ApiErrorType };

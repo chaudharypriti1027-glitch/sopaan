@@ -1,20 +1,17 @@
 import { AppError } from '../../utils/AppError.js';
 import { logger } from '../../observability/logger.js';
-import { buildOtpSmsBody, resolveTwilioVerifyTemplateSid } from './otpSmsCopy.js';
+import { getTwilioCredentials } from '../../config/twilioConfig.js';
+import { resolveTwilioVerifyTemplateSid } from './otpSmsCopy.js';
 
 const INVALID_OTP_MESSAGE = 'Invalid or expired OTP';
 const VERIFY_BASE = 'https://verify.twilio.com/v2';
 
 function credentials() {
-  const accountSid = process.env.TWILIO_ACCOUNT_SID?.trim();
-  const authToken = process.env.TWILIO_AUTH_TOKEN?.trim();
-  const serviceSid = process.env.TWILIO_VERIFY_SERVICE_SID?.trim();
-
-  if (!accountSid || !authToken || !serviceSid) {
+  const creds = getTwilioCredentials();
+  if (!creds?.serviceSid) {
     return null;
   }
-
-  return { accountSid, authToken, serviceSid };
+  return creds;
 }
 
 /** Phone OTP via Twilio Verify when service SID + credentials are set (skipped in tests). */
@@ -79,6 +76,15 @@ async function verifyRequest(path, fields) {
         'SMS cannot be sent to this number on a Twilio trial account. Upgrade Twilio billing or verify the number in Twilio Console.',
         503,
         'SMS_TRIAL_RESTRICTED',
+      );
+    }
+
+    // Regional SMS permission not enabled (common for India on new Twilio accounts).
+    if (code === 21408) {
+      throw new AppError(
+        'SMS to this country is not enabled on the Twilio account. Enable India under Messaging Geo Permissions.',
+        503,
+        'SMS_GEO_RESTRICTED',
       );
     }
 

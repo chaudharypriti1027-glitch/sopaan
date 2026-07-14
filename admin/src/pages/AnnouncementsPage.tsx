@@ -228,7 +228,10 @@ export function AnnouncementsPage() {
       <div className="sec-t">Banners</div>
       <DataTable
         rows={bannersQuery.data?.items ?? []}
-        emptyMessage={bannersQuery.isLoading ? 'Loading banners…' : 'No banners yet'}
+        emptyMessage="No banners yet"
+        isLoading={bannersQuery.isLoading}
+        error={bannersQuery.isError ? bannersQuery.error : undefined}
+        onRetry={() => void bannersQuery.refetch()}
         columns={[
           { key: 'message', header: 'Message', render: (row) => row.message },
           { key: 'link', header: 'Destination', render: (row) => linkSummary(row) },

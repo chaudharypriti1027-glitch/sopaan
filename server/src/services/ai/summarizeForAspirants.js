@@ -10,6 +10,9 @@ const MAX_ATTEMPTS = 2;
 
 const summaryShapeSchema = z.object({
   summary: z.string().trim().min(20).max(MAX_SUMMARY_CHARS),
+  shortAnswer: z.string().trim().min(10).max(220),
+  examTip: z.string().trim().min(10).max(200),
+  keyPoints: z.array(z.string().trim().min(5).max(120)).min(3).max(5),
   category: z.string().trim().min(1),
   quizQuestions: z.array(z.unknown()).length(3),
 });
@@ -42,6 +45,9 @@ export function validateSummarizeForAspirantsResponse(raw) {
 
   return {
     summary: parsed.data.summary.trim(),
+    shortAnswer: parsed.data.shortAnswer.trim(),
+    examTip: parsed.data.examTip.trim(),
+    keyPoints: parsed.data.keyPoints.map((point) => point.trim()),
     category: parsed.data.category.trim(),
     quizQuestions,
   };

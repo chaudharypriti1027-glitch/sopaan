@@ -33,8 +33,8 @@ jest.mock('../../hooks', () => ({
 jest.mock('../../games/WordScrambleGame', () => {
   const { Pressable, Text } = require('react-native');
   return {
-    WordScrambleGame: ({ onComplete }: { onComplete: (score: number) => void }) => (
-      <Pressable accessibilityRole="button" testID="mock-finish-game" onPress={() => onComplete(80)}>
+    WordScrambleGame: ({ onComplete }: { onComplete: (result: { score: number }) => void }) => (
+      <Pressable accessibilityRole="button" testID="mock-finish-game" onPress={() => onComplete({ score: 80 })}>
         <Text>Mock game</Text>
       </Pressable>
     ),
@@ -53,7 +53,7 @@ describe('GamePlayScreen', () => {
 
     await waitFor(() => {
       expect(mockMutate).toHaveBeenCalledWith(
-        { gameId: 'word-scramble', score: 80 },
+        expect.objectContaining({ gameId: 'word-scramble', score: 80 }),
         expect.any(Object),
       );
     });

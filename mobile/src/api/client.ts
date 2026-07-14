@@ -1,4 +1,4 @@
-import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
+import { create, type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import { config } from '../config/env';
 import { getAppLanguage } from './language';
 import { getAccessToken, getTokens, saveTokens, clearTokens } from '../lib/secure';
@@ -61,7 +61,7 @@ async function refreshAccessToken(): Promise<string> {
   return token;
 }
 
-export const apiClient = axios.create({
+export const apiClient = create({
   baseURL: config.apiBaseUrl,
   headers: {
     Accept: 'application/json',

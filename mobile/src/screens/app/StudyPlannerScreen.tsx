@@ -10,18 +10,25 @@ import {
   Text,
   View,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import {
   AIBadge,
   AIGoldCard,
   Button,
-  Card,
   DateChip,
+  FeatureScreenLayout,
   PlanTaskRow,
-  Screen,
-  SectionTitle,
+  PremiumFeatureCard,
   TextField,
   TimelineItem,
 } from '../../components';
+import {
+  DEFAULT_STUDY_SESSION_MINUTES,
+  DEFAULT_STUDY_SESSION_TYPE,
+  DEFAULT_STUDY_START_TIME,
+  STUDY_MIN_SESSION_MINUTES,
+  STUDY_SESSION_TYPE_SUGGESTIONS,
+} from '../../content/featureDefaultsContent';
 import {
   todayDateString,
   useCreatePlannerSession,
@@ -58,9 +65,12 @@ function sortSessions(sessions: PlannerSession[]): PlannerSession[] {
 }
 
 export function StudyPlannerScreen() {
+  const { t } = useTranslation('app');
   const route = useRoute<RouteProp<MainStackParamList, 'StudyPlanner'>>();
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
+
+  const typePlaceholder = STUDY_SESSION_TYPE_SUGGESTIONS.join(' / ');
 
   const initialDate = route.params?.date ?? todayDateString();
   const [selectedDate, setSelectedDate] = useState(initialDate);
@@ -79,20 +89,20 @@ export function StudyPlannerScreen() {
 
   const [showAdd, setShowAdd] = useState(false);
   const [subject, setSubject] = useState('');
-  const [startTime, setStartTime] = useState('09:00');
-  const [durationMin, setDurationMin] = useState('45');
-  const [type, setType] = useState('study');
+  const [startTime, setStartTime] = useState(DEFAULT_STUDY_START_TIME);
+  const [durationMin, setDurationMin] = useState(String(DEFAULT_STUDY_SESSION_MINUTES));
+  const [type, setType] = useState<string>(DEFAULT_STUDY_SESSION_TYPE);
 
   const sessions = sortSessions(sessionsQuery.data?.items ?? []);
 
   const handleAdd = () => {
     if (!subject.trim()) {
-      Alert.alert('Subject required', 'Enter what you plan to study.');
+      Alert.alert(t('studyPlanner.subjectRequired'), t('studyPlanner.subjectRequiredBody'));
       return;
     }
     const duration = Number(durationMin);
-    if (!duration || duration < 5) {
-      Alert.alert('Invalid duration', 'Duration must be at least 5 minutes.');
+    if (!duration || duration < STUDY_MIN_SESSION_MINUTES) {
+      Alert.alert(t('studyPlanner.invalidDuration'), t('studyPlanner.invalidDurationBody'));
       return;
     }
 
@@ -102,14 +112,14 @@ export function StudyPlannerScreen() {
         subject: subject.trim(),
         startTime,
         durationMin: duration,
-        type: type.trim() || 'study',
+        type: type.trim() || DEFAULT_STUDY_SESSION_TYPE,
       },
       {
         onSuccess: () => {
           setShowAdd(false);
           setSubject('');
         },
-        onError: (err) => Alert.alert('Could not add session', String(err)),
+        onError: (err) => Alert.alert(t('studyPlanner.addFailed'), String(err)),
       },
     );
   };
@@ -118,17 +128,13 @@ export function StudyPlannerScreen() {
     generatePlan.mutate(
       { date: selectedDate },
       {
-        onError: (err) => Alert.alert('AI plan failed', String(err)),
+        onError: (err) => Alert.alert(t('studyPlanner.aiPlanFailed'), String(err)),
       },
     );
   };
 
   return (
-    <Screen scroll contentContainerStyle={styles.content}>
-      <SectionTitle
-        subtitle="Week view with timed sessions — add your own or let AI plan the day"
-      />
-
+    <FeatureScreenLayout title={t('studyPlanner.title')} subtitle={t('studyPlanner.subtitle')}>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.weekStrip}>
         {week.map((date) => (
           <DateChip
@@ -143,14 +149,14 @@ export function StudyPlannerScreen() {
 
       <View style={styles.actions}>
         <Button
-          label="Add session"
+          label={t('studyPlanner.addSession')}
           variant="ghost"
           size="sm"
           onPress={() => setShowAdd((v) => !v)}
           style={styles.actionBtn}
         />
         <Button
-          label="AI plan"
+          label={t('studyPlanner.aiPlan')}
           size="sm"
           icon={<Sparkles size={16} color={theme.colors.brand.onPrimary} />}
           loading={generatePlan.isPending}
@@ -160,30 +166,50 @@ export function StudyPlannerScreen() {
       </View>
 
       {showAdd ? (
-        <Card style={styles.addCard}>
-          <TextField label="Subject" value={subject} onChangeText={setSubject} placeholder="e.g. Polity" />
+        <PremiumFeatureCard style={styles.addCard}>
+          <TextField
+            label={t('studyPlanner.subject')}
+            value={subject}
+            onChangeText={setSubject}
+            placeholder={t('studyPlanner.subjectPlaceholder')}
+          />
           <View style={styles.row}>
             <View style={styles.half}>
-              <TextField label="Start" value={startTime} onChangeText={setStartTime} placeholder="09:00" />
+              <TextField
+                label={t('studyPlanner.start')}
+                value={startTime}
+                onChangeText={setStartTime}
+                placeholder={t('studyPlanner.startPlaceholder')}
+              />
             </View>
             <View style={styles.half}>
               <TextField
-                label="Minutes"
+                label={t('studyPlanner.minutes')}
                 value={durationMin}
                 onChangeText={setDurationMin}
-                placeholder="45"
+                placeholder={t('studyPlanner.minutesPlaceholder')}
                 keyboardType="number-pad"
               />
             </View>
           </View>
-          <TextField label="Type" value={type} onChangeText={setType} placeholder="study / revision / mock" />
-          <Button label="Save session" onPress={handleAdd} loading={createSession.isPending} fullWidth />
-        </Card>
+          <TextField
+            label={t('studyPlanner.type')}
+            value={type}
+            onChangeText={setType}
+            placeholder={typePlaceholder}
+          />
+          <Button
+            label={t('studyPlanner.saveSession')}
+            onPress={handleAdd}
+            loading={createSession.isPending}
+            fullWidth
+          />
+        </PremiumFeatureCard>
       ) : null}
 
       {generatePlan.data?.summary ? (
         <AIGoldCard style={styles.summaryCard}>
-          <AIBadge label="AI plan" />
+          <AIBadge label={t('studyPlanner.aiPlan')} />
           <Text style={styles.summary}>{generatePlan.data.summary}</Text>
         </AIGoldCard>
       ) : null}
@@ -191,11 +217,11 @@ export function StudyPlannerScreen() {
       {sessionsQuery.isLoading ? (
         <ActivityIndicator color={theme.colors.brand.primary} />
       ) : sessions.length === 0 ? (
-        <Card>
-          <Text style={styles.empty}>No sessions for this day. Tap AI plan or add one manually.</Text>
-        </Card>
+        <PremiumFeatureCard>
+          <Text style={styles.empty}>{t('studyPlanner.empty')}</Text>
+        </PremiumFeatureCard>
       ) : (
-        <Card style={styles.timelineCard}>
+        <PremiumFeatureCard style={styles.timelineCard}>
           {sessions.map((session, index) => (
             <View key={session.id}>
               <TimelineItem
@@ -204,13 +230,18 @@ export function StudyPlannerScreen() {
                 subtitle={
                   session.motivation ??
                   session.reason ??
-                  `${session.durationMin} min · ${session.type}`
+                  t('studyPlanner.sessionSubtitle', {
+                    minutes: session.durationMin,
+                    type: session.type,
+                  })
                 }
                 completed={session.completed}
                 isLast={index === sessions.length - 1}
               />
               <PlanTaskRow
-                title={session.completed ? 'Completed' : 'Mark complete'}
+                title={
+                  session.completed ? t('studyPlanner.completed') : t('studyPlanner.markComplete')
+                }
                 completed={session.completed}
                 onToggle={() =>
                   updateSession.mutate({
@@ -222,25 +253,24 @@ export function StudyPlannerScreen() {
               />
             </View>
           ))}
-        </Card>
+        </PremiumFeatureCard>
       )}
-    </Screen>
+    </FeatureScreenLayout>
   );
 }
 
 function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
-    content: { gap: theme.spacing.lg, paddingBottom: theme.spacing['3xl'] },
     weekStrip: { gap: theme.spacing.sm, paddingVertical: theme.spacing.xs },
     dateChip: { marginRight: theme.spacing.xs },
     actions: { flexDirection: 'row', gap: theme.spacing.sm },
     actionBtn: { flex: 1 },
-    addCard: { gap: theme.spacing.md },
+    addCard: { gap: theme.spacing.md, padding: theme.spacing.md },
     row: { flexDirection: 'row', gap: theme.spacing.md },
     half: { flex: 1 },
     summaryCard: { gap: theme.spacing.sm },
     summary: { ...theme.typography.presets.body, color: theme.colors.text.primary },
-    timelineCard: { gap: theme.spacing.sm },
+    timelineCard: { gap: theme.spacing.sm, padding: theme.spacing.md },
     taskRow: { marginLeft: theme.spacing['2xl'] },
     empty: { ...theme.typography.presets.body, color: theme.colors.text.secondary },
   });

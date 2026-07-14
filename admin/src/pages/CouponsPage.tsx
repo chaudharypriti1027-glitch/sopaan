@@ -253,7 +253,10 @@ export function CouponsPage() {
           <div style={{ padding: '0 16px 16px' }}>
             <DataTable<AdminCoupon>
               rows={rows}
-              emptyMessage={couponsQuery.isLoading ? 'Loading coupons…' : 'No coupons yet'}
+              emptyMessage="No coupons yet"
+              isLoading={couponsQuery.isLoading}
+              error={couponsQuery.isError ? couponsQuery.error : undefined}
+              onRetry={() => void couponsQuery.refetch()}
               columns={[
                 {
                   key: 'code',

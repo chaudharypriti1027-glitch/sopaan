@@ -5,6 +5,7 @@ import { enqueueJob } from '../jobs/bullmqScheduler.js';
 import { Book, BookGenJob, Page } from '../models/index.js';
 import { AppError } from '../utils/AppError.js';
 import { slugifyBookTitle } from '../utils/bookContent.js';
+import { CONTENT_DOMAINS, notifyStudentsContentUpdated } from './contentSyncService.js';
 
 async function ensureUniqueSlug(title) {
   const base = slugifyBookTitle(title);
@@ -145,6 +146,11 @@ export async function publishBook(bookId, _user) {
   }
 
   await book.save();
+
+  notifyStudentsContentUpdated(CONTENT_DOMAINS.BOOKS, {
+    action: 'publish',
+    bookId: book._id.toString(),
+  });
 
   return {
     id: book._id.toString(),

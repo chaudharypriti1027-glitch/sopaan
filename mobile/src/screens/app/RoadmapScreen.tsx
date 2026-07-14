@@ -1,18 +1,21 @@
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { Compass } from 'lucide-react-native';
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
-  Card,
+  FeatureScreenLayout,
   MilestoneNode,
+  PremiumFeatureCard,
   PremiumHeroCard,
+  PremiumScreen,
   RankRing,
-  Screen,
   SectionTitle,
 } from '../../components';
 import { useGoalRoadmap, useProfile } from '../../hooks';
 import { useTheme } from '../../theme';
 
 export function RoadmapScreen() {
+  const { t } = useTranslation('app');
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
@@ -22,37 +25,44 @@ export function RoadmapScreen() {
 
   if (goalQuery.isLoading) {
     return (
-      <Screen style={styles.centered}>
+      <PremiumScreen style={styles.centered}>
         <ActivityIndicator size="large" color={theme.colors.brand.primary} />
-      </Screen>
+      </PremiumScreen>
     );
   }
 
   if (!roadmap) {
     return (
-      <Screen style={styles.centered}>
-        <Text style={styles.empty}>Set your exam goal to see your roadmap.</Text>
-      </Screen>
+      <FeatureScreenLayout title={t('roadmap.title')}>
+        <Text style={styles.empty}>{t('roadmap.setGoalEmpty')}</Text>
+      </FeatureScreenLayout>
     );
   }
 
   return (
-    <Screen scroll contentContainerStyle={styles.content}>
-      <SectionTitle
-        subtitle={`${roadmap.examName} · Target ${roadmap.targetYear}`}
-      />
-
+    <FeatureScreenLayout
+      title={t('roadmap.title')}
+      subtitle={t('roadmap.subtitle', {
+        exam: roadmap.examName,
+        year: roadmap.targetYear,
+      })}
+    >
       <PremiumHeroCard
         icon={<Compass size={24} color="#FFFFFF" strokeWidth={1.8} />}
-        eyebrow="Current stage"
-        title={roadmap.currentStage ?? 'In progress'}
-        stats={[{ label: 'Overall progress', value: `${roadmap.overallProgress ?? 0}%` }]}
+        eyebrow={t('roadmap.currentStage')}
+        title={roadmap.currentStage ?? t('roadmap.inProgress')}
+        stats={[
+          {
+            label: t('roadmap.overallProgress'),
+            value: `${roadmap.overallProgress ?? 0}%`,
+          },
+        ]}
       >
         <View style={styles.heroRingWrap}>
           <RankRing
             value={roadmap.overallProgress ?? 0}
             max={100}
-            label="Progress"
+            label={t('roadmap.progress')}
             size={100}
             variant="teal"
             trackColor="rgba(255,255,255,0.15)"
@@ -62,8 +72,8 @@ export function RoadmapScreen() {
         </View>
       </PremiumHeroCard>
 
-      <SectionTitle title="Milestone journey" />
-      <Card style={styles.journey}>
+      <SectionTitle title={t('roadmap.milestoneJourney')} />
+      <PremiumFeatureCard style={styles.journey}>
         {roadmap.stages.map((stage, index) => (
           <MilestoneNode
             key={stage.order}
@@ -73,12 +83,12 @@ export function RoadmapScreen() {
             isLast={index === roadmap.stages.length - 1}
           />
         ))}
-      </Card>
+      </PremiumFeatureCard>
 
       {(roadmap.upcomingDates ?? []).length > 0 ? (
         <View style={styles.section}>
-          <SectionTitle title="Upcoming dates" />
-          <Card style={styles.dates}>
+          <SectionTitle title={t('roadmap.upcomingDates')} />
+          <PremiumFeatureCard style={styles.dates}>
             {roadmap.upcomingDates!.map((item) => (
               <View key={`${item.label}-${item.date}`} style={styles.dateRow}>
                 <Text style={styles.dateLabel}>{item.label}</Text>
@@ -91,16 +101,15 @@ export function RoadmapScreen() {
                 </Text>
               </View>
             ))}
-          </Card>
+          </PremiumFeatureCard>
         </View>
       ) : null}
-    </Screen>
+    </FeatureScreenLayout>
   );
 }
 
 function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
-    content: { gap: theme.spacing.lg, paddingBottom: theme.spacing['3xl'] },
     centered: { alignItems: 'center', justifyContent: 'center', padding: theme.spacing.xl },
     empty: { ...theme.typography.presets.body, color: theme.colors.text.secondary, textAlign: 'center' },
     heroRingWrap: { alignItems: 'center', zIndex: 1 },

@@ -1,6 +1,7 @@
 import { generateTest } from '../services/ai/testGenerator.js';
 import { solveDoubt } from '../services/ai/doubtSolver.js';
 import { evaluateAnswer } from '../services/ai/answerEvaluator.js';
+import { suggestPracticeOptions } from '../services/ai/practiceSuggestions.js';
 import { persistAnswerEvaluation, reportAiOutput } from '../services/ai/aiFeedbackService.js';
 import { listDoubtAnswers } from '../services/ai/aiDoubtHistoryService.js';
 import { recordFeatureUsage } from '../services/quotaService.js';
@@ -32,11 +33,25 @@ export async function generateTestHandler(req, res) {
   });
 }
 
+export async function practiceSuggestionsHandler(req, res) {
+  const result = await suggestPracticeOptions({
+    userId: req.user._id,
+    user: req.user,
+    examTag: req.body.examTag,
+    subject: req.body.subject,
+    topic: req.body.topic,
+    language: req.body.language ?? req.language,
+  });
+
+  res.status(200).json(result);
+}
+
 export async function askDoubtHandler(req, res) {
   const result = await solveDoubt({
     ...req.body,
     language: req.body.language ?? req.language,
     userId: req.user._id,
+    targetExam: req.user.targetExam,
   });
   res.status(200).json(result);
 }

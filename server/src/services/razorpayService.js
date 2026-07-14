@@ -191,7 +191,7 @@ function formatUserResponse(user) {
 
 function webhookIdempotencyKey(eventType, paymentEntity, subscriptionEntity, fallbackEventId) {
   if (paymentEntity?.id) {
-    return `payment:${paymentEntity.id}`;
+    return `payment:${paymentEntity.id}:${eventType}`;
   }
 
   if (subscriptionEntity?.id) {

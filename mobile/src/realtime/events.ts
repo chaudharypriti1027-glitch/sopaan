@@ -11,6 +11,21 @@ export const SOCKET_EVENTS = {
   GROUP_REPORT: 'group:report',
   GROUP_ERROR: 'group:error',
 
+  DM_JOIN: 'dm:join',
+  DM_LEAVE: 'dm:leave',
+  DM_MESSAGE: 'dm:message',
+  DM_MESSAGE_NEW: 'dm:message:new',
+  DM_HISTORY: 'dm:history',
+  DM_ERROR: 'dm:error',
+  DM_INBOX_UPDATE: 'dm:inbox:update',
+
+  FRIEND_REQUEST_NEW: 'friend:request:new',
+  FRIEND_REQUEST_ACCEPTED: 'friend:request:accepted',
+
+  APP_TASK_UPDATE: 'app:task:update',
+
+  CONTENT_UPDATED: 'content:updated',
+
   CLASS_JOIN: 'class:join',
   CLASS_LEAVE: 'class:leave',
   CLASS_MESSAGE: 'class:message',
@@ -69,8 +84,72 @@ export type GroupChatMessage = {
 export type GroupChatError = {
   groupId?: string;
   liveClassId?: string;
+  conversationId?: string;
   code: string;
   message: string;
+};
+
+export type DirectChatMessage = {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  senderName: string;
+  messageType: 'text' | 'image' | 'document';
+  text: string;
+  attachmentUrl: string;
+  attachmentName: string;
+  attachmentMimeType: string;
+  createdAt: string;
+};
+
+export type ConversationSummary = {
+  id: string;
+  friend: {
+    id: string;
+    name: string;
+    avatarUrl: string | null;
+    targetExam: string | null;
+  } | null;
+  lastMessageText: string;
+  lastMessageType: 'text' | 'image' | 'document';
+  lastMessageAt: string;
+};
+
+export type FriendRequestRealtimePayload = {
+  id: string;
+  fromUser: {
+    id: string;
+    name: string;
+    avatarUrl: string | null;
+    targetExam: string | null;
+  };
+  createdAt: string;
+};
+
+export type FriendAcceptedRealtimePayload = {
+  friend: {
+    id: string;
+    name: string;
+    avatarUrl: string | null;
+    targetExam: string | null;
+  };
+};
+
+export type AppTaskUpdatePayload = {
+  domain: 'planner' | 'exam-plan' | string;
+  action: string;
+  sessionId?: string;
+  date?: string;
+  completed?: boolean;
+};
+
+export type ContentUpdatedPayload = {
+  domain: string;
+  action?: string;
+  updatedAt?: string;
+  liveClassId?: string;
+  bookId?: string;
+  testId?: string;
 };
 
 export type LiveClassReaction = {

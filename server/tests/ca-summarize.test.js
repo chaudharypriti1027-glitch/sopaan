@@ -4,6 +4,13 @@ import { validateSummarizeForAspirantsResponse } from '../src/services/ai/summar
 const validPayload = {
   summary:
     'India announced a new skill development scheme focused on youth employment and vocational training centres across districts.',
+  shortAnswer: 'A new national skill development scheme targets youth employment via district training centres.',
+  examTip: 'Link scheme name, ministry, and launch year when revising government schemes.',
+  keyPoints: [
+    'Focus on youth employment',
+    'District-level training centres',
+    'Vocational skills emphasis',
+  ],
   category: 'Schemes',
   quizQuestions: [
     {

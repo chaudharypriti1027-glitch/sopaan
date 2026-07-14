@@ -7,6 +7,7 @@ describe('homeSectionConfig', () => {
     const feed = createMockHomeFeed({
       dailyChallenge: {
         id: 'daily-1',
+        testId: 'test-daily-1',
         title: 'Daily drill',
         qCount: 10,
         rewardCoins: 50,
@@ -32,8 +33,8 @@ describe('homeSectionConfig', () => {
     expect(visibleHomeSections(feed)).toContain('features');
   });
 
-  it('always includes the AI coach section even without nudges', () => {
-    const feed = createMockHomeFeed({ aiNudges: [] });
+  it('always includes the AI coach hub', () => {
+    const feed = createMockHomeFeed({ aiNudges: [], quickActions: [] });
     expect(resolveHomeSectionVisibility(feed).nudges).toBe(true);
     expect(visibleHomeSections(feed)).toContain('nudges');
   });
@@ -42,6 +43,7 @@ describe('homeSectionConfig', () => {
     const feed = createMockHomeFeed({
       dailyChallenge: {
         id: 'daily-1',
+        testId: 'test-daily-1',
         title: 'Daily drill',
         qCount: 10,
         rewardCoins: 50,
@@ -56,7 +58,9 @@ describe('homeSectionConfig', () => {
   it('exposes section metadata for feed rendering', () => {
     expect(HOME_SECTION_META.features.titleKey).toBe('explore');
     expect(HOME_SECTION_META.features.compactWhenFirst).toBe(true);
-    expect(HOME_SECTION_META.nudges.titleKey).toBe('forYou');
+    expect(HOME_SECTION_META.features.subtitleKey).toBe('exploreSubtitle');
+    expect(HOME_SECTION_META.nudges.titleKey).toBe('aiActionsTitle');
     expect(HOME_SECTION_META.continue.actionKey).toBe('seeAll');
+    expect(HOME_SECTION_META.nudges.panelTone).toBe(false);
   });
 });

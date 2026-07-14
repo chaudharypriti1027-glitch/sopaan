@@ -1,8 +1,9 @@
 import { useMemo } from 'react';
 import { Linking, Pressable, StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { Check } from 'lucide-react-native';
 import { Text } from '../Text';
-import { AUTH_UI } from './authTheme';
+import { AUTH_FONTS, AUTH_UI } from './authTheme';
 
 type AuthTermsBoxProps = {
   checked: boolean;
@@ -15,36 +16,31 @@ const PRIVACY_URL = 'https://sopaan.app/privacy';
 const TERMS_URL = 'https://sopaan.app/terms';
 
 export function AuthTermsBox({ checked, onToggle, policyVersion, testID }: AuthTermsBoxProps) {
+  const { t } = useTranslation('auth');
   const styles = useMemo(() => createStyles(), []);
 
   return (
     <Pressable
       accessibilityRole="checkbox"
       accessibilityState={{ checked }}
+      accessibilityLabel={t('otp.consentA11y', { version: policyVersion })}
       testID={testID}
       onPress={onToggle}
       style={styles.box}
     >
       <View style={[styles.checkbox, checked && styles.checkboxChecked]}>
-        {checked ? <Check size={10} color="#FFFFFF" strokeWidth={3} /> : null}
+        {checked ? <Check size={11} color="#FFFFFF" strokeWidth={3} /> : null}
       </View>
-      <View style={styles.copy}>
-        <Text style={styles.text}>
-          I agree to the{' '}
-          <Text style={styles.link} onPress={() => void Linking.openURL(PRIVACY_URL)}>
-            Privacy Policy
-          </Text>{' '}
-          and{' '}
-          <Text style={styles.link} onPress={() => void Linking.openURL(TERMS_URL)}>
-            Terms
-          </Text>{' '}
-          (v{policyVersion}).
+      <Text variant="caption" color="secondary" style={styles.text}>
+        {t('otp.consentPolicyBefore')}{' '}
+        <Text variant="label" style={styles.link} onPress={() => void Linking.openURL(PRIVACY_URL)}>
+          {t('otp.consentPrivacyLink')}
+        </Text>{' '}
+        {t('otp.consentAnd')}{' '}
+        <Text variant="label" style={styles.link} onPress={() => void Linking.openURL(TERMS_URL)}>
+          {t('otp.consentTermsLink')}
         </Text>
-        <Text style={styles.note}>
-          I consent to AI processing of my study data via Claude (Anthropic). Name, email, and phone
-          are not sent to AI.
-        </Text>
-      </View>
+      </Text>
     </Pressable>
   );
 }
@@ -53,48 +49,34 @@ function createStyles() {
   return StyleSheet.create({
     box: {
       flexDirection: 'row',
-      gap: 12,
-      alignItems: 'flex-start',
-      backgroundColor: AUTH_UI.bg,
-      borderRadius: 16,
-      borderWidth: 1,
-      borderColor: AUTH_UI.border,
-      paddingVertical: 14,
-      paddingHorizontal: 16,
-      marginBottom: 16,
+      gap: 10,
+      alignItems: 'center',
+      marginTop: 4,
+      marginBottom: 4,
+      paddingHorizontal: 2,
     },
     checkbox: {
-      width: 18,
-      height: 18,
-      borderRadius: 5,
-      borderWidth: 2,
+      width: 20,
+      height: 20,
+      borderRadius: 6,
+      borderWidth: 1.5,
       borderColor: AUTH_UI.borderHover,
       backgroundColor: AUTH_UI.card,
       alignItems: 'center',
       justifyContent: 'center',
-      marginTop: 1,
       flexShrink: 0,
     },
     checkboxChecked: {
-      backgroundColor: AUTH_UI.accent,
-      borderColor: AUTH_UI.accent,
+      backgroundColor: AUTH_UI.goldDeep,
+      borderColor: AUTH_UI.goldDeep,
     },
-    copy: { flex: 1 },
     text: {
-      fontSize: 12,
-      color: AUTH_UI.muted,
-      lineHeight: 19,
+      flex: 1,
+      lineHeight: 18,
     },
     link: {
-      fontSize: 12,
       color: AUTH_UI.accent,
-      fontWeight: '600',
-    },
-    note: {
-      fontSize: 11,
-      color: AUTH_UI.faint,
-      marginTop: 4,
-      lineHeight: 16,
+      fontFamily: AUTH_FONTS.bold,
     },
   });
 }

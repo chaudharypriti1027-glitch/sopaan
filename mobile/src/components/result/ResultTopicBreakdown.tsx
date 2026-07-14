@@ -10,7 +10,6 @@ import Animated, {
 } from 'react-native-reanimated';
 import { NumText } from '../NumText';
 import { Text } from '../Text';
-import { useTheme } from '../../theme';
 import {
   resultCard,
   RESULT_UI,

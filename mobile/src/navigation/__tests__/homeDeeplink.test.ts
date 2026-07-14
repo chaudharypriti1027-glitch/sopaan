@@ -78,6 +78,15 @@ describe('navigateHomeDeeplink', () => {
     expect(mockStackNavigate).toHaveBeenCalledWith('GamePlay', { gameId: 'rapid-fire' });
   });
 
+  it('navigates to GamePlay with affair quiz params', () => {
+    const navigation = createNavigation();
+    navigateHomeDeeplink(navigation, '/stack/GamePlay/rapid-fire?affairId=ca-42');
+    expect(mockStackNavigate).toHaveBeenCalledWith('GamePlay', {
+      gameId: 'rapid-fire',
+      affairId: 'ca-42',
+    });
+  });
+
   it('opens Ask AI on the main stack', () => {
     const navigation = createNavigation();
     navigateHomeDeeplink(navigation, '/stack/AskAI');

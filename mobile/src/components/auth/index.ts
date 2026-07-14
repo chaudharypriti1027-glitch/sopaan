@@ -1,3 +1,14 @@
+export { AuthLoginHero } from './AuthLoginHero';
+export { AuthPremiumHero } from './AuthPremiumHero';
+export { AuthHeroAmbient } from './AuthHeroAmbient';
+export { AuthScreenAmbient } from './AuthScreenAmbient';
+export { AuthMotivationTicker } from './AuthMotivationTicker';
+export { LoginPerkStrip } from './LoginPerkStrip';
+export { LoginMethodTiles, AuthErrorBanner } from './LoginMethodTiles';
+export { AuthFormIntro } from './AuthFormIntro';
+export { AuthTrustNote } from './AuthTrustNote';
+export { WelcomeHero } from './WelcomeHero';
+export { WelcomeFeatureGrid } from './WelcomeFeatureGrid';
 export { AuthScreen } from './AuthScreen';
 export { AuthBrandHeader } from './AuthBrandHeader';
 export { AuthProgressDots } from './AuthProgressDots';

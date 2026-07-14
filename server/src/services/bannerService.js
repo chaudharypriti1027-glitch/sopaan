@@ -1,6 +1,12 @@
 import { Banner } from '../models/Banner.js';
 import { AppError } from '../utils/AppError.js';
 import { buildPaginatedResult, parsePagination } from '../utils/pagination.js';
+import { CONTENT_DOMAINS, notifyStudentsContentUpdated } from './contentSyncService.js';
+
+function syncBanners(action) {
+  notifyStudentsContentUpdated(CONTENT_DOMAINS.BANNERS, { action });
+  notifyStudentsContentUpdated(CONTENT_DOMAINS.HOME, { action: `banner-${action}` });
+}
 
 export function resolveBannerDeeplink(banner) {
   switch (banner.linkType) {
@@ -82,6 +88,7 @@ export async function createAdminBanner(userId, payload) {
     createdBy: userId,
   });
 
+  syncBanners('create');
   return formatBanner(banner.toObject());
 }
 
@@ -105,6 +112,7 @@ export async function updateAdminBanner(id, payload) {
   }
 
   await banner.save();
+  syncBanners('update');
   return formatBanner(banner.toObject());
 }
 
@@ -123,6 +131,7 @@ export async function setAdminBannerActive(id, active) {
   }
 
   await banner.save();
+  syncBanners(active ? 'activate' : 'deactivate');
   return formatBanner(banner.toObject());
 }
 
@@ -133,5 +142,6 @@ export async function deleteAdminBanner(id) {
     throw new AppError('Banner not found', 404, 'NOT_FOUND');
   }
 
+  syncBanners('delete');
   return { id: banner._id.toString(), deleted: true };
 }

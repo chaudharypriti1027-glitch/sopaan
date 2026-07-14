@@ -1,26 +1,49 @@
 :root {
   --navy: #232a4d;
   --navy-2: #2e3766;
-  --navy-deep: #1a1f3b;
+  --navy-deep: #12162b;
+  --navy-mid: #1a1f3b;
   --navy-soft: #e9ebf3;
   --gold: #c29a4e;
   --gold-lt: #e3c97f;
   --gold-deep: #a67c33;
   --gold-soft: #f4ebd8;
+  --gold-glow: rgba(226, 201, 127, 0.35);
   --sage: #5f8a7b;
   --sage-deep: #4c7264;
   --sage-soft: #e4ede9;
-  --bg: #f3f1ea;
+  --bg: #f0ede4;
+  --bg-elevated: #f7f5ef;
   --surface: #ffffff;
-  --ink: #1c1e2e;
-  --ink-2: #41435a;
-  --muted: #87889a;
+  --surface-glass: rgba(255, 255, 255, 0.82);
+  --ink: #141626;
+  --ink-2: #3d3f55;
+  --muted: #7d7f92;
   --faint: #b3b4c2;
-  --line: #eae7dd;
-  --hair: #f2f0e8;
+  --line: #e4e0d4;
+  --hair: #f3f1ea;
   --red: #c0503f;
   --red-soft: #fbe9e7;
-  --sh: 0 14px 34px -24px rgba(35, 42, 77, 0.4);
-  --sh-sm: 0 8px 20px -16px rgba(35, 42, 77, 0.3);
-  --side-width: 246px;
+  --sh: 0 22px 48px -28px rgba(18, 22, 43, 0.45);
+  --sh-sm: 0 10px 24px -16px rgba(18, 22, 43, 0.28);
+  --sh-lg: 0 32px 64px -32px rgba(18, 22, 43, 0.5);
+  --ring: 0 0 0 3px rgba(194, 154, 78, 0.22);
+  --grad-navy: linear-gradient(145deg, #2a3260 0%, #12162b 55%, #1a1f3b 100%);
+  --grad-gold: linear-gradient(135deg, #f0dfa8 0%, #e3c97f 42%, #c29a4e 100%);
+  --grad-page: radial-gradient(ellipse 120% 80% at 100% -20%, rgba(194, 154, 78, 0.12), transparent 50%),
+    radial-gradient(ellipse 80% 60% at -10% 100%, rgba(35, 42, 77, 0.08), transparent 45%),
+    var(--bg);
+  --side-width: 252px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+
+  /* Legacy aliases used in page-specific CSS */
+  --border: var(--line);
+  --text-muted: var(--muted);
+  --danger: var(--red);
+  --accent: var(--gold);
+  --surface-2: var(--hair);
+  --sh-md: var(--sh-sm);
 }

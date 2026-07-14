@@ -1,5 +1,3 @@
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Award, Camera, CheckCircle2, Image as ImageIcon } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import {
@@ -14,18 +12,16 @@ import {
 import { useTranslation } from 'react-i18next';
 import {
   AIBadge,
-  BackButton,
   Button,
   Card,
+  FeatureScreenLayout,
   PremiumHeroCard,
+  PremiumSectionLabel,
   ProgressBar,
-  Screen,
-  SectionTitle,
   TextField,
 } from '../../components';
 import { useEvaluateAnswer, useReportAiFeedback } from '../../hooks/useAi';
 import { useProGate } from '../../hooks/useProGate';
-import type { MainStackParamList } from '../../navigation/types';
 import { getUserFacingMessage } from '../../errors/getUserFacingMessage';
 import { useFormat } from '../../i18n/useFormat';
 import { useTheme } from '../../theme';
@@ -34,7 +30,6 @@ import { pickImageBase64 } from '../../utils/imagePicker';
 const MAX_MARKS = 15;
 
 export function AnswerEvaluationScreen() {
-  const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
   const { t } = useTranslation(['app', 'common']);
   const { formatNumber } = useFormat();
   const { theme } = useTheme();
@@ -128,17 +123,12 @@ export function AnswerEvaluationScreen() {
   };
 
   return (
-    <Screen scroll contentContainerStyle={styles.content}>
-      <BackButton onPress={() => navigation.goBack()} />
-
-      <View style={styles.header}>
-        <SectionTitle
-          title={t('answerEvaluation.title')}
-          subtitle={t('answerEvaluation.subtitle')}
-        />
-        <AIBadge label={t('answerEvaluation.mainsBadge')} />
-      </View>
-
+    <FeatureScreenLayout
+      title={t('answerEvaluation.title')}
+      subtitle={t('answerEvaluation.subtitle')}
+      rightAction={<AIBadge label={t('answerEvaluation.mainsBadge')} />}
+      contentStyle={styles.content}
+    >
       <Card style={styles.form}>
         <TextField
           label={t('answerEvaluation.question')}
@@ -209,7 +199,7 @@ export function AnswerEvaluationScreen() {
             ]}
           />
 
-          <SectionTitle title={t('answerEvaluation.breakdown')} />
+          <PremiumSectionLabel title={t('answerEvaluation.breakdown')} compact />
           <Card style={styles.breakdown}>
             <ProgressBar
               label={t('answerEvaluation.content')}
@@ -234,7 +224,7 @@ export function AnswerEvaluationScreen() {
             />
           </Card>
 
-          <SectionTitle title={t('answerEvaluation.whatToImprove')} />
+          <PremiumSectionLabel title={t('answerEvaluation.whatToImprove')} compact />
           <Card style={styles.feedbackCard}>
             {result.feedback.map((item) => (
               <View key={item} style={styles.feedbackRow}>
@@ -253,7 +243,7 @@ export function AnswerEvaluationScreen() {
           />
         </View>
       ) : null}
-    </Screen>
+    </FeatureScreenLayout>
   );
 }
 

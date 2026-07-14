@@ -1,7 +1,9 @@
 import bcrypt from 'bcrypt';
 import { OtpToken } from '../models/OtpToken.js';
+import { env } from '../config/env.js';
 import { AppError } from '../utils/AppError.js';
-import { sendOtpSms } from './sms/index.js';
+import { logger } from '../observability/logger.js';
+import { sendOtpSms, devSmsProvider } from './sms/index.js';
 import {
   checkTwilioPhoneVerification,
   isTwilioVerifyEnabled,
@@ -28,20 +30,50 @@ async function persistOtp({ phone, email, code }) {
   await OtpToken.create({ phone, email, codeHash, expiresAt, attempts: 0 });
 }
 
+async function sendLocalPhoneOtp(phone, { logToConsole = false } = {}) {
+  const code = generateOtpCode();
+  await persistOtp({ phone, code });
+
+  if (logToConsole && env.isDevelopment) {
+    await devSmsProvider.sendOtp(phone, code);
+  } else {
+    await sendOtpSms(phone, code);
+  }
+
+  return code;
+}
+
+function shouldUseDevTrialFallback(err) {
+  return (
+    env.isDevelopment &&
+    err?.code === 'SMS_TRIAL_RESTRICTED' &&
+    process.env.OTP_DEV_FALLBACK_ON_TRIAL?.trim().toLowerCase() !== 'false'
+  );
+}
+
 /**
  * Create/replace OTP for phone, send via SMS, return plaintext code (dev logging only).
  * @param {string} phone Normalized +91…
  */
 export async function createAndSendOtp(phone) {
   if (isTwilioVerifyEnabled()) {
-    await startTwilioPhoneVerification(phone);
-    return null;
+    try {
+      await startTwilioPhoneVerification(phone);
+      await OtpToken.deleteMany({ phone });
+      return null;
+    } catch (err) {
+      if (!shouldUseDevTrialFallback(err)) {
+        throw err;
+      }
+
+      logger.warn('[otp] Twilio trial SMS blocked — using local dev OTP fallback', {
+        phone: `${phone.slice(0, 4)}***`,
+      });
+      return sendLocalPhoneOtp(phone, { logToConsole: true });
+    }
   }
 
-  const code = generateOtpCode();
-  await persistOtp({ phone, code });
-  await sendOtpSms(phone, code);
-  return code;
+  return sendLocalPhoneOtp(phone);
 }
 
 /**
@@ -90,6 +122,11 @@ async function verifyOtpToken(filter, code) {
  * @param {string} code 6-digit code
  */
 export async function verifyAndConsumeOtp(phone, code) {
+  const hasLocalToken = await OtpToken.exists({ phone });
+  if (hasLocalToken) {
+    return verifyOtpToken({ phone }, code);
+  }
+
   if (isTwilioVerifyEnabled()) {
     return checkTwilioPhoneVerification(phone, code);
   }

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
+  FadeInDown,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
@@ -16,12 +17,15 @@ import { useTranslation } from 'react-i18next';
 import {
   AUTH_UI,
   AuthAnimatedSection,
-  AuthBrandHeader,
+  AuthFormCard,
+  AuthFormIntro,
+  AuthPremiumHero,
   AuthScreen,
   GhostButton,
   OtpInput,
   useShakeOnError,
 } from '../components/auth';
+import { AUTH_SPACING } from '../components/auth/authTheme';
 import { Text } from '../components/Text';
 import { authApi, parseApiError } from '../api';
 import { formatOtpError } from '../auth/otpErrors';
@@ -157,12 +161,6 @@ export function OtpScreen() {
 
   return (
     <AuthScreen
-      header={
-        <AuthBrandHeader
-          title={t('otp.verifyTitle')}
-          subtitle={t('otp.codeSentSubtitle', { phone: destinationLabel })}
-        />
-      }
       footer={
         <View style={styles.footer}>
           {canResend ? (
@@ -183,23 +181,40 @@ export function OtpScreen() {
         </View>
       }
     >
-      <Animated.View style={[styles.form, shakeStyle]}>
-        <AuthAnimatedSection index={0}>
-          <OtpInput
-            value={code}
-            onChange={setCode}
-            error={Boolean(error)}
-            success={success}
-            disabled={verifying || success}
-            autoFocus
+      <AuthPremiumHero
+        variant="verify"
+        subtitle={t('otp.codeSentSubtitle', { phone: destinationLabel })}
+      />
+
+      <Animated.View entering={FadeInDown.duration(440).delay(80)} style={shakeStyle}>
+        <AuthFormCard overlap>
+          <AuthFormIntro
+            eyebrow={t('otp.verifyEyebrow')}
+            title={t('otp.verifyFormTitle')}
+            subtitle={t('otp.verifyFormSubtitle')}
           />
-        </AuthAnimatedSection>
 
-        {success ? <OtpSuccessBadge /> : null}
+          <View style={styles.form}>
+            <AuthAnimatedSection index={0}>
+              <OtpInput
+                value={code}
+                onChange={setCode}
+                error={Boolean(error)}
+                success={success}
+                disabled={verifying || success}
+                autoFocus
+              />
+            </AuthAnimatedSection>
 
-        {error ? <Text style={styles.error}>{error}</Text> : null}
+            {success ? <OtpSuccessBadge /> : null}
 
-        {verifying && !success ? <Text style={styles.verifying}>{t('otp.verifying')}</Text> : null}
+            {error ? <Text style={styles.error}>{error}</Text> : null}
+
+            {verifying && !success ? (
+              <Text style={styles.verifying}>{t('otp.verifying')}</Text>
+            ) : null}
+          </View>
+        </AuthFormCard>
       </Animated.View>
     </AuthScreen>
   );
@@ -207,7 +222,7 @@ export function OtpScreen() {
 
 const styles = StyleSheet.create({
   form: {
-    gap: 20,
+    gap: 16,
     alignItems: 'stretch',
   },
   successBadge: {
@@ -238,6 +253,6 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   footer: {
-    gap: 10,
+    gap: AUTH_SPACING.footer,
   },
 });

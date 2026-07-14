@@ -65,7 +65,13 @@ describe('ResultScreen', () => {
 
     fireEvent.press(getByText('Practice weak topics'));
 
-    expect(mockNavigate).toHaveBeenCalledWith('AppTabs', { screen: 'Practice' });
+    expect(mockNavigate).toHaveBeenCalledWith('AppTabs', {
+      screen: 'Practice',
+      params: {
+        weakTopics: ['Indian Polity'],
+        openForm: true,
+      },
+    });
   });
 
   it('navigates to mock analysis, retake, and more tests', () => {

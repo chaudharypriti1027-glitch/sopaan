@@ -11,6 +11,7 @@ const UPLOAD_ROOT = path.join(__dirname, '../../../uploads');
 const MEDIA_PREFIX = process.env.MEDIA_S3_PREFIX?.trim() || 'media';
 const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
 const MAX_VIDEO_BYTES = 200 * 1024 * 1024;
+const MAX_DOCUMENT_BYTES = 50 * 1024 * 1024;
 const PRESIGN_TTL_SEC = 15 * 60;
 
 const ALLOWED_MIME_TYPES = new Set([
@@ -21,6 +22,9 @@ const ALLOWED_MIME_TYPES = new Set([
   'video/mp4',
   'video/webm',
   'video/quicktime',
+  'application/pdf',
+  'text/plain',
+  'text/markdown',
 ]);
 
 function sanitizeFilename(filename) {
@@ -45,6 +49,12 @@ function extensionForMime(mimeType) {
       return 'webm';
     case 'video/quicktime':
       return 'mov';
+    case 'application/pdf':
+      return 'pdf';
+    case 'text/plain':
+      return 'txt';
+    case 'text/markdown':
+      return 'md';
     default:
       return 'jpg';
   }
@@ -57,7 +67,11 @@ export function assertAllowedMediaMime(mimeType) {
 }
 
 export function assertAllowedMediaSize(mimeType, sizeBytes) {
-  const maxBytes = mimeType.startsWith('video/') ? MAX_VIDEO_BYTES : MAX_IMAGE_BYTES;
+  const maxBytes = mimeType.startsWith('video/')
+    ? MAX_VIDEO_BYTES
+    : mimeType === 'application/pdf' || mimeType.startsWith('text/')
+      ? MAX_DOCUMENT_BYTES
+      : MAX_IMAGE_BYTES;
   if (sizeBytes > maxBytes) {
     throw new AppError('File exceeds size limit', 400, 'VALIDATION_ERROR');
   }
@@ -75,6 +89,11 @@ export function buildMediaKey({ userId, filename, mimeType }) {
 }
 
 export function buildPublicUrl(key) {
+  if (env.isTest) {
+    const host = process.env.MEDIA_DEV_PUBLIC_HOST?.trim() || `http://localhost:${env.port}`;
+    return `${host.replace(/\/$/, '')}/uploads/${key}`;
+  }
+
   const explicit = process.env.MEDIA_PUBLIC_BASE_URL?.trim() || process.env.S3_PUBLIC_BASE_URL?.trim();
   if (explicit) {
     return `${explicit.replace(/\/$/, '')}/${key}`;
@@ -111,12 +130,18 @@ async function loadS3Modules() {
 }
 
 function createS3Client() {
+  const credentials = {
+    accessKeyId: env.s3AccessKey,
+    secretAccessKey: env.s3SecretKey,
+  };
+
+  if (env.s3SessionToken) {
+    credentials.sessionToken = env.s3SessionToken;
+  }
+
   const config = {
     region: env.s3Region || 'auto',
-    credentials: {
-      accessKeyId: env.s3AccessKey,
-      secretAccessKey: env.s3SecretKey,
-    },
+    credentials,
   };
 
   if (env.s3Endpoint) {
@@ -134,7 +159,7 @@ export async function createPresignedUpload({ userId, filename, mimeType, sizeBy
   const key = buildMediaKey({ userId, filename, mimeType });
   const publicUrl = buildPublicUrl(key);
 
-  if (!isObjectStorageConfigured()) {
+  if (!isObjectStorageConfigured() || env.isTest) {
     const uploadToken = jwt.sign(
       { key, mimeType, sizeBytes, sub: String(userId), purpose: 'media-upload' },
       env.jwtSecret,
@@ -197,7 +222,7 @@ export async function saveDevMediaFile({ key, buffer }) {
 }
 
 export async function assertObjectUploaded({ key, mimeType, sizeBytes }) {
-  if (!isObjectStorageConfigured()) {
+  if (!isObjectStorageConfigured() || env.isTest) {
     const target = path.join(UPLOAD_ROOT, key);
     try {
       const stat = await fs.stat(target);
@@ -240,7 +265,7 @@ export async function assertObjectUploaded({ key, mimeType, sizeBytes }) {
 }
 
 export async function deleteStoredObject(key) {
-  if (!isObjectStorageConfigured()) {
+  if (!isObjectStorageConfigured() || env.isTest) {
     const target = path.join(UPLOAD_ROOT, key);
     await fs.unlink(target).catch(() => undefined);
     return;

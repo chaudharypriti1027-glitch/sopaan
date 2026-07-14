@@ -3,18 +3,20 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Play, GraduationCap } from 'lucide-react-native';
 import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import {
-  Card,
+  FeatureScreenLayout,
   Pill,
   PremiumEmptyState,
+  PremiumFeatureCard,
   PremiumHeroCard,
   ProgressBar,
   QueryStateView,
-  Screen,
 } from '../../components';
 import { HomeSlotIcon } from '../../components/home/HomePremiumIcon';
 import type { Course } from '../../api/types';
 import { useCourses, useNetworkStatus } from '../../hooks';
+import { useFocusRefetch } from '../../hooks/useFocusRefetch';
 import type { MainStackParamList } from '../../navigation/types';
 import { toneColors, toneForText } from '../../utils/iconTone';
 import { useTheme } from '../../theme';
@@ -29,11 +31,12 @@ type CourseCardProps = {
 };
 
 function CourseCard({ course, styles, primaryColor, onPress }: CourseCardProps) {
+  const { t } = useTranslation('app');
   const tone = toneColors(toneForText(course.subject ?? course.title));
 
   return (
     <Pressable onPress={onPress}>
-      <Card style={styles.card}>
+      <PremiumFeatureCard style={styles.card}>
         <View
           style={[
             styles.thumb,
@@ -48,22 +51,23 @@ function CourseCard({ course, styles, primaryColor, onPress }: CourseCardProps) 
         <View style={styles.info}>
           <Text style={styles.title}>{course.title}</Text>
           <Text style={styles.meta}>
-            {course.subject} · {course.lessonCount ?? 0} lessons
+            {course.subject} · {t('courses.lessonCount', { count: course.lessonCount ?? 0 })}
           </Text>
           <ProgressBar
             value={course.progressPercent ?? 0}
-            label="Progress"
+            label={t('courses.progress')}
             showValue
             variant="teal"
           />
         </View>
-        <Pill label="Free" variant="teal" />
-      </Card>
+        <Pill label={t('courses.free')} variant="teal" />
+      </PremiumFeatureCard>
     </Pressable>
   );
 }
 
 export function CoursesScreen() {
+  const { t } = useTranslation('app');
   const navigation = useNavigation<CoursesNav>();
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -74,13 +78,21 @@ export function CoursesScreen() {
   const hasData = freeCourses.length > 0;
   const inProgress = freeCourses.filter((course) => (course.progressPercent ?? 0) > 0).length;
 
+  useFocusRefetch(() => {
+    void coursesQuery.refetch();
+  });
+
   return (
-    <Screen scroll contentContainerStyle={styles.content}>
+    <FeatureScreenLayout title={t('courses.title')} subtitle={t('courses.subtitle')}>
       <PremiumHeroCard
         icon={<HomeSlotIcon slot="featured" Icon={GraduationCap} tone="lavender" />}
-        eyebrow="Free courses"
-        title={`${freeCourses.length} available`}
-        hint={inProgress > 0 ? `${inProgress} in progress` : 'Video lessons with tracked progress'}
+        eyebrow={t('courses.title')}
+        title={t('courses.availableCount', { count: freeCourses.length })}
+        hint={
+          inProgress > 0
+            ? t('courses.inProgress', { count: inProgress })
+            : t('courses.subtitle')
+        }
       />
 
       <QueryStateView
@@ -92,33 +104,32 @@ export function CoursesScreen() {
         onRetry={() => void coursesQuery.refetch()}
       >
         {hasData ? (
-        <View style={styles.list}>
-          {freeCourses.map((course) => (
-            <CourseCard
-              key={course.id}
-              course={course}
-              styles={styles}
-              primaryColor={theme.colors.brand.primary}
-              onPress={() => navigation.navigate('CourseDetail', { courseId: course.id })}
-            />
-          ))}
-        </View>
+          <View style={styles.list}>
+            {freeCourses.map((course) => (
+              <CourseCard
+                key={course.id}
+                course={course}
+                styles={styles}
+                primaryColor={theme.colors.brand.primary}
+                onPress={() => navigation.navigate('CourseDetail', { courseId: course.id })}
+              />
+            ))}
+          </View>
         ) : (
           <PremiumEmptyState
-            title="No courses yet"
-            hint="Free video courses will appear here when available."
+            title={t('courses.emptyTitle')}
+            hint={t('courses.emptyBody')}
             Icon={GraduationCap}
             tone="lavender"
           />
         )}
       </QueryStateView>
-    </Screen>
+    </FeatureScreenLayout>
   );
 }
 
 function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
-    content: { gap: theme.spacing.lg, paddingBottom: theme.spacing['3xl'] },
     list: { gap: theme.spacing.md },
     card: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.md },
     thumb: {

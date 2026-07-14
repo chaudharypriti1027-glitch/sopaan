@@ -1,6 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { MessageCircle, ThumbsUp, Users } from 'lucide-react-native';
+import { MessageCircle, ThumbsUp, UserPlus, Users } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import {
   Alert,
@@ -9,15 +9,19 @@ import {
   Text,
   View,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import {
   Button,
-  Card,
+  FeatureScreenLayout,
+  PremiumFeatureCard,
   QueryStateView,
-  Screen,
-  SectionTitle,
   SegTabs,
   TextField,
 } from '../../components';
+import {
+  DEFAULT_EXAM_TAG,
+  DEFAULT_FORUM_SUBJECT,
+} from '../../content/featureDefaultsContent';
 import {
   useCreateDoubt,
   useCreateGroup,
@@ -36,19 +40,15 @@ type ForumNav = NativeStackNavigationProp<MainStackParamList, 'Forum'>;
 
 type ForumTab = 'doubts' | 'groups';
 
-const TAB_OPTIONS = [
-  { key: 'doubts' as const, label: 'Doubt Forum' },
-  { key: 'groups' as const, label: 'Study Groups' },
-];
-
-function authorName(user: unknown): string {
+function authorName(user: unknown, fallback: string): string {
   if (user && typeof user === 'object' && 'name' in user) {
-    return (user as { name?: string }).name ?? 'Student';
+    return (user as { name?: string }).name ?? fallback;
   }
-  return 'Student';
+  return fallback;
 }
 
 export function ForumScreen() {
+  const { t } = useTranslation('app');
   const navigation = useNavigation<ForumNav>();
   const { user } = useAuth();
   const { theme } = useTheme();
@@ -58,10 +58,18 @@ export function ForumScreen() {
   const [showAsk, setShowAsk] = useState(false);
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
-  const [subject, setSubject] = useState('General');
+  const [subject, setSubject] = useState(DEFAULT_FORUM_SUBJECT);
   const [groupName, setGroupName] = useState('');
-  const [examTag, setExamTag] = useState('SSC-CGL');
+  const [examTag, setExamTag] = useState(DEFAULT_EXAM_TAG);
   const { isOffline } = useNetworkStatus();
+
+  const tabOptions = useMemo(
+    () => [
+      { key: 'doubts' as const, label: t('forum.tabDoubts') },
+      { key: 'groups' as const, label: t('forum.tabGroups') },
+    ],
+    [t],
+  );
 
   const doubtsQuery = useDoubts({ limit: 30 });
   const groupsQuery = useGroups({ limit: 30 });
@@ -72,7 +80,7 @@ export function ForumScreen() {
 
   const submitDoubt = async () => {
     if (!title.trim() || !body.trim()) {
-      Alert.alert('Missing fields', 'Add a title and description.');
+      Alert.alert(t('forum.missingFields'), t('forum.missingFieldsBody'));
       return;
     }
 
@@ -84,7 +92,7 @@ export function ForumScreen() {
 
   const submitGroup = async () => {
     if (!groupName.trim()) {
-      Alert.alert('Name required', 'Enter a group name.');
+      Alert.alert(t('forum.nameRequired'), t('forum.nameRequiredBody'));
       return;
     }
 
@@ -92,43 +100,60 @@ export function ForumScreen() {
     setGroupName('');
   };
 
+  const studentLabel = t('forum.student');
+
   return (
-    <Screen scroll contentContainerStyle={styles.content}>
-      <View style={styles.header}>
-        <SectionTitle title="Community" subtitle="Doubts and study groups" />
+    <FeatureScreenLayout
+      title={t('forum.title')}
+      subtitle={t('forum.subtitle')}
+      rightAction={
         <Button
-          label="Ask AI"
+          label={t('forum.askAi')}
           variant="ghost"
           size="sm"
           onPress={() => navigateToAskAI(navigation)}
         />
-      </View>
+      }
+    >
+      <SegTabs options={tabOptions} value={tab} onChange={setTab} />
 
-      <SegTabs options={TAB_OPTIONS} value={tab} onChange={setTab} />
+      <PremiumFeatureCard style={styles.quickLinks}>
+        <Text style={styles.quickLinksTitle}>{t('forum.friendsQuickTitle')}</Text>
+        <View style={styles.quickLinksRow}>
+          <Pressable style={styles.quickLink} onPress={() => navigation.navigate('Friends')}>
+            <UserPlus size={18} color={theme.colors.brand.primary} />
+            <Text style={styles.quickLinkLabel}>{t('forum.addFriends')}</Text>
+          </Pressable>
+          <Pressable style={styles.quickLink} onPress={() => navigation.navigate('Messages')}>
+            <MessageCircle size={18} color={theme.colors.brand.primary} />
+            <Text style={styles.quickLinkLabel}>{t('forum.messagesQuick')}</Text>
+          </Pressable>
+        </View>
+      </PremiumFeatureCard>
 
       {tab === 'doubts' ? (
         <>
           <Button
-            label={showAsk ? 'Cancel' : 'Ask a doubt'}
+            label={showAsk ? t('forum.cancel') : t('forum.askDoubt')}
             onPress={() => setShowAsk((v) => !v)}
           />
           {showAsk ? (
-            <Card style={styles.form}>
-              <TextField label="Title" value={title} onChangeText={setTitle} />
-              <TextField label="Subject" value={subject} onChangeText={setSubject} />
+            <PremiumFeatureCard style={styles.form}>
+              <TextField label={t('forum.titleLabel')} value={title} onChangeText={setTitle} />
+              <TextField label={t('forum.subject')} value={subject} onChangeText={setSubject} />
               <TextField
-                label="Describe your doubt"
+                label={t('forum.describeDoubt')}
                 value={body}
                 onChangeText={setBody}
                 multiline
                 style={styles.multiline}
               />
               <Button
-                label={createDoubt.isPending ? 'Posting…' : 'Post doubt'}
+                label={createDoubt.isPending ? t('forum.posting') : t('forum.postDoubt')}
                 onPress={submitDoubt}
                 disabled={createDoubt.isPending}
               />
-            </Card>
+            </PremiumFeatureCard>
           ) : null}
 
           <QueryStateView
@@ -141,7 +166,7 @@ export function ForumScreen() {
           >
             <View style={styles.list}>
               {(doubtsQuery.data?.items ?? []).map((post) => (
-                <Card key={post.id} style={styles.post}>
+                <PremiumFeatureCard key={post.id} style={styles.post}>
                   <View style={styles.postHeader}>
                     <MessageCircle size={16} color={theme.colors.brand.primary} />
                     <Text style={styles.postSubject}>{post.subject}</Text>
@@ -149,36 +174,38 @@ export function ForumScreen() {
                   <Text style={styles.postTitle}>{post.title}</Text>
                   <Text style={styles.postBody} numberOfLines={3}>{post.body}</Text>
                   <View style={styles.postFooter}>
-                    <Text style={styles.postMeta}>{authorName(post.userId)}</Text>
+                    <Text style={styles.postMeta}>{authorName(post.userId, studentLabel)}</Text>
                     <View style={styles.votes}>
                       <Pressable
                         accessibilityRole="button"
-                        accessibilityLabel="Upvote doubt"
+                        accessibilityLabel={t('forum.tabDoubts')}
                         onPress={() => void voteDoubt.mutateAsync(post.id)}
                         style={styles.voteBtn}
                       >
                         <ThumbsUp size={14} color={theme.colors.text.tertiary} />
                         <Text style={styles.votesText}>{post.votes ?? 0}</Text>
                       </Pressable>
-                      <Text style={styles.answers}>{post.answers?.length ?? 0} answers</Text>
+                      <Text style={styles.answers}>
+                        {t('forum.answers', { count: post.answers?.length ?? 0 })}
+                      </Text>
                     </View>
                   </View>
-                </Card>
+                </PremiumFeatureCard>
               ))}
             </View>
           </QueryStateView>
         </>
       ) : (
         <>
-          <Card style={styles.form}>
-            <TextField label="Group name" value={groupName} onChangeText={setGroupName} />
-            <TextField label="Exam tag" value={examTag} onChangeText={setExamTag} />
+          <PremiumFeatureCard style={styles.form}>
+            <TextField label={t('forum.groupName')} value={groupName} onChangeText={setGroupName} />
+            <TextField label={t('forum.examTag')} value={examTag} onChangeText={setExamTag} />
             <Button
-              label={createGroup.isPending ? 'Creating…' : 'Create group'}
+              label={createGroup.isPending ? t('forum.creating') : t('forum.createGroup')}
               onPress={submitGroup}
               disabled={createGroup.isPending}
             />
-          </Card>
+          </PremiumFeatureCard>
 
           <QueryStateView
             isLoading={groupsQuery.isLoading}
@@ -202,18 +229,21 @@ export function ForumScreen() {
                   (memberIds.includes(user!.id) || createdById === user!.id);
 
                 return (
-                <Card key={group.id} style={styles.post}>
+                <PremiumFeatureCard key={group.id} style={styles.post}>
                   <View style={styles.postHeader}>
                     <Users size={16} color={theme.colors.brand.primary} />
                     <Text style={styles.postSubject}>{group.examTag}</Text>
                   </View>
                   <Text style={styles.postTitle}>{group.name}</Text>
                   <Text style={styles.postMeta}>
-                    {group.members?.length ?? 1} members · by {authorName(group.createdBy)}
+                    {t('forum.membersBy', {
+                      count: group.members?.length ?? 1,
+                      name: authorName(group.createdBy, studentLabel),
+                    })}
                   </Text>
                   {isMember ? (
                     <Button
-                      label="Open group chat"
+                      label={t('forum.openChat')}
                       variant="ghost"
                       size="sm"
                       onPress={() =>
@@ -225,35 +255,57 @@ export function ForumScreen() {
                     />
                   ) : (
                     <Button
-                      label={joinGroup.isPending ? 'Joining…' : 'Join group'}
+                      label={joinGroup.isPending ? t('forum.joining') : t('forum.joinGroup')}
                       variant="ghost"
                       size="sm"
                       onPress={() => joinGroup.mutate(group.id)}
                     />
                   )}
-                </Card>
+                </PremiumFeatureCard>
               );
               })}
             </View>
           </QueryStateView>
         </>
       )}
-    </Screen>
+    </FeatureScreenLayout>
   );
 }
 
 function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
-    content: { gap: theme.spacing.lg, paddingBottom: theme.spacing['3xl'] },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'flex-start',
-      justifyContent: 'space-between',
+    quickLinks: {
+      gap: theme.spacing.sm,
+      padding: theme.spacing.md,
     },
-    form: { gap: theme.spacing.md },
+    quickLinksTitle: {
+      ...theme.typography.presets.label,
+      color: theme.colors.text.secondary,
+      textTransform: 'uppercase',
+    },
+    quickLinksRow: {
+      flexDirection: 'row',
+      gap: theme.spacing.sm,
+    },
+    quickLink: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: theme.spacing.xs,
+      paddingVertical: theme.spacing.sm,
+      borderRadius: theme.radii.md,
+      backgroundColor: theme.colors.surface.muted,
+    },
+    quickLinkLabel: {
+      ...theme.typography.presets.bodyMedium,
+      color: theme.colors.brand.primary,
+      fontWeight: '600',
+    },
+    form: { gap: theme.spacing.md, padding: theme.spacing.md },
     multiline: { minHeight: 100, textAlignVertical: 'top' },
     list: { gap: theme.spacing.md },
-    post: { gap: theme.spacing.sm },
+    post: { gap: theme.spacing.sm, padding: theme.spacing.md },
     postHeader: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm },
     postSubject: {
       ...theme.typography.presets.label,

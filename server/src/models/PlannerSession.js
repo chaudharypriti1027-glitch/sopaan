@@ -47,6 +47,16 @@ const plannerSessionSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    actionType: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+    actionResourceId: {
+      type: String,
+      trim: true,
+      default: null,
+    },
   },
   {
     timestamps: true,

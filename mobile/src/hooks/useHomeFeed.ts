@@ -19,6 +19,7 @@ export function useHomeFeed() {
     },
     enabled: isAuthenticated,
     staleTime: 60_000,
+    refetchOnMount: 'always',
     /** Keep showing the last good feed when a background refetch fails (offline). */
     throwOnError: false,
   });

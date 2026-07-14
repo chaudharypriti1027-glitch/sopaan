@@ -196,7 +196,10 @@ export function MentorsPage() {
 
       <DataTable
         rows={rows}
-        emptyMessage={query.isLoading ? 'Loading mentors…' : 'No mentors yet'}
+        emptyMessage="No mentors yet"
+        isLoading={query.isLoading}
+        error={query.isError ? query.error : undefined}
+        onRetry={() => void query.refetch()}
         columns={[
           {
             key: 'name',

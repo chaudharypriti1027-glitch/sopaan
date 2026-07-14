@@ -71,6 +71,8 @@ export function useBookExplain(bookId: string | undefined) {
       setError(null);
       setIsStreaming(true);
 
+      let streamFailed = false;
+
       try {
         const token = await getAccessToken();
         const response = await fetch(`${config.apiBaseUrl}/books/${bookId}/explain`, {
@@ -90,6 +92,7 @@ export function useBookExplain(bookId: string | undefined) {
         if (contentType.includes('application/json')) {
           const json = (await response.json()) as { ok?: boolean; message?: string };
           if (json.ok === false) {
+            streamFailed = true;
             setError(json.message ?? 'AI is busy right now — try again in a moment.');
           }
           setIsStreaming(false);
@@ -97,6 +100,7 @@ export function useBookExplain(bookId: string | undefined) {
         }
 
         if (!response.ok || !response.body) {
+          streamFailed = true;
           setError('Could not load explanation');
           setIsStreaming(false);
           return;
@@ -126,15 +130,16 @@ export function useBookExplain(bookId: string | undefined) {
             } else if (event.type === 'done') {
               setCached(Boolean(event.cached));
             } else if (event.type === 'error') {
+              streamFailed = true;
               setError(event.message);
             }
           }
         }
 
-        if (!fullText && !error) {
+        if (!fullText && !streamFailed) {
           setError('AI is busy right now — try again in a moment.');
         }
-      } catch (err) {
+      } catch {
         if (controller.signal.aborted) {
           return;
         }

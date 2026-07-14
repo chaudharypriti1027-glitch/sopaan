@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react';
-import { StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { View } from 'react-native';
 import type { CompositeNavigationProp } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -18,7 +18,9 @@ import {
   HOME_SECTION_META,
   visibleHomeSections,
   type HomeSectionKey,
-} from './homeSectionConfig';
+} from '../../content/homeContent';
+import { HOME_SECTION_ICONS } from './homeIcons';
+import { homeSectionPanel } from './homeTheme';
 import type { HomeFeatureLink } from '../../navigation/homeFeatureConfig';
 import { navigateToAskAI } from '../../navigation/askAiNavigation';
 import type { AppTabParamList, MainStackParamList } from '../../navigation/types';
@@ -51,21 +53,13 @@ export function HomeFeedContent({
   onFeaturePress,
 }: HomeFeedContentProps) {
   const { t } = useTranslation('app');
-  const styles = useMemo(() => createStyles(), []);
   const sections = useMemo(() => visibleHomeSections(feed), [feed]);
 
   const sectionAction = useCallback(
     (key: HomeSectionKey) => {
       switch (key) {
         case 'continue':
-          return () => {
-            const first = feed.continue[0];
-            if (first?.deeplink) {
-              onDeeplink(first.deeplink);
-              return;
-            }
-            navigation.getParent()?.navigate('Courses');
-          };
+          return () => navigation.getParent()?.navigate('Courses');
         case 'recommended':
           return () => navigation.navigate('Practice');
         case 'affairs':
@@ -74,7 +68,7 @@ export function HomeFeedContent({
           return undefined;
       }
     },
-    [feed.continue, navigation, onDeeplink],
+    [navigation],
   );
 
   const handleAskAiPress = useCallback(
@@ -87,6 +81,18 @@ export function HomeFeedContent({
     [navigation],
   );
 
+  const handleGenerateTest = useCallback(() => {
+    navigation.navigate('Practice', { openForm: true });
+  }, [navigation]);
+
+  const handleGamesPress = useCallback(() => {
+    navigation.getParent()?.navigate('Games');
+  }, [navigation]);
+
+  const handleExamPlanPress = useCallback(() => {
+    navigation.getParent()?.navigate('ExamPlan');
+  }, [navigation]);
+
   const renderSectionBody = useCallback(
     (key: HomeSectionKey) => {
       switch (key) {
@@ -94,8 +100,13 @@ export function HomeFeedContent({
           return (
             <HomeAIHub
               nudges={feed.aiNudges}
+              examName={feed.countdown?.examName}
+              daysLeft={feed.countdown?.daysLeft}
               onNudgePress={onDeeplinkWithHaptic}
               onAskAiPress={handleAskAiPress}
+              onExamPlanPress={handleExamPlanPress}
+              onGenerateTestPress={handleGenerateTest}
+              onGamesPress={handleGamesPress}
             />
           );
         case 'features':
@@ -131,6 +142,9 @@ export function HomeFeedContent({
       onLeaguePress,
       onTestPress,
       handleAskAiPress,
+      handleGenerateTest,
+      handleGamesPress,
+      handleExamPlanPress,
     ],
   );
 
@@ -143,6 +157,9 @@ export function HomeFeedContent({
         const subtitle = meta.subtitleKey ? t(`home.${meta.subtitleKey}`) : undefined;
         const actionLabel = meta.actionKey ? t(`home.${meta.actionKey}`) : undefined;
         const onAction = sectionAction(key);
+        const sectionIcon = HOME_SECTION_ICONS[key];
+        const body = renderSectionBody(key);
+        const panelTone = meta.panelTone;
 
         return (
           <HomeAnimatedSection key={key} index={index}>
@@ -154,17 +171,18 @@ export function HomeFeedContent({
                   actionLabel={actionLabel}
                   onActionPress={onAction}
                   compact={isFirst && meta.compactWhenFirst}
+                  icon={sectionIcon}
                 />
               ) : null}
-              {renderSectionBody(key)}
+              {panelTone ? (
+                <View style={homeSectionPanel(panelTone)}>{body}</View>
+              ) : (
+                body
+              )}
             </HomeSection>
           </HomeAnimatedSection>
         );
       })}
     </>
   );
-}
-
-function createStyles() {
-  return StyleSheet.create({});
 }

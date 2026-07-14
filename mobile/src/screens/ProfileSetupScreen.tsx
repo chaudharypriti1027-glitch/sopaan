@@ -1,13 +1,11 @@
 import { useMemo, useState } from 'react';
 import {
   Modal,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   View,
 } from 'react-native';
-import DateTimePicker, { type DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { Camera } from 'lucide-react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
@@ -26,12 +24,24 @@ import {
   PrimaryButton,
   useShakeOnError,
 } from '../components/auth';
+import { AUTH_SPACING } from '../components/auth/authTheme';
 import { Avatar, ChipSelect } from '../components';
 import { ConfettiBurst } from '../components/profileSetup/ConfettiBurst';
+import { ExamDatePickerField } from '../components/profileSetup/ExamDatePickerField';
+import { TargetExamGrid } from '../components/profileSetup/TargetExamGrid';
+import {
+  parseExamDate,
+  toExamDatePayload,
+} from '../components/profileSetup/examDateUtils';
 import { Text } from '../components/Text';
 import { meApi, parseApiError } from '../api';
 import { useOnboarding } from '../auth/OnboardingContext';
 import { routeAfterSession } from '../auth/routeAfterSession';
+import {
+  isValidTargetExam,
+  resolveTargetExam,
+  splitTargetExam,
+} from '../utils/examTarget';
 import { useLanguage } from '../language/LanguageContext';
 import type {
   EducationLevel,
@@ -48,9 +58,7 @@ import {
   LANGUAGE_OPTIONS,
   PROFILE_CATEGORY_OPTIONS,
   PROFILE_SETUP_STEPS,
-  TARGET_EXAM_OPTIONS,
 } from './profileSetup/constants';
-import { useFormat } from '../i18n/useFormat';
 
 type ProfileSetupNav = CompositeNavigationProp<
   NativeStackNavigationProp<AuthStackParamList, 'ProfileSetup'>,
@@ -59,39 +67,6 @@ type ProfileSetupNav = CompositeNavigationProp<
 
 const STEP_COUNT = PROFILE_SETUP_STEPS.length;
 const CONFETTI_HOLD_MS = 900;
-
-function parseExamDate(value?: string): Date | null {
-  if (!value) {
-    return null;
-  }
-
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? null : parsed;
-}
-
-function formatExamDateLabel(
-  date: Date | null,
-  optionalLabel: string,
-  formatDate: (value: Date, options?: Intl.DateTimeFormatOptions) => string,
-) {
-  if (!date) {
-    return optionalLabel;
-  }
-
-  return formatDate(date, {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  });
-}
-
-function toExamDatePayload(date: Date | null): string | null {
-  if (!date) {
-    return null;
-  }
-
-  return date.toISOString().slice(0, 10);
-}
 
 function wait(ms: number) {
   return new Promise<void>((resolve) => {
@@ -104,13 +79,15 @@ export function ProfileSetupScreen() {
   const navigation = useNavigation<ProfileSetupNav>();
   const profile = useAuthStore((state) => state.profile);
   const setProfile = useAuthStore((state) => state.setProfile);
-  const { completeOnboarding } = useOnboarding();
+  const { completeOnboarding, goal: onboardingGoal } = useOnboarding();
   const { setLanguage: setAppLanguage } = useLanguage();
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   const [step, setStep] = useState(0);
-  const [targetExam, setTargetExam] = useState(profile?.targetExam ?? '');
+  const initialExam = splitTargetExam(profile?.targetExam || onboardingGoal?.examTrack || '');
+  const [examSelection, setExamSelection] = useState(initialExam.selection);
+  const [customExamName, setCustomExamName] = useState(initialExam.customName);
   const [examDate, setExamDate] = useState<Date | null>(() => parseExamDate(profile?.examDate));
   const [state, setState] = useState(profile?.state ?? '');
   const [stateQuery, setStateQuery] = useState('');
@@ -121,7 +98,6 @@ export function ProfileSetupScreen() {
   );
   const [language, setLanguage] = useState<ProfileLanguage>(profile?.language ?? 'en');
   const [avatarUri, setAvatarUri] = useState<string | undefined>(profile?.avatarUrl);
-  const [showDatePicker, setShowDatePicker] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [avatarLoading, setAvatarLoading] = useState(false);
@@ -140,25 +116,10 @@ export function ProfileSetupScreen() {
 
   const stepCanContinue =
     step === 0
-      ? Boolean(targetExam.trim())
+      ? isValidTargetExam(examSelection, customExamName)
       : step === 1
         ? Boolean(state.trim())
         : Boolean(language);
-
-  const handleDateChange = (event: DateTimePickerEvent, selected?: Date) => {
-    if (Platform.OS === 'android') {
-      setShowDatePicker(false);
-    }
-
-    if (event.type === 'dismissed') {
-      return;
-    }
-
-    if (selected) {
-      setExamDate(selected);
-      setFormError(null);
-    }
-  };
 
   const handlePickAvatar = async () => {
     setFormError(null);
@@ -193,7 +154,7 @@ export function ProfileSetupScreen() {
     try {
       if (step === 0) {
         const updated = await meApi.updateMe({
-          targetExam: targetExam.trim(),
+          targetExam: resolveTargetExam(examSelection, customExamName),
           examDate: toExamDatePayload(examDate),
         });
         await setProfile(updated);
@@ -228,7 +189,7 @@ export function ProfileSetupScreen() {
 
   const handlePrimary = async () => {
     if (!stepCanContinue || loading) {
-      if (step === 0 && !targetExam.trim()) {
+      if (step === 0 && !isValidTargetExam(examSelection, customExamName)) {
         setFormError(t('auth:profileSetup.pickExamError'));
       } else if (step === 1 && !state.trim()) {
         setFormError(t('auth:profileSetup.selectStateError'));
@@ -307,15 +268,16 @@ export function ProfileSetupScreen() {
           {step === 0 ? (
             <GoalStep
               examDate={examDate}
+              customExamName={customExamName}
+              examSelection={examSelection}
               formError={formError}
-              onClearDate={() => setExamDate(null)}
-              onExamSelect={setTargetExam}
-              onOpenDatePicker={() => setShowDatePicker(true)}
-              showDatePicker={showDatePicker}
+              onCustomExamNameChange={setCustomExamName}
+              onExamDateChange={(date) => {
+                setExamDate(date);
+                setFormError(null);
+              }}
+              onExamSelectionChange={setExamSelection}
               styles={styles}
-              targetExam={targetExam}
-              theme={theme}
-              onDateChange={handleDateChange}
             />
           ) : null}
 
@@ -366,89 +328,48 @@ type StepStyles = ReturnType<typeof createStyles>;
 type StepTheme = ReturnType<typeof useTheme>['theme'];
 
 type GoalStepProps = {
-  targetExam: string;
+  examSelection: string;
+  customExamName: string;
   examDate: Date | null;
-  showDatePicker: boolean;
   formError: string | null;
   styles: StepStyles;
-  theme: StepTheme;
-  onExamSelect: (value: string) => void;
-  onOpenDatePicker: () => void;
-  onClearDate: () => void;
-  onDateChange: (event: DateTimePickerEvent, selected?: Date) => void;
+  onExamSelectionChange: (value: string) => void;
+  onCustomExamNameChange: (value: string) => void;
+  onExamDateChange: (date: Date | null) => void;
 };
 
 function GoalStep({
-  targetExam,
+  examSelection,
+  customExamName,
   examDate,
-  showDatePicker,
   formError,
   styles,
-  theme,
-  onExamSelect,
-  onOpenDatePicker,
-  onClearDate,
-  onDateChange,
+  onExamSelectionChange,
+  onCustomExamNameChange,
+  onExamDateChange,
 }: GoalStepProps) {
-  const { t } = useTranslation(['auth', 'common']);
-  const { formatDate } = useFormat();
+  const { t } = useTranslation(['auth']);
 
   return (
     <View style={styles.stepBody}>
       <AuthAnimatedSection index={0}>
         <AuthStepLabel>{t('auth:profileSetup.targetExamLabel')}</AuthStepLabel>
-        <View style={styles.chipRow}>
-          {TARGET_EXAM_OPTIONS.map((option) => (
-            <ChipSelect
-              key={option.value}
-              label={option.label}
-              emoji={option.emoji}
-              selected={targetExam === option.value}
-              onPress={() => onExamSelect(option.value)}
-              testID={`exam-chip-${option.label.toLowerCase().replace(/\s+/g, '-')}`}
-            />
-          ))}
-        </View>
+        <TargetExamGrid
+          selection={examSelection}
+          customName={customExamName}
+          onSelectionChange={onExamSelectionChange}
+          onCustomNameChange={onCustomExamNameChange}
+        />
       </AuthAnimatedSection>
 
       <AuthAnimatedSection index={1}>
         <AuthStepLabel>{t('auth:profileSetup.examDateLabel')}</AuthStepLabel>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={t('auth:profileSetup.pickExamDateA11y')}
-          onPress={onOpenDatePicker}
-          style={({ pressed }) => [styles.dateCard, pressed && styles.cardPressed]}
+        <ExamDatePickerField
+          value={examDate}
+          onChange={onExamDateChange}
+          optionalLabel={t('auth:profileSetup.addTargetDateOptional')}
           testID="profile-setup-exam-date"
-        >
-          <Text variant="bodyMedium">
-            {formatExamDateLabel(examDate, t('auth:profileSetup.addTargetDateOptional'), formatDate)}
-          </Text>
-          {examDate ? (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={t('auth:profileSetup.clearExamDateA11y')}
-              hitSlop={8}
-              onPress={(event) => {
-                event.stopPropagation();
-                onClearDate();
-              }}
-            >
-              <Text variant="caption" color="link">
-                {t('auth:profileSetup.clearDate')}
-              </Text>
-            </Pressable>
-          ) : null}
-        </Pressable>
-
-        {showDatePicker ? (
-          <DateTimePicker
-            value={examDate ?? new Date()}
-            mode="date"
-            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-            minimumDate={new Date()}
-            onChange={onDateChange}
-          />
-        ) : null}
+        />
       </AuthAnimatedSection>
 
       {formError ? (
@@ -533,7 +454,9 @@ function YouStep({
           style={({ pressed }) => [styles.selectorCard, pressed && styles.cardPressed]}
           testID="profile-setup-state"
         >
-          <Text variant="bodyMedium">{state || t('auth:profileSetup.searchSelectState')}</Text>
+          <Text variant="bodyMedium" color={state ? 'primary' : 'secondary'}>
+            {state || t('auth:profileSetup.searchSelectState')}
+          </Text>
         </Pressable>
       </AuthAnimatedSection>
 
@@ -546,6 +469,7 @@ function YouStep({
               label={option}
               selected={category === option}
               onPress={() => onCategorySelect(option)}
+              style={styles.categoryChip}
               testID={`category-chip-${option.toLowerCase()}`}
             />
           ))}
@@ -561,6 +485,7 @@ function YouStep({
               label={option.label}
               selected={educationLevel === option.value}
               onPress={() => onEducationSelect(option.value)}
+              style={styles.educationChip}
               testID={`education-chip-${option.value}`}
             />
           ))}
@@ -666,7 +591,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       flex: 1,
     },
     footer: {
-      gap: 10,
+      gap: AUTH_SPACING.footer,
     },
     stepBody: {
       gap: 20,
@@ -676,17 +601,13 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       flexWrap: 'wrap',
       gap: theme.spacing.sm,
     },
-    dateCard: {
-      minHeight: theme.a11y.minTouchTarget,
-      borderRadius: AUTH_UI.inputRadius,
-      borderWidth: 1.5,
-      borderColor: AUTH_UI.border,
-      backgroundColor: AUTH_UI.card,
-      paddingHorizontal: 16,
-      paddingVertical: 14,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
+    categoryChip: {
+      minWidth: '30%',
+      flexGrow: 1,
+    },
+    educationChip: {
+      minWidth: '30%',
+      flexGrow: 1,
     },
     selectorCard: {
       minHeight: theme.a11y.minTouchTarget,

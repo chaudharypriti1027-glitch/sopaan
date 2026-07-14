@@ -8,6 +8,7 @@ export function useHomeBanner() {
     queryKey: queryKeys.home.banner(),
     queryFn: getActiveBanner,
     staleTime: 60_000,
+    refetchOnMount: 'always',
     retry: false,
     select: (data) => data.banner,
   });

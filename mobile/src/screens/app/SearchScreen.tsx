@@ -15,14 +15,15 @@ import {
   Sparkles,
   type LucideIcon,
 } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import {
-  Card,
   ChipSelect,
+  FeatureScreenLayout,
   PremiumEmptyState,
+  PremiumFeatureCard,
   PremiumListRow,
+  PremiumSectionLabel,
   QueryStateView,
-  Screen,
-  SectionTitle,
   TextField,
 } from '../../components';
 import type { SearchResult, SearchResultGroup } from '../../api/search';
@@ -32,13 +33,6 @@ import { navigateToAskAI } from '../../navigation/askAiNavigation';
 import { useTheme } from '../../theme';
 
 type SearchNav = NativeStackNavigationProp<MainStackParamList, 'Search'>;
-
-const GROUP_LABELS: Record<SearchResultGroup, string> = {
-  exams: 'Exams',
-  courses: 'Courses',
-  tests: 'Tests & mocks',
-  ai: 'Ask AI',
-};
 
 const GROUP_ORDER: SearchResultGroup[] = ['exams', 'courses', 'tests', 'ai'];
 
@@ -56,7 +50,15 @@ const GROUP_ICONS: Record<SearchResultGroup, LucideIcon> = {
   ai: Sparkles,
 };
 
+const GROUP_LABEL_KEYS: Record<SearchResultGroup, string> = {
+  exams: 'search.groupExams',
+  courses: 'search.groupCourses',
+  tests: 'search.groupTests',
+  ai: 'search.groupAi',
+};
+
 export function SearchScreen() {
+  const { t } = useTranslation('app');
   const navigation = useNavigation<SearchNav>();
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -109,11 +111,11 @@ export function SearchScreen() {
     GROUP_ORDER.some((group) => (searchQuery.data?.results[group]?.length ?? 0) > 0);
 
   return (
-    <Screen scroll contentContainerStyle={styles.content}>
+    <FeatureScreenLayout title={t('search.title')} subtitle={t('search.subtitle')}>
       <TextField
         value={query}
         onChangeText={setQuery}
-        placeholder="Search courses, tests, exams…"
+        placeholder={t('search.placeholder')}
         autoCapitalize="none"
         autoCorrect={false}
         autoFocus
@@ -122,17 +124,17 @@ export function SearchScreen() {
       {debouncedQuery.length === 0 ? (
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <SectionTitle title="Recent" />
+            <PremiumSectionLabel title={t('search.recent')} compact />
             {recent.length > 0 ? (
               <Pressable onPress={() => void clearRecent()}>
-                <Text style={styles.clearText}>Clear</Text>
+                <Text style={styles.clearText}>{t('search.clear')}</Text>
               </Pressable>
             ) : null}
           </View>
           {recent.length === 0 ? (
             <PremiumEmptyState
-              title="No recent searches"
-              hint="Your recent searches will appear here."
+              title={t('search.emptyRecentTitle')}
+              hint={t('search.emptyRecent')}
               Icon={SearchIcon}
               tone="slate"
             />
@@ -158,8 +160,7 @@ export function SearchScreen() {
         >
           {!hasResults ? (
             <PremiumEmptyState
-              title="No results"
-              hint={`Nothing matched “${debouncedQuery}”. Try a different keyword.`}
+              title={t('search.noResults', { query: debouncedQuery })}
               Icon={SearchIcon}
               tone="slate"
             />
@@ -170,8 +171,8 @@ export function SearchScreen() {
 
               return (
                 <View key={group} style={styles.section}>
-                  <SectionTitle title={GROUP_LABELS[group]} />
-                  <Card padded={false}>
+                  <PremiumSectionLabel title={t(GROUP_LABEL_KEYS[group])} compact />
+                  <PremiumFeatureCard style={styles.resultCard}>
                     {items.map((item: SearchResult, index: number) => (
                       <PremiumListRow
                         key={item.id}
@@ -183,23 +184,19 @@ export function SearchScreen() {
                         last={index === items.length - 1}
                       />
                     ))}
-                  </Card>
+                  </PremiumFeatureCard>
                 </View>
               );
             })
           )}
         </QueryStateView>
       ) : null}
-    </Screen>
+    </FeatureScreenLayout>
   );
 }
 
 function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
-    content: {
-      gap: theme.spacing.xl,
-      paddingBottom: theme.spacing['4xl'],
-    },
     section: {
       gap: theme.spacing.sm,
     },
@@ -218,6 +215,10 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       flexDirection: 'row',
       flexWrap: 'wrap',
       gap: theme.spacing.sm,
+    },
+    resultCard: {
+      padding: 0,
+      overflow: 'hidden',
     },
   });
 }

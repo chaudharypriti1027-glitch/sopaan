@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ArrowRight, Eye, RotateCcw } from 'lucide-react-native';
+import { ArrowRight, Download, Eye, RotateCcw } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { Text } from '../Text';
 import { useTheme } from '../../theme';
@@ -13,6 +13,7 @@ type ResultActionBarProps = {
   onRetake: () => void;
   onMoreTests: () => void;
   onMockAnalysis?: () => void;
+  onDownloadReport?: () => void;
 };
 
 export function ResultActionBar({
@@ -20,6 +21,7 @@ export function ResultActionBar({
   onRetake,
   onMoreTests,
   onMockAnalysis,
+  onDownloadReport,
 }: ResultActionBarProps) {
   const { t } = useTranslation('app');
   const { theme } = useTheme();
@@ -70,6 +72,17 @@ export function ResultActionBar({
           style={({ pressed }) => [styles.analysisBtn, pressed && styles.pressed]}
         >
           <Text style={styles.analysisText}>{t('result.mockAnalysis')}</Text>
+        </Pressable>
+      ) : null}
+
+      {onDownloadReport ? (
+        <Pressable
+          accessibilityRole="button"
+          onPress={onDownloadReport}
+          style={({ pressed }) => [styles.reportBtn, pressed && styles.pressed]}
+        >
+          <Download size={16} color={RESULT_UI.navy} strokeWidth={2.2} />
+          <Text style={styles.reportText}>{t('result.downloadReport')}</Text>
         </Pressable>
       ) : null}
     </View>
@@ -126,6 +139,22 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     analysisText: {
       fontSize: 13,
       fontWeight: '700',
+      color: RESULT_UI.navy,
+    },
+    reportBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+      paddingVertical: 14,
+      borderRadius: 16,
+      backgroundColor: RESULT_UI.surface,
+      borderWidth: 1,
+      borderColor: RESULT_UI.line,
+    },
+    reportText: {
+      fontSize: 13,
+      fontWeight: '800',
       color: RESULT_UI.navy,
     },
     pressed: { opacity: 0.9 },

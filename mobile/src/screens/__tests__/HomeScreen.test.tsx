@@ -6,6 +6,10 @@ import { createMockHomeFeed } from '../../test/fixtures/homeFeed';
 
 const mockGetParent = jest.fn(() => ({ navigate: jest.fn() }));
 
+jest.mock('../../hooks/useFocusRefetch', () => ({
+  useFocusRefetch: jest.fn(),
+}));
+
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({
     navigate: jest.fn(),
@@ -33,6 +37,27 @@ jest.mock('../../hooks/useProGate', () => ({
     showAds: true,
     isLoading: false,
   }),
+}));
+
+jest.mock('../../hooks/usePlanner', () => ({
+  useTodayPlanner: () => ({
+    sessions: [
+      {
+        id: '1',
+        subject: 'Polity',
+        topic: 'Fundamental Rights',
+        startTime: '09:00',
+        durationMin: 45,
+        type: 'study',
+        completed: false,
+      },
+    ],
+    completedCount: 0,
+    progress: 0,
+    summary: 'You have 1 sessions planned for today.',
+    isLoading: false,
+  }),
+  todayDateString: () => '2026-07-09',
 }));
 
 jest.mock('expo-haptics', () => ({
@@ -68,6 +93,7 @@ describe('HomeScreen integration', () => {
       'home-section-greeting',
       'home-section-countdown',
       'home-section-streak',
+      'home-section-ai-plan',
       'home-section-features',
       'home-section-explore-shortcuts',
       'home-section-daily-challenge',

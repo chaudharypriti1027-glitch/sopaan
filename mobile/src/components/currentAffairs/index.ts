@@ -8,4 +8,5 @@ export { CaFilterSheet } from './CaFilterSheet';
 export { CaPremiumIcon } from './CaPremiumIcon';
 export { CaQuizBanner } from './CaQuizBanner';
 export { CaFeedHeader } from './CaFeedHeader';
+export { CaAiSummaryCard } from './CaAiSummaryCard';
 export { CA_UI, caFeedCard, caChip, caPressFeedback } from './caTheme';

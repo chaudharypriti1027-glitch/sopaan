@@ -52,6 +52,12 @@ const ICONS: Record<string, ReactNode> = {
       <path d="M4 5h13v14H6a2 2 0 0 1-2-2zM17 8h3v9a2 2 0 0 1-2 2M8 9h5M8 13h5" />
     </>
   ),
+  books: (
+    <>
+      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5z" />
+      <path d="M12 7v10" />
+    </>
+  ),
   media: (
     <>
       <rect x="3" y="3" width="18" height="18" rx="2" />

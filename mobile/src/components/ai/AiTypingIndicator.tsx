@@ -1,5 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Text } from '../Text';
 import { AiAvatar } from './AiAvatar';
 import { AI_UI } from './aiTheme';
 import { platformShadow } from '../../utils/platformShadow';
@@ -20,22 +22,30 @@ function Dot({ delay }: { delay: number }) {
     return () => loop.stop();
   }, [delay, y]);
 
-  return (
-    <Animated.View
-      style={[styles.dot, { transform: [{ translateY: y }] }]}
-    />
-  );
+  return <Animated.View style={[styles.dot, { transform: [{ translateY: y }] }]} />;
 }
 
-export function AiTypingIndicator() {
+type AiTypingIndicatorProps = {
+  label?: string;
+};
+
+export function AiTypingIndicator({ label }: AiTypingIndicatorProps) {
   return (
     <View style={styles.row}>
       <AiAvatar size={36} />
-      <View style={styles.bubble}>
-        <Dot delay={0} />
-        <Dot delay={150} />
-        <Dot delay={300} />
-      </View>
+      <LinearGradient
+        colors={[AI_UI.goldSoft, AI_UI.card]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.bubble}
+      >
+        <View style={styles.dots}>
+          <Dot delay={0} />
+          <Dot delay={150} />
+          <Dot delay={300} />
+        </View>
+        {label ? <Text style={styles.label}>{label}</Text> : null}
+      </LinearGradient>
     </View>
   );
 }
@@ -47,22 +57,31 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   bubble: {
+    borderRadius: AI_UI.bubbleRadius,
+    borderBottomLeftRadius: 6,
+    borderWidth: 1,
+    borderColor: AI_UI.goldBorder,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 6,
+    minWidth: 120,
+    ...platformShadow({ color: AI_UI.primary, offsetY: 4, opacity: 0.08, radius: 16, elevation: 3 }),
+  },
+  dots: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 16,
-    borderBottomLeftRadius: 4,
-    backgroundColor: AI_UI.card,
-    borderWidth: 1.5,
-    borderColor: AI_UI.primaryLight,
-    ...platformShadow({ color: '#000', offsetY: 2, opacity: 0.04, radius: 12, elevation: 2 }),
   },
   dot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: AI_UI.primaryMuted,
+    backgroundColor: AI_UI.gold,
+    opacity: 0.75,
+  },
+  label: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: AI_UI.goldDeep,
   },
 });

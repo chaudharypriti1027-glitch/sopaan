@@ -5,11 +5,11 @@ import { useTranslation } from 'react-i18next';
 import {
   Button,
   Card,
+  FeatureScreenLayout,
   Pill,
   PremiumHeroCard,
+  PremiumSectionLabel,
   QueryStateView,
-  Screen,
-  SectionTitle,
   StatTile,
 } from '../../components';
 import { PremiumIcon } from '../../components/premium/PremiumIcon';
@@ -73,9 +73,11 @@ export function ReferEarnScreen() {
     : undefined;
 
   return (
-    <Screen scroll contentContainerStyle={styles.content}>
-      <SectionTitle subtitle={t('referEarn.subtitle')} />
-
+    <FeatureScreenLayout
+      title={t('referEarn.title')}
+      subtitle={t('referEarn.subtitle')}
+      contentStyle={styles.content}
+    >
       <QueryStateView
         isLoading={dashboardQuery.isLoading}
         isError={dashboardQuery.isError}
@@ -125,10 +127,8 @@ export function ReferEarnScreen() {
               />
             </View>
 
-            <SectionTitle
-              title={t('referEarn.yourReferrals')}
-              subtitle={t('referEarn.referralsSubtitle')}
-            />
+            <PremiumSectionLabel title={t('referEarn.yourReferrals')} compact />
+            <Text style={styles.referralsHint}>{t('referEarn.referralsSubtitle')}</Text>
 
             {data.referrals.length === 0 ? (
               <Card>
@@ -161,7 +161,7 @@ export function ReferEarnScreen() {
           </>
         ) : null}
       </QueryStateView>
-    </Screen>
+    </FeatureScreenLayout>
   );
 }
 
@@ -170,6 +170,12 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     content: { gap: theme.spacing.lg, paddingBottom: theme.spacing['3xl'] },
     heroActions: { width: '100%', gap: theme.spacing.sm, marginTop: theme.spacing.sm },
     statsRow: { flexDirection: 'row', gap: theme.spacing.sm },
+    referralsHint: {
+      ...theme.typography.presets.caption,
+      color: theme.colors.text.secondary,
+      marginTop: -theme.spacing.sm,
+      marginBottom: theme.spacing.xs,
+    },
     referralRow: {
       flexDirection: 'row',
       alignItems: 'center',

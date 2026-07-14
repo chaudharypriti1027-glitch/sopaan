@@ -1,15 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import Animated from 'react-native-reanimated';
+import { StyleSheet } from 'react-native';
+import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
 import type { CompositeNavigationProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import {
   AuthAnimatedSection,
-  AuthBrandHeader,
   AuthFormCard,
+  AuthFormIntro,
   AuthPremiumField,
+  AuthPremiumHero,
   AuthScreen,
   PrimaryButton,
   VerifiedPhoneChip,
@@ -92,9 +93,6 @@ function SignupProfileCompletion() {
 
   return (
     <AuthScreen
-      header={
-        <AuthBrandHeader title={t('signup.postOtpTitle')} subtitle={t('signup.postOtpSubtitle')} />
-      }
       footer={
         <PrimaryButton
           label={t('onboarding.continue')}
@@ -105,8 +103,15 @@ function SignupProfileCompletion() {
         />
       }
     >
-      <Animated.View style={shakeStyle}>
-        <AuthFormCard>
+      <AuthPremiumHero variant="profile" />
+
+      <Animated.View entering={FadeInDown.duration(440).delay(80)} style={shakeStyle}>
+        <AuthFormCard overlap>
+          <AuthFormIntro
+            eyebrow={t('signup.eyebrow')}
+            title={t('signup.postOtpTitle')}
+            subtitle={t('signup.postOtpSubtitle')}
+          />
           {phone ? (
             <AuthAnimatedSection index={0}>
               <VerifiedPhoneChip phone={phone} />

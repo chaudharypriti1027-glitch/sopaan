@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GAME_CATALOG } from './content';
 import type { GameId } from './types';
+import { getDailyChallengeGameId as resolveDailyChallengeGameId } from '@sopaan/shared/dailyChallenge';
 
 const STORAGE_KEY = 'sopaan_game_progress_v1';
 
@@ -16,26 +17,13 @@ export type GameProgressState = {
   };
 };
 
-const DEFAULT_PROGRESS: GameProgressState = {
-  gamesCompleted: 0,
-  lastPlayedGameId: null,
-  lastPlayedAt: null,
-  bestScores: {},
-  dailyChallenge: {
-    dateKey: '',
-    gameId: 'rapid-fire',
-    completed: false,
-  },
-};
-
 function todayKey(date = new Date()) {
   return date.toISOString().slice(0, 10);
 }
 
 export function getDailyChallengeGameId(date = new Date()): GameId {
-  const start = new Date(date.getFullYear(), 0, 0);
-  const dayOfYear = Math.floor((date.getTime() - start.getTime()) / 86_400_000);
-  return GAME_CATALOG[dayOfYear % GAME_CATALOG.length].id;
+  const id = resolveDailyChallengeGameId(date);
+  return GAME_CATALOG.some((game) => game.id === id) ? (id as GameId) : GAME_CATALOG[0].id;
 }
 
 function normalizeProgress(raw: Partial<GameProgressState> | null): GameProgressState {

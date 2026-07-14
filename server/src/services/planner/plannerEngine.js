@@ -1,4 +1,5 @@
 import { Exam } from '../../models/Exam.js';
+import { User } from '../../models/User.js';
 import { TopicMastery } from '../../models/TopicMastery.js';
 import { Attempt } from '../../models/Attempt.js';
 import { getOrCreateProfile } from '../profileService.js';
@@ -57,13 +58,30 @@ export async function buildAdaptiveDayPlan(userId, { date } = {}) {
   const language = profile.preferences?.language ?? 'en';
   const planDate = date ?? new Date();
 
-  const [weakTopics, dueCards, exams] = await Promise.all([
+  const [weakTopics, dueCards, exams, userDoc] = await Promise.all([
     loadWeakestTopics(userId),
     countDueCards(userId),
     Exam.find({}).select('name code category importantDates').lean(),
+    User.findById(userId).select('examDate targetExam').lean(),
   ]);
 
-  const examProximity = computeExamProximity(exams, examTrack, planDate);
+  let examProximity = computeExamProximity(exams, examTrack, planDate);
+
+  if (userDoc?.examDate) {
+    const examDate = new Date(userDoc.examDate);
+
+    if (examDate >= planDate) {
+      const daysAway = Math.ceil(
+        (examDate.getTime() - planDate.getTime()) / (24 * 60 * 60 * 1000),
+      );
+      examProximity = {
+        examName: userDoc.targetExam?.trim() || examTrack,
+        examDate,
+        daysAway,
+        category: examProximity?.category ?? null,
+      };
+    }
+  }
 
   const sessions = buildSessionSlots({
     weakTopics,
@@ -97,9 +115,33 @@ export async function buildAdaptiveDayPlan(userId, { date } = {}) {
     // Keep deterministic fallbacks when Claude is unavailable.
   }
 
+  const caDigestSession = {
+    startTime: '08:00',
+    subject: 'Current Affairs',
+    topic: 'Today\'s digest',
+    type: 'study',
+    reason: 'Read today\'s headlines and memorize one-liners for GK',
+    durationMin: 20,
+    completed: false,
+    actionType: 'ca_digest',
+    actionResourceId: '',
+  };
+
+  const gameSession = {
+    startTime: '20:30',
+    subject: 'Brain break',
+    topic: 'Affairs quiz game',
+    type: 'practice',
+    reason: 'Lock in today\'s current affairs with unique MCQs',
+    durationMin: 15,
+    completed: false,
+    actionType: 'game',
+    actionResourceId: 'rapid-fire',
+  };
+
   return {
     summary,
-    sessions: enrichedSessions,
+    sessions: [caDigestSession, ...enrichedSessions, gameSession],
     meta: {
       dueFlashcards: dueCards.count,
       examProximity,

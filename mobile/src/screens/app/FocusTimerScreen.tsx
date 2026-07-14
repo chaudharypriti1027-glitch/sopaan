@@ -1,24 +1,33 @@
 import { Droplets, Eye, Pause, Play, SkipForward, StretchHorizontal, Wind } from 'lucide-react-native';
+import type { LucideIcon } from 'lucide-react-native';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AppState, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { Button, Card, IconButton, Screen, SectionTitle, TimerRing } from '../../components';
+import {
+  Button,
+  FeatureScreenLayout,
+  IconButton,
+  PremiumFeatureCard,
+  TimerRing,
+} from '../../components';
+import {
+  BREAK_TIMER_SECONDS,
+  FOCUS_BREAK_TIPS,
+  FOCUS_TIMER_SECONDS,
+  POMODORO_CYCLES,
+} from '../../content/focusTimerContent';
 import { useLogFocus } from '../../hooks';
 import { toneColors, toneForIndex } from '../../utils/iconTone';
 import { useTheme } from '../../theme';
 
-const FOCUS_SEC = 25 * 60;
-const BREAK_SEC = 5 * 60;
-const CYCLES = 4;
-
 type Phase = 'focus' | 'break';
 
-const BREAK_TIPS = [
-  { id: 'stretch', label: 'Stretch', icon: StretchHorizontal },
-  { id: 'hydrate', label: 'Hydrate', icon: Droplets },
-  { id: 'eye-rest', label: 'Eye rest', icon: Eye },
-  { id: 'breathe', label: 'Breathe', icon: Wind },
-] as const;
+const BREAK_TIP_ICONS: Record<(typeof FOCUS_BREAK_TIPS)[number]['id'], LucideIcon> = {
+  stretch: StretchHorizontal,
+  hydrate: Droplets,
+  'eye-rest': Eye,
+  breathe: Wind,
+};
 
 export function FocusTimerScreen() {
   const { theme } = useTheme();
@@ -28,11 +37,11 @@ export function FocusTimerScreen() {
 
   const [phase, setPhase] = useState<Phase>('focus');
   const [cycleIndex, setCycleIndex] = useState(0);
-  const [remaining, setRemaining] = useState(FOCUS_SEC);
+  const [remaining, setRemaining] = useState(FOCUS_TIMER_SECONDS);
   const [running, setRunning] = useState(false);
   const [focusMinutesLogged, setFocusMinutesLogged] = useState(0);
 
-  const totalSec = phase === 'focus' ? FOCUS_SEC : BREAK_SEC;
+  const totalSec = phase === 'focus' ? FOCUS_TIMER_SECONDS : BREAK_TIMER_SECONDS;
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const endAtRef = useRef<number | null>(null);
 
@@ -48,20 +57,20 @@ export function FocusTimerScreen() {
     setRunning(false);
 
     if (phase === 'focus') {
-      const minutes = Math.round(FOCUS_SEC / 60);
+      const minutes = Math.round(FOCUS_TIMER_SECONDS / 60);
       setFocusMinutesLogged((m) => m + minutes);
       logFocus.mutate({ focusMinutes: minutes, sessions: 1 });
       setPhase('break');
-      setRemaining(BREAK_SEC);
+      setRemaining(BREAK_TIMER_SECONDS);
     } else {
       const nextCycle = cycleIndex + 1;
-      if (nextCycle >= CYCLES) {
+      if (nextCycle >= POMODORO_CYCLES) {
         setCycleIndex(0);
       } else {
         setCycleIndex(nextCycle);
       }
       setPhase('focus');
-      setRemaining(FOCUS_SEC);
+      setRemaining(FOCUS_TIMER_SECONDS);
     }
   }, [phase, cycleIndex, clearTimer, logFocus]);
 
@@ -83,9 +92,6 @@ export function FocusTimerScreen() {
     }, 250);
 
     return clearTimer;
-    // `remaining` is intentionally excluded — it's read once to seed
-    // `endAtRef` and updated by the interval itself; including it would
-    // restart the countdown on every tick.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [running, clearTimer, onPhaseComplete]);
 
@@ -104,19 +110,18 @@ export function FocusTimerScreen() {
     onPhaseComplete();
   };
 
-  const phaseLabel = phase === 'focus' ? 'Focus' : 'Break';
+  const phaseLabel = phase === 'focus' ? t('focusTimer.focus') : t('focusTimer.break');
 
   return (
-    <Screen scroll contentContainerStyle={styles.content}>
-      <SectionTitle
-        subtitle={`Pomodoro · ${focusMinutesLogged} min logged today`}
-      />
-
-      <Card style={styles.timerCard}>
+    <FeatureScreenLayout
+      title={t('focusTimer.title')}
+      subtitle={t('focusTimer.subtitle', { minutes: focusMinutesLogged })}
+    >
+      <PremiumFeatureCard style={styles.timerCard}>
         <Text style={styles.phase}>{phaseLabel}</Text>
         <TimerRing totalSec={totalSec} remainingSec={remaining} size={200} strokeWidth={10} />
         <View style={styles.dots}>
-          {Array.from({ length: CYCLES }, (_, i) => (
+          {Array.from({ length: POMODORO_CYCLES }, (_, i) => (
             <View
               key={i}
               style={[
@@ -149,31 +154,31 @@ export function FocusTimerScreen() {
             onPress={handleSkip}
           />
         </View>
-      </Card>
+      </PremiumFeatureCard>
 
       {phase === 'break' ? (
         <View style={styles.breakSection}>
-          <Text style={styles.breakTitle}>On your break, try</Text>
+          <Text style={styles.breakTitle}>{t('focusTimer.breakTitle')}</Text>
           <View style={styles.tipGrid}>
-            {BREAK_TIPS.map(({ id, label, icon: Icon }, index) => {
+            {FOCUS_BREAK_TIPS.map((tip, index) => {
+              const Icon = BREAK_TIP_ICONS[tip.id];
               const tone = toneColors(toneForIndex(index));
               return (
-                <View key={id} style={[styles.tipTile, { backgroundColor: tone.bg }]}>
+                <View key={tip.id} style={[styles.tipTile, { backgroundColor: tone.bg }]}>
                   <Icon size={22} color={tone.fg} />
-                  <Text style={[styles.tipLabel, { color: tone.fg }]}>{label}</Text>
+                  <Text style={[styles.tipLabel, { color: tone.fg }]}>{t(tip.labelKey)}</Text>
                 </View>
               );
             })}
           </View>
         </View>
       ) : null}
-    </Screen>
+    </FeatureScreenLayout>
   );
 }
 
 function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
-    content: { gap: theme.spacing.lg, paddingBottom: theme.spacing['3xl'] },
     timerCard: { alignItems: 'center', gap: theme.spacing.lg, paddingVertical: theme.spacing.xl },
     phase: {
       ...theme.typography.presets.eyebrow,

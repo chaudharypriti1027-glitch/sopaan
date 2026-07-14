@@ -84,6 +84,7 @@ export const HOME_FEATURE_SECTIONS: HomeFeatureSection[] = [
     titleKey: 'prep',
     links: [
       stack('ExamCalendar', Calendar, 'gold', 'examCalendar'),
+      stack('ExamPlan', Sparkles, 'gold', 'examPlan'),
       stack('Readiness', Target, 'primary', 'readiness'),
       stack('Roadmap', Zap, 'teal', 'roadmap'),
       stack('StudyPlanner', PenLine, 'coral', 'studyPlanner'),
@@ -96,6 +97,8 @@ export const HOME_FEATURE_SECTIONS: HomeFeatureSection[] = [
     titleKey: 'community',
     links: [
       stack('Forum', MessageCircle, 'primary', 'forum'),
+      stack('Friends', Users, 'teal', 'friends'),
+      stack('Messages', MessageCircle, 'gold', 'messages'),
       stack('Mentors', Users, 'gold', 'mentors'),
       stack('LiveClasses', Video, 'coral', 'liveClasses', { proHighlight: true }),
       stack('CommunityTests', Radio, 'teal', 'communityTests'),

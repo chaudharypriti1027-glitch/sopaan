@@ -5,11 +5,15 @@ export const NOTIFICATION_TYPES = Object.freeze({
   PLAN_READY: 'plan_ready',
   MOCK_LIVE: 'mock_live',
   LIVE_CLASS_SCHEDULED: 'live_class_scheduled',
+  LIVE_CLASS_LIVE: 'live_class_live',
   PROGRESS_RECAP: 'progress_recap',
   BADGE: 'badge',
   REWARD: 'reward',
   MENTOR: 'mentor',
   PREMIUM_ACTIVATED: 'premium_activated',
+  FRIEND_REQUEST: 'friend_request',
+  FRIEND_ACCEPTED: 'friend_accepted',
+  NEW_MESSAGE: 'new_message',
 });
 
 /** @deprecated use NOTIFICATION_TYPES */
@@ -31,11 +35,15 @@ export const DEFAULT_TYPE_PREFERENCES = Object.freeze({
   [NOTIFICATION_TYPES.PLAN_READY]: true,
   [NOTIFICATION_TYPES.MOCK_LIVE]: true,
   [NOTIFICATION_TYPES.LIVE_CLASS_SCHEDULED]: true,
+  [NOTIFICATION_TYPES.LIVE_CLASS_LIVE]: true,
   [NOTIFICATION_TYPES.PROGRESS_RECAP]: true,
   [NOTIFICATION_TYPES.BADGE]: true,
   [NOTIFICATION_TYPES.REWARD]: true,
   [NOTIFICATION_TYPES.MENTOR]: true,
   [NOTIFICATION_TYPES.PREMIUM_ACTIVATED]: true,
+  [NOTIFICATION_TYPES.FRIEND_REQUEST]: true,
+  [NOTIFICATION_TYPES.FRIEND_ACCEPTED]: true,
+  [NOTIFICATION_TYPES.NEW_MESSAGE]: true,
 });
 
 export const PUSH_ELIGIBLE_TYPES = new Set(Object.values(NOTIFICATION_TYPES));
@@ -63,6 +71,11 @@ export function buildDeepLinkPayload(type, data = {}) {
         screen: 'LiveClassViewer',
         params: { liveClassId: data.liveClassId ?? undefined },
       };
+    case NOTIFICATION_TYPES.LIVE_CLASS_LIVE:
+      return {
+        screen: 'LiveClassViewer',
+        params: { liveClassId: data.liveClassId ?? undefined },
+      };
     case NOTIFICATION_TYPES.PROGRESS_RECAP:
       return { screen: 'ProgressAnalytics', params: { weekKey: data.weekKey ?? undefined } };
     case NOTIFICATION_TYPES.BADGE:
@@ -72,6 +85,19 @@ export function buildDeepLinkPayload(type, data = {}) {
       return { screen: 'Mentors', params: {} };
     case NOTIFICATION_TYPES.PREMIUM_ACTIVATED:
       return { screen: 'Premium', params: { plan: data.plan ?? undefined } };
+    case NOTIFICATION_TYPES.FRIEND_REQUEST:
+      return { screen: 'Friends', params: {} };
+    case NOTIFICATION_TYPES.FRIEND_ACCEPTED:
+      return { screen: 'Friends', params: {} };
+    case NOTIFICATION_TYPES.NEW_MESSAGE:
+      return {
+        screen: 'DirectMessage',
+        params: {
+          conversationId: data.conversationId ?? undefined,
+          friendUserId: data.friendUserId ?? undefined,
+          friendName: data.friendName ?? undefined,
+        },
+      };
     default:
       return { screen: 'Notifications', params: {} };
   }

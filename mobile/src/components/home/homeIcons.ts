@@ -51,11 +51,8 @@ export const HOME_COACH_FALLBACK: AINudge = {
   deeplink: '/stack/AskAI',
 };
 
-export const HOME_COACH_PROMPTS = [
-  { key: 'coachPromptPlan', icon: 'target' as const, tone: 'gold' as const },
-  { key: 'coachPromptWeak', icon: 'brain' as const, tone: 'lavender' as const },
-  { key: 'coachPromptCa', icon: 'newspaper' as const, tone: 'coral' as const },
-] as const;
+/** @deprecated Import from `../../content/homeContent` instead. */
+export { HOME_COACH_PROMPTS } from '../../content/homeContent';
 
 /** Shared size / elevation presets — single source for all home icon slots. */
 export const HOME_ICON_SLOTS = {

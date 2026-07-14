@@ -14,6 +14,7 @@ export function useCompleteGame() {
       queryClient.setQueryData(queryKeys.account.me(), data.profile);
       void queryClient.invalidateQueries({ queryKey: queryKeys.home.all });
       void queryClient.invalidateQueries({ queryKey: queryKeys.rewards.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.dailyRoutine.all });
     },
   });
 }

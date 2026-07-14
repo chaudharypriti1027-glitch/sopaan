@@ -14,6 +14,18 @@ jest.mock('@react-navigation/native', () => ({
   useRoute: () => ({ params: undefined }),
 }));
 
+jest.mock('../../../auth/useGoogleSignIn', () => ({
+  useGoogleSignIn: () => ({
+    signInWithGoogle: jest.fn(),
+    loading: false,
+    isConfigured: true,
+  }),
+}));
+
+jest.mock('../../../auth/completeGoogleLogin', () => ({
+  completeGoogleLogin: jest.fn(),
+}));
+
 jest.mock('../../../api', () => ({
   authApi: {
     requestOtp: (...args: unknown[]) => mockRequestOtp(...args),
@@ -75,5 +87,17 @@ describe('OtpLoginScreen', () => {
     fireEvent.press(getByTestId('otp-login-email-link'));
 
     expect(mockNavigate).toHaveBeenCalledWith('Login');
+  });
+
+  it('starts Google sign-in after consent is accepted', async () => {
+    const { completeGoogleLogin } = jest.requireMock('../../../auth/completeGoogleLogin');
+    const { getByTestId } = await renderOtpLogin();
+
+    fireEvent.press(getByTestId('otp-login-consent'));
+    fireEvent.press(getByTestId('otp-login-google'));
+
+    await waitFor(() => {
+      expect(completeGoogleLogin).toHaveBeenCalled();
+    });
   });
 });

@@ -40,6 +40,7 @@ export function AINudgeCard({ nudge, onPress }: AINudgeCardProps) {
     <HomeFeedCard
       onPress={() => onPress?.(nudge.deeplink)}
       accentLeft={tint.accent}
+      accentTop={nudge.tone === 'urgent' || nudge.tone === 'streak'}
       tint={tint.iconBg}
       contentStyle={styles.body}
     >
@@ -90,7 +91,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 12,
-      paddingVertical: 14,
+      paddingVertical: 15,
       paddingHorizontal: 14,
       paddingLeft: 16,
     },

@@ -31,7 +31,8 @@ import {
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import * as FileSystem from 'expo-file-system';
-import { Button, Card, ChipSelect, Screen, SectionTitle } from '../../components';
+import { Button, Card, ChipSelect, FeatureScreenLayout, PremiumSectionLabel } from '../../components';
+import { premiumCard } from '../../components/premium/premiumStyles';
 import { usePremiumDialog } from '../../components/premium/PremiumDialogProvider';
 import { MENU_TONE_STYLES } from '../../components/premium/premiumIconTokens';
 import { parseApiError, privacyApi } from '../../api';
@@ -380,16 +381,21 @@ export function SettingsScreen() {
     );
   };
 
-  const goalOptions = CAREER_GOALS.map((g) => ({ value: g.examTrack, label: g.title }));
+  const goalOptions = CAREER_GOALS.filter((g) => g.examTrack !== 'Other').map((g) => ({
+    value: g.examTrack,
+    label: g.title,
+  }));
   const pushEnabled = notificationPrefs?.pushNotificationsEnabled ?? localSettings?.pushNotifications ?? true;
   const quietHours = notificationPrefs?.quietHours;
 
   return (
-    <Screen scroll contentContainerStyle={styles.content}>
-      <SectionTitle subtitle={t('settings:subtitle')} />
-
-      <SectionTitle title={t('settings:account')} />
-      <Card style={styles.group}>
+    <FeatureScreenLayout
+      title={t('settings:title')}
+      subtitle={t('settings:subtitle')}
+      contentStyle={styles.content}
+    >
+      <PremiumSectionLabel title={t('settings:account')} compact />
+      <View style={[styles.group, premiumCard(theme)]}>
         <SettingsRow
           icon={User}
           tone="indigo"
@@ -409,7 +415,7 @@ export function SettingsScreen() {
           value={profileQuery.data?.profile.goal?.examTrack ?? t('settings:notSet')}
           onPress={() => setShowGoalPicker((v) => !v)}
         />
-      </Card>
+      </View>
 
       {showGoalPicker ? (
         <Card style={styles.goalCard}>
@@ -439,8 +445,8 @@ export function SettingsScreen() {
         </Card>
       ) : null}
 
-      <SectionTitle title={t('settings:study')} />
-      <Card style={styles.group}>
+      <PremiumSectionLabel title={t('settings:study')} />
+      <View style={[styles.group, premiumCard(theme)]}>
         <SettingsRow
           icon={Languages}
           tone="teal"
@@ -476,10 +482,10 @@ export function SettingsScreen() {
             />
           }
         />
-      </Card>
+      </View>
 
-      <SectionTitle title={t('settings:notifications')} />
-      <Card style={styles.group}>
+      <PremiumSectionLabel title={t('settings:notifications')} />
+      <View style={[styles.group, premiumCard(theme)]}>
         <SettingsRow
           icon={Bell}
           tone="gold"
@@ -516,9 +522,9 @@ export function SettingsScreen() {
             />
           }
         />
-      </Card>
+      </View>
 
-      <Card style={styles.group}>
+      <View style={[styles.group, premiumCard(theme)]}>
         {NOTIFICATION_TYPE_KEYS.map((key) => (
           <TypeToggle
             key={key}
@@ -532,10 +538,10 @@ export function SettingsScreen() {
             onChange={(v) => void handleTypeToggle(key, v)}
           />
         ))}
-      </Card>
+      </View>
 
-      <SectionTitle title={t('settings:privacyData')} />
-      <Card style={styles.group}>
+      <PremiumSectionLabel title={t('settings:privacyData')} />
+      <View style={[styles.group, premiumCard(theme)]}>
         <SettingsRow
           icon={Shield}
           tone="teal"
@@ -571,10 +577,10 @@ export function SettingsScreen() {
           description={t('settings:deleteAccountDesc')}
           onPress={() => navigation.navigate('DeleteAccount')}
         />
-      </Card>
+      </View>
 
-      <SectionTitle title={t('settings:support')} />
-      <Card style={styles.group}>
+      <PremiumSectionLabel title={t('settings:support')} />
+      <View style={[styles.group, premiumCard(theme)]}>
         <SettingsRow
           icon={MessageCircle}
           tone="teal"
@@ -600,10 +606,10 @@ export function SettingsScreen() {
           label={t('settings:privacyPolicyWeb')}
           onPress={() => void Linking.openURL(PRIVACY_POLICY_URL)}
         />
-      </Card>
+      </View>
 
       {__DEV__ && process.env.EXPO_PUBLIC_SENTRY_DSN ? (
-        <Card style={styles.group}>
+        <View style={[styles.group, premiumCard(theme)]}>
           <SettingsRow
             icon={HelpCircle}
             tone="indigo"
@@ -621,7 +627,7 @@ export function SettingsScreen() {
               }
             }}
           />
-        </Card>
+        </View>
       ) : null}
 
       <Button
@@ -631,7 +637,7 @@ export function SettingsScreen() {
         onPress={handleLogout}
         fullWidth
       />
-    </Screen>
+    </FeatureScreenLayout>
   );
 }
 
@@ -668,7 +674,10 @@ function createRowStyles(theme: ReturnType<typeof useTheme>['theme']) {
 function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
     content: { gap: theme.spacing.lg, paddingBottom: theme.spacing['3xl'] },
-    group: { paddingVertical: theme.spacing.xs },
+    group: {
+      paddingVertical: theme.spacing.xs,
+      paddingHorizontal: theme.spacing.md,
+    },
     goalCard: { gap: theme.spacing.md },
     fieldLabel: {
       ...theme.typography.presets.label,

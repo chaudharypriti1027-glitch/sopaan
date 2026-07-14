@@ -82,7 +82,7 @@ export function stubDoubtAnswer(question, { imageScan = false } = {}) {
       : 'Local dev stub answer.';
 
   return {
-    explanation: `${prefix} Break the problem into steps, apply the relevant concept or formula, and verify units before submitting.`,
+    explanation: `${prefix}\nAnswer: ${topic ? `For "${topic.slice(0, 80)}", ` : ''}apply the core concept and state the final result first.\nExplanation:\n- Identify what the question is really asking.\n- Use one formula or rule, then verify the result.`,
     fromCache: false,
   };
 }
@@ -120,6 +120,13 @@ export function stubCurrentAffairSummary(title) {
 
   return {
     summary: `Dev stub summary for "${title.trim().slice(0, 100)}". Focus on key facts, dates, and why this matters for competitive exams.`,
+    shortAnswer: 'This headline is exam-relevant because it may appear in GK or current-affairs sections.',
+    examTip: 'Link the main entity, date, and policy outcome when you revise this topic.',
+    keyPoints: [
+      'Note the main organisation or ministry involved.',
+      'Remember the headline date for chronology questions.',
+      'Connect this topic to your target exam syllabus.',
+    ],
     category: 'National',
     quizQuestions: [pick(0), pick(1), pick(2)].map((template) => ({
       text: template.text,

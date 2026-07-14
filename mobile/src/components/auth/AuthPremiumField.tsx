@@ -101,7 +101,18 @@ export const AuthPremiumField = forwardRef<TextInput, AuthPremiumFieldProps>(
       <View style={styles.field}>
         {dense ? null : <Text style={styles.label}>{label}</Text>}
         <View style={styles.inputWrap}>
-          {dense ? (
+          {dense && isPhone ? (
+            <>
+              <View style={styles.denseIcon} pointerEvents="none">
+                <View style={[styles.denseIconTile, { backgroundColor: iconTint.bg }]}>
+                  <Icon size={16} color={iconTint.fg} strokeWidth={2} />
+                </View>
+              </View>
+              <View style={styles.densePrefix} pointerEvents="none">
+                <Text style={styles.densePrefixCode}>+91</Text>
+              </View>
+            </>
+          ) : dense ? (
             <View style={styles.denseIcon} pointerEvents="none">
               <View style={[styles.denseIconTile, { backgroundColor: iconTint.bg }]}>
                 <Icon size={16} color={iconTint.fg} strokeWidth={2} />
@@ -132,6 +143,7 @@ export const AuthPremiumField = forwardRef<TextInput, AuthPremiumFieldProps>(
             style={[
               styles.input,
               dense && styles.inputDense,
+              dense && isPhone && styles.inputDensePhone,
               !dense && isPhone && styles.inputPhone,
               isPassword && styles.inputEye,
             ]}
@@ -170,7 +182,7 @@ function createStyles(state: { focused: boolean; hasError: boolean; dense: boole
 
   return StyleSheet.create({
     field: {
-      marginBottom: state.dense ? 13 : 14,
+      marginBottom: state.dense ? 0 : 14,
     },
     label: {
       fontSize: 11,
@@ -189,6 +201,19 @@ function createStyles(state: { focused: boolean; hasError: boolean; dense: boole
       bottom: 0,
       justifyContent: 'center',
       zIndex: 1,
+    },
+    densePrefix: {
+      position: 'absolute',
+      left: 46,
+      top: 0,
+      bottom: 0,
+      justifyContent: 'center',
+      zIndex: 1,
+    },
+    densePrefixCode: {
+      fontSize: 14,
+      fontWeight: '700',
+      color: AUTH_UI.accent,
     },
     denseIconTile: {
       width: 30,
@@ -237,7 +262,7 @@ function createStyles(state: { focused: boolean; hasError: boolean; dense: boole
     },
     inputDense: {
       paddingLeft: 50,
-      paddingVertical: 14,
+      paddingVertical: 15,
       borderWidth: 1,
       backgroundColor: '#FAFAF7',
       shadowColor: AUTH_UI.shadowSm,
@@ -245,6 +270,9 @@ function createStyles(state: { focused: boolean; hasError: boolean; dense: boole
       shadowOpacity: state.focused ? 0.1 : 0.04,
       shadowRadius: 10,
       elevation: 1,
+    },
+    inputDensePhone: {
+      paddingLeft: 88,
     },
     inputPhone: {
       paddingLeft: 72,

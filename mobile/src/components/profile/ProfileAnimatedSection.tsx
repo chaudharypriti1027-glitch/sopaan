@@ -1,6 +1,5 @@
 import { memo, useEffect, type ReactNode } from 'react';
 import Animated, {
-  Easing,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,

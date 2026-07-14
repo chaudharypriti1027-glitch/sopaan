@@ -106,6 +106,21 @@ describe('useAuthStore', () => {
     expect(SecureStore.setItemAsync).not.toHaveBeenCalled();
   });
 
+  it('setSession rejects creator and moderator staff accounts', async () => {
+    for (const role of ['creator', 'moderator'] as const) {
+      await useAuthStore.getState().signOut();
+      await expect(
+        getAuthStore().setSession({
+          token: 'access-token',
+          refreshToken: 'refresh-token',
+          profile: { ...profile, role },
+          isNewUser: false,
+        }),
+      ).rejects.toBeInstanceOf(AdminAppAccessError);
+      expect(getAuthStore().status).toBe('guest');
+    }
+  });
+
   it('signOut clears tokens and cached profile', async () => {
     await getAuthStore().setSession({
       token: 'access-token',

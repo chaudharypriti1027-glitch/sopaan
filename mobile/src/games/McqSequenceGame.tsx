@@ -2,25 +2,39 @@ import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Text } from '../components/Text';
 import { GAMES_UI } from './gamesTheme';
+import type { GameAnswerRecord } from './completion';
+import { gameComplete } from './completion';
 import type { McqQuestion } from './types';
 import { shuffle } from './content';
+import { percentScore } from './score';
 
 const OPTION_LETTERS = ['A', 'B', 'C', 'D'] as const;
 
 type McqSequenceGameProps = {
   questions: McqQuestion[];
   label?: string;
-  onComplete: (score: number) => void;
+  onComplete: (result: ReturnType<typeof gameComplete>) => void;
 };
 
 export function McqSequenceGame({ questions, label, onComplete }: McqSequenceGameProps) {
   const styles = useMemo(() => createStyles(), []);
   const [pool] = useState(() => shuffle(questions));
   const [index, setIndex] = useState(0);
-  const [score, setScore] = useState(0);
+  const [correctCount, setCorrectCount] = useState(0);
   const [selected, setSelected] = useState<string | null>(null);
+  const [answerLog, setAnswerLog] = useState<GameAnswerRecord[]>([]);
 
   const current = pool[index];
+
+  const recordAnswer = (question: McqQuestion, option: string, correct: boolean): GameAnswerRecord => ({
+    questionId: question.id,
+    prompt: question.prompt,
+    topic: question.label,
+    selected: option,
+    correct,
+    correctAnswer: question.answer,
+    explanation: question.explanation,
+  });
 
   const pick = (option: string) => {
     if (selected) {
@@ -28,15 +42,18 @@ export function McqSequenceGame({ questions, label, onComplete }: McqSequenceGam
     }
     setSelected(option);
     const correct = option === current.answer;
-    const nextScore = score + (correct ? 20 : 0);
+    const entry = recordAnswer(current, option, correct);
+    const nextCorrect = correctCount + (correct ? 1 : 0);
 
     setTimeout(() => {
       const next = index + 1;
+      const nextLog = [...answerLog, entry];
       if (next >= pool.length) {
-        onComplete(nextScore);
+        onComplete(gameComplete(percentScore(nextCorrect, pool.length), nextLog));
         return;
       }
-      setScore(nextScore);
+      setAnswerLog(nextLog);
+      setCorrectCount(nextCorrect);
       setIndex(next);
       setSelected(null);
     }, 500);
@@ -50,7 +67,9 @@ export function McqSequenceGame({ questions, label, onComplete }: McqSequenceGam
         <Text style={styles.progress}>
           Question {index + 1}/{pool.length}
         </Text>
-        <Text style={styles.score}>Score {score}</Text>
+        <Text style={styles.score}>
+          Score {percentScore(correctCount, pool.length)}%
+        </Text>
       </View>
 
       <View style={styles.card}>

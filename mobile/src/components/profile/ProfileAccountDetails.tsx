@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { CheckSquare, GraduationCap, Mail, MapPin, Phone } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { Text } from '../Text';

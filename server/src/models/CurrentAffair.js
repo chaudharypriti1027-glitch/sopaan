@@ -12,6 +12,28 @@ const currentAffairSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    shortAnswer: {
+      type: String,
+      trim: true,
+    },
+    examTip: {
+      type: String,
+      trim: true,
+    },
+    keyPoints: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+    heroMediaKey: {
+      type: String,
+      trim: true,
+    },
+    body: {
+      type: String,
+      trim: true,
+    },
     category: {
       type: String,
       trim: true,

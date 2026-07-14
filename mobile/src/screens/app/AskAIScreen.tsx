@@ -1,7 +1,6 @@
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { BookOpen, Brain, PenLine, TrendingUp } from 'lucide-react-native';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Alert,
@@ -12,13 +11,15 @@ import {
   View,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { OptimizedImage } from '../../components';
 import {
   AI_UI,
   AiAssistantCard,
+  AiChatShell,
   AiComposer,
+  AiErrorBubble,
   AiHeader,
   AiHomeHero,
+  AiImagePreview,
   AiPromptCard,
   AiSegmentTabs,
   type AiTab,
@@ -26,25 +27,39 @@ import {
   AiUserBubble,
 } from '../../components/ai';
 import { historyToChatMessages, type AiChatMessage } from '../../components/ai/historyToChatMessages';
+import { QueryStateSkeleton } from '../../components/premium';
+import { ASK_AI_PROMPTS } from '../../content/askAiContent';
 import { useAiDoubtHistory, useAskDoubt, useReportAiFeedback, useSaveNote } from '../../hooks';
+import { useProGate } from '../../hooks/useProGate';
 import { getUserFacingMessage } from '../../errors/getUserFacingMessage';
 import type { MainStackParamList } from '../../navigation/types';
 import { useTheme } from '../../theme';
 import { pickImageBase64 } from '../../utils/imagePicker';
 import { Text } from '../../components/Text';
 
-const PROMPT_CONFIG = [
-  { key: 'prompt1', tagKey: 'promptTag1', Icon: TrendingUp },
-  { key: 'prompt2', tagKey: 'promptTag2', Icon: Brain },
-  { key: 'prompt3', tagKey: 'promptTag3', Icon: BookOpen },
-  { key: 'prompt4', tagKey: 'promptTag4', Icon: PenLine },
-] as const;
+function cacheSourceLabel(
+  source: string | null | undefined,
+  t: (key: string) => string,
+): string | undefined {
+  switch (source) {
+    case 'user_history':
+      return t('app:askAi.fromHistory');
+    case 'forum_doubt':
+      return t('app:askAi.fromForum');
+    case 'ai_cache':
+    case 'exact_cache':
+      return t('app:askAi.similarFound');
+    default:
+      return undefined;
+  }
+}
 
 export function AskAIScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
   const route = useRoute<RouteProp<MainStackParamList, 'AskAI'>>();
   const { theme } = useTheme();
   const { t } = useTranslation(['app', 'common']);
+  const { canUseFeature, openPaywall, handleProError } = useProGate();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const scrollRef = useRef<ScrollView>(null);
 
@@ -53,7 +68,7 @@ export function AskAIScreen() {
   const [imageBase64, setImageBase64] = useState<string | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [messages, setMessages] = useState<AiChatMessage[]>([]);
-  const [lastQuestion, setLastQuestion] = useState('');
+  const [lastRetry, setLastRetry] = useState<AiChatMessage['retryPayload'] | null>(null);
   const [savedAnswerIds, setSavedAnswerIds] = useState<Set<string>>(new Set());
   const [historyHydrated, setHistoryHydrated] = useState(false);
 
@@ -72,8 +87,9 @@ export function AskAIScreen() {
 
   const prompts = useMemo(
     () =>
-      PROMPT_CONFIG.map(({ key, tagKey, Icon }) => ({
+      ASK_AI_PROMPTS.map(({ key, tagKey, Icon, tone }) => ({
         Icon,
+        tone,
         text: t(`app:askAi.${key}`),
         tag: t(`app:askAi.${tagKey}`),
       })),
@@ -112,48 +128,78 @@ export function AskAIScreen() {
     }
   };
 
-  const sendMessage = useCallback(async (text: string, options?: { skipCache?: boolean }) => {
-    const question = text.trim();
-    if (!question && !imageBase64) return;
+  const sendMessage = useCallback(
+    async (
+      text: string,
+      options?: { skipCache?: boolean; imageBase64?: string | null; imageUri?: string | null },
+    ) => {
+      const question = text.trim();
+      const scanned = options?.imageBase64 ?? imageBase64;
+      const preview = options?.imageUri ?? imagePreview;
 
-    const userMsg: AiChatMessage = {
-      id: `u_${Date.now()}`,
-      role: 'user',
-      text: question || t('app:askAi.scannedQuestion'),
-    };
+      if (!question && !scanned) return;
 
-    setMessages((prev) => [...prev, userMsg]);
-    setLastQuestion(question || t('app:askAi.solveScanned'));
-    setInput('');
-    const scanned = imageBase64;
-    setImageBase64(null);
-    setImagePreview(null);
+      if (!canUseFeature('ai_doubt')) {
+        openPaywall({ feature: 'ai_doubt' });
+        return;
+      }
 
-    try {
-      const result = await askMutation.mutateAsync({
-        question: question || t('app:askAi.solveScanned'),
-        imageBase64: scanned ?? undefined,
-        skipCache: options?.skipCache,
-      });
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: result.answerId ? `a_${result.answerId}` : `a_${Date.now()}`,
-          role: 'assistant',
-          text: result.explanation,
-          fromCache: result.fromCache,
-          answerId: result.answerId,
-          responseMs: result.responseMs,
-          inputSummary: question || t('app:askAi.scannedQuestion'),
+      const userMsg: AiChatMessage = {
+        id: `u_${Date.now()}`,
+        role: 'user',
+        text: question || t('app:askAi.scannedQuestion'),
+        imageUri: preview ?? undefined,
+        imageBase64: scanned,
+        retryPayload: {
+          question: question || t('app:askAi.solveScanned'),
+          imageBase64: scanned,
         },
-      ]);
-      setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 120);
-    } catch (error) {
-      setMessages((prev) => prev.slice(0, -1));
-      Alert.alert(t('app:askAi.answerFailedTitle'), getUserFacingMessage(error));
-    }
-  }, [askMutation, imageBase64, t]);
+      };
+
+      setMessages((prev) => [...prev.filter((msg) => msg.role !== 'error'), userMsg]);
+      setLastRetry(userMsg.retryPayload ?? null);
+      setInput('');
+      setImageBase64(null);
+      setImagePreview(null);
+
+      try {
+        const result = await askMutation.mutateAsync({
+          question: question || t('app:askAi.solveScanned'),
+          imageBase64: scanned ?? undefined,
+          skipCache: options?.skipCache,
+        });
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: result.answerId ? `a_${result.answerId}` : `a_${Date.now()}`,
+            role: 'assistant',
+            text: result.explanation,
+            fromCache: result.fromCache,
+            cacheSource: result.cacheSource,
+            answerId: result.answerId,
+            responseMs: result.responseMs,
+            inputSummary: question || t('app:askAi.scannedQuestion'),
+          },
+        ]);
+        setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 120);
+      } catch (error) {
+        if (handleProError(error)) {
+          return;
+        }
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `e_${Date.now()}`,
+            role: 'error',
+            text: getUserFacingMessage(error) || t('app:askAi.answerFailedBody'),
+          },
+        ]);
+      }
+    },
+    [askMutation, canUseFeature, handleProError, imageBase64, imagePreview, openPaywall, t],
+  );
 
   const handleReportAnswer = (msg: AiChatMessage) => {
     Alert.alert(t('app:askAi.reportTitle'), t('app:askAi.reportBody'), [
@@ -176,7 +222,7 @@ export function AskAIScreen() {
 
   const submitReport = async (
     msg: AiChatMessage,
-    reason: 'inaccurate' | 'off_topic' | 'unsafe',
+    reason: 'inaccurate' | 'off_topic' | 'unsafe' | 'other',
   ) => {
     try {
       await reportMutation.mutateAsync({
@@ -193,6 +239,19 @@ export function AskAIScreen() {
     } catch {
       Alert.alert(t('app:askAi.reportFailedTitle'), t('app:askAi.reportFailedBody'));
     }
+  };
+
+  const handleHelpful = (msg: AiChatMessage) => {
+    void reportMutation.mutateAsync({
+      feature: 'doubt_solver',
+      reason: 'other',
+      inputSummary: `[helpful] ${msg.inputSummary ?? ''}`.trim(),
+      outputSnapshot: {
+        explanation: msg.text,
+        fromCache: msg.fromCache ?? false,
+        answerId: msg.answerId,
+      },
+    });
   };
 
   const handleSaveAnswer = async (msg: AiChatMessage) => {
@@ -212,125 +271,170 @@ export function AskAIScreen() {
     }
   };
 
+  const handleRetry = useCallback(() => {
+    if (!lastRetry) {
+      return;
+    }
+
+    void sendMessage(lastRetry.question, {
+      skipCache: true,
+      imageBase64: lastRetry.imageBase64,
+      imageUri: lastRetry.imageBase64 ? `data:image/jpeg;base64,${lastRetry.imageBase64}` : null,
+    });
+  }, [lastRetry, sendMessage]);
+
   const showHome = messages.length === 0 && !askMutation.isPending && historyHydrated;
+  const showHistorySkeleton = historyQuery.isLoading && !historyHydrated;
 
   return (
     <View style={styles.screen}>
       <AiHeader
         title={t('app:askAi.title')}
-        badgeLabel={t('app:askAi.subtitle')}
+        subtitle={t('app:askAi.subtitle')}
+        eyebrow={t('app:askAi.heroEyebrow')}
+        backA11y={t('app:askAi.backA11y')}
+        evaluateLabel={t('app:askAi.tabEvaluate')}
         onBack={() => navigation.goBack()}
-        onBadgePress={() => navigation.navigate('AnswerEvaluation')}
+        onEvaluatePress={() => navigation.navigate('AnswerEvaluation')}
       />
 
-      <View style={styles.tabs}>
-        <AiSegmentTabs
-          value={tab}
-          onChange={handleTabChange}
-          askLabel={t('app:askAi.tabAsk')}
-          evaluateLabel={t('app:askAi.tabEvaluate')}
-        />
-      </View>
+      <AiChatShell>
+        <View style={styles.tabs}>
+          <AiSegmentTabs
+            value={tab}
+            onChange={handleTabChange}
+            askLabel={t('app:askAi.tabAsk')}
+            evaluateLabel={t('app:askAi.tabEvaluate')}
+          />
+        </View>
 
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 12 : 0}
-      >
-        <ScrollView
-          ref={scrollRef}
-          style={styles.scroll}
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
+        <KeyboardAvoidingView
+          style={styles.flex}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
         >
-          {showHome ? (
-            <View>
-              <AiHomeHero
-                title={t('app:askAi.emptyTitle')}
-                subtitle={t('app:askAi.emptySubtitle')}
-              />
-              <View style={styles.promptList}>
-                {prompts.map((prompt, index) => (
-                  <AiPromptCard
-                    key={PROMPT_CONFIG[index].key}
-                    Icon={prompt.Icon}
-                    text={prompt.text}
-                    tag={prompt.tag}
-                    onPress={() => void sendMessage(prompt.text)}
-                  />
-                ))}
+          <ScrollView
+            ref={scrollRef}
+            style={styles.scroll}
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            {showHistorySkeleton ? (
+              <View style={styles.skeletonWrap}>
+                <QueryStateSkeleton rows={4} />
               </View>
-              <View style={styles.dividerRow}>
-                <View style={styles.dividerLine} />
-                <Text style={styles.dividerText}>{t('app:askAi.orTypeBelow')}</Text>
-                <View style={styles.dividerLine} />
-              </View>
-            </View>
-          ) : (
-            <View style={styles.chat}>
-              {messages.map((msg) =>
-                msg.role === 'user' ? (
-                  <AiUserBubble key={msg.id} text={msg.text} />
-                ) : (
-                  <AiAssistantCard
-                    key={msg.id}
-                    text={msg.text}
-                    fromCache={msg.fromCache}
-                    cacheLabel={t('app:askAi.similarFound')}
-                    instantLabel={t('app:askAi.instantAnswer')}
-                    formulaLabel={t('app:askAi.formula')}
-                    copyLabel={t('app:askAi.copy')}
-                    copiedLabel={t('app:askAi.copied')}
-                    helpfulLabel={t('app:askAi.helpful')}
-                    notHelpfulLabel={t('app:askAi.notHelpful')}
-                    retryLabel={t('app:askAi.retry')}
-                    saveLabel={t('app:askAi.saveNote')}
-                    savedLabel={t('app:askAi.savedShort')}
-                    saving={saveNoteMutation.isPending}
-                    saved={msg.answerId ? savedAnswerIds.has(msg.answerId) : false}
-                    responseMs={msg.responseMs}
-                    onRetry={() => void sendMessage(lastQuestion, { skipCache: true })}
-                    onNotHelpful={() => handleReportAnswer(msg)}
-                    onSave={() => void handleSaveAnswer(msg)}
-                  />
-                ),
-              )}
-              {askMutation.isPending ? <AiTypingIndicator /> : null}
-            </View>
-          )}
-        </ScrollView>
+            ) : null}
 
-        {imagePreview ? (
-          <View style={styles.previewRow}>
-            <OptimizedImage uri={imagePreview} style={styles.previewThumb} />
-            <Text
-              style={styles.removePreview}
-              onPress={() => {
+            {showHome ? (
+              <View>
+                <AiHomeHero
+                  eyebrow={t('app:askAi.heroEyebrow')}
+                  title={t('app:askAi.emptyTitle')}
+                  subtitle={t('app:askAi.emptySubtitle')}
+                />
+                <Text style={styles.suggestedTitle}>{t('app:askAi.suggestedTitle')}</Text>
+                <View style={styles.promptList}>
+                  {prompts.map((prompt, index) => (
+                    <AiPromptCard
+                      key={ASK_AI_PROMPTS[index].key}
+                      Icon={prompt.Icon}
+                      tone={prompt.tone}
+                      text={prompt.text}
+                      tag={prompt.tag}
+                      onPress={() => void sendMessage(prompt.text)}
+                    />
+                  ))}
+                </View>
+                <View style={styles.dividerRow}>
+                  <View style={styles.dividerLine} />
+                  <Text style={styles.dividerText}>{t('app:askAi.orTypeBelow')}</Text>
+                  <View style={styles.dividerLine} />
+                </View>
+              </View>
+            ) : null}
+
+            {!showHome && !showHistorySkeleton ? (
+              <View style={styles.chat}>
+                {messages.map((msg) => {
+                  if (msg.role === 'user') {
+                    return <AiUserBubble key={msg.id} text={msg.text} imageUri={msg.imageUri} />;
+                  }
+
+                  if (msg.role === 'error') {
+                    return (
+                      <AiErrorBubble
+                        key={msg.id}
+                        message={msg.text}
+                        retryLabel={t('app:askAi.retry')}
+                        onRetry={handleRetry}
+                      />
+                    );
+                  }
+
+                  return (
+                    <AiAssistantCard
+                      key={msg.id}
+                      coachName={t('app:askAi.coachName')}
+                      text={msg.text}
+                      fromCache={msg.fromCache}
+                      cacheLabel={t('app:askAi.similarFound')}
+                      cacheSourceLabel={cacheSourceLabel(msg.cacheSource, t)}
+                      instantLabel={t('app:askAi.instantAnswer')}
+                      formulaLabel={t('app:askAi.formula')}
+                      answerLabel={t('app:askAi.answerLabel')}
+                      explanationLabel={t('app:askAi.explanationLabel')}
+                      tipLabel={t('app:askAi.tipLabel')}
+                      copyLabel={t('app:askAi.copy')}
+                      copiedLabel={t('app:askAi.copied')}
+                      helpfulLabel={t('app:askAi.helpful')}
+                      notHelpfulLabel={t('app:askAi.notHelpful')}
+                      retryLabel={t('app:askAi.retryFresh')}
+                      saveLabel={t('app:askAi.saveNote')}
+                      savedLabel={t('app:askAi.savedShort')}
+                      saving={saveNoteMutation.isPending}
+                      saved={msg.answerId ? savedAnswerIds.has(msg.answerId) : false}
+                      responseMs={msg.responseMs}
+                      onRetry={handleRetry}
+                      onHelpful={() => handleHelpful(msg)}
+                      onNotHelpful={() => handleReportAnswer(msg)}
+                      onSave={() => void handleSaveAnswer(msg)}
+                    />
+                  );
+                })}
+                {askMutation.isPending ? (
+                  <AiTypingIndicator label={t('app:askAi.thinking')} />
+                ) : null}
+              </View>
+            ) : null}
+          </ScrollView>
+
+          {imagePreview ? (
+            <AiImagePreview
+              uri={imagePreview}
+              label={t('app:askAi.imageAttached')}
+              removeLabel={t('app:askAi.removePreview')}
+              onRemove={() => {
                 setImageBase64(null);
                 setImagePreview(null);
               }}
-            >
-              {t('app:askAi.removePreview')}
-            </Text>
-          </View>
-        ) : null}
+            />
+          ) : null}
 
-        <View style={styles.composerWrap}>
-        <AiComposer
-          value={input}
-          onChangeText={setInput}
-          onSend={() => void sendMessage(input)}
-          onCamera={() => void handleScan('camera')}
-          onGallery={() => void handleScan('library')}
-          placeholder={t('app:askAi.placeholder')}
-          disabled={askMutation.isPending}
-          cameraA11y={t('app:askAi.cameraA11y')}
-          galleryA11y={t('app:askAi.galleryA11y')}
-          sendA11y={t('app:askAi.sendA11y')}
-        />
-        </View>
-      </KeyboardAvoidingView>
+          <AiComposer
+            value={input}
+            onChangeText={setInput}
+            onSend={() => void sendMessage(input)}
+            onCamera={() => void handleScan('camera')}
+            onGallery={() => void handleScan('library')}
+            placeholder={t('app:askAi.placeholder')}
+            disabled={askMutation.isPending}
+            cameraA11y={t('app:askAi.cameraA11y')}
+            galleryA11y={t('app:askAi.galleryA11y')}
+            sendA11y={t('app:askAi.sendA11y')}
+          />
+        </KeyboardAvoidingView>
+      </AiChatShell>
     </View>
   );
 }
@@ -339,7 +443,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
     screen: {
       flex: 1,
-      backgroundColor: AI_UI.bg,
+      backgroundColor: AI_UI.primaryDark,
     },
     flex: {
       flex: 1,
@@ -357,6 +461,18 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       paddingHorizontal: theme.spacing.lg,
       paddingBottom: theme.spacing.md,
     },
+    skeletonWrap: {
+      paddingTop: theme.spacing.xl,
+    },
+    suggestedTitle: {
+      fontSize: 12,
+      fontFamily: theme.typography.fonts.ui.bold,
+      fontWeight: '800',
+      letterSpacing: 0.4,
+      textTransform: 'uppercase',
+      color: AI_UI.goldDeep,
+      marginBottom: theme.spacing.sm,
+    },
     promptList: {
       gap: theme.spacing.md,
     },
@@ -370,7 +486,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     dividerLine: {
       flex: 1,
       height: StyleSheet.hairlineWidth,
-      backgroundColor: 'rgba(79,53,210,0.1)',
+      backgroundColor: AI_UI.goldBorder,
     },
     dividerText: {
       fontSize: 11,
@@ -382,27 +498,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     },
     chat: {
       gap: theme.spacing.lg,
-      paddingTop: theme.spacing.lg,
-    },
-    composerWrap: {
-      backgroundColor: AI_UI.bg,
-    },
-    previewRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: theme.spacing.md,
-      paddingHorizontal: theme.spacing.lg,
-      paddingVertical: theme.spacing.sm,
-    },
-    previewThumb: {
-      width: 48,
-      height: 48,
-      borderRadius: 10,
-    },
-    removePreview: {
-      fontSize: 12,
-      color: theme.colors.semantic.error,
-      fontFamily: theme.typography.fonts.ui.semibold,
+      paddingTop: theme.spacing.md,
     },
   });
 }

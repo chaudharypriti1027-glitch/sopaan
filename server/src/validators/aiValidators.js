@@ -37,6 +37,13 @@ export const generateTestRequestSchema = z
     }
   });
 
+export const practiceSuggestionsRequestSchema = z.object({
+  examTag: z.string().trim().min(1).optional(),
+  subject: z.string().trim().optional(),
+  topic: z.string().trim().optional(),
+  language: z.enum(['en', 'hi']).default('en'),
+});
+
 export const askDoubtSchema = z.object({
   question: z.string().trim().min(1, 'question is required'),
   imageBase64: z.string().trim().optional(),

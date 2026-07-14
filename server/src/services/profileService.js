@@ -2,10 +2,13 @@ import { User } from '../models/User.js';
 import { StudentProfile } from '../models/StudentProfile.js';
 import { Exam } from '../models/Exam.js';
 import { AppError } from '../utils/AppError.js';
+import { isReservedExamSentinel } from '../utils/examTrack.js';
 import { buildRoadmap as buildAiRoadmap } from './ai/roadmap.js';
 import { buildExamSearchQuery } from './roadmapService.js';
 import { readinessForGoal } from './ai/coach.js';
 import { markReferralOnboardingComplete } from './referralService.js';
+import { syncProfileGoalToUser } from './goalSyncService.js';
+import { bustHomeFeedCache } from './home/buildHomeFeed.js';
 import {
   formatEntitlementDto,
   getEntitlementByUserId,
@@ -116,6 +119,10 @@ export async function updateProfile(userId, updates) {
 }
 
 export async function updateGoal(userId, goal) {
+  if (isReservedExamSentinel(goal.examTrack)) {
+    throw new AppError('Enter your specific exam name', 400, 'VALIDATION_ERROR');
+  }
+
   const profile = await getOrCreateProfile(userId);
 
   profile.goal = {
@@ -135,6 +142,13 @@ export async function updateGoal(userId, goal) {
   }
 
   const exam = await findExamByTrack(goal.examTrack);
+  await syncProfileGoalToUser(userId, {
+    examTrack: goal.examTrack,
+    targetYear: goal.targetYear,
+    examDate: exam?.importantDates?.find((item) => item.type === 'exam')?.date,
+  });
+  await bustHomeFeedCache(userId);
+
   const roadmap = await buildAiRoadmap({
     examTrack: goal.examTrack,
     targetYear: goal.targetYear,

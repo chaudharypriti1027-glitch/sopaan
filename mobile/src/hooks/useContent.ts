@@ -11,6 +11,8 @@ export function useBooks(params?: LibraryListParams, options?: { enabled?: boole
     queryKey: queryKeys.books.list(params),
     queryFn: () => listBooks(params),
     enabled: options?.enabled ?? true,
+    staleTime: 60_000,
+    refetchOnMount: 'always',
   });
 }
 

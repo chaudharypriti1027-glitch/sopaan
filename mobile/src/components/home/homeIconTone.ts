@@ -1,13 +1,13 @@
 /** @deprecated Import tone helpers from `./homeIcons` instead. */
+import { PREMIUM_ICON_TONES } from '../premium/premiumIconTokens';
+import type { AINudge } from '../../types/home';
+import { nudgePremiumTone } from './homeIcons';
+
 export {
   continueAccentTone,
   featureLinkPremiumTone,
   nudgePremiumTone,
 } from './homeIcons';
-
-import { PREMIUM_ICON_TONES } from '../premium/premiumIconTokens';
-import type { AINudge } from '../../types/home';
-import { nudgePremiumTone } from './homeIcons';
 
 /** Maps legacy FeatureLinkTone to { bg, fg } for Home explore grid. */
 export function featureLinkToneColors(tone: import('../../navigation/profileFeatureLinks').FeatureLinkTone) {

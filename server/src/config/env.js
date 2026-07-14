@@ -33,6 +33,7 @@ export const env = Object.freeze({
   s3Region: validated.s3Region,
   s3AccessKey: validated.s3AccessKey,
   s3SecretKey: validated.s3SecretKey,
+  s3SessionToken: validated.s3SessionToken,
   s3Endpoint: validated.s3Endpoint,
   s3PublicBaseUrl: validated.s3PublicBaseUrl,
   razorpayKeyId: validated.razorpayKeyId,

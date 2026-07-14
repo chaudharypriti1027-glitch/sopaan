@@ -7,8 +7,8 @@ import { ActionButton } from '../components/ActionButton';
 import { DataTable } from '../components/DataTable';
 import { FormField } from '../components/content/FormField';
 import { Pill } from '../components/Pill';
+import { QueryErrorBanner } from '../components/QueryErrorBanner';
 import { useToast } from '../components/Toast';
-import { PagePlaceholder } from '../components/PagePlaceholder';
 import './settings.css';
 
 type SettingsForm = {
@@ -104,7 +104,14 @@ export function SettingsPage() {
   const integrations = settingsQuery.data?.integrations ?? {};
 
   return (
-    <PagePlaceholder title="Settings">
+    <div className="settings-page">
+      {settingsQuery.isError ? (
+        <QueryErrorBanner
+          error={settingsQuery.error}
+          onRetry={() => void settingsQuery.refetch()}
+        />
+      ) : null}
+
       <div className="panel">
         <h3>Platform settings</h3>
         <p className="page-sub">
@@ -213,7 +220,10 @@ export function SettingsPage() {
         <h3>Recent audit entries</h3>
         <DataTable
           rows={auditQuery.data?.items ?? []}
-          emptyMessage={auditQuery.isLoading ? 'Loading…' : 'No audit entries yet'}
+          emptyMessage="No audit entries yet"
+          isLoading={auditQuery.isLoading}
+          error={auditQuery.isError ? auditQuery.error : undefined}
+          onRetry={() => void auditQuery.refetch()}
           columns={[
             {
               key: 'at',
@@ -230,6 +240,6 @@ export function SettingsPage() {
           ]}
         />
       </div>
-    </PagePlaceholder>
+    </div>
   );
 }

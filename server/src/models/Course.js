@@ -25,6 +25,14 @@ const lessonSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    materialUrl: {
+      type: String,
+      trim: true,
+    },
+    materialName: {
+      type: String,
+      trim: true,
+    },
   },
   { _id: true }
 );

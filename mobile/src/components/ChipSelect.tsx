@@ -74,6 +74,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme'], selected: boo
       fontFamily: selected
         ? theme.typography.fonts.ui.semibold
         : theme.typography.fonts.ui.medium,
+      flexShrink: 1,
     },
   });
 }

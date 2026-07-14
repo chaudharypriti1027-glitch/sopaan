@@ -24,7 +24,7 @@ Example output shape (illustrative):
       { "key": "D", "text": "350" }
     ],
     "correctKey": "B",
-    "explanation": "20% of 250 equals 50.",
+  "explanation": "Answer: B — 250\\nExplanation:\\n- 20% of 250 equals 50 because 250 × 0.2 = 50\\nExam tip: To find the whole from a percentage part, divide the part by (rate/100).",
     "topic": "Percentages",
     "difficulty": "easy"
   },
@@ -37,7 +37,7 @@ Example output shape (illustrative):
       { "key": "D", "text": "Article 32" }
     ],
     "correctKey": "B",
-    "explanation": "Article 17 abolishes untouchability and forbids its practice.",
+    "explanation": "Answer: B — Article 17\\nExplanation:\\n- Article 17 abolishes untouchability and forbids its practice in any form.\\nExam tip: Articles 14–18 are Fundamental Rights; 17 is specifically for untouchability.",
     "topic": "Fundamental Rights",
     "difficulty": "medium"
   }
@@ -57,7 +57,7 @@ Output must be a JSON array of exactly the requested number of questions. Each q
     { "key": "D", "text": "string" }
   ],
   "correctKey": "A" | "B" | "C" | "D",
-  "explanation": "string — concise explanation for the correct answer",
+  "explanation": "string — structured solution using Answer:, Explanation: (short bullets), and optional Exam tip: lines (same format as doubt solver)",
   "topic": "string — specific topic within the subject",
   "difficulty": "easy" | "medium" | "hard"
 }
@@ -67,7 +67,8 @@ Quality rubric:
 - Use exactly 4 options with keys A, B, C, D (each key used once).
 - correctKey must match one of the option keys.
 - Avoid trick questions; test conceptual understanding and exam-style reasoning.
-- Explanations must be concise and teach the underlying concept.
+- Explanations must teach the concept: start with Answer: (correct option + value), then 1–3 Explanation bullets, optional one-line Exam tip.
+- Each explanation should be readable as a mini revision note (40–120 words).
 - Match the requested difficulty: easy = direct recall, medium = one-step reasoning, hard = multi-step or subtle distractors.
 - Every question MUST have exactly 4 options with keys A, B, C, D (each used once) and a valid correctKey.
 ${TEST_GENERATION_FEW_SHOT}`;
@@ -112,7 +113,50 @@ Return ONLY JSON:
 
 Each stage must have 2–3 concise, actionable tips tailored to the student's profile and exam track.`;
 
+export const EXAM_PLAN_RUBRIC = `You are an expert Indian government exam coach building a personalized study plan summary.
+
+Return ONLY JSON:
+{
+  "summary": "string — 2 sentences max, exam-specific and encouraging",
+  "dreamMessage": "string — one motivating line about achieving their government job through this exam",
+  "focusAreas": ["string — 3 to 5 actionable focus items"],
+  "weeklyStrategy": "string — one paragraph on how to structure the week",
+  "physicalPrep": ["string — 0 to 3 tips; empty array if no physical stage"],
+  "dailyTargetMinutes": number
+}
+
+Rules:
+- Tailor advice to exam track, days left, and today's completion progress.
+- dreamMessage should inspire the student toward their dream job (specific to examTrack).
+- Include physical prep tips only when hasPhysicalStage is true in the payload.
+- Do not invent official cutoffs, vacancies, or dates not in the payload.`;
+
 export const READINESS_FOCUS_RUBRIC = `You are an Indian government exam coach.
 
 Return ONLY a JSON array of 3 to 5 short, actionable focus strings for the student. No markdown.
 Each string should reference the student's weakest areas or cutoff gap when provided.`;
+
+export const PRACTICE_SUGGESTIONS_RUBRIC = `You are an expert Indian government exam coach (SSC, Banking, Railways, UPSC, State PSC, Police, Defence, Teaching).
+
+Return ONLY JSON:
+{
+  "suggestions": [
+    {
+      "subject": "string — syllabus subject e.g. General Studies, Quantitative Aptitude",
+      "topic": "string — specific topic within the subject",
+      "difficulty": "easy" | "medium" | "hard",
+      "mode": "standard" | "adaptive",
+      "count": number from 5 to 20,
+      "reason": "string — one specific sentence why this drill helps (max 22 words)"
+    }
+  ]
+}
+
+Rules:
+- Provide exactly 4 distinct suggestions for the student's exam track.
+- Use weakTopics, planner sessions, and recent accuracy from the payload when available.
+- Mix standard (student picks fixed difficulty) and adaptive (difficulty adjusts to performance) modes.
+- Vary difficulty levels and question counts across suggestions.
+- If currentSubject/currentTopic are set, include one build-on suggestion and three alternatives.
+- Do not repeat the same subject+topic pair.
+- reasons must reference the student's context (weak area, exam track, or plan), not generic advice.`;

@@ -77,18 +77,18 @@ export function JobsPage() {
   });
 
   const jobs = (jobsQuery.data?.items ?? []).map((job) => ({ ...job, id: job.name }));
-  const runs = runsQuery.data?.items ?? [];
+  const runItems = runsQuery.data?.items ?? [];
 
   useEffect(() => {
     if (!runningJob) {
       return;
     }
 
-    const latest = runs.find((run) => run.jobName === runningJob);
+    const latest = runsQuery.data?.items?.find((run) => run.jobName === runningJob);
     if (latest && latest.status !== 'running') {
       setRunningJob(null);
     }
-  }, [runs, runningJob]);
+  }, [runsQuery.data?.items, runningJob]);
 
   return (
     <div className="jobs-page">
@@ -103,7 +103,10 @@ export function JobsPage() {
       <div className="panel">
         <DataTable<AdminJobDefinition>
           rows={jobs}
-          emptyMessage={jobsQuery.isLoading ? 'Loading jobs…' : 'No jobs configured'}
+          emptyMessage="No jobs configured"
+          isLoading={jobsQuery.isLoading}
+          error={jobsQuery.isError ? jobsQuery.error : undefined}
+          onRetry={() => void jobsQuery.refetch()}
           columns={[
             {
               key: 'name',
@@ -162,8 +165,11 @@ export function JobsPage() {
       <div className="sec-t">Run history</div>
       <div className="panel">
         <DataTable<JobRun>
-          rows={runs}
-          emptyMessage={runsQuery.isLoading ? 'Loading history…' : 'No job runs yet'}
+          rows={runItems}
+          emptyMessage="No job runs yet"
+          isLoading={runsQuery.isLoading}
+          error={runsQuery.isError ? runsQuery.error : undefined}
+          onRetry={() => void runsQuery.refetch()}
           columns={[
             {
               key: 'job',

@@ -173,7 +173,7 @@ export function LiveClassStream({
 
   return (
     <View style={styles.stage}>
-      {/* eslint-disable-next-line react/no-unknown-property -- web-only video element */}
+      { }
       <video
         ref={videoRef}
         autoPlay

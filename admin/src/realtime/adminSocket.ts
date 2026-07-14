@@ -1,6 +1,6 @@
 import { io, type Socket } from 'socket.io-client';
 import { getAccessToken } from '../api/storage';
-import { ADMIN_NS_EVENTS, type AdminDashboardCounters } from './events';
+import { ADMIN_NS_EVENTS, type AdminDashboardCounters, type AdminLivePresencePayload } from './events';
 import { getSocketOrigin } from './socketOrigin';
 
 let socket: Socket | null = null;
@@ -54,5 +54,17 @@ export function onAdminDashboardCounters(handler: (counters: AdminDashboardCount
   client.on(ADMIN_NS_EVENTS.COUNTERS, handler);
   return () => {
     client.off(ADMIN_NS_EVENTS.COUNTERS, handler);
+  };
+}
+
+export function onAdminLivePresence(handler: (payload: AdminLivePresencePayload) => void) {
+  const client = connectAdminSocket();
+  if (!client) {
+    return () => {};
+  }
+
+  client.on(ADMIN_NS_EVENTS.LIVE_PRESENCE, handler);
+  return () => {
+    client.off(ADMIN_NS_EVENTS.LIVE_PRESENCE, handler);
   };
 }

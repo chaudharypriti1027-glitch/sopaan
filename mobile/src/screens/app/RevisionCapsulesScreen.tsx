@@ -1,11 +1,17 @@
 import { Clock } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Card, QueryStateView, Screen, SectionTitle } from '../../components';
+import { useTranslation } from 'react-i18next';
+import {
+  FeatureScreenLayout,
+  PremiumFeatureCard,
+  QueryStateView,
+} from '../../components';
 import { useNetworkStatus, useRevisionCapsules } from '../../hooks';
 import { useTheme } from '../../theme';
 
 export function RevisionCapsulesScreen() {
+  const { t } = useTranslation('app');
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -16,9 +22,10 @@ export function RevisionCapsulesScreen() {
   const hasData = capsules.length > 0;
 
   return (
-    <Screen scroll contentContainerStyle={styles.content}>
-      <SectionTitle subtitle="Quick 5-minute reads between mocks" />
-
+    <FeatureScreenLayout
+      title={t('revisionCapsules.title')}
+      subtitle={t('revisionCapsules.subtitle')}
+    >
       <QueryStateView
         isLoading={capsulesQuery.isLoading}
         isError={capsulesQuery.isError}
@@ -31,7 +38,7 @@ export function RevisionCapsulesScreen() {
           {capsules.map((capsule) => {
             const expanded = expandedId === capsule.id;
             return (
-              <Card key={capsule.id} style={styles.card}>
+              <PremiumFeatureCard key={capsule.id} style={styles.card}>
                 <Pressable onPress={() => setExpandedId(expanded ? null : capsule.id)}>
                   <View style={styles.header}>
                     <View style={styles.headerText}>
@@ -40,7 +47,9 @@ export function RevisionCapsulesScreen() {
                     </View>
                     <View style={styles.readTime}>
                       <Clock size={14} color={theme.colors.text.tertiary} />
-                      <Text style={styles.readMin}>{capsule.readMinutes ?? 5} min</Text>
+                      <Text style={styles.readMin}>
+                        {t('revisionCapsules.readMin', { count: capsule.readMinutes ?? 5 })}
+                      </Text>
                     </View>
                   </View>
                   {expanded ? (
@@ -50,22 +59,23 @@ export function RevisionCapsulesScreen() {
                       {capsule.body.replace(/[#*`$]/g, '')}
                     </Text>
                   )}
-                  <Text style={styles.toggle}>{expanded ? 'Show less' : 'Read now'}</Text>
+                  <Text style={styles.toggle}>
+                    {expanded ? t('revisionCapsules.showLess') : t('revisionCapsules.readNow')}
+                  </Text>
                 </Pressable>
-              </Card>
+              </PremiumFeatureCard>
             );
           })}
         </View>
       </QueryStateView>
-    </Screen>
+    </FeatureScreenLayout>
   );
 }
 
 function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
-    content: { gap: theme.spacing.lg, paddingBottom: theme.spacing['3xl'] },
     list: { gap: theme.spacing.md },
-    card: { gap: theme.spacing.sm },
+    card: { gap: theme.spacing.sm, padding: theme.spacing.md },
     header: { flexDirection: 'row', gap: theme.spacing.md },
     headerText: { flex: 1, gap: theme.spacing.xs },
     subject: {

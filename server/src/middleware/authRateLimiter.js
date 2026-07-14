@@ -31,9 +31,6 @@ function otpDestinationKey(req) {
   }
 }
 
-/** @deprecated use otpDestinationKey */
-const otpPhoneKey = otpDestinationKey;
-
 const otpLimitMessage = {
   error: {
     message: 'Too many OTP requests. Please wait before trying again.',

@@ -2,14 +2,25 @@ import type { CurrentAffair } from '../../api/types';
 
 export type CaSortMode = 'latest' | 'trending';
 
+export function getQuizQuestionCount(item: CurrentAffair): number {
+  if (typeof item.quizQuestionCount === 'number') {
+    return item.quizQuestionCount;
+  }
+  return item.quizQuestions?.length ?? 0;
+}
+
+export function hasAffairQuiz(item: CurrentAffair): boolean {
+  return getQuizQuestionCount(item) > 0;
+}
+
 export function estimateReadTime(item: CurrentAffair): string {
-  const words = (item.summary ?? item.title ?? '').split(/\s+/).length;
+  const words = (item.body ?? item.summary ?? item.title ?? '').split(/\s+/).length;
   const minutes = Math.max(2, Math.min(8, Math.ceil(words / 45)));
   return `${minutes} min`;
 }
 
 export function isTrendingAffair(item: CurrentAffair): boolean {
-  if (item.quizQuestions && item.quizQuestions.length > 0) {
+  if (hasAffairQuiz(item)) {
     return true;
   }
   if (!item.publishedAt) {
@@ -21,7 +32,7 @@ export function isTrendingAffair(item: CurrentAffair): boolean {
 }
 
 export function getExamWeight(item: CurrentAffair): 'High' | 'Medium' {
-  if (item.quizQuestions && item.quizQuestions.length > 0) {
+  if (hasAffairQuiz(item)) {
     return 'High';
   }
   const highCategories = ['Economy', 'International', 'Defence', 'Polity', 'Schemes', 'Environment'];

@@ -106,7 +106,10 @@ export function ReviewQueuePage() {
 
       <DataTable
         rows={rows}
-        emptyMessage={query.isLoading ? 'Loading review queue…' : 'Review queue is clear'}
+        emptyMessage="Review queue is clear"
+        isLoading={query.isLoading}
+        error={query.isError ? query.error : undefined}
+        onRetry={() => void query.refetch()}
         columns={[
           {
             key: 'text',

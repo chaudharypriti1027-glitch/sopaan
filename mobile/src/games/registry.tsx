@@ -20,11 +20,12 @@ import { SpellingBeeGame } from './SpellingBeeGame';
 import { StoryBuilderGame } from './StoryBuilderGame';
 import { WordChainGame } from './WordChainGame';
 import { WordScrambleGame } from './WordScrambleGame';
+import type { GameCompleteResult } from './completion';
 import type { GameId } from './types';
 
 export type GameSessionProps = {
   sessionKey: string;
-  onComplete: (score: number) => void;
+  onComplete: (result: number | GameCompleteResult) => void;
 };
 
 export function renderGameById(id: GameId, { sessionKey, onComplete }: GameSessionProps): ReactElement | null {

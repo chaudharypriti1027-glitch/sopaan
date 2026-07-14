@@ -1,11 +1,12 @@
-import { useMemo } from 'react';
-import { Linking, StyleSheet, View } from 'react-native';
-import { useRoute, type RouteProp } from '@react-navigation/native';
-import { Clock, ExternalLink, Flame } from 'lucide-react-native';
+import { useMemo, useState, useEffect, useCallback } from 'react';
+import { Alert, Linking, StyleSheet, View } from 'react-native';
+import { useRoute, useNavigation, type RouteProp } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Check, Clock, Download, ExternalLink, Flame } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
 import { Button, OptimizedImage, QueryStateView, Text } from '../../components';
-import { CA_UI, caFeedCard } from '../../components/currentAffairs';
+import { CA_UI, CaAiSummaryCard, caFeedCard } from '../../components/currentAffairs';
 import {
   categoryStyle,
   estimateReadTime,
@@ -13,11 +14,14 @@ import {
 } from '../../components/currentAffairs/caUtils';
 import { PremiumScreen } from '../../components/premium';
 import { PREMIUM } from '../../components/premium/premiumStyles';
-import { useCurrentAffair, useNetworkStatus } from '../../hooks';
+import { useCurrentAffair, useCurrentAffairAiSummary, useNetworkStatus } from '../../hooks';
+import { cacheAffair, isAffairCached, removeCachedAffair } from '../../affairs/offlineAffairCache';
 import { useFormat } from '../../i18n/useFormat';
+import { navigateToAskAI } from '../../navigation/askAiNavigation';
 import type { MainStackParamList } from '../../navigation/types';
 
 type ReaderRoute = RouteProp<MainStackParamList, 'CurrentAffairReader'>;
+type ReaderNav = NativeStackNavigationProp<MainStackParamList, 'CurrentAffairReader'>;
 
 function formatArticleBody(text?: string) {
   if (!text) return '';
@@ -34,13 +38,41 @@ function formatArticleBody(text?: string) {
 
 export function CurrentAffairReaderScreen() {
   const route = useRoute<ReaderRoute>();
+  const navigation = useNavigation<ReaderNav>();
   const { t } = useTranslation('app');
   const { formatDate } = useFormat();
   const styles = useMemo(() => createStyles(), []);
 
   const { isOffline } = useNetworkStatus();
   const affairQuery = useCurrentAffair(route.params.affairId);
+  const aiSummaryQuery = useCurrentAffairAiSummary(route.params.affairId);
   const affair = affairQuery.data;
+  const [offlineSaved, setOfflineSaved] = useState(false);
+
+  useEffect(() => {
+    if (!affair?.id) {
+      setOfflineSaved(false);
+      return;
+    }
+
+    void isAffairCached(affair.id).then(setOfflineSaved);
+  }, [affair?.id]);
+
+  const toggleOfflineSave = useCallback(async () => {
+    if (!affair) {
+      return;
+    }
+
+    if (offlineSaved) {
+      await removeCachedAffair(affair.id);
+      setOfflineSaved(false);
+      return;
+    }
+
+    await cacheAffair(affair);
+    setOfflineSaved(true);
+    Alert.alert(t('currentAffairs.downloadedTitle'), t('currentAffairs.downloadedBody'));
+  }, [affair, offlineSaved, t]);
 
   const bodyText = formatArticleBody(affair?.body || affair?.summary);
   const trending = affair ? isTrendingAffair(affair) : false;
@@ -115,9 +147,41 @@ export function CurrentAffairReaderScreen() {
               </Text>
             ) : null}
 
+            <CaAiSummaryCard
+              summary={aiSummaryQuery.data}
+              isLoading={aiSummaryQuery.isLoading}
+              isError={aiSummaryQuery.isError}
+              onRetry={() => void aiSummaryQuery.refetch()}
+            />
+
             <View style={styles.bodyCard}>
               <Text style={styles.body}>{bodyText}</Text>
             </View>
+
+            {(affair.quizQuestionCount ?? 0) > 0 ? (
+              <Button
+                label={t('currentAffairs.playQuiz')}
+                variant="gold"
+                fullWidth
+                onPress={() =>
+                  navigation.navigate('GamePlay', {
+                    gameId: 'rapid-fire',
+                    affairId: affair.id,
+                  })
+                }
+              />
+            ) : null}
+
+            <Button
+              label={t('currentAffairs.askAboutThis')}
+              variant="ghost"
+              fullWidth
+              onPress={() =>
+                navigateToAskAI(navigation, {
+                  initialPrompt: `Explain this current affair for my exam: ${affair.title}`,
+                })
+              }
+            />
 
             {affair.sourceUrl ? (
               <Button
@@ -128,6 +192,24 @@ export function CurrentAffairReaderScreen() {
                 icon={<ExternalLink size={16} color={PREMIUM.ink} />}
               />
             ) : null}
+
+            <Button
+              label={
+                offlineSaved
+                  ? t('currentAffairs.savedOffline')
+                  : t('currentAffairs.downloadOffline')
+              }
+              variant={offlineSaved ? 'ghost' : 'primary'}
+              fullWidth
+              onPress={() => void toggleOfflineSave()}
+              icon={
+                offlineSaved ? (
+                  <Check size={16} color={PREMIUM.ink} />
+                ) : (
+                  <Download size={16} color="#FFFFFF" />
+                )
+              }
+            />
           </View>
         ) : null}
       </QueryStateView>

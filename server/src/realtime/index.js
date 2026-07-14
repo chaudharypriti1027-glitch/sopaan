@@ -6,6 +6,8 @@ import {
   registerLiveMockHandlers,
   rejoinTrackedRooms,
 } from './groupChat.js';
+import { registerDirectChatHandlers, rejoinDirectRooms } from './directChat.js';
+import { joinUserInboxRoom } from './userRealtime.js';
 import { registerLiveClassChatHandlers, rejoinLiveClassRooms } from './liveClassChat.js';
 import { registerLiveNamespace } from './liveNamespace.js';
 import { registerAdminNamespace } from './adminNamespace.js';
@@ -53,12 +55,15 @@ export function initRealtimeServer(httpServer) {
   io.on('connection', (socket) => {
     console.info(`[realtime] connected user=${socket.user.id}`);
 
+    joinUserInboxRoom(socket);
     registerLiveMockHandlers(socket);
     registerGroupChatHandlers(socket);
+    registerDirectChatHandlers(socket);
     registerLiveClassChatHandlers(socket);
 
     socket.on('realtime:rejoin', async () => {
       await rejoinTrackedRooms(socket);
+      await rejoinDirectRooms(socket);
       await rejoinLiveClassRooms(socket);
     });
 

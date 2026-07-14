@@ -19,6 +19,7 @@ export const LIVE_NS_EVENTS = {
 export const ADMIN_NS_EVENTS = {
   COUNTERS: 'admin:counters',
   ERROR: 'admin:error',
+  LIVE_PRESENCE: 'admin:live:presence',
 } as const;
 
 export interface LiveChatMessage {
@@ -69,5 +70,11 @@ export interface AdminDashboardCounters {
   pendingReviews: number;
   pendingQuestionReviews: number;
   liveClasses: number;
+  at: string;
+}
+
+export interface AdminLivePresencePayload {
+  classId: string;
+  count: number;
   at: string;
 }

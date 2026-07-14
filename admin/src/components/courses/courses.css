@@ -1,0 +1,138 @@
+.lesson-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 8px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
+.lesson-editor-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.lesson-editor-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.lesson-editor-hint {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.45;
+  max-width: 36rem;
+}
+
+.lesson-editor-empty {
+  margin: 0;
+}
+
+.lesson-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.lesson-card {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px;
+  background: var(--hair);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.lesson-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.lesson-order {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.lesson-card-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.tbtn.sm {
+  min-height: 30px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+.tbtn.danger {
+  color: var(--danger, #b42318);
+}
+
+.lesson-notes-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.lesson-material-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--hair);
+  margin-bottom: 8px;
+}
+
+.lesson-material-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.lesson-material-link {
+  font-size: 12px;
+  color: var(--navy);
+  text-decoration: underline;
+}
+
+.course-thumb-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.course-thumb {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  object-fit: cover;
+  border: 1px solid var(--line);
+  background: var(--hair);
+  flex-shrink: 0;
+}
+
+.course-thumb.fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--muted);
+}

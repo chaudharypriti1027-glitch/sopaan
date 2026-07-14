@@ -142,7 +142,7 @@ async function runPostSubmitSideEffects({
   attempt,
   questions,
   score,
-  accuracy,
+  _accuracy,
 }) {
   void enrichAttemptCoaching(attempt._id, { attempt, test, questions, userId });
 

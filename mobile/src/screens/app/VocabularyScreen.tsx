@@ -1,6 +1,18 @@
 import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Button, Card, Flashcard, QueryStateView, Screen, SectionTitle } from '../../components';
+import { useTranslation } from 'react-i18next';
+import {
+  Button,
+  FeatureScreenLayout,
+  Flashcard,
+  PremiumFeatureCard,
+  QueryStateView,
+  SectionTitle,
+} from '../../components';
+import {
+  VOCAB_QUIZ_MAX_QUESTIONS,
+  VOCAB_QUIZ_MIN_POOL,
+} from '../../content/featureDefaultsContent';
 import { useNetworkStatus, useVocabularyRecent, useVocabularyToday } from '../../hooks';
 import type { VocabularyWord } from '../../api/types';
 import { useTheme } from '../../theme';
@@ -15,6 +27,7 @@ function shuffle<T>(items: T[]): T[] {
 }
 
 export function VocabularyScreen() {
+  const { t } = useTranslation('app');
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
@@ -34,9 +47,9 @@ export function VocabularyScreen() {
 
   const startQuiz = () => {
     const pool = [todayQuery.data, ...(recentQuery.data ?? [])].filter(Boolean) as VocabularyWord[];
-    if (pool.length < 3) return;
+    if (pool.length < VOCAB_QUIZ_MIN_POOL) return;
 
-    const words = shuffle(pool).slice(0, Math.min(5, pool.length));
+    const words = shuffle(pool).slice(0, Math.min(VOCAB_QUIZ_MAX_QUESTIONS, pool.length));
     setQuizWords(words);
     setQuizIndex(0);
     setQuizScore(0);
@@ -67,16 +80,17 @@ export function VocabularyScreen() {
       }
       setQuizIndex(nextIndex);
       setSelected(null);
-      buildOptions(quizWords[nextIndex], [todayQuery.data, ...(recentQuery.data ?? [])].filter(Boolean) as VocabularyWord[]);
+      buildOptions(
+        quizWords[nextIndex],
+        [todayQuery.data, ...(recentQuery.data ?? [])].filter(Boolean) as VocabularyWord[],
+      );
     }, 700);
   };
 
   const today = todayQuery.data;
 
   return (
-    <Screen scroll contentContainerStyle={styles.content}>
-      <SectionTitle subtitle="Word of the day and quick quiz" />
-
+    <FeatureScreenLayout title={t('vocabulary.title')} subtitle={t('vocabulary.subtitle')}>
       <QueryStateView
         isLoading={todayQuery.isLoading}
         isError={todayQuery.isError}
@@ -85,69 +99,73 @@ export function VocabularyScreen() {
         hasData={Boolean(today)}
         onRetry={() => void todayQuery.refetch()}
       >
-      {today ? (
-        <Flashcard
-          front={today.word}
-          back={`${today.meaning ?? ''}${today.example ? `\n\n"${today.example}"` : ''}`}
-          flipped={flipped}
-          onFlip={() => setFlipped((v) => !v)}
-        />
-      ) : null}
+        {today ? (
+          <Flashcard
+            front={today.word}
+            back={`${today.meaning ?? ''}${today.example ? `\n\n"${today.example}"` : ''}`}
+            flipped={flipped}
+            onFlip={() => setFlipped((v) => !v)}
+          />
+        ) : null}
 
-      {quizActive && quizWords[quizIndex] ? (
-        <Card style={styles.quizCard}>
-          <Text style={styles.quizLabel}>
-            Quiz {quizIndex + 1}/{quizWords.length}
+        {quizActive && quizWords[quizIndex] ? (
+          <PremiumFeatureCard style={styles.quizCard}>
+            <Text style={styles.quizLabel}>
+              {t('vocabulary.quizProgress', {
+                current: quizIndex + 1,
+                total: quizWords.length,
+              })}
+            </Text>
+            <Text style={styles.quizWord}>{quizWords[quizIndex].word}</Text>
+            <Text style={styles.quizPrompt}>{t('vocabulary.pickMeaning')}</Text>
+            <View style={styles.options}>
+              {options.map((option) => {
+                const isCorrect =
+                  option === (quizWords[quizIndex].meaning ?? quizWords[quizIndex].word);
+                const isSelected = selected === option;
+                return (
+                  <Pressable
+                    key={option}
+                    onPress={() => !selected && handleAnswer(option)}
+                    style={[
+                      styles.option,
+                      isSelected && (isCorrect ? styles.optionCorrect : styles.optionWrong),
+                    ]}
+                  >
+                    <Text style={styles.optionText}>{option}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </PremiumFeatureCard>
+        ) : (
+          <Button label={t('vocabulary.startQuiz')} onPress={startQuiz} />
+        )}
+
+        {!quizActive && quizScore > 0 && quizWords.length > 0 ? (
+          <Text style={styles.score}>
+            {t('vocabulary.lastQuiz', { score: quizScore, total: quizWords.length })}
           </Text>
-          <Text style={styles.quizWord}>{quizWords[quizIndex].word}</Text>
-          <Text style={styles.quizPrompt}>Pick the correct meaning</Text>
-          <View style={styles.options}>
-            {options.map((option) => {
-              const isCorrect = option === (quizWords[quizIndex].meaning ?? quizWords[quizIndex].word);
-              const isSelected = selected === option;
-              return (
-                <Pressable
-                  key={option}
-                  onPress={() => !selected && handleAnswer(option)}
-                  style={[
-                    styles.option,
-                    isSelected && (isCorrect ? styles.optionCorrect : styles.optionWrong),
-                  ]}
-                >
-                  <Text style={styles.optionText}>{option}</Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        </Card>
-      ) : (
-        <Button label="Start vocab quiz" onPress={startQuiz} />
-      )}
+        ) : null}
 
-      {!quizActive && quizScore > 0 && quizWords.length > 0 ? (
-        <Text style={styles.score}>
-          Last quiz: {quizScore}/{quizWords.length}
-        </Text>
-      ) : null}
-
-      <SectionTitle title="Recent words" />
-      <View style={styles.recentList}>
-        {recent.map((word) => (
-          <Card key={word.id} style={styles.recentCard}>
-            <Text style={styles.recentWord}>{word.word}</Text>
-            <Text style={styles.recentMeaning} numberOfLines={1}>{word.meaning}</Text>
-          </Card>
-        ))}
-      </View>
+        <SectionTitle title={t('vocabulary.recentWords')} />
+        <View style={styles.recentList}>
+          {recent.map((word) => (
+            <PremiumFeatureCard key={word.id} style={styles.recentCard}>
+              <Text style={styles.recentWord}>{word.word}</Text>
+              <Text style={styles.recentMeaning} numberOfLines={1}>
+                {word.meaning}
+              </Text>
+            </PremiumFeatureCard>
+          ))}
+        </View>
       </QueryStateView>
-    </Screen>
+    </FeatureScreenLayout>
   );
 }
 
 function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
-    content: { gap: theme.spacing.lg, paddingBottom: theme.spacing['3xl'] },
-    centered: { alignItems: 'center', justifyContent: 'center' },
     quizCard: { gap: theme.spacing.md },
     quizLabel: { ...theme.typography.presets.label, color: theme.colors.text.tertiary },
     quizWord: {
@@ -155,7 +173,11 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       color: theme.colors.text.primary,
       textAlign: 'center',
     },
-    quizPrompt: { ...theme.typography.presets.caption, color: theme.colors.text.secondary, textAlign: 'center' },
+    quizPrompt: {
+      ...theme.typography.presets.caption,
+      color: theme.colors.text.secondary,
+      textAlign: 'center',
+    },
     options: { gap: theme.spacing.sm },
     option: {
       padding: theme.spacing.md,
@@ -164,8 +186,14 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       borderColor: theme.colors.border.default,
       backgroundColor: theme.colors.surface.muted,
     },
-    optionCorrect: { borderColor: theme.colors.semantic.success, backgroundColor: theme.colors.semantic.successMuted },
-    optionWrong: { borderColor: theme.colors.semantic.error, backgroundColor: theme.colors.semantic.errorMuted },
+    optionCorrect: {
+      borderColor: theme.colors.semantic.success,
+      backgroundColor: theme.colors.semantic.successMuted,
+    },
+    optionWrong: {
+      borderColor: theme.colors.semantic.error,
+      backgroundColor: theme.colors.semantic.errorMuted,
+    },
     optionText: { ...theme.typography.presets.body, color: theme.colors.text.primary },
     score: {
       ...theme.typography.presets.bodyMedium,
@@ -173,7 +201,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       textAlign: 'center',
     },
     recentList: { gap: theme.spacing.sm },
-    recentCard: { gap: theme.spacing.xs },
+    recentCard: { gap: theme.spacing.xs, padding: theme.spacing.md },
     recentWord: {
       ...theme.typography.presets.bodyMedium,
       fontFamily: theme.typography.fonts.ui.semibold,

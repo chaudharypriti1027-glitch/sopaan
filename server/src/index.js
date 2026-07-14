@@ -9,7 +9,7 @@ import { seedE2eStudentUser } from './seed/data.js';
 import { livekitStreamingProvider } from './services/streaming/livekitStreamingProvider.js';
 import { initStreamingProvider } from './services/streaming/index.js';
 import { initRealtimeServer, closeRealtimeServer } from './realtime/index.js';
-import { startJobScheduler } from './jobs/index.js';
+import { startJobScheduler, stopJobScheduler } from './jobs/index.js';
 import { initSentry, installProcessErrorHandlers } from './observability/sentry.js';
 import { connectRedis, disconnectRedis } from './lib/redis.js';
 import { processConfig } from './config/processConfig.js';
@@ -25,6 +25,8 @@ if (!processConfig.runsHttp) {
 }
 
 function listen(httpServer, port) {
+  const host = env.isDevelopment ? '0.0.0.0' : '127.0.0.1';
+
   return new Promise((resolve, reject) => {
     const onError = (err) => {
       httpServer.off('listening', onListening);
@@ -36,7 +38,7 @@ function listen(httpServer, port) {
     };
     httpServer.once('error', onError);
     httpServer.once('listening', onListening);
-    httpServer.listen(port);
+    httpServer.listen({ port, host, exclusive: false });
   });
 }
 
@@ -108,30 +110,33 @@ async function start() {
     initRealtimeServer(httpServer);
   }
 
-  await listenWithRetry(httpServer, env.port);
+  await listenWithRetry(httpServer, env.port, {
+    retries: env.isDevelopment ? 12 : 5,
+    delayMs: 1000,
+  });
   console.log(`Sopaan API listening on http://localhost:${env.port} [${env.nodeEnv}]`);
+  if (env.isDevelopment) {
+    console.log(`[dev] LAN devices: use http://<your-ip>:${env.port}/api (e.g. Expo Go on phone)`);
+  }
 
   registerDatabaseShutdownHandlers(async () => {
-    await closeRealtimeServer().catch(() => {});
-    await disconnectRedis().catch(() => {});
+    stopJobScheduler();
 
-    await Promise.race([
-      new Promise((resolve, reject) => {
-        httpServer.close((err) => (err ? reject(err) : resolve()));
-      }),
-      new Promise((resolve) => {
-        if (env.isDevelopment) {
-          setTimeout(resolve, 1500);
-          return;
-        }
-        resolve();
-      }),
-    ]);
+    await new Promise((resolve) => {
+      if (typeof httpServer.closeAllConnections === 'function') {
+        httpServer.closeAllConnections();
+      }
+      if (typeof httpServer.closeIdleConnections === 'function') {
+        httpServer.closeIdleConnections();
+      }
 
-    if (typeof httpServer.closeAllConnections === 'function') {
-      httpServer.closeAllConnections();
-    }
+      httpServer.close(() => resolve());
+      if (env.isDevelopment) {
+        setTimeout(resolve, 200);
+      }
+    });
 
+    await Promise.allSettled([closeRealtimeServer(), disconnectRedis()]);
     console.log('HTTP server closed');
   });
 }

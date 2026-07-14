@@ -1,4 +1,20 @@
 /** Premium auth tokens — "Classic Premium" navy/gold. */
+export const AUTH_SPACING = {
+  /** Logo → hairline → title → subtitle */
+  stack: 12,
+  /** Header → form card → footer */
+  section: 20,
+  /** Terms, buttons, links within footer */
+  footer: 12,
+} as const;
+
+export const AUTH_FONTS = {
+  regular: 'PlusJakartaSans_400Regular',
+  medium: 'PlusJakartaSans_500Medium',
+  semibold: 'PlusJakartaSans_600SemiBold',
+  bold: 'PlusJakartaSans_700Bold',
+} as const;
+
 export const AUTH_UI = {
   bg: '#F4F1E9',
   bgTop: '#F7F3EA',

@@ -16,7 +16,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { scalableTextProps } from '../../a11y/textProps';
-import { AUTH_UI } from './authTheme';
+import { AUTH_FONTS, AUTH_UI } from './authTheme';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -83,15 +83,19 @@ export function PrimaryButton({
         </View>
       ) : (
         <LinearGradient
-          colors={isDisabled ? ['#E2E8F0', '#E2E8F0'] : [...AUTH_UI.gradient]}
+          colors={
+            isDisabled
+              ? ['#E8E4DA', '#E8E4DA']
+              : ['#F0DFA8', '#E3C97F', '#C29A4E']
+          }
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={[styles.button, isDisabled && styles.disabled]}
         >
           {loading ? (
-            <ActivityIndicator color="#FFFFFF" size="small" />
+            <ActivityIndicator color={AUTH_UI.accentDark} size="small" />
           ) : (
-            <Text {...scalableTextProps} style={styles.label}>
+            <Text {...scalableTextProps} style={[styles.label, isDisabled && styles.disabledLabel]}>
               {label}
             </Text>
           )}
@@ -113,10 +117,10 @@ function createStyles() {
       justifyContent: 'center',
       paddingVertical: 16,
       paddingHorizontal: 18,
-      shadowColor: AUTH_UI.accent,
-      shadowOffset: { width: 0, height: 6 },
-      shadowOpacity: 0.32,
-      shadowRadius: 18,
+      shadowColor: AUTH_UI.goldDeep,
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.28,
+      shadowRadius: 16,
       elevation: 5,
     },
     disabled: {
@@ -125,14 +129,14 @@ function createStyles() {
       elevation: 0,
     },
     label: {
+      fontFamily: AUTH_FONTS.bold,
       fontSize: 15,
-      fontWeight: '800',
-      letterSpacing: 0.3,
-      color: '#FFFFFF',
+      letterSpacing: 0.2,
+      color: '#2A2110',
     },
     disabledLabel: {
+      fontFamily: AUTH_FONTS.bold,
       fontSize: 14,
-      fontWeight: '700',
       color: AUTH_UI.muted,
     },
   });

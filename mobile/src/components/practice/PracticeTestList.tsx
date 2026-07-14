@@ -1,9 +1,12 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { FilePlus } from 'lucide-react-native';
+import { FilePlus, Play } from 'lucide-react-native';
 import { useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { Text } from '../Text';
 import { PRACTICE_UI, AVATAR_GRADIENTS, avatarToneForIndex, type PracticeAvatarTone } from './practiceTheme';
+import { platformShadow } from '../../utils/platformShadow';
+import { practiceFadeInDown, practiceFadeIn } from './practiceMotion';
 
 type PracticeTestRowProps = {
   avatarLabel: string;
@@ -13,6 +16,7 @@ type PracticeTestRowProps = {
   meta: string;
   startLabel: string;
   onPress: () => void;
+  index?: number;
 };
 
 export function PracticeTestRow({
@@ -23,39 +27,49 @@ export function PracticeTestRow({
   meta,
   startLabel,
   onPress,
+  index = 0,
 }: PracticeTestRowProps) {
   const styles = useMemo(() => createStyles(), []);
   const avatarColors = AVATAR_GRADIENTS[avatarTone];
 
   return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [styles.row, pressed && styles.pressed]}
-      accessibilityRole="button"
-    >
+    <Animated.View entering={practiceFadeInDown(index)}>
+      <Pressable
+        onPress={onPress}
+        style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+        accessibilityRole="button"
+      >
       <LinearGradient colors={avatarColors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.avatar}>
         <Text style={styles.avatarText}>{avatarLabel}</Text>
       </LinearGradient>
 
       <View style={styles.info}>
-        <Text style={styles.title} numberOfLines={1}>
+        <Text style={styles.title} numberOfLines={2}>
           {title}
-          {titleMuted ? <Text style={styles.titleMuted}> — {titleMuted}</Text> : null}
         </Text>
-        <Text style={styles.meta} numberOfLines={1}>
+        {titleMuted ? (
+          <Text style={styles.subtitle} numberOfLines={2}>
+            {titleMuted}
+          </Text>
+        ) : null}
+        <Text style={styles.meta} numberOfLines={2}>
           {meta}
         </Text>
       </View>
 
-      <LinearGradient
-        colors={[PRACTICE_UI.startStart, PRACTICE_UI.startEnd]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.startBtn}
-      >
-        <Text style={styles.startText}>{startLabel}</Text>
-      </LinearGradient>
-    </Pressable>
+      <View style={styles.startWrap}>
+        <LinearGradient
+          colors={[PRACTICE_UI.startStart, PRACTICE_UI.startEnd]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.startBtn}
+        >
+          <Play size={11} color="#FFFFFF" fill="#FFFFFF" strokeWidth={0} />
+          <Text style={styles.startText}>{startLabel}</Text>
+        </LinearGradient>
+      </View>
+      </Pressable>
+    </Animated.View>
   );
 }
 
@@ -82,18 +96,17 @@ export function PracticeTestList({ tests, startLabel, onStart }: PracticeTestLis
   return (
     <View style={styles.list}>
       {tests.map((test, index) => (
-        <View key={test.id}>
-          <PracticeTestRow
-            avatarLabel={test.avatarLabel}
-            avatarTone={test.avatarTone ?? avatarToneForIndex(index)}
-            title={test.title}
-            titleMuted={test.titleMuted}
-            meta={test.meta}
-            startLabel={startLabel}
-            onPress={() => onStart(test.id)}
-          />
-          {index < tests.length - 1 ? <View style={styles.divider} /> : null}
-        </View>
+        <PracticeTestRow
+          key={test.id}
+          index={index}
+          avatarLabel={test.avatarLabel}
+          avatarTone={test.avatarTone ?? avatarToneForIndex(index)}
+          title={test.title}
+          titleMuted={test.titleMuted}
+          meta={test.meta}
+          startLabel={startLabel}
+          onPress={() => onStart(test.id)}
+        />
       ))}
     </View>
   );
@@ -108,10 +121,13 @@ export function PracticeSectionHeader({ label, countLabel }: PracticeSectionHead
   const styles = useMemo(() => createStyles(), []);
 
   return (
-    <View style={styles.sectionHeader}>
-      <Text style={styles.sectionLabel}>{label}</Text>
+    <Animated.View entering={practiceFadeIn(0)} style={styles.sectionHeader}>
+      <View style={styles.sectionLabelRow}>
+        <View style={styles.sectionDot} />
+        <Text style={styles.sectionLabel}>{label}</Text>
+      </View>
       {countLabel ? <Text style={styles.sectionCount}>{countLabel}</Text> : null}
-    </View>
+    </Animated.View>
   );
 }
 
@@ -120,14 +136,23 @@ type PracticeEmptyStateProps = {
   description: string;
   actionLabel: string;
   onAction: () => void;
+  secondaryActionLabel?: string;
+  onSecondaryAction?: () => void;
 };
 
-export function PracticeEmptyState({ title, description, actionLabel, onAction }: PracticeEmptyStateProps) {
+export function PracticeEmptyState({
+  title,
+  description,
+  actionLabel,
+  onAction,
+  secondaryActionLabel,
+  onSecondaryAction,
+}: PracticeEmptyStateProps) {
   const styles = useMemo(() => createStyles(), []);
 
   return (
-    <View style={styles.empty}>
-      <LinearGradient colors={['#E9EBF3', '#C0C4DB']} style={styles.emptyIcon}>
+    <Animated.View entering={practiceFadeInDown(0, 50, 420)} style={styles.empty}>
+      <LinearGradient colors={['#EEF1FA', '#D8DDF0']} style={styles.emptyIcon}>
         <FilePlus size={28} color={PRACTICE_UI.startEnd} strokeWidth={2} />
       </LinearGradient>
       <Text style={styles.emptyTitle}>{title}</Text>
@@ -142,41 +167,45 @@ export function PracticeEmptyState({ title, description, actionLabel, onAction }
           <Text style={styles.genBtnText}>{actionLabel}</Text>
         </LinearGradient>
       </Pressable>
-    </View>
+      {secondaryActionLabel && onSecondaryAction ? (
+        <Pressable onPress={onSecondaryAction} style={({ pressed }) => [styles.secondaryBtn, pressed && styles.pressed]}>
+          <Text style={styles.secondaryBtnText}>{secondaryActionLabel}</Text>
+        </Pressable>
+      ) : null}
+    </Animated.View>
   );
 }
 
 function createStyles() {
   return StyleSheet.create({
     list: {
-      backgroundColor: PRACTICE_UI.card,
-      borderRadius: 20,
-      overflow: 'hidden',
-      shadowColor: PRACTICE_UI.startEnd,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.08,
-      shadowRadius: 16,
-      elevation: 2,
+      gap: 10,
     },
     row: {
       flexDirection: 'row',
-      alignItems: 'center',
+      alignItems: 'flex-start',
       gap: 12,
-      paddingHorizontal: 16,
+      paddingHorizontal: 14,
       paddingVertical: 14,
+      backgroundColor: PRACTICE_UI.card,
+      borderRadius: 18,
+      borderWidth: 1,
+      borderColor: 'rgba(35,42,77,0.06)',
+      ...platformShadow({
+        color: PRACTICE_UI.startEnd,
+        offsetY: 4,
+        opacity: 0.07,
+        radius: 14,
+        elevation: 2,
+      }),
     },
     pressed: {
-      backgroundColor: '#F8FAFC',
-    },
-    divider: {
-      height: StyleSheet.hairlineWidth,
-      backgroundColor: '#F1F5F9',
-      marginLeft: 70,
+      opacity: 0.92,
     },
     avatar: {
-      width: 42,
-      height: 42,
-      borderRadius: 14,
+      width: 44,
+      height: 44,
+      borderRadius: 15,
       alignItems: 'center',
       justifyContent: 'center',
       flexShrink: 0,
@@ -191,28 +220,42 @@ function createStyles() {
       minWidth: 0,
     },
     title: {
-      fontSize: 13,
-      fontWeight: '600',
+      fontSize: 14,
+      fontWeight: '700',
       color: PRACTICE_UI.ink,
+      lineHeight: 19,
     },
-    titleMuted: {
-      fontWeight: '400',
+    subtitle: {
+      fontSize: 12,
+      fontWeight: '500',
       color: PRACTICE_UI.muted,
+      marginTop: 2,
+      lineHeight: 17,
     },
     meta: {
       fontSize: 11,
       color: PRACTICE_UI.meta,
+      marginTop: 4,
+      lineHeight: 15,
+    },
+    startWrap: {
+      flexShrink: 0,
       marginTop: 2,
     },
     startBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
       borderRadius: 12,
-      paddingHorizontal: 16,
+      paddingHorizontal: 12,
       paddingVertical: 8,
-      shadowColor: PRACTICE_UI.startEnd,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.35,
-      shadowRadius: 8,
-      elevation: 2,
+      ...platformShadow({
+        color: PRACTICE_UI.startEnd,
+        offsetY: 3,
+        opacity: 0.3,
+        radius: 8,
+        elevation: 2,
+      }),
     },
     startText: {
       fontSize: 11,
@@ -224,19 +267,34 @@ function createStyles() {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      marginBottom: 10,
+      marginBottom: 4,
+    },
+    sectionLabelRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    sectionDot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: PRACTICE_UI.goldBadge,
     },
     sectionLabel: {
-      fontSize: 10,
+      fontSize: 11,
       fontWeight: '800',
-      letterSpacing: 1.2,
+      letterSpacing: 1,
       textTransform: 'uppercase',
       color: PRACTICE_UI.sectionLabel,
     },
     sectionCount: {
       fontSize: 12,
-      fontWeight: '600',
+      fontWeight: '700',
       color: PRACTICE_UI.sectionCount,
+      backgroundColor: PRACTICE_UI.statIndigoBg,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: 999,
     },
     empty: {
       backgroundColor: PRACTICE_UI.card,
@@ -245,11 +303,15 @@ function createStyles() {
       paddingHorizontal: 20,
       alignItems: 'center',
       gap: 10,
-      shadowColor: PRACTICE_UI.startEnd,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.08,
-      shadowRadius: 16,
-      elevation: 2,
+      borderWidth: 1,
+      borderColor: 'rgba(35,42,77,0.06)',
+      ...platformShadow({
+        color: PRACTICE_UI.startEnd,
+        offsetY: 4,
+        opacity: 0.08,
+        radius: 16,
+        elevation: 2,
+      }),
     },
     emptyIcon: {
       width: 64,
@@ -261,31 +323,43 @@ function createStyles() {
     },
     emptyTitle: {
       fontSize: 15,
-      fontWeight: '600',
-      color: '#334155',
+      fontWeight: '700',
+      color: PRACTICE_UI.ink,
     },
     emptyDesc: {
-      fontSize: 13,
-      color: PRACTICE_UI.sectionLabel,
+      fontSize: 14,
+      color: PRACTICE_UI.muted,
       textAlign: 'center',
-      lineHeight: 19,
-      maxWidth: 220,
+      lineHeight: 21,
+      paddingHorizontal: 8,
     },
     genBtn: {
       marginTop: 8,
       borderRadius: 12,
       paddingHorizontal: 22,
       paddingVertical: 10,
-      shadowColor: PRACTICE_UI.startEnd,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.35,
-      shadowRadius: 8,
-      elevation: 2,
+      ...platformShadow({
+        color: PRACTICE_UI.startEnd,
+        offsetY: 3,
+        opacity: 0.3,
+        radius: 8,
+        elevation: 2,
+      }),
     },
     genBtnText: {
       fontSize: 13,
       fontWeight: '700',
       color: '#FFFFFF',
+    },
+    secondaryBtn: {
+      marginTop: 4,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+    },
+    secondaryBtnText: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: PRACTICE_UI.startEnd,
     },
   });
 }

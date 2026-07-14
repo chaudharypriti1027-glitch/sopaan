@@ -7,6 +7,7 @@ import {
   type AdminTransaction,
 } from '../api/revenue';
 import { DataTable } from '../components/DataTable';
+import { QueryErrorBanner } from '../components/QueryErrorBanner';
 import { useToast } from '../components/Toast';
 import './revenue.css';
 
@@ -76,6 +77,12 @@ export function RevenuePage() {
       <div className="sec-t" style={{ marginTop: 0 }}>
         Revenue overview
       </div>
+      {revenueQuery.isError ? (
+        <QueryErrorBanner
+          error={revenueQuery.error}
+          onRetry={() => void revenueQuery.refetch()}
+        />
+      ) : null}
       <div className="revenue-metrics">
         <div className="revenue-metric-card">
           <div className="label">MRR</div>
@@ -99,9 +106,10 @@ export function RevenuePage() {
       <div className="panel">
         <DataTable<AdminTransaction>
           rows={rows}
-          emptyMessage={
-            transactionsQuery.isLoading ? 'Loading transactions…' : 'No payment transactions yet'
-          }
+          emptyMessage="No payment transactions yet"
+          isLoading={transactionsQuery.isLoading}
+          error={transactionsQuery.isError ? transactionsQuery.error : undefined}
+          onRetry={() => void transactionsQuery.refetch()}
           columns={[
             {
               key: 'student',

@@ -22,7 +22,7 @@ function createStyles() {
       flex: 1,
       width: '100%',
       backgroundColor: '#F4F1E9',
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       minHeight: '100vh' as any,
     },
   });

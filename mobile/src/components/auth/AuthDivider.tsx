@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Text } from '../Text';
-import { AUTH_UI } from './authTheme';
+import { AUTH_SPACING, AUTH_UI } from './authTheme';
 
 type AuthDividerProps = {
   label: string;
@@ -13,7 +13,9 @@ export function AuthDivider({ label }: AuthDividerProps) {
   return (
     <View style={styles.row}>
       <View style={styles.line} />
-      <Text style={styles.label}>{label}</Text>
+      <Text variant="eyebrow" style={styles.label}>
+        {label}
+      </Text>
       <View style={styles.line} />
     </View>
   );
@@ -24,8 +26,8 @@ function createStyles() {
     row: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 12,
-      marginVertical: 18,
+      gap: AUTH_SPACING.stack,
+      marginVertical: AUTH_SPACING.stack,
     },
     line: {
       flex: 1,
@@ -33,11 +35,8 @@ function createStyles() {
       backgroundColor: AUTH_UI.border,
     },
     label: {
-      fontSize: 10.5,
-      fontWeight: '700',
-      letterSpacing: 0.5,
-      textTransform: 'uppercase',
       color: AUTH_UI.faint,
+      textTransform: 'uppercase',
     },
   });
 }

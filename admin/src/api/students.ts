@@ -1,5 +1,6 @@
 import { apiRequest } from './client';
 import { getAccessToken } from './storage';
+import { getApiOrigin } from '../realtime/socketOrigin';
 import type { PaginatedResponse } from './contentTypes';
 import { normalizeDoc, normalizeList } from './normalize';
 
@@ -75,11 +76,10 @@ export async function setStudentStatus(id: string, status: StudentAccountStatus)
 }
 
 export async function downloadStudentsCsv(q?: string) {
-  const API_BASE = import.meta.env.VITE_API_BASE ?? '';
   const params = q?.trim() ? `?q=${encodeURIComponent(q.trim())}` : '';
   const token = getAccessToken();
 
-  const res = await fetch(`${API_BASE}/api/admin/students/export${params}`, {
+  const res = await fetch(`${getApiOrigin()}/api/admin/students/export${params}`, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
 

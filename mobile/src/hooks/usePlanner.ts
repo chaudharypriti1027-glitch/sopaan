@@ -30,6 +30,7 @@ export function useCreatePlannerSession() {
       plannerApi.createPlannerSession(input),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.planner.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.examPlan.all });
     },
   });
 }
@@ -47,6 +48,7 @@ export function useUpdatePlannerSession() {
     }) => plannerApi.updatePlannerSession(id, input),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.planner.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.examPlan.all });
     },
   });
 }
@@ -58,6 +60,7 @@ export function useGenerateDayPlan() {
     mutationFn: (input?: { date?: string }) => plannerApi.generateDayPlan(input),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.planner.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.examPlan.all });
     },
   });
 }

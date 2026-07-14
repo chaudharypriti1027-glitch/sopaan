@@ -82,6 +82,7 @@ export function validateEnvironment(raw = process.env) {
     S3_REGION: z.string().trim().optional(),
     S3_ACCESS_KEY: z.string().trim().optional(),
     S3_SECRET_KEY: z.string().trim().optional(),
+    S3_SESSION_TOKEN: z.string().trim().optional(),
     S3_ENDPOINT: z.string().trim().optional(),
     S3_PUBLIC_BASE_URL: z.string().trim().optional(),
     STREAMING_PROVIDER: z.string().trim().optional(),
@@ -147,6 +148,7 @@ export function validateEnvironment(raw = process.env) {
   const s3Bucket = data.S3_BUCKET || '';
   const s3AccessKey = data.S3_ACCESS_KEY || '';
   const s3SecretKey = data.S3_SECRET_KEY || '';
+  const s3SessionToken = data.S3_SESSION_TOKEN || '';
 
   if (isProduction && livekitEgressEnabled) {
     const egressMissing = [];
@@ -199,6 +201,7 @@ export function validateEnvironment(raw = process.env) {
     s3Region: data.S3_REGION || '',
     s3AccessKey,
     s3SecretKey,
+    s3SessionToken,
     s3Endpoint: data.S3_ENDPOINT || '',
     s3PublicBaseUrl: data.S3_PUBLIC_BASE_URL || '',
     razorpayKeyId: data.RAZORPAY_KEY_ID || '',

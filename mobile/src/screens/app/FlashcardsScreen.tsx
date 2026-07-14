@@ -1,7 +1,15 @@
 import { Bookmark } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Button, Card, Flashcard, QueryStateView, Screen, SectionTitle } from '../../components';
+import { useTranslation } from 'react-i18next';
+import {
+  Button,
+  FeatureScreenLayout,
+  Flashcard,
+  PremiumFeatureCard,
+  QueryStateView,
+} from '../../components';
+import { SR_RATING_BUTTONS } from '../../content/flashcardsContent';
 import {
   useDeckDueCounts,
   useFlashcardDecks,
@@ -15,14 +23,8 @@ import type { DueFlashcard, FlashcardDeck } from '../../api/flashcards';
 import { saveFlashcardBookmark } from '../../flashcards/savedFlashcards';
 import { useTheme } from '../../theme';
 
-const SR_BUTTONS: { rating: SrRating; label: string; color: string }[] = [
-  { rating: 'again', label: 'Again', color: '#E53935' },
-  { rating: 'hard', label: 'Hard', color: '#FB8C00' },
-  { rating: 'good', label: 'Good', color: '#43A047' },
-  { rating: 'easy', label: 'Easy', color: '#1E88E5' },
-];
-
 export function FlashcardsScreen() {
+  const { t } = useTranslation('app');
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const { isOffline } = useNetworkStatus();
@@ -92,11 +94,13 @@ export function FlashcardsScreen() {
 
   if (selectedDeck && currentCard) {
     return (
-      <Screen scroll contentContainerStyle={styles.content}>
-        <SectionTitle
-          title={selectedDeck.title}
-          subtitle={`${cardIndex + 1} / ${sessionCards.length} · tap card to flip`}
-        />
+      <FeatureScreenLayout
+        title={selectedDeck.title}
+        subtitle={t('flashcards.sessionSubtitle', {
+          current: cardIndex + 1,
+          total: sessionCards.length,
+        })}
+      >
         <Flashcard
           front={currentCard.front}
           back={currentCard.back}
@@ -115,34 +119,38 @@ export function FlashcardsScreen() {
           }
         >
           <Bookmark size={16} color={theme.colors.brand.primary} />
-          <Text style={styles.bookmarkLabel}>Bookmark card</Text>
+          <Text style={styles.bookmarkLabel}>{t('flashcards.bookmarkCard')}</Text>
         </Pressable>
         {flipped ? (
           <View style={styles.srRow}>
-            {SR_BUTTONS.map(({ rating, label, color }) => (
+            {SR_RATING_BUTTONS.map(({ rating, labelKey, color }) => (
               <Pressable
                 key={rating}
                 onPress={() => handleRate(rating)}
                 disabled={reviewFlashcard.isPending}
                 style={[styles.srBtn, { borderColor: color }]}
               >
-                <Text style={[styles.srLabel, { color }]}>{label}</Text>
+                <Text style={[styles.srLabel, { color }]}>{t(labelKey)}</Text>
               </Pressable>
             ))}
           </View>
         ) : (
-          <Text style={styles.hint}>Flip the card to reveal the answer and rate recall.</Text>
+          <Text style={styles.hint}>{t('flashcards.flipHint')}</Text>
         )}
-        <Button label="Back to decks" variant="ghost" onPress={() => setSelectedDeck(null)} />
-      </Screen>
+        <Button
+          label={t('flashcards.backToDecks')}
+          variant="ghost"
+          onPress={() => setSelectedDeck(null)}
+        />
+      </FeatureScreenLayout>
     );
   }
 
   return (
-    <Screen scroll contentContainerStyle={styles.content}>
-      <SectionTitle
-        subtitle={`Spaced repetition · ${totalDue} due today`}
-      />
+    <FeatureScreenLayout
+      title={t('flashcards.title')}
+      subtitle={t('flashcards.subtitle', { count: totalDue })}
+    >
       <QueryStateView
         isLoading={decksQuery.isLoading}
         isError={decksQuery.isError}
@@ -156,32 +164,30 @@ export function FlashcardsScreen() {
             const due = deckDueCounts[deck.id] ?? deck.cardCount;
             return (
               <Pressable key={deck.id} onPress={() => openDeck(deck)}>
-                <Card style={styles.deckCard}>
+                <PremiumFeatureCard style={styles.deckCard}>
                   <Text style={styles.deckTitle}>{deck.title}</Text>
                   <Text style={styles.deckMeta}>
-                    {deck.cardCount} cards · {due} due
+                    {t('flashcards.deckMeta', { count: deck.cardCount, due })}
                   </Text>
-                </Card>
+                </PremiumFeatureCard>
               </Pressable>
             );
           })}
           {decks.length === 0 ? (
-            <Card>
-              <Text style={styles.empty}>No decks yet. Add revision capsules or vocabulary first.</Text>
-            </Card>
+            <PremiumFeatureCard>
+              <Text style={styles.empty}>{t('flashcards.empty')}</Text>
+            </PremiumFeatureCard>
           ) : null}
         </View>
       </QueryStateView>
-    </Screen>
+    </FeatureScreenLayout>
   );
 }
 
 function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
-    content: { gap: theme.spacing.lg, paddingBottom: theme.spacing['3xl'] },
-    centered: { alignItems: 'center', justifyContent: 'center' },
     list: { gap: theme.spacing.md },
-    deckCard: { gap: theme.spacing.xs },
+    deckCard: { gap: theme.spacing.xs, padding: theme.spacing.md },
     deckTitle: {
       ...theme.typography.presets.bodyMedium,
       fontFamily: theme.typography.fonts.ui.semibold,

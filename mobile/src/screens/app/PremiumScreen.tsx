@@ -4,7 +4,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useMemo, useState, useEffect, useRef } from 'react';
 import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { Button, Card, Pill, PremiumHeroCard, Screen } from '../../components';
+import { Button, Card, FeatureScreenLayout, Pill, PremiumHeroCard } from '../../components';
 import { PREMIUM, PremiumIcon, PremiumSectionLabel } from '../../components/premium';
 import { useAuth } from '../../auth';
 import { useExperiments } from '../../experiments';
@@ -108,9 +108,13 @@ export function PremiumScreen() {
 
   if (plansQuery.isLoading) {
     return (
-      <Screen style={styles.centered}>
+      <FeatureScreenLayout
+        title={t('premium.title')}
+        subtitle={t('premium.subtitle')}
+        contentStyle={styles.centered}
+      >
         <ActivityIndicator size="large" color={PREMIUM.gold} />
-      </Screen>
+      </FeatureScreenLayout>
     );
   }
 
@@ -125,7 +129,11 @@ export function PremiumScreen() {
           : t('premium.premiumActive');
 
     return (
-      <Screen scroll contentContainerStyle={styles.content}>
+      <FeatureScreenLayout
+        title={t('premium.title')}
+        subtitle={t('premium.proActive')}
+        contentStyle={styles.content}
+      >
         <PremiumHeroCard
           icon={heroIcon}
           eyebrow={t('premium.proActive')}
@@ -163,12 +171,16 @@ export function PremiumScreen() {
           fullWidth
           onPress={() => navigation.navigate('ManageSubscription')}
         />
-      </Screen>
+      </FeatureScreenLayout>
     );
   }
 
   return (
-    <Screen scroll contentContainerStyle={styles.content}>
+    <FeatureScreenLayout
+      title={t('premium.title')}
+      subtitle={t('premium.subtitle')}
+      contentStyle={styles.content}
+    >
       <PremiumHeroCard icon={heroIcon} eyebrow="Go Premium" title={heroTitle} hint={heroSub} />
 
       <PremiumSectionLabel title={copy.benefitsTitle} />
@@ -237,7 +249,7 @@ export function PremiumScreen() {
         fullWidth
       />
       <Text style={styles.disclaimer}>{t('premium.disclaimerFull')}</Text>
-    </Screen>
+    </FeatureScreenLayout>
   );
 }
 

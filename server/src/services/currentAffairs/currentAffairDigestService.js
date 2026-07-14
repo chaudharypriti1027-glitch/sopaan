@@ -76,6 +76,9 @@ async function createAffairFromFeedItem(source, feedItem, aiResult, digestId, la
   return CurrentAffair.create({
     title: feedItem.title,
     summary: summaryWithAttribution,
+    shortAnswer: aiResult.shortAnswer,
+    examTip: aiResult.examTip,
+    keyPoints: aiResult.keyPoints ?? [],
     category: aiResult.category || source.categoryHint || 'National',
     source: source.name,
     sourceUrl: feedItem.link,
@@ -241,7 +244,8 @@ export async function getDigestForDate(dateInput, pagination = {}) {
     })
       .populate({
         path: 'affairs',
-        select: 'title summary category source sourceUrl publishedAt imageColor quizQuestions',
+        select:
+          'title summary shortAnswer examTip keyPoints category source sourceUrl publishedAt imageColor quizQuestions',
       })
       .lean();
 

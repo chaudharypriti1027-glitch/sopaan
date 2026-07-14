@@ -3,6 +3,8 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { Text } from '../components/Text';
 import { GAMES_UI } from './gamesTheme';
 import { GK_QUESTIONS, shuffle } from './content';
+import { gameComplete, type GameAnswerRecord } from './completion';
+import { percentScore } from './score';
 
 const OPTION_LETTERS = ['A', 'B', 'C', 'D'] as const;
 
@@ -10,7 +12,7 @@ type McqGameProps = {
   questions: typeof GK_QUESTIONS;
   durationSec?: number;
   label?: string;
-  onComplete: (score: number) => void;
+  onComplete: (result: ReturnType<typeof gameComplete>) => void;
 };
 
 function formatTime(seconds: number) {
@@ -27,26 +29,26 @@ export function McqTimedGame({ questions, durationSec = 60, label, onComplete }:
   const [timeLeft, setTimeLeft] = useState(durationSec);
   const [selected, setSelected] = useState<string | null>(null);
   const finished = useRef(false);
-  const scoreRef = useRef(0);
+  const correctRef = useRef(0);
+  const answeredRef = useRef(0);
+  const answersRef = useRef<GameAnswerRecord[]>([]);
 
-  useEffect(() => {
-    scoreRef.current = score;
-  }, [score]);
-
-  const finish = useCallback(
-    (finalScore: number) => {
-      if (finished.current) {
-        return;
-      }
-      finished.current = true;
-      onComplete(finalScore);
-    },
-    [onComplete],
-  );
+  const finish = useCallback(() => {
+    if (finished.current) {
+      return;
+    }
+    finished.current = true;
+    onComplete(
+      gameComplete(
+        percentScore(correctRef.current, Math.max(answeredRef.current, 1)),
+        answersRef.current,
+      ),
+    );
+  }, [onComplete]);
 
   useEffect(() => {
     if (timeLeft <= 0) {
-      finish(scoreRef.current);
+      finish();
       return;
     }
     const timer = setTimeout(() => setTimeLeft((t) => t - 1), 1000);
@@ -61,15 +63,26 @@ export function McqTimedGame({ questions, durationSec = 60, label, onComplete }:
     }
     setSelected(option);
     const correct = option === current.answer;
-    const nextScore = score + (correct ? 10 : 0);
-    scoreRef.current = nextScore;
-    setScore(nextScore);
+    answeredRef.current += 1;
+    answersRef.current.push({
+      questionId: current.id,
+      prompt: current.prompt,
+      topic: current.label,
+      selected: option,
+      correct,
+      correctAnswer: current.answer,
+      explanation: current.explanation,
+    });
+    if (correct) {
+      correctRef.current += 1;
+      setScore(correctRef.current);
+    }
 
     setTimeout(() => {
       setSelected(null);
       const next = index + 1;
       if (timeLeft <= 1 && next >= pool.length) {
-        finish(nextScore);
+        finish();
         return;
       }
       setIndex(next);

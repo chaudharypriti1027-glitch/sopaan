@@ -4,6 +4,8 @@ import { AppError } from '../utils/AppError.js';
 import { endOfDay, startOfDay, buildPaginatedResult, parsePagination } from '../utils/pagination.js';
 import { buildAdaptiveDayPlan } from './planner/plannerEngine.js';
 import { createNotification, PUSH_TYPES } from './notificationService.js';
+import { bustHomeFeedCache } from './home/buildHomeFeed.js';
+import { emitAppTaskUpdate } from '../realtime/userRealtime.js';
 
 function parseDate(dateStr) {
   return startOfDay(dateStr);
@@ -38,6 +40,8 @@ export async function createSession(userId, data) {
     reason: data.reason,
     motivation: data.motivation,
     completed: data.completed ?? false,
+    actionType: data.actionType ?? null,
+    actionResourceId: data.actionResourceId ?? null,
   });
 }
 
@@ -47,6 +51,8 @@ export async function updateSession(userId, sessionId, updates) {
   if (!session) {
     throw new AppError('Planner session not found', 404, 'NOT_FOUND');
   }
+
+  const wasCompleted = session.completed;
 
   if (updates.date) {
     session.date = parseDate(updates.date);
@@ -61,6 +67,8 @@ export async function updateSession(userId, sessionId, updates) {
     'reason',
     'motivation',
     'completed',
+    'actionType',
+    'actionResourceId',
   ]) {
     if (updates[field] !== undefined) {
       session[field] = updates[field];
@@ -68,6 +76,19 @@ export async function updateSession(userId, sessionId, updates) {
   }
 
   await session.save();
+
+  if (updates.completed !== undefined && updates.completed !== wasCompleted) {
+    await bustHomeFeedCache(userId);
+  }
+
+  emitAppTaskUpdate(userId, {
+    domain: 'planner',
+    action: 'session_updated',
+    sessionId: String(session._id),
+    date: session.date.toISOString().slice(0, 10),
+    completed: session.completed,
+  });
+
   return session;
 }
 
@@ -95,6 +116,8 @@ export async function generatePlan(userId, dateStr, { replaceExisting = true } =
         reason: session.reason,
         motivation: session.motivation,
         completed: session.completed ?? false,
+        actionType: session.actionType ?? null,
+        actionResourceId: session.actionResourceId ?? null,
       })
     )
   );
@@ -106,6 +129,12 @@ export async function generatePlan(userId, dateStr, { replaceExisting = true } =
     title: 'Your study plan is ready',
     body: plan.summary ?? `Adaptive plan scheduled for ${dateLabel}.`,
     data: { date: dateLabel },
+  });
+
+  emitAppTaskUpdate(userId, {
+    domain: 'planner',
+    action: 'plan_generated',
+    date: dateLabel,
   });
 
   return {

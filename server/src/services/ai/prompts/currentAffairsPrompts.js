@@ -7,6 +7,9 @@ Return ONLY valid JSON — no markdown, no code fences, no commentary.
 Output shape:
 {
   "summary": "string — 2-4 short sentences, max ~120 words, exam-relevant facts only",
+  "shortAnswer": "string — one exam-ready sentence a student can memorize (max 40 words)",
+  "examTip": "string — one practical tip linking this news to likely exam questions (max 35 words)",
+  "keyPoints": ["string — 3 to 5 bullet facts, each under 20 words"],
   "category": "string — one of: National, International, Economy, Polity, Science, Defence, Schemes, Sports, Environment, Other",
   "quizQuestions": [
     {
@@ -31,4 +34,5 @@ Rules:
 - Do not invent speculative details not supported by the headline/snippet.
 - Avoid opinion; focus on verifiable exam-style facts.
 - Explanations must be at least 10 characters.
+- shortAnswer, examTip, and keyPoints must be original — not copied from the snippet.
 - Summary must be original — not a rewrite of the snippet sentence-by-sentence.`;

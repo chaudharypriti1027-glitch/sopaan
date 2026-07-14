@@ -3,6 +3,7 @@ import { useMemo, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '../Text';
+import { PracticeHeaderAmbient } from './PracticeHeaderAmbient';
 import { PRACTICE_UI } from './practiceTheme';
 
 type PracticeHeaderProps = {
@@ -23,14 +24,14 @@ export function PracticeHeader({ eyebrow, title, subtitle, aiCard }: PracticeHea
       end={{ x: 0.9, y: 1 }}
       style={styles.gradient}
     >
-      <View style={styles.decorA} />
-      <View style={styles.decorB} />
+      <PracticeHeaderAmbient />
 
       <Text style={styles.eyebrow}>{eyebrow}</Text>
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.subtitle}>{subtitle}</Text>
+      <View style={styles.hairline} />
 
-      {aiCard}
+      <View style={styles.aiWrap}>{aiCard}</View>
     </LinearGradient>
   );
 }
@@ -40,28 +41,10 @@ function createStyles(topInset: number) {
     gradient: {
       paddingTop: topInset + 10,
       paddingHorizontal: 20,
-      paddingBottom: 24,
+      paddingBottom: 28,
       borderBottomLeftRadius: 32,
       borderBottomRightRadius: 32,
       overflow: 'hidden',
-    },
-    decorA: {
-      position: 'absolute',
-      top: -60,
-      right: -60,
-      width: 200,
-      height: 200,
-      borderRadius: 100,
-      backgroundColor: 'rgba(194,154,78,0.22)',
-    },
-    decorB: {
-      position: 'absolute',
-      bottom: -40,
-      left: -40,
-      width: 140,
-      height: 140,
-      borderRadius: 70,
-      backgroundColor: 'rgba(255,255,255,0.06)',
     },
     eyebrow: {
       fontSize: 11,
@@ -77,11 +60,24 @@ function createStyles(topInset: number) {
       color: '#FFFFFF',
       lineHeight: 33,
       marginBottom: 2,
+      letterSpacing: -0.4,
     },
     subtitle: {
-      fontSize: 13,
-      color: PRACTICE_UI.eyebrow,
+      fontSize: 14,
+      lineHeight: 20,
+      color: 'rgba(255,255,255,0.9)',
+      marginBottom: 10,
+    },
+    hairline: {
+      width: 44,
+      height: 2,
+      borderRadius: 99,
+      backgroundColor: PRACTICE_UI.gold,
       marginBottom: 16,
+      opacity: 0.85,
+    },
+    aiWrap: {
+      marginTop: 2,
     },
   });
 }

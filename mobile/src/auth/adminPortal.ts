@@ -1,11 +1,12 @@
 import { Platform } from 'react-native';
 import { config } from '../config/env';
+import { isStaffRole } from './staffRoles';
 
 export class AdminAppAccessError extends Error {
   readonly adminConsoleUrl: string;
 
   constructor(adminConsoleUrl = getAdminConsoleUrl()) {
-    super('Admin accounts must use the admin console, not the student app.');
+    super('Team accounts must use the admin console, not the student app.');
     this.name = 'AdminAppAccessError';
     this.adminConsoleUrl = adminConsoleUrl;
   }
@@ -23,13 +24,22 @@ export function getAdminConsoleUrl(): string {
   return `${config.apiOrigin}/admin`;
 }
 
-export function isAdminProfile(profile: Pick<import('../types/auth').Profile, 'role'> | null | undefined): boolean {
-  return profile?.role === 'admin';
+export function isStaffProfile(
+  profile: Pick<import('../types/auth').Profile, 'role'> | null | undefined,
+): boolean {
+  return isStaffRole(profile?.role);
 }
 
-/** Reject admin users from the student mobile/web app. */
+/** @deprecated Use isStaffProfile — kept for existing imports. */
+export function isAdminProfile(
+  profile: Pick<import('../types/auth').Profile, 'role'> | null | undefined,
+): boolean {
+  return isStaffProfile(profile);
+}
+
+/** Reject staff users from the student mobile/web app. */
 export function assertStudentProfile(profile: import('../types/auth').Profile): void {
-  if (isAdminProfile(profile)) {
+  if (isStaffProfile(profile)) {
     throw new AdminAppAccessError();
   }
 }

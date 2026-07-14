@@ -14,6 +14,7 @@ import { ActionButton } from '../components/ActionButton';
 import { DataTable } from '../components/DataTable';
 import { Drawer } from '../components/content/Drawer';
 import { FormField } from '../components/content/FormField';
+import { CoverImageField } from '../components/media/MediaPicker';
 import { PublishStatusPill } from '../components/content/PublishStatusPill';
 import { PaginationBar } from '../components/questions/PaginationBar';
 import { TableActionButton } from '../components/questions/TableActionButton';
@@ -23,19 +24,25 @@ import { usePublishableResource } from '../hooks/usePublishableResource';
 type FormState = {
   title: string;
   summary: string;
+  body: string;
   category: string;
   source: string;
+  sourceUrl: string;
   publishedAt: string;
   imageColor: string;
+  imageUrl: string;
 };
 
 const emptyForm = (): FormState => ({
   title: '',
   summary: '',
+  body: '',
   category: 'General',
   source: '',
+  sourceUrl: '',
   publishedAt: new Date().toISOString().slice(0, 10),
   imageColor: '',
+  imageUrl: '',
 });
 
 function toForm(row: AdminCurrentAffair): FormState {
@@ -43,10 +50,13 @@ function toForm(row: AdminCurrentAffair): FormState {
   return {
     title: row.title,
     summary: row.summary ?? '',
+    body: row.body ?? '',
     category: row.category ?? 'General',
     source: row.source ?? '',
+    sourceUrl: row.sourceUrl ?? '',
     publishedAt,
     imageColor: row.imageColor ?? '',
+    imageUrl: row.imageUrl ?? '',
   };
 }
 
@@ -129,10 +139,13 @@ export function CurrentAffairsPage() {
     const body: CurrentAffairInput = {
       title: form.title.trim(),
       summary: form.summary.trim() || undefined,
+      body: form.body.trim() || undefined,
       category: form.category.trim() || undefined,
       source: form.source.trim() || undefined,
+      sourceUrl: form.sourceUrl.trim() || undefined,
       publishedAt: new Date(form.publishedAt).toISOString(),
       imageColor: form.imageColor.trim() || undefined,
+      imageUrl: form.imageUrl.trim() || undefined,
       status: editing?.status ?? 'draft',
     };
 
@@ -187,7 +200,10 @@ export function CurrentAffairsPage() {
 
       <DataTable
         rows={resource.rows}
-        emptyMessage={resource.query.isLoading ? 'Loading articles…' : 'No articles found'}
+        emptyMessage="No articles found"
+        isLoading={resource.query.isLoading}
+        error={resource.query.isError ? resource.query.error : undefined}
+        onRetry={() => void resource.query.refetch()}
         columns={[
           { key: 'title', header: 'Headline', render: (row) => row.title },
           { key: 'category', header: 'Category', render: (row) => row.category ?? '—' },
@@ -291,14 +307,24 @@ export function CurrentAffairsPage() {
               placeholder="New scheme announced"
             />
           </FormField>
-          <FormField id="affair-summary" label="Summary">
+          <FormField id="affair-summary" label="Short summary">
             <textarea
               id="affair-summary"
               className="form-input form-textarea"
               value={form.summary}
               onChange={(e) => setForm((f) => ({ ...f, summary: e.target.value }))}
-              rows={5}
-              placeholder="Short exam-angle summary (or use AI after saving)"
+              rows={3}
+              placeholder="One-line exam-angle summary for cards"
+            />
+          </FormField>
+          <FormField id="affair-body" label="Full article">
+            <textarea
+              id="affair-body"
+              className="form-input form-textarea"
+              value={form.body}
+              onChange={(e) => setForm((f) => ({ ...f, body: e.target.value }))}
+              rows={8}
+              placeholder="Full notes for students (or use AI after saving)"
             />
           </FormField>
           <FormField id="affair-category" label="Category">
@@ -319,6 +345,16 @@ export function CurrentAffairsPage() {
               placeholder="PIB, The Hindu, etc."
             />
           </FormField>
+          <FormField id="affair-source-url" label="Source URL">
+            <input
+              id="affair-source-url"
+              type="url"
+              className="form-input"
+              value={form.sourceUrl}
+              onChange={(e) => setForm((f) => ({ ...f, sourceUrl: e.target.value }))}
+              placeholder="https://pib.gov.in/..."
+            />
+          </FormField>
           <FormField id="affair-date" label="Published date" error={errors.publishedAt}>
             <input
               id="affair-date"
@@ -337,6 +373,11 @@ export function CurrentAffairsPage() {
               placeholder="#3B82F6"
             />
           </FormField>
+          <CoverImageField
+            label="Cover image"
+            value={form.imageUrl}
+            onChange={(url) => setForm((f) => ({ ...f, imageUrl: url }))}
+          />
           {editing && editing.quizQuestions?.length ? (
             <p className="form-hint">
               {editing.quizQuestions.length} quiz question

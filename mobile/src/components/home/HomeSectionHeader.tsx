@@ -3,6 +3,8 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { ChevronRight } from 'lucide-react-native';
 import { Text } from '../Text';
 import { useTheme } from '../../theme';
+import { HomeSectionIcon } from './HomePremiumIcon';
+import type { HomeSectionIconSpec } from './homeIcons';
 import { HOME_UI, homePressFeedback } from './homeTheme';
 
 type HomeSectionHeaderProps = {
@@ -12,6 +14,7 @@ type HomeSectionHeaderProps = {
   onActionPress?: () => void;
   badge?: ReactNode;
   compact?: boolean;
+  icon?: HomeSectionIconSpec;
 };
 
 export function HomeSectionHeader({
@@ -21,6 +24,7 @@ export function HomeSectionHeader({
   onActionPress,
   badge,
   compact = false,
+  icon,
 }: HomeSectionHeaderProps) {
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme, compact), [theme, compact]);
@@ -29,7 +33,11 @@ export function HomeSectionHeader({
     <View style={styles.row}>
       <View style={styles.titleCol}>
         <View style={styles.titleWrap}>
-          <View style={styles.accent} />
+          {icon ? (
+            <HomeSectionIcon Icon={icon.Icon} tone={icon.tone} style={styles.sectionIcon} />
+          ) : (
+            <View style={styles.accent} />
+          )}
           <View style={styles.titleTextCol}>
             <Text style={styles.title}>{title}</Text>
             {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
@@ -79,6 +87,9 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme'], compact: bool
       borderRadius: 2,
       backgroundColor: HOME_UI.gold,
       marginTop: 3,
+    },
+    sectionIcon: {
+      marginTop: 1,
     },
     titleTextCol: {
       flex: 1,

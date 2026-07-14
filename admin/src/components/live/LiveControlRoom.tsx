@@ -283,9 +283,10 @@ export function LiveControlRoom({
           </div>
         ) : null}
 
-        {(room.connecting || room.error) && (
+        {(room.connecting || room.error || chat.error) && (
           <div className="live-connecting">
             {room.error ??
+              chat.error?.message ??
               (room.devMode
                 ? 'Starting local preview (dev streaming — set LIVEKIT_API_SECRET for real video)'
                 : 'Connecting to LiveKit…')}
@@ -454,7 +455,11 @@ export function LiveControlRoom({
         <div className="live-chat">
           <div className="h">
             All student messages <span className="c num">{studentMessages.length}</span>
-            {!chat.connected ? ' · reconnecting…' : ''}
+            {!chat.connected
+              ? chat.error
+                ? ` · ${chat.error.message}`
+                : ' · connecting…'
+              : ''}
           </div>
           <div className="body" ref={chatBodyRef}>
             {studentMessages.length === 0 ? (

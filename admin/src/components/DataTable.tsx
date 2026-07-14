@@ -1,4 +1,6 @@
 import type { ReactNode } from 'react';
+import { QueryErrorBanner } from './QueryErrorBanner';
+import { ADMIN_SHELL_COPY } from '../content/adminShellContent';
 import './ui.css';
 
 export interface TableColumn<T> {
@@ -12,13 +14,27 @@ interface DataTableProps<T> {
   columns: TableColumn<T>[];
   rows: T[];
   emptyMessage?: string;
+  error?: unknown;
+  onRetry?: () => void;
+  isLoading?: boolean;
 }
 
 export function DataTable<T extends { id?: string }>({
   columns,
   rows,
   emptyMessage = 'No rows yet',
+  error,
+  onRetry,
+  isLoading = false,
 }: DataTableProps<T>) {
+  if (error) {
+    return <QueryErrorBanner error={error} onRetry={onRetry} />;
+  }
+
+  if (isLoading) {
+    return <p className="table-empty">{ADMIN_SHELL_COPY.loading}</p>;
+  }
+
   if (!rows.length) {
     return <p className="table-empty">{emptyMessage}</p>;
   }

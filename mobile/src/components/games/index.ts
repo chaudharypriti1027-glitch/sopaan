@@ -6,6 +6,7 @@ export { GamesCategoryChips } from './GamesCategoryChips';
 export { GamesSectionHeader } from './GamesSectionHeader';
 export { GameTile } from './GameTile';
 export { GameResultCard } from './GameResultCard';
+export { GameAiCoachSection } from './GameAiCoachSection';
 export { GamesScreenHeader } from './GamesScreenHeader';
 export { GamePlayHeader } from './GamePlayHeader';
 export { GamesEmptyState } from './GamesEmptyState';

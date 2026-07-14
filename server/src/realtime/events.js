@@ -11,6 +11,21 @@ export const SOCKET_EVENTS = Object.freeze({
   GROUP_REPORT: 'group:report',
   GROUP_ERROR: 'group:error',
 
+  DM_JOIN: 'dm:join',
+  DM_LEAVE: 'dm:leave',
+  DM_MESSAGE: 'dm:message',
+  DM_MESSAGE_NEW: 'dm:message:new',
+  DM_HISTORY: 'dm:history',
+  DM_ERROR: 'dm:error',
+  DM_INBOX_UPDATE: 'dm:inbox:update',
+
+  FRIEND_REQUEST_NEW: 'friend:request:new',
+  FRIEND_REQUEST_ACCEPTED: 'friend:request:accepted',
+
+  APP_TASK_UPDATE: 'app:task:update',
+
+  CONTENT_UPDATED: 'content:updated',
+
   CLASS_JOIN: 'class:join',
   CLASS_LEAVE: 'class:leave',
   CLASS_MESSAGE: 'class:message',
@@ -24,5 +39,7 @@ export const SOCKET_EVENTS = Object.freeze({
 export const SOCKET_ROOMS = Object.freeze({
   liveMock: (testId) => `live-mock:${testId}`,
   group: (groupId) => `group:${groupId}`,
+  dm: (conversationId) => `dm:${conversationId}`,
+  user: (userId) => `user:${userId}`,
   liveClass: (liveClassId) => `live-class:${liveClassId}`,
 });

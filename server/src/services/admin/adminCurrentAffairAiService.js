@@ -56,6 +56,9 @@ export async function enrichCurrentAffairWithAi(id, userId) {
   );
 
   affair.summary = aiResult.summary;
+  affair.shortAnswer = aiResult.shortAnswer;
+  affair.examTip = aiResult.examTip;
+  affair.keyPoints = aiResult.keyPoints ?? [];
   affair.category = aiResult.category || affair.category;
   affair.imageColor = CATEGORY_COLORS[aiResult.category] ?? affair.imageColor;
   affair.quizQuestions = questionDocs.map((doc) => doc._id);

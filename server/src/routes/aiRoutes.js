@@ -11,6 +11,7 @@ import {
   listDoubtHistoryQuerySchema,
   evaluateAnswerSchema,
   reportAiFeedbackSchema,
+  practiceSuggestionsRequestSchema,
 } from '../validators/aiValidators.js';
 
 const router = Router();
@@ -23,6 +24,11 @@ router.post(
   checkQuota('ai_generate_test'),
   validate(generateTestRequestSchema),
   asyncHandler(aiController.generateTestHandler),
+);
+router.post(
+  '/practice-suggestions',
+  validate(practiceSuggestionsRequestSchema),
+  asyncHandler(aiController.practiceSuggestionsHandler),
 );
 router.post(
   '/ask',

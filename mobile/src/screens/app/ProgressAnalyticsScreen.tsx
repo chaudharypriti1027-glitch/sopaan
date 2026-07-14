@@ -7,11 +7,11 @@ import { useTranslation } from 'react-i18next';
 import {
   Button,
   Card,
+  FeatureScreenLayout,
   LineChart,
   PremiumHeroCard,
+  PremiumSectionLabel,
   ProgressBar,
-  Screen,
-  SectionTitle,
   SegTabs,
 } from '../../components';
 import type { AnalyticsRange } from '../../api/analytics';
@@ -110,8 +110,11 @@ export function ProgressAnalyticsScreen() {
 
   if (!isPro) {
     return (
-      <Screen scroll contentContainerStyle={styles.content}>
-        <SectionTitle subtitle={t('progressAnalytics.proFeature')} />
+      <FeatureScreenLayout
+        title={t('progressAnalytics.title')}
+        subtitle={t('progressAnalytics.proFeature')}
+        contentStyle={styles.content}
+      >
         <Card style={styles.lockedCard}>
           <BarChart2 size={32} color={theme.colors.brand.primary} />
           <Text style={styles.lockedTitle}>{t('progressAnalytics.lockedTitle')}</Text>
@@ -123,21 +126,28 @@ export function ProgressAnalyticsScreen() {
             onPress={() => openPaywall({ feature: 'detailed_analytics' })}
           />
         </Card>
-      </Screen>
+      </FeatureScreenLayout>
     );
   }
 
   if (analyticsQuery.isLoading && !data) {
     return (
-      <Screen style={styles.centered}>
+      <FeatureScreenLayout
+        title={t('progressAnalytics.title')}
+        subtitle={t('progressAnalytics.subtitle')}
+        contentStyle={styles.centered}
+      >
         <ActivityIndicator size="large" color={theme.colors.brand.primary} />
-      </Screen>
+      </FeatureScreenLayout>
     );
   }
 
   return (
-    <Screen scroll contentContainerStyle={styles.content}>
-      <SectionTitle subtitle={t('progressAnalytics.subtitle')} />
+    <FeatureScreenLayout
+      title={t('progressAnalytics.title')}
+      subtitle={t('progressAnalytics.subtitle')}
+      contentStyle={styles.content}
+    >
 
       <SegTabs options={rangeOptions} value={range} onChange={setRange} />
 
@@ -153,7 +163,7 @@ export function ProgressAnalyticsScreen() {
       />
 
       <View style={styles.section}>
-        <SectionTitle title={t('progressAnalytics.accuracyTrend')} />
+        <PremiumSectionLabel title={t('progressAnalytics.accuracyTrend')} compact />
         <Card>
           {accuracyChart.length > 0 ? (
             <LineChart
@@ -170,7 +180,7 @@ export function ProgressAnalyticsScreen() {
 
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
-          <SectionTitle title={t('progressAnalytics.subjectMastery')} />
+          <PremiumSectionLabel title={t('progressAnalytics.subjectMastery')} compact />
           <BarChart2 size={18} color={theme.colors.text.tertiary} />
         </View>
         <Card style={styles.masteryCard}>
@@ -189,7 +199,7 @@ export function ProgressAnalyticsScreen() {
           )}
         </Card>
       </View>
-    </Screen>
+    </FeatureScreenLayout>
   );
 }
 
@@ -202,6 +212,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     centered: {
       alignItems: 'center',
       justifyContent: 'center',
+      minHeight: 240,
     },
     section: {
       gap: theme.spacing.md,

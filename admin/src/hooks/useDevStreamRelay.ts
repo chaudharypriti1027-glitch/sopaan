@@ -162,7 +162,8 @@ export function useDevStreamRelay({
     return () => {
       socket.off(LIVE_NS_EVENTS.DEV_STREAM_REQUEST, onViewerRequest);
       socket.off(LIVE_NS_EVENTS.DEV_STREAM_SIGNAL, onSignal);
-      for (const viewerUserId of [...peersRef.current.keys()]) {
+      const peers = peersRef.current;
+      for (const viewerUserId of [...peers.keys()]) {
         closePeer(viewerUserId);
       }
     };
