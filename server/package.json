@@ -25,7 +25,7 @@
     "sentry:sourcemaps": "node --input-type=module -e \"console.log('Upload with: sentry-cli releases files', process.env.SENTRY_RELEASE || 'sopaan-api@0.1.0', 'upload-sourcemaps ./dist')\""
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.57.0",
+    "@anthropic-ai/sdk": "^0.110.0",
     "@aws-sdk/client-s3": "^3.1079.0",
     "@aws-sdk/s3-request-presigner": "^3.1079.0",
     "@sentry/node": "^9.47.1",
