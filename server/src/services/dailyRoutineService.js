@@ -4,7 +4,7 @@ import { publishedContentFilter } from '../models/publishableFields.js';
 import { endOfDay, startOfDay } from '../utils/pagination.js';
 import { toIstDateKey } from '../utils/date.js';
 import { getTodayDigest } from './currentAffairs/currentAffairDigestService.js';
-import { getDailyChallengeGameId } from '../../../shared/dailyChallenge.js';
+import { getDailyChallengeGameId } from '../utils/dailyChallenge.js';
 
 function formatPlannerTask(session) {
   return {

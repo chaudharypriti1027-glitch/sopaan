@@ -41,6 +41,7 @@ RUN groupadd --gid 1001 sopaan \
 COPY --from=deps --chown=sopaan:sopaan /app/node_modules ./node_modules
 COPY --chown=sopaan:sopaan package.json ./
 COPY --chown=sopaan:sopaan src ./src
+COPY --chown=sopaan:sopaan public ./public
 
 USER sopaan
 
