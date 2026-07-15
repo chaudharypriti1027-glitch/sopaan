@@ -142,14 +142,28 @@ export function validateEnvironment(raw = process.env) {
       throw new Error('JWT_SECRET and JWT_REFRESH_SECRET must differ in production.');
     }
 
-    const smsProvider = (raw.SMS_PROVIDER ?? 'dev').trim().toLowerCase();
-    if (smsProvider !== 'dev') {
+    const smsProvider = (raw.SMS_PROVIDER ?? '').trim().toLowerCase();
+    if (smsProvider === 'twilio') {
+      const useVerify = isTruthyFlag(raw.OTP_USE_TWILIO_VERIFY);
       const twilioRequired = [
         ['TWILIO_ACCOUNT_SID', raw.TWILIO_ACCOUNT_SID],
         ['TWILIO_AUTH_TOKEN', raw.TWILIO_AUTH_TOKEN],
-        ['TWILIO_VERIFY_SERVICE_SID', raw.TWILIO_VERIFY_SERVICE_SID],
+        [
+          useVerify ? 'TWILIO_VERIFY_SERVICE_SID' : 'TWILIO_FROM_NUMBER',
+          useVerify ? raw.TWILIO_VERIFY_SERVICE_SID : raw.TWILIO_FROM_NUMBER,
+        ],
       ];
       for (const [key, value] of twilioRequired) {
+        if (!value?.trim()) {
+          missing.push(key);
+        }
+      }
+    } else if (smsProvider === 'msg91') {
+      const msg91Required = [
+        ['MSG91_AUTH_KEY', raw.MSG91_AUTH_KEY],
+        ['MSG91_OTP_TEMPLATE_ID', raw.MSG91_OTP_TEMPLATE_ID],
+      ];
+      for (const [key, value] of msg91Required) {
         if (!value?.trim()) {
           missing.push(key);
         }

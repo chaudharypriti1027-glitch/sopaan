@@ -16,8 +16,28 @@ function resolveProviderName() {
 
   const configured = process.env.SMS_PROVIDER?.trim().toLowerCase();
 
-  if (configured && providers[configured]) {
+  // Never silently use the console-only provider in production. Render deployments
+  // often inherit SMS_PROVIDER=dev from local examples, which returns success but
+  // cannot deliver a message to the student's phone.
+  if (configured && configured !== 'dev' && providers[configured]) {
     return configured;
+  }
+
+  if (
+    env.isProduction &&
+    process.env.TWILIO_ACCOUNT_SID?.trim() &&
+    process.env.TWILIO_AUTH_TOKEN?.trim() &&
+    (process.env.TWILIO_VERIFY_SERVICE_SID?.trim() || process.env.TWILIO_FROM_NUMBER?.trim())
+  ) {
+    return 'twilio';
+  }
+
+  if (
+    env.isProduction &&
+    process.env.MSG91_AUTH_KEY?.trim() &&
+    process.env.MSG91_OTP_TEMPLATE_ID?.trim()
+  ) {
+    return 'msg91';
   }
 
   return env.isProduction ? 'msg91' : 'dev';
