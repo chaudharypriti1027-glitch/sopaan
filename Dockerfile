@@ -42,6 +42,8 @@ COPY --from=deps --chown=sopaan:sopaan /app/node_modules /app/node_modules
 COPY --from=deps --chown=sopaan:sopaan /app/server/node_modules ./node_modules
 COPY --chown=sopaan:sopaan server/package.json ./
 COPY --chown=sopaan:sopaan server/src ./src
+COPY --chown=sopaan:sopaan server/public ./public
+COPY --chown=sopaan:sopaan shared /app/shared
 
 USER sopaan
 

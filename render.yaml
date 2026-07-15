@@ -1,12 +1,12 @@
 # Render — https://render.com/docs/blueprint-spec
-# Root directory `server` matches server/Dockerfile COPY paths (package.json, src/).
+# Build from the monorepo root because the API imports runtime modules from shared/.
 
 services:
   - type: web
     name: sopaan-api
     runtime: docker
-    rootDir: server
-    dockerfilePath: Dockerfile
+    rootDir: .
+    dockerfilePath: ./Dockerfile
     healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
@@ -19,8 +19,8 @@ services:
   - type: worker
     name: sopaan-worker
     runtime: docker
-    rootDir: server
-    dockerfilePath: Dockerfile
+    rootDir: .
+    dockerfilePath: ./Dockerfile
     dockerCommand: node src/worker.js
     envVars:
       - key: NODE_ENV
