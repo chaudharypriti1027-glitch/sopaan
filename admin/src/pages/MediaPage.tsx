@@ -1,16 +1,12 @@
 import { useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Copy, ImagePlus, Library, Trash2, Upload } from 'lucide-react';
 import { deleteMedia, fetchMedia, type AdminMedia } from '../api/media';
 import { ActionButton } from '../components/ActionButton';
 import { QueryErrorBanner } from '../components/QueryErrorBanner';
 import { MediaThumb } from '../components/media/MediaPicker';
 import { useToast } from '../components/Toast';
-import {
-  formatBytes,
-  isImageMedia,
-  isVideoMedia,
-  uploadMediaFile,
-} from '../hooks/useMediaLibrary';
+import { formatBytes, isImageMedia, isVideoMedia, uploadMediaFile } from '../hooks/useMediaLibrary';
 
 export function MediaPage() {
   const { showToast } = useToast();
@@ -75,7 +71,7 @@ export function MediaPage() {
   }
 
   return (
-    <div>
+    <div className="content-page media-page">
       <div className="toolbar">
         <select
           className="filter-select"
@@ -92,6 +88,7 @@ export function MediaPage() {
           onClick={() => fileRef.current?.click()}
           disabled={uploadMutation.isPending}
         >
+          <Upload aria-hidden strokeWidth={1.8} />
           Upload media
         </ActionButton>
         <input
@@ -116,9 +113,20 @@ export function MediaPage() {
       {query.isError ? (
         <QueryErrorBanner error={query.error} onRetry={() => void query.refetch()} />
       ) : query.isLoading ? (
-        <p className="empty-note">Loading media…</p>
+        <div className="media-library-state" role="status">
+          <Library aria-hidden strokeWidth={1.7} />
+          <strong>Loading media library…</strong>
+        </div>
       ) : items.length === 0 ? (
-        <p className="empty-note">No media uploaded yet.</p>
+        <div className="media-library-state">
+          <ImagePlus aria-hidden strokeWidth={1.7} />
+          <strong>No media uploaded yet</strong>
+          <span>Upload an image or video to reuse it across courses and content.</span>
+          <ActionButton variant="gold" onClick={() => fileRef.current?.click()}>
+            <Upload aria-hidden strokeWidth={1.8} />
+            Upload first asset
+          </ActionButton>
+        </div>
       ) : (
         <div className="media-grid">
           {items.map((item) => (
@@ -132,6 +140,7 @@ export function MediaPage() {
               </div>
               <div className="media-card-actions">
                 <button type="button" className="abtn" onClick={() => void copyUrl(item.url)}>
+                  <Copy aria-hidden strokeWidth={1.8} />
                   Copy URL
                 </button>
                 <button
@@ -140,6 +149,7 @@ export function MediaPage() {
                   disabled={busyId === item.id}
                   onClick={() => handleDelete(item)}
                 >
+                  <Trash2 aria-hidden strokeWidth={1.8} />
                   Delete
                 </button>
               </div>

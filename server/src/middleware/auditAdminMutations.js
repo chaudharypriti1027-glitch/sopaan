@@ -54,6 +54,8 @@ function parseAdminAudit(req) {
     action = 'role_change';
   } else if (resource === 'audit' && segments[1] === 'test') {
     action = 'test';
+  } else if (resource === 'settings' && segments[1] === 'welcome-month') {
+    action = 'revoke_welcome_month';
   }
 
   return { action, resource, resourceId: resourceId ? String(resourceId) : null };
@@ -75,6 +77,12 @@ async function recordMutationAudit(req, res, body) {
       meta: {
         method: req.method,
         path: req.originalUrl,
+        ...(action === 'revoke_welcome_month' && body && typeof body === 'object'
+          ? {
+              revoked: body.revoked,
+              orphanUsersCleared: body.orphanUsersCleared,
+            }
+          : {}),
       },
     });
   } catch (err) {

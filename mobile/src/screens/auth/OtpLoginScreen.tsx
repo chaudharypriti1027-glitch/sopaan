@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
+import { ArrowRight } from 'lucide-react-native';
 import {
-  AuthAnimatedSection,
   AuthDivider,
+  AuthErrorBanner,
+  AuthAltLinks,
   AuthFormCard,
   AuthFormIntro,
   AuthPremiumField,
@@ -14,12 +16,9 @@ import {
   AuthScreen,
   AuthSocialButton,
   AuthTermsBox,
-  AuthTrustNote,
-  GhostButton,
   PrimaryButton,
   useShakeOnError,
 } from '../../components/auth';
-import { Text } from '../../components';
 import { authApi, parseApiError, privacyApi } from '../../api';
 import type { SignupInput } from '../../api/auth';
 import { completeGoogleLogin } from '../../auth/completeGoogleLogin';
@@ -116,17 +115,18 @@ export function OtpLoginScreen() {
 
   return (
     <AuthScreen scrollProps={{ keyboardShouldPersistTaps: 'handled' }}>
-      <AuthPremiumHero variant="otp" />
+      <AuthPremiumHero variant="otp" compact />
 
-      <Animated.View entering={FadeInDown.duration(440).delay(80)} style={shakeStyle}>
-        <AuthFormCard overlap>
-          <AuthFormIntro
-            eyebrow={t('otp.formEyebrow')}
-            title={t('otp.entryTitle')}
-            subtitle={t('otp.entrySubtitle')}
-          />
+      <Animated.View entering={FadeInDown.duration(400).delay(80)} style={shakeStyle}>
+        <AuthFormCard overlap premium borderless>
+          <View style={styles.formStack}>
+            <AuthFormIntro
+              title={t('otp.entryTitle')}
+              subtitle={t('otp.entrySubtitle')}
+              accent
+              compactSpacing
+            />
 
-          <AuthAnimatedSection index={0}>
             <AuthPremiumField
               dense
               variant="phone"
@@ -141,44 +141,55 @@ export function OtpLoginScreen() {
               testID="otp-login-phone"
               autoFocus
             />
-          </AuthAnimatedSection>
 
-          {error ? <Text style={styles.error}>{error}</Text> : null}
+            {error ? (
+              <AuthErrorBanner message={error} testID="otp-login-error" />
+            ) : null}
 
-          <AuthTermsBox
-            testID="otp-login-consent"
-            checked={acceptedTerms}
-            onToggle={() => setAcceptedTerms((v) => !v)}
-            policyVersion={policyVersion}
-          />
+            <AuthTermsBox
+              testID="otp-login-consent"
+              checked={acceptedTerms}
+              onToggle={() => setAcceptedTerms((v) => !v)}
+              policyVersion={policyVersion}
+            />
 
-          <PrimaryButton
-            label={t('otp.continue')}
-            loading={loading}
-            disabled={!canSubmit}
-            onPress={() => void handleSendOtp()}
-            testID="otp-login-send"
-          />
+            <PrimaryButton
+              label={t('otp.continue')}
+              loading={loading}
+              disabled={!canSubmit}
+              onPress={() => void handleSendOtp()}
+              testID="otp-login-send"
+              trailingIcon={ArrowRight}
+            />
+          </View>
 
           <AuthDivider label={t('login.dividerOr')} />
 
-          <AuthSocialButton
-            label={t('login.continueGoogle')}
-            variant="google"
-            disabled={busy || !acceptedTerms}
-            onPress={() => void handleGoogleSignIn()}
-            testID="otp-login-google"
-          />
-
-          <GhostButton
-            label={t('otp.useEmailInstead')}
-            disabled={busy}
-            onPress={() => navigation.navigate('Login')}
-            testID="otp-login-email-link"
-          />
+          <View style={styles.altMethods}>
+            <AuthSocialButton
+              label={t('login.continueGoogle')}
+              variant="google"
+              style={styles.socialButton}
+              disabled={busy || !acceptedTerms}
+              onPress={() => void handleGoogleSignIn()}
+              testID="otp-login-google"
+            />
+            <AuthAltLinks
+              links={[
+                {
+                  label: t('otp.useEmailInstead'),
+                  onPress: busy ? undefined : () => navigation.navigate('Login'),
+                  testID: 'otp-login-email-link',
+                },
+                {
+                  label: t('otp.cantSignIn'),
+                  onPress: busy ? undefined : () => navigation.navigate('ForgotPassword'),
+                  testID: 'otp-login-cant-sign-in',
+                },
+              ]}
+            />
+          </View>
         </AuthFormCard>
-
-        <AuthTrustNote message={t('brand.secureNote')} testID="otp-login-trust-note" />
       </Animated.View>
     </AuthScreen>
   );
@@ -186,13 +197,17 @@ export function OtpLoginScreen() {
 
 function createStyles() {
   return StyleSheet.create({
-    error: {
-      fontSize: 12,
-      color: '#C4634F',
-      textAlign: 'center',
-      marginTop: 2,
-      marginBottom: 8,
-      fontWeight: '600',
+    formStack: {
+      gap: 14,
+    },
+    altMethods: {
+      gap: 14,
+    },
+    socialButton: {
+      borderWidth: 0,
+      backgroundColor: '#F7F4EC',
+      shadowOpacity: 0,
+      elevation: 0,
     },
   });
 }

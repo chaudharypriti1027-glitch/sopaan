@@ -1,20 +1,25 @@
 import { Bell, BellOff, BookOpen, CalendarClock } from 'lucide-react-native';
 import { useMemo } from 'react';
-import { Alert, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
 import { Text } from '../Text';
 import { NumText } from '../NumText';
+import { usePremiumDialog } from '../premium';
+import { getUserFacingMessage } from '../../errors/getUserFacingMessage';
 import { useLiveClassCountdown } from '../../hooks/useLiveClassCountdown';
 import { useLiveClassReminder } from '../../hooks';
 import type { LiveClass } from '../../api/liveClasses';
 import { formatLiveClassWhenLong } from '../../content/liveClassesContent';
+import { useFormat } from '../../i18n/useFormat';
 import { useTheme } from '../../theme';
 import { LIVE } from './liveTheme';
 
 type LiveClassScheduledPanelProps = {
   liveClass: LiveClass;
 };
+
+const ICON_STROKE = 1.9;
 
 function pad(value: number) {
   return value.toString().padStart(2, '0');
@@ -23,6 +28,8 @@ function pad(value: number) {
 export function LiveClassScheduledPanel({ liveClass }: LiveClassScheduledPanelProps) {
   const { t } = useTranslation('app', { keyPrefix: 'liveClassViewer' });
   const { theme } = useTheme();
+  const { locale } = useFormat();
+  const { alert } = usePremiumDialog();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const reminderMutation = useLiveClassReminder();
   const startsAt = liveClass.startsAt ?? liveClass.scheduledAt;
@@ -33,11 +40,19 @@ export function LiveClassScheduledPanel({ liveClass }: LiveClassScheduledPanelPr
       { id: liveClass.id, enabled: !liveClass.reminderSet },
       {
         onSuccess: () =>
-          Alert.alert(
-            liveClass.reminderSet ? t('reminderRemoved') : t('reminderSet'),
-            liveClass.reminderSet ? t('reminderRemovedBody') : t('reminderSetBody'),
-          ),
-        onError: (err) => Alert.alert(t('reminderFailed'), String(err)),
+          alert({
+            title: liveClass.reminderSet ? t('reminderRemoved') : t('reminderSet'),
+            message: liveClass.reminderSet ? t('reminderRemovedBody') : t('reminderSetBody'),
+            icon: 'bell',
+            iconTone: 'gold',
+          }),
+        onError: (err) =>
+          alert({
+            title: t('reminderFailed'),
+            message: getUserFacingMessage(err),
+            icon: 'info',
+            iconTone: 'coral',
+          }),
       },
     );
   };
@@ -51,8 +66,10 @@ export function LiveClassScheduledPanel({ liveClass }: LiveClassScheduledPanelPr
       <View style={styles.glow} pointerEvents="none" />
 
       <View style={styles.card}>
-        <CalendarClock size={30} color={LIVE.goldLt} strokeWidth={1.75} />
-        <Text style={styles.heading}>{t('startsIn')}</Text>
+        <View style={styles.iconWell}>
+          <CalendarClock size={30} color={LIVE.goldLt} strokeWidth={ICON_STROKE} />
+        </View>
+        <Text style={styles.eyebrow}>{t('startsIn')}</Text>
 
         {countdown.hasTarget ? (
           <View style={styles.countdownRow}>
@@ -69,26 +86,33 @@ export function LiveClassScheduledPanel({ liveClass }: LiveClassScheduledPanelPr
         )}
 
         {startsAt ? (
-          <Text style={styles.when}>{formatLiveClassWhenLong(startsAt)}</Text>
+          <Text style={styles.when}>{formatLiveClassWhenLong(startsAt, locale)}</Text>
         ) : null}
 
         {liveClass.topic ? (
           <View style={styles.topicRow}>
-            <BookOpen size={15} color={LIVE.goldLt} strokeWidth={1.75} />
-            <Text style={styles.topic}>{liveClass.topic}</Text>
+            <BookOpen size={15} color={LIVE.goldLt} strokeWidth={ICON_STROKE} />
+            <Text style={styles.topic} numberOfLines={2}>
+              {liveClass.topic}
+            </Text>
           </View>
         ) : null}
 
         <Pressable
           accessibilityRole="button"
+          accessibilityLabel={liveClass.reminderSet ? t('reminderOn') : t('notifyMe')}
           onPress={toggleReminder}
           disabled={reminderMutation.isPending}
-          style={[styles.notifyBtn, liveClass.reminderSet && styles.notifyBtnOn]}
+          style={({ pressed }) => [
+            styles.notifyBtn,
+            liveClass.reminderSet && styles.notifyBtnOn,
+            pressed && styles.notifyPressed,
+          ]}
         >
           {liveClass.reminderSet ? (
-            <BellOff size={18} color={LIVE.inkPin} />
+            <BellOff size={18} color={LIVE.inkPin} strokeWidth={ICON_STROKE} />
           ) : (
-            <Bell size={18} color={LIVE.inkPin} />
+            <Bell size={18} color={LIVE.inkPin} strokeWidth={ICON_STROKE} />
           )}
           <Text style={styles.notifyLabel}>
             {liveClass.reminderSet ? t('reminderOn') : t('notifyMe')}
@@ -109,7 +133,9 @@ function CountdownUnit({ label, value }: { label: string; value: string }) {
 
   return (
     <View style={styles.unit}>
-      <NumText style={styles.value}>{value}</NumText>
+      <View style={styles.valueWell}>
+        <NumText style={styles.value}>{value}</NumText>
+      </View>
       <Text style={styles.label}>{label}</Text>
     </View>
   );
@@ -117,12 +143,23 @@ function CountdownUnit({ label, value }: { label: string; value: string }) {
 
 function createUnitStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
-    unit: { alignItems: 'center', minWidth: 52 },
+    unit: { alignItems: 'center', gap: 6, minWidth: 54 },
+    valueWell: {
+      minWidth: 54,
+      paddingVertical: 10,
+      paddingHorizontal: 8,
+      borderRadius: 14,
+      alignItems: 'center',
+      backgroundColor: 'rgba(255,255,255,0.08)',
+      borderWidth: 1,
+      borderColor: 'rgba(255,255,255,0.12)',
+    },
     value: {
-      fontSize: 28,
+      fontSize: 26,
       fontFamily: theme.typography.fonts.stat.bold,
       fontWeight: '700',
       color: '#FFFFFF',
+      letterSpacing: 0.5,
     },
     label: {
       fontSize: 10,
@@ -130,6 +167,7 @@ function createUnitStyles(theme: ReturnType<typeof useTheme>['theme']) {
       fontWeight: '600',
       color: LIVE.textMuted,
       textTransform: 'uppercase',
+      letterSpacing: 0.4,
     },
   });
 }
@@ -141,37 +179,52 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     },
     glow: {
       position: 'absolute',
-      top: '18%',
+      top: '16%',
       alignSelf: 'center',
-      width: 260,
-      height: 260,
-      borderRadius: 130,
-      backgroundColor: 'rgba(194,154,78,0.18)',
+      width: 280,
+      height: 280,
+      borderRadius: 140,
+      backgroundColor: 'rgba(201,162,75,0.18)',
     },
     card: {
       flex: 1,
       alignItems: 'center',
       justifyContent: 'center',
-      gap: theme.spacing.md,
-      padding: theme.spacing.xl,
+      gap: 14,
+      paddingHorizontal: theme.spacing.xl,
+      paddingVertical: theme.spacing.xl,
     },
-    heading: {
-      fontSize: 22,
-      fontFamily: theme.typography.fonts.ui.bold,
-      fontWeight: '800',
-      color: '#FFFFFF',
+    iconWell: {
+      width: 64,
+      height: 64,
+      borderRadius: 20,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: 'rgba(201,162,75,0.14)',
+      borderWidth: 1,
+      borderColor: 'rgba(233,207,141,0.32)',
+      marginBottom: 4,
+    },
+    eyebrow: {
+      fontSize: 13,
+      fontFamily: theme.typography.fonts.ui.semibold,
+      fontWeight: '700',
+      letterSpacing: 0.8,
+      textTransform: 'uppercase',
+      color: LIVE.goldLt,
       textAlign: 'center',
     },
     countdownRow: {
       flexDirection: 'row',
-      alignItems: 'center',
-      gap: theme.spacing.xs,
+      alignItems: 'flex-start',
+      gap: 4,
     },
     sep: {
       fontSize: 22,
       fontFamily: theme.typography.fonts.stat.bold,
       color: LIVE.textFaint,
-      marginBottom: 18,
+      marginTop: 12,
+      paddingHorizontal: 2,
     },
     when: {
       fontSize: 14,
@@ -179,41 +232,58 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       fontWeight: '600',
       color: LIVE.textMuted,
       textAlign: 'center',
+      lineHeight: 20,
+      maxWidth: 300,
     },
     whenUnknown: {
-      fontSize: 14,
+      fontSize: 15,
+      fontFamily: theme.typography.fonts.ui.semibold,
       color: LIVE.textMuted,
+      textAlign: 'center',
     },
     topicRow: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 8,
+      maxWidth: 320,
       backgroundColor: LIVE.glassDark,
-      borderRadius: 99,
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: LIVE.glassBorder,
       paddingHorizontal: 14,
-      paddingVertical: 8,
+      paddingVertical: 10,
     },
     topic: {
-      fontSize: 12,
+      flexShrink: 1,
+      fontSize: 13,
       fontFamily: theme.typography.fonts.ui.bold,
       fontWeight: '700',
       color: '#FFFFFF',
+      lineHeight: 18,
     },
     notifyBtn: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: theme.spacing.sm,
+      justifyContent: 'center',
+      gap: 10,
+      alignSelf: 'stretch',
+      maxWidth: 340,
       backgroundColor: LIVE.goldLt,
-      borderRadius: 14,
-      paddingVertical: 12,
+      borderRadius: 16,
+      paddingVertical: 14,
       paddingHorizontal: theme.spacing.xl,
-      marginTop: theme.spacing.sm,
+      marginTop: 8,
+      minHeight: 52,
     },
     notifyBtnOn: {
       backgroundColor: LIVE.sageLt,
     },
+    notifyPressed: {
+      opacity: 0.92,
+      transform: [{ scale: 0.98 }],
+    },
     notifyLabel: {
-      fontSize: 14,
+      fontSize: 15,
       fontFamily: theme.typography.fonts.ui.bold,
       fontWeight: '800',
       color: LIVE.inkPin,
@@ -224,8 +294,9 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       fontWeight: '600',
       color: LIVE.textFaint,
       textAlign: 'center',
-      maxWidth: 320,
-      lineHeight: 17,
+      maxWidth: 300,
+      lineHeight: 18,
+      marginTop: 2,
     },
   });
 }

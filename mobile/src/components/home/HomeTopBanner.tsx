@@ -2,7 +2,6 @@ import { Megaphone, ChevronRight } from 'lucide-react-native';
 import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { HomeSlotIcon } from './HomePremiumIcon';
 import { HomeFeedCard } from './HomeFeedCard';
 import { Text } from '../Text';
 import type { HomeBanner } from '../../api/banners';
@@ -27,14 +26,16 @@ export function HomeTopBanner({ banner, onPress }: HomeTopBannerProps) {
         contentStyle={styles.body}
         testID="home-top-banner"
       >
-        <HomeSlotIcon slot="shortcut" Icon={Megaphone} tone="gold" />
+        <View style={styles.leadIcon}>
+          <Megaphone size={15} color={HOME_UI.goldDeep} strokeWidth={2.2} />
+        </View>
         <View style={styles.copy}>
           <Text style={styles.message} numberOfLines={2}>
             {banner.message}
           </Text>
           <Text style={styles.hint}>{t('home.topBannerTap')}</Text>
         </View>
-        <HomeSlotIcon slot="button" Icon={ChevronRight} tone="gold" />
+        <ChevronRight size={16} color={HOME_UI.goldDeep} strokeWidth={2.4} />
       </HomeFeedCard>
     </View>
   );
@@ -53,9 +54,20 @@ function createStyles() {
     body: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 12,
+      gap: 10,
       paddingHorizontal: 14,
       paddingVertical: 12,
+    },
+    leadIcon: {
+      width: 32,
+      height: 32,
+      borderRadius: 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: HOME_UI.goldSoft,
+      borderWidth: 1,
+      borderColor: HOME_UI.goldBorder,
+      flexShrink: 0,
     },
     copy: {
       flex: 1,

@@ -18,14 +18,14 @@ export function mapAnthropicError(err) {
 
   if (status === 401 || type === 'authentication_error') {
     return new AppError(
-      'AI is not configured on the server. Add a valid ANTHROPIC_API_KEY or set DEV_STUB_AI=true for local development.',
+      'AI is temporarily unavailable because its provider is not configured.',
       503,
-      'AI_NOT_CONFIGURED',
+      'AI_UNAVAILABLE'
     );
   }
 
   if (status === 403 || type === 'permission_error') {
-    return new AppError('AI access denied for this API key.', 503, 'AI_NOT_CONFIGURED');
+    return new AppError('AI is temporarily unavailable.', 503, 'AI_UNAVAILABLE');
   }
 
   if (status === 429 || type === 'rate_limit_error') {
@@ -33,12 +33,23 @@ export function mapAnthropicError(err) {
   }
 
   if (status === 529 || type === 'overloaded_error') {
-    return new AppError('AI service is overloaded. Please try again shortly.', 503, 'AI_OVERLOADED');
+    return new AppError(
+      'AI service is overloaded. Please try again shortly.',
+      503,
+      'AI_OVERLOADED'
+    );
   }
 
-  if (message) {
-    return new AppError(`AI request failed: ${message}`, 502, 'AI_GENERATION_FAILED');
+  const name = err?.name ?? '';
+  const isTimeout =
+    name === 'TimeoutError' ||
+    type === 'ABORT_ERR' ||
+    err?.code === 'ABORT_ERR' ||
+    /aborted due to timeout|timed?\s*out/i.test(message);
+
+  if (isTimeout) {
+    return new AppError('AI took too long to respond. Please try again.', 504, 'AI_TIMEOUT');
   }
 
-  return new AppError('AI request failed', 502, 'AI_GENERATION_FAILED');
+  return new AppError('AI generation failed. Please try again.', 502, 'AI_GENERATION_FAILED');
 }

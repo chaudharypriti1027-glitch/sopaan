@@ -216,6 +216,10 @@ export const triggerJobSchema = z.object({
 
 export const adminStudentQuerySchema = paginationQuerySchema.extend({
   q: z.string().trim().optional(),
+  /** pro = paid monthly/yearly; trial = welcome/trial Pro; free = not premium */
+  premium: z.enum(['pro', 'free', 'trial']).optional(),
+  exam: z.string().trim().min(1).max(80).optional(),
+  status: z.enum(['active', 'suspended']).optional(),
 });
 
 export const adminMentorQuerySchema = paginationQuerySchema.extend({
@@ -362,6 +366,7 @@ export const platformSettingsUpdateSchema = z
     proAiQualityDoubtsPerDay: z.coerce.number().int().min(0).max(100_000).optional(),
     proAiEvaluationsPerDay: z.coerce.number().int().min(0).max(100_000).optional(),
     proMocksPerDay: z.coerce.number().int().min(0).max(100_000).optional(),
+    welcomeMonthEnabled: z.boolean().optional(),
   })
   .refine((data) => Object.keys(data).length > 0, {
     message: 'At least one setting is required',

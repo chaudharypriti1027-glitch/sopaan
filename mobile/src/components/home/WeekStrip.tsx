@@ -2,17 +2,25 @@ import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { NumText } from '../NumText';
 import { Text } from '../Text';
+import { useFormat } from '../../i18n/useFormat';
 import { HOME_UI } from './homeTheme';
 
 type WeekStripProps = {
   streakDays: number;
 };
 
-function buildWeek(streakDays: number) {
+function localeTag(locale: string) {
+  if (locale === 'hi') return 'hi-IN';
+  if (locale === 'gu') return 'gu-IN';
+  return 'en-IN';
+}
+
+function buildWeek(streakDays: number, locale: string) {
   const today = new Date();
   const dayIndex = (today.getDay() + 6) % 7;
   const monday = new Date(today);
   monday.setDate(today.getDate() - dayIndex);
+  const tag = localeTag(locale);
 
   return Array.from({ length: 7 }, (_, i) => {
     const date = new Date(monday);
@@ -23,7 +31,7 @@ function buildWeek(streakDays: number) {
     const active = isPast && streakDays > 0 && daysAgo < streakDays;
     return {
       key: date.toISOString(),
-      letter: date.toLocaleDateString('en-US', { weekday: 'narrow' }),
+      letter: date.toLocaleDateString(tag, { weekday: 'narrow' }),
       num: date.getDate(),
       isToday,
       active,
@@ -32,7 +40,8 @@ function buildWeek(streakDays: number) {
 }
 
 export function WeekStrip({ streakDays }: WeekStripProps) {
-  const days = useMemo(() => buildWeek(streakDays), [streakDays]);
+  const { locale } = useFormat();
+  const days = useMemo(() => buildWeek(streakDays, locale), [locale, streakDays]);
 
   return (
     <View style={styles.row} testID="home-week-strip">
@@ -41,8 +50,8 @@ export function WeekStrip({ streakDays }: WeekStripProps) {
           key={day.key}
           style={[
             styles.cell,
-            day.isToday && styles.cellToday,
             day.active && !day.isToday && styles.cellActive,
+            day.isToday && styles.cellToday,
           ]}
         >
           <Text style={[styles.letter, day.isToday && styles.letterToday]}>{day.letter}</Text>
@@ -52,6 +61,7 @@ export function WeekStrip({ streakDays }: WeekStripProps) {
               styles.tick,
               day.active && !day.isToday && styles.tickActive,
               day.isToday && styles.tickToday,
+              !day.active && !day.isToday && styles.tickMuted,
             ]}
           />
         </View>
@@ -63,52 +73,63 @@ export function WeekStrip({ streakDays }: WeekStripProps) {
 const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 4,
-    marginTop: 14,
+    gap: 6,
+    marginTop: 20,
     zIndex: 2,
   },
   cell: {
     flex: 1,
     alignItems: 'center',
-    gap: 3,
-    paddingVertical: 7,
-    borderRadius: 10,
+    gap: 4,
+    paddingTop: 10,
+    paddingBottom: 8,
+    borderRadius: 14,
     backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.07)',
   },
   cellActive: {
-    backgroundColor: 'rgba(194,154,78,0.12)',
+    backgroundColor: 'rgba(255,255,255,0.06)',
   },
   cellToday: {
-    backgroundColor: 'rgba(255,255,255,0.92)',
+    backgroundColor: HOME_UI.goldLt,
+    borderColor: 'transparent',
+    shadowColor: HOME_UI.gold,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 4,
   },
   letter: {
-    fontSize: 9,
-    fontWeight: '700',
+    fontSize: 10,
+    fontWeight: '600',
     color: 'rgba(255,255,255,0.5)',
-    letterSpacing: 0.2,
   },
   letterToday: {
-    color: HOME_UI.accent,
+    fontWeight: '700',
+    color: '#463612',
   },
   num: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: 'rgba(255,255,255,0.82)',
+    fontSize: 14,
+    fontWeight: '700',
+    color: 'rgba(255,255,255,0.9)',
   },
   numToday: {
-    color: HOME_UI.accent,
+    fontWeight: '800',
+    color: '#251C08',
   },
   tick: {
-    width: 12,
-    height: 2,
-    borderRadius: 1,
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    width: 14,
+    height: 3,
+    borderRadius: 99,
+  },
+  tickMuted: {
+    backgroundColor: 'rgba(255,255,255,0.16)',
   },
   tickActive: {
-    backgroundColor: HOME_UI.goldLt,
+    backgroundColor: HOME_UI.sage,
   },
   tickToday: {
-    backgroundColor: HOME_UI.gold,
+    backgroundColor: '#251C08',
   },
 });

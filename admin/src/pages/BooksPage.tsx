@@ -1,5 +1,6 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
+import { BookOpenCheck, Rocket, Sparkles } from 'lucide-react';
 import {
   fetchBookGenStatus,
   generateAdminBook,
@@ -10,6 +11,7 @@ import { formatApiError } from '../api/errors';
 import { ActionButton } from '../components/ActionButton';
 import { FormField } from '../components/content/FormField';
 import { Pill } from '../components/Pill';
+import { QueryErrorBanner } from '../components/QueryErrorBanner';
 import { useToast } from '../components/Toast';
 import './books.css';
 
@@ -18,7 +20,7 @@ const COVER_THEMES = ['navy', 'gold', 'sage', 'deep', 'rust'] as const;
 
 function statusTone(state: BookGenStatusResponse['state']): 'sage' | 'red' | 'gold' | 'muted' {
   switch (state) {
-    case 'completed':
+    case 'done':
       return 'sage';
     case 'failed':
       return 'red';
@@ -31,7 +33,7 @@ function statusTone(state: BookGenStatusResponse['state']): 'sage' | 'red' | 'go
 
 function statusLabel(state: BookGenStatusResponse['state']) {
   switch (state) {
-    case 'completed':
+    case 'done':
       return 'Completed';
     case 'failed':
       return 'Failed';
@@ -58,7 +60,7 @@ export function BooksPage() {
         .split('\n')
         .map((line) => line.trim())
         .filter(Boolean),
-    [chaptersText],
+    [chaptersText]
   );
 
   const statusQuery = useQuery({
@@ -98,7 +100,7 @@ export function BooksPage() {
   const publishMutation = useMutation({
     mutationFn: () => publishAdminBook(activeBookId!),
     onSuccess: (result) => {
-      showToast(`Published “${result.book.title}”`);
+      showToast(result.book?.title ? `Published “${result.book.title}”` : 'Book published');
     },
     onError: (err: Error) => showToast(formatApiError(err)),
   });
@@ -120,11 +122,15 @@ export function BooksPage() {
   };
 
   const status = statusQuery.data;
+  const progress = Math.min(100, Math.max(0, status?.progress ?? 0));
 
   return (
     <div className="books-page">
       <section className="panel">
-        <h2>Generate AI book</h2>
+        <h2 className="panel-title-icon">
+          <Sparkles aria-hidden strokeWidth={1.8} />
+          Generate AI book
+        </h2>
         <p className="panel-sub">
           Create a draft book with AI-written chapters. Publish when generation completes.
         </p>
@@ -189,27 +195,43 @@ export function BooksPage() {
         </div>
 
         <ActionButton onClick={handleGenerate} disabled={generateMutation.isPending}>
+          <Sparkles aria-hidden strokeWidth={1.8} />
           {generateMutation.isPending ? 'Starting…' : 'Start generation'}
         </ActionButton>
       </section>
 
-      {status ? (
+      {activeJobId && statusQuery.isError ? (
+        <section className="panel">
+          <h2 className="panel-title-icon">
+            <BookOpenCheck aria-hidden strokeWidth={1.8} />
+            Generation status
+          </h2>
+          <QueryErrorBanner error={statusQuery.error} onRetry={() => void statusQuery.refetch()} />
+        </section>
+      ) : status ? (
         <section className="panel">
           <div className="books-status-head">
-            <h2>Generation status</h2>
+            <h2 className="panel-title-icon">
+              <BookOpenCheck aria-hidden strokeWidth={1.8} />
+              Generation status
+            </h2>
             <Pill tone={statusTone(status.state)}>{statusLabel(status.state)}</Pill>
           </div>
           <p className="panel-sub">Job {status.jobId}</p>
           <div className="books-progress">
-            <div className="books-progress-bar" style={{ width: `${status.progress}%` }} />
+            <div className="books-progress-bar" style={{ width: `${progress}%` }} />
           </div>
           <p className="books-meta">
             {status.metrics?.chaptersDone ?? 0} / {status.metrics?.chaptersTotal ?? chapters.length}{' '}
             chapters
           </p>
           {status.error ? <p className="books-error">{status.error}</p> : null}
-          {status.state === 'completed' && activeBookId ? (
-            <ActionButton onClick={() => publishMutation.mutate()} disabled={publishMutation.isPending}>
+          {status.state === 'done' && activeBookId ? (
+            <ActionButton
+              onClick={() => publishMutation.mutate()}
+              disabled={publishMutation.isPending}
+            >
+              <Rocket aria-hidden strokeWidth={1.8} />
               {publishMutation.isPending ? 'Publishing…' : 'Publish book'}
             </ActionButton>
           ) : null}

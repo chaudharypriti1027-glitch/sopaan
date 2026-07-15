@@ -1,5 +1,18 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
+import {
+  AlertCircle,
+  Film,
+  Image,
+  Inbox,
+  Library,
+  Link,
+  Play,
+  RefreshCw,
+  Trash2,
+  Upload,
+  X,
+} from 'lucide-react';
 import type { AdminMedia } from '../../api/media';
 import { fetchMedia } from '../../api/media';
 import { ActionButton } from '../ActionButton';
@@ -85,12 +98,11 @@ export function MediaPicker({
               onClick={() => fileRef.current?.click()}
               disabled={uploading}
             >
+              <Upload aria-hidden strokeWidth={1.8} />
               {uploading ? 'Uploading…' : 'Upload from device'}
             </ActionButton>
             <button type="button" className="drawer-close" onClick={onClose} aria-label="Close">
-              <svg className="svg" viewBox="0 0 24 24" aria-hidden>
-                <path d="M18 6 6 18M6 6l12 12" />
-              </svg>
+              <X aria-hidden strokeWidth={1.8} />
             </button>
           </div>
         </header>
@@ -112,11 +124,26 @@ export function MediaPicker({
         ) : null}
         <div className="media-picker-body">
           {query.isLoading ? (
-            <p className="empty-note">Loading media…</p>
+            <div className="media-picker-state" role="status">
+              <Library aria-hidden strokeWidth={1.7} />
+              <strong>Loading media library…</strong>
+            </div>
+          ) : query.isError ? (
+            <div className="media-picker-state error" role="alert">
+              <AlertCircle aria-hidden strokeWidth={1.7} />
+              <strong>Could not load media</strong>
+              <span>{query.error instanceof Error ? query.error.message : 'Please try again.'}</span>
+              <ActionButton variant="ghost" onClick={() => void query.refetch()}>
+                <RefreshCw aria-hidden strokeWidth={1.8} />
+                Try again
+              </ActionButton>
+            </div>
           ) : filtered.length === 0 ? (
-            <p className="empty-note">
-              No {kind} assets yet. Upload from your device or use the Media library page.
-            </p>
+            <div className="media-picker-state">
+              <Inbox aria-hidden strokeWidth={1.7} />
+              <strong>No {kind} assets yet</strong>
+              <span>Upload from your device to add the first one.</span>
+            </div>
           ) : (
             <div className="media-grid compact">
               {filtered.map((item) => (
@@ -171,7 +198,7 @@ export function MediaThumb({ item }: { item: AdminMedia }) {
     return (
       <div className="media-thumb video">
         <video src={item.url} muted preload="metadata" />
-        <span className="media-play">▶</span>
+        <span className="media-play"><Play aria-hidden fill="currentColor" strokeWidth={1.8} /></span>
       </div>
     );
   }
@@ -212,7 +239,7 @@ export function CoverImageField({
     try {
       const item = await uploadMediaFile(file, setUploadPct);
       onChange(item.url);
-      showToast('Photo uploaded');
+      showToast(`${kind === 'image' ? 'Image' : 'Video'} uploaded`);
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Upload failed');
     } finally {
@@ -230,7 +257,14 @@ export function CoverImageField({
         ) : value && kind === 'video' ? (
           <video src={value} className="cover-preview" muted preload="metadata" />
         ) : (
-          <div className="cover-preview empty">No image selected</div>
+          <div className="cover-preview empty">
+            {kind === 'image' ? (
+              <Image aria-hidden strokeWidth={1.7} />
+            ) : (
+              <Film aria-hidden strokeWidth={1.7} />
+            )}
+            <span>No {kind} selected</span>
+          </div>
         )}
         <div className="cover-actions">
           <ActionButton
@@ -238,18 +272,22 @@ export function CoverImageField({
             onClick={() => fileRef.current?.click()}
             disabled={uploading}
           >
+            <Upload aria-hidden strokeWidth={1.8} />
             {uploading ? `Uploading… ${uploadPct ?? 0}%` : 'Upload from device'}
           </ActionButton>
           <ActionButton variant="ghost" onClick={() => setPickerOpen(true)}>
+            <Library aria-hidden strokeWidth={1.8} />
             Choose from library
           </ActionButton>
           {allowUrl ? (
             <ActionButton variant="ghost" onClick={() => setShowUrl((open) => !open)}>
+              <Link aria-hidden strokeWidth={1.8} />
               {showUrl ? 'Hide URL' : 'Paste URL'}
             </ActionButton>
           ) : null}
           {value ? (
             <ActionButton variant="ghost" onClick={() => onChange('')}>
+              <Trash2 aria-hidden strokeWidth={1.8} />
               Remove
             </ActionButton>
           ) : null}

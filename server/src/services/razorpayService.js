@@ -174,6 +174,14 @@ async function fetchRazorpayPayment(paymentId) {
   return razorpayFetch(`/payments/${paymentId}`);
 }
 
+function toIsoOrNull(value) {
+  if (value == null || value === '') {
+    return null;
+  }
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
 function formatUserResponse(user) {
   return {
     id: user._id,
@@ -183,7 +191,8 @@ function formatUserResponse(user) {
     role: user.role,
     isPremium: user.isPremium,
     premiumPlan: user.premiumPlan ?? null,
-    premiumExpiresAt: user.premiumExpiresAt ?? null,
+    premiumExpiresAt: toIsoOrNull(user.premiumExpiresAt),
+    premiumTrialUsed: Boolean(user.premiumTrialUsed),
     coins: user.coins,
     streak: user.streak,
   };
@@ -281,7 +290,9 @@ export async function fulfillPaymentOrder(order, paymentId, options = {}) {
 }
 
 /**
- * Client callback — signature check + UX status only. Entitlements are granted by webhook.
+ * Client callback after Razorpay checkout.
+ * Signature + payment status are verified; entitlement is fulfilled here so purchase
+ * success does not depend on webhook latency. Webhooks remain idempotent.
  */
 export async function verifyAndActivatePremium(userId, _userName, {
   razorpay_order_id,
@@ -324,20 +335,23 @@ export async function verifyAndActivatePremium(userId, _userName, {
     throw new AppError('Payment not completed yet', 402, 'PAYMENT_PENDING');
   }
 
+  const fulfilled = await fulfillPaymentOrder(order, razorpay_payment_id, {
+    event: 'client_verify',
+    trustedPaymentEntity: payment,
+  });
+
+  const user = fulfilled.user ?? formatUserResponse(await syncUserPremiumFields(userId));
   const entitlement = await getEntitlementByUserId(userId);
-  const user = await syncUserPremiumFields(userId);
-  const active = entitlementGrantsAccess(entitlement);
+  const active = entitlementGrantsAccess(entitlement) || Boolean(user?.isPremium);
 
   return {
     verified: true,
     active,
     pending: !active,
-    user: formatUserResponse(user),
+    user,
     plan: order.plan,
     paymentId: razorpay_payment_id,
-    alreadyFulfilled: false,
-    message:
-      'Payment verified. Pro access activates when the billing webhook is processed (usually within seconds).',
+    alreadyFulfilled: fulfilled.alreadyFulfilled ?? false,
   };
 }
 

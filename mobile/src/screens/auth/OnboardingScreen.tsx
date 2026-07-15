@@ -59,7 +59,7 @@ export function OnboardingScreen() {
               <ChipSelect
                 key={exam.id}
                 label={exam.label}
-                emoji={exam.emoji}
+                Icon={exam.Icon}
                 selected={selected === exam.id}
                 onPress={() => setSelected(exam.id)}
                 style={styles.chip}

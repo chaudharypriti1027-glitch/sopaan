@@ -18,31 +18,43 @@ const PRODUCTION_BASE = {
 };
 
 describe('validateEnvironment', () => {
-  it('throws when production is missing ANTHROPIC_API_KEY', () => {
-    expect(() =>
-      validateEnvironment({
-        ...PRODUCTION_BASE,
-        ANTHROPIC_API_KEY: '',
-      }),
-    ).toThrow(/ANTHROPIC_API_KEY/);
+  it('allows production without ANTHROPIC_API_KEY so AI routes can return AI_UNAVAILABLE', () => {
+    const result = validateEnvironment({
+      ...PRODUCTION_BASE,
+      ANTHROPIC_API_KEY: '',
+    });
+
+    expect(result.anthropicApiKey).toBe('');
   });
 
-  it('throws when production is missing Razorpay keys', () => {
+  it('allows production without Razorpay (checkout returns PAYMENTS_NOT_CONFIGURED)', () => {
+    const result = validateEnvironment({
+      ...PRODUCTION_BASE,
+      RAZORPAY_KEY_ID: '',
+      RAZORPAY_KEY_SECRET: '',
+      RAZORPAY_WEBHOOK_SECRET: '',
+    });
+
+    expect(result.isProduction).toBe(true);
+    expect(result.razorpayKeyId).toBeFalsy();
+  });
+
+  it('throws when production has partial Razorpay keys', () => {
     expect(() =>
       validateEnvironment({
         ...PRODUCTION_BASE,
         RAZORPAY_KEY_SECRET: '',
-      }),
+      })
     ).toThrow(/RAZORPAY_KEY_SECRET/);
   });
 
-  it('throws when production is missing NEWSAPI_AI_KEY', () => {
-    expect(() =>
-      validateEnvironment({
-        ...PRODUCTION_BASE,
-        NEWSAPI_AI_KEY: '',
-      }),
-    ).toThrow(/NEWSAPI_AI_KEY/);
+  it('allows production without NEWSAPI_AI_KEY so news routes can return a structured 503', () => {
+    const result = validateEnvironment({
+      ...PRODUCTION_BASE,
+      NEWSAPI_AI_KEY: '',
+    });
+
+    expect(result.newsApiAiKey).toBe('');
   });
 
   it('throws when production is missing SENTRY_DSN', () => {
@@ -50,7 +62,7 @@ describe('validateEnvironment', () => {
       validateEnvironment({
         ...PRODUCTION_BASE,
         SENTRY_DSN: '',
-      }),
+      })
     ).toThrow(/SENTRY_DSN/);
   });
 
@@ -59,7 +71,7 @@ describe('validateEnvironment', () => {
       validateEnvironment({
         ...PRODUCTION_BASE,
         DEV_STUB_AI: 'true',
-      }),
+      })
     ).toThrow(/DEV_STUB_AI cannot be enabled/);
   });
 
@@ -105,7 +117,7 @@ describe('validateEnvironment', () => {
       validateEnvironment({
         ...PRODUCTION_BASE,
         LIVEKIT_EGRESS_ENABLED: 'true',
-      }),
+      })
     ).toThrow(/S3_BUCKET/);
   });
 });

@@ -254,6 +254,14 @@ export function MainStack() {
         options={HIDDEN_STACK_HEADER}
       />
       <Stack.Screen
+        name="ChangePassword"
+        getComponent={lazyScreen(
+          () => require('../screens/app/ChangePasswordScreen'),
+          'ChangePasswordScreen',
+        )}
+        options={{ title: t('changePassword', { defaultValue: 'Password' }) }}
+      />
+      <Stack.Screen
         name="PrivacyPolicy"
         getComponent={lazyScreen(() => require('../screens/app/PrivacyPolicyScreen'), 'PrivacyPolicyScreen')}
         options={{ title: t('privacyPolicy') }}

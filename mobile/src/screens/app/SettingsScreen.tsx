@@ -5,6 +5,7 @@ import {
   Download,
   Headphones,
   HelpCircle,
+  KeyRound,
   Languages,
   LogOut,
   MessageCircle,
@@ -35,7 +36,7 @@ import { Button, Card, ChipSelect, FeatureScreenLayout, PremiumSectionLabel } fr
 import { premiumCard } from '../../components/premium/premiumStyles';
 import { usePremiumDialog } from '../../components/premium/PremiumDialogProvider';
 import { MENU_TONE_STYLES } from '../../components/premium/premiumIconTokens';
-import { parseApiError, privacyApi } from '../../api';
+import { privacyApi } from '../../api';
 import { useAuth } from '../../auth';
 import { CAREER_GOALS, getTargetYearOptions } from '../../auth/onboardingData';
 import { useProfile, useUpdateGoal } from '../../hooks';
@@ -57,10 +58,12 @@ import { useLanguage } from '../../language/LanguageContext';
 import { useTheme } from '../../theme';
 import type { MainStackParamList } from '../../navigation/types';
 import { captureSentryTestError } from '../../observability/sentryTest';
+import { getUserFacingMessage } from '../../errors/getUserFacingMessage';
 import {
   HELP_CENTER_URL,
   PRIVACY_POLICY_URL,
   SUPPORT_EMAIL,
+  TERMS_OF_SERVICE_URL,
   WHATSAPP_COMMUNITY_URL,
 } from '../../config/externalLinks';
 
@@ -287,7 +290,7 @@ export function SettingsScreen() {
     } catch (err) {
       alert({
         title: t('settings:notificationPrefFailed'),
-        message: String(err),
+        message: getUserFacingMessage(err),
         icon: 'info',
         iconTone: 'coral',
       });
@@ -300,7 +303,7 @@ export function SettingsScreen() {
     } catch (err) {
       alert({
         title: t('settings:quietHoursFailed'),
-        message: String(err),
+        message: getUserFacingMessage(err),
         icon: 'info',
         iconTone: 'coral',
       });
@@ -314,7 +317,7 @@ export function SettingsScreen() {
     } catch (err) {
       alert({
         title: t('settings:marketingFailed'),
-        message: parseApiError(err).message,
+        message: getUserFacingMessage(err),
         icon: 'shield',
         iconTone: 'navy',
       });
@@ -335,7 +338,7 @@ export function SettingsScreen() {
     } catch (err) {
       alert({
         title: t('settings:exportFailed'),
-        message: parseApiError(err).message,
+        message: getUserFacingMessage(err),
         icon: 'info',
         iconTone: 'coral',
       });
@@ -373,7 +376,7 @@ export function SettingsScreen() {
         onError: (err) =>
           alert({
             title: t('settings:goalSaveFailed'),
-            message: String(err),
+            message: getUserFacingMessage(err),
             icon: 'info',
             iconTone: 'coral',
           }),
@@ -407,6 +410,13 @@ export function SettingsScreen() {
           tone="indigo"
           label={t('settings:emailPhone')}
           value={user?.email ?? user?.phone ?? '—'}
+        />
+        <SettingsRow
+          icon={KeyRound}
+          tone="coral"
+          label={t('settings:changePassword')}
+          description={t('settings:changePasswordDesc')}
+          onPress={() => navigation.navigate('ChangePassword')}
         />
         <SettingsRow
           icon={Target}
@@ -548,6 +558,13 @@ export function SettingsScreen() {
           label={t('settings:privacyPolicy')}
           description={t('settings:privacyPolicyDesc')}
           onPress={() => navigation.navigate('PrivacyPolicy')}
+        />
+        <SettingsRow
+          icon={BookOpen}
+          tone="coral"
+          label={t('settings:termsOfService')}
+          description={t('settings:termsOfServiceDesc')}
+          onPress={() => void Linking.openURL(TERMS_OF_SERVICE_URL)}
         />
         <SettingsRow
           icon={Download}

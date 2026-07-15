@@ -4,6 +4,7 @@ import { getBullMqConnection } from '../lib/redis.js';
 import { logger } from '../observability/logger.js';
 import { captureException } from '../observability/sentry.js';
 import { getJobHandler } from './scheduler.js';
+import { BookGenJob } from '../models/BookGenJob.js';
 
 let queue = null;
 let worker = null;
@@ -57,7 +58,7 @@ export async function enqueueManualJob(jobName, { force = false } = {}) {
     {
       removeOnComplete: 100,
       removeOnFail: 50,
-    },
+    }
   );
 }
 
@@ -85,7 +86,7 @@ async function registerRepeatableJobs(jobQueue) {
         },
         removeOnComplete: 100,
         removeOnFail: 50,
-      },
+      }
     );
 
     logger.info('[jobs] bullmq repeatable job registered', {
@@ -97,7 +98,7 @@ async function registerRepeatableJobs(jobQueue) {
 }
 
 function attachWorkerFailureLogging(bullWorker) {
-  bullWorker.on('failed', (job, err) => {
+  bullWorker.on('failed', async (job, err) => {
     logger.error('[jobs] bullmq job failed', {
       jobName: job?.name,
       message: err.message,
@@ -113,6 +114,22 @@ function attachWorkerFailureLogging(bullWorker) {
         attemptsMade: job?.attemptsMade,
       },
     });
+
+    if (job?.name === JOB_NAMES.BOOK_GEN && job.data?.jobId) {
+      const maxAttempts = job.opts?.attempts ?? 1;
+      const willRetry = job.attemptsMade < maxAttempts;
+      await BookGenJob.findByIdAndUpdate(job.data.jobId, {
+        state: willRetry ? 'queued' : 'failed',
+        error: willRetry
+          ? `Generation attempt ${job.attemptsMade} failed; retry scheduled`
+          : 'Book generation worker failed after all retries',
+      }).catch((statusError) => {
+        logger.error('[jobs] failed to persist book generation failure', {
+          jobId: job.data.jobId,
+          message: statusError.message,
+        });
+      });
+    }
   });
 }
 
@@ -155,7 +172,7 @@ export async function startBullMqScheduler({
           data,
         });
       },
-      { connection },
+      { connection }
     );
 
     attachWorkerFailureLogging(worker);

@@ -7,6 +7,7 @@ import {
   BookOpen,
   ChevronDown,
   Eye,
+  LogOut,
   Pin,
   Smartphone,
 } from 'lucide-react-native';
@@ -133,8 +134,9 @@ function LiveClassImmersiveShellInner({
             accessibilityLabel={t('back')}
             onPress={onBack}
             style={({ pressed }) => [styles.iconBtn, pressed && styles.pressed]}
+            hitSlop={4}
           >
-            <ChevronDown size={19} color="#FFFFFF" strokeWidth={1.75} />
+            <ChevronDown size={20} color="#FFFFFF" strokeWidth={2} />
           </Pressable>
 
           {!isFullscreen ? (
@@ -181,7 +183,9 @@ function LiveClassImmersiveShellInner({
             accessibilityLabel={t('leave')}
             onPress={onLeave}
             style={({ pressed }) => [styles.leaveBtn, pressed && styles.pressed]}
+            hitSlop={4}
           >
+            <LogOut size={14} color="#FFFFFF" strokeWidth={2.1} />
             <Text style={styles.leaveText}>{t('leave')}</Text>
           </Pressable>
         </View>
@@ -204,7 +208,7 @@ function LiveClassImmersiveShellInner({
         {!isFullscreen && pinnedMessage ? (
           <View style={styles.pinned}>
             <LinearGradient
-              colors={['rgba(194,154,78,0.95)', 'rgba(166,124,51,0.95)']}
+              colors={['rgba(201,162,75,0.95)', 'rgba(166,127,46,0.95)']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={StyleSheet.absoluteFill}
@@ -285,7 +289,7 @@ function createStyles(
       width: 280,
       height: 280,
       borderRadius: 140,
-      backgroundColor: 'rgba(194,154,78,0.2)',
+      backgroundColor: 'rgba(201,162,75,0.2)',
     },
     stage: {
       flex: 1,
@@ -319,9 +323,9 @@ function createStyles(
       flex: 1,
     },
     iconBtn: {
-      width: 40,
-      height: 40,
-      borderRadius: 13,
+      width: 42,
+      height: 42,
+      borderRadius: 14,
       backgroundColor: LIVE.glass,
       borderWidth: 1,
       borderColor: LIVE.glassBorder,
@@ -346,8 +350,8 @@ function createStyles(
       flexShrink: 0,
       backgroundColor: LIVE.red,
       borderRadius: 99,
-      paddingHorizontal: 9,
-      paddingVertical: 4,
+      paddingHorizontal: 10,
+      paddingVertical: 5,
     },
     liveDot: {
       width: 6,
@@ -359,29 +363,36 @@ function createStyles(
       fontSize: 10,
       fontFamily: theme.typography.fonts.ui.bold,
       fontWeight: '800',
-      letterSpacing: 0.5,
+      letterSpacing: 0.6,
       color: '#FFFFFF',
     },
     recPill: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 5,
+      backgroundColor: LIVE.glassDark,
+      borderRadius: 99,
+      paddingHorizontal: 9,
+      paddingVertical: 5,
+      borderWidth: 1,
+      borderColor: 'rgba(255,255,255,0.1)',
     },
     recDot: {
-      width: 7,
-      height: 7,
-      borderRadius: 4,
+      width: 6,
+      height: 6,
+      borderRadius: 3,
       backgroundColor: LIVE.red,
     },
     recPillText: {
       fontSize: 10,
       fontFamily: theme.typography.fonts.ui.bold,
       fontWeight: '700',
+      letterSpacing: 0.4,
       color: LIVE.textMuted,
     },
     classTitle: {
-      marginTop: 4,
-      fontSize: 12.5,
+      marginTop: 5,
+      fontSize: 13,
       fontFamily: theme.typography.fonts.ui.bold,
       fontWeight: '800',
       color: '#FFFFFF',
@@ -389,11 +400,13 @@ function createStyles(
     viewers: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 6,
+      gap: 5,
       backgroundColor: LIVE.glassDark,
       borderRadius: 99,
       paddingHorizontal: 11,
-      paddingVertical: 7,
+      paddingVertical: 8,
+      borderWidth: 1,
+      borderColor: 'rgba(255,255,255,0.1)',
     },
     viewerCount: {
       fontSize: 12,
@@ -402,10 +415,16 @@ function createStyles(
       color: '#FFFFFF',
     },
     leaveBtn: {
-      backgroundColor: 'rgba(232,80,58,0.92)',
-      borderRadius: 12,
-      paddingHorizontal: 13,
-      paddingVertical: 9,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      backgroundColor: 'rgba(232,80,58,0.94)',
+      borderRadius: 13,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      minHeight: 42,
+      borderWidth: 1,
+      borderColor: 'rgba(255,255,255,0.12)',
     },
     leaveText: {
       fontSize: 12,
@@ -532,10 +551,10 @@ function createStyles(
       right: 0,
       bottom: 0,
       zIndex: 12,
-      paddingHorizontal: 16,
-      paddingTop: 40,
-      paddingBottom: Math.max(20, bottomInset + 8),
-      gap: 12,
+      paddingHorizontal: 14,
+      paddingTop: 36,
+      paddingBottom: Math.max(18, bottomInset + 8),
+      gap: 11,
     },
     pressed: {
       opacity: 0.92,

@@ -318,6 +318,7 @@ userSchema.methods.toProfile = function toProfile() {
     onboardingComplete: Boolean(this.onboardingComplete),
     role: this.role ?? 'student',
     isPremium: Boolean(this.isPremium),
+    premiumTrialUsed: Boolean(this.premiumTrialUsed),
     ...(this.premiumPlan ? { premiumPlan: this.premiumPlan } : {}),
     ...(this.premiumExpiresAt
       ? { premiumExpiresAt: this.premiumExpiresAt.toISOString() }

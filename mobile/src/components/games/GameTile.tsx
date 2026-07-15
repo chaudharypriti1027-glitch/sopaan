@@ -4,6 +4,7 @@ import {
   ChevronRight,
   Clock,
   Code,
+  Coins,
   Crosshair,
   Flag,
   FlaskConical,
@@ -154,7 +155,8 @@ export function GameTile({
 
         <View style={styles.gridFooter}>
           <View style={styles.coins}>
-            <Text style={styles.coinsText}>🪙 +{game.coinReward}</Text>
+            <Coins size={12} color={GAMES_UI.gold} strokeWidth={2.2} />
+            <Text style={styles.coinsText}>+{game.coinReward}</Text>
           </View>
           <View style={styles.footerEnd}>
             {bestScore != null && bestScore > 0 ? (
@@ -285,6 +287,9 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       gap: 6,
     },
     coins: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
       backgroundColor: GAMES_UI.goldSoft,
       borderRadius: 10,
       paddingHorizontal: 8,

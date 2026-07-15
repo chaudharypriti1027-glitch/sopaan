@@ -1,6 +1,6 @@
 import { GraduationCap } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import {
   Button,
@@ -10,8 +10,10 @@ import {
   QueryStateView,
   SectionTitle,
 } from '../../components';
+import { usePremiumDialog } from '../../components/premium';
 import { useBookMentor, useMentors, useNetworkStatus } from '../../hooks';
 import type { Mentor } from '../../api/mentors';
+import { useFormat } from '../../i18n/useFormat';
 import { useTheme } from '../../theme';
 
 function mentorName(mentor: Mentor, fallback: string): string {
@@ -24,19 +26,11 @@ function mentorName(mentor: Mentor, fallback: string): string {
   return fallback;
 }
 
-function formatSlot(iso: string): string {
-  return new Date(iso).toLocaleString('en-IN', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
 export function MentorsScreen() {
   const { t } = useTranslation('app');
   const { theme } = useTheme();
+  const { formatDate } = useFormat();
+  const { alert } = usePremiumDialog();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   const { isOffline } = useNetworkStatus();
@@ -49,14 +43,33 @@ export function MentorsScreen() {
   const selected = mentors.find((m) => m.id === selectedId) ?? featured;
   const mentorFallback = t('mentors.mentor');
 
+  const formatSlot = (iso: string) =>
+    formatDate(iso, {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
   const handleBook = async (slotStart: string) => {
     if (!selected) return;
 
     try {
       await bookMentor.mutateAsync({ id: selected.id, slotStart });
-      Alert.alert(t('mentors.booked'), t('mentors.bookedBody'));
+      alert({
+        title: t('mentors.booked'),
+        message: t('mentors.bookedBody'),
+        icon: 'sparkles',
+        iconTone: 'gold',
+      });
     } catch {
-      Alert.alert(t('mentors.bookingFailed'), t('mentors.bookingFailedBody'));
+      alert({
+        title: t('mentors.bookingFailed'),
+        message: t('mentors.bookingFailedBody'),
+        icon: 'info',
+        iconTone: 'coral',
+      });
     }
   };
 

@@ -100,7 +100,7 @@ export const MENU_TONE_STYLES = {
 } as const;
 
 /** Tile sizes — `tile` is the full outer bevel dimension (no double boxing). */
-export type PremiumIconSize = '2xs' | 'xs' | 'sm' | 'md' | 'lg';
+export type PremiumIconSize = '2xs' | 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 
 export const PREMIUM_ICON_SIZES: Record<
   PremiumIconSize,
@@ -111,6 +111,8 @@ export const PREMIUM_ICON_SIZES: Record<
   sm: { tile: 36, radius: 12, icon: 18, stroke: 2.2 },
   md: { tile: 44, radius: 14, icon: 22, stroke: 2.25 },
   lg: { tile: 52, radius: 16, icon: 26, stroke: 2.3 },
+  /** Reserved for rare hero features — prefer md/lg for grids. */
+  xl: { tile: 56, radius: 16, icon: 26, stroke: 2.3 },
 };
 
 export type PremiumIconProps = {

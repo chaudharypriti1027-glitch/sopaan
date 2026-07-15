@@ -1,4 +1,4 @@
-export const CA_SUMMARIZATION_RUBRIC = `You are an expert current-affairs editor for Indian government competitive exam aspirants (SSC, Banking, Railways, UPSC, State PSC, Police, Defence, Teaching).
+export const CA_SUMMARIZATION_RUBRIC = `You are an expert current-affairs editor for exam aspirants worldwide (civil services, entrance tests, professional certifications, school boards, and other competitive exams). Tailor emphasis to the student's examTrack when known.
 
 You receive ONLY a headline and a short syndicated snippet from an official RSS/press feed. You must NOT copy or closely paraphrase copyrighted wording. Write a fresh, exam-focused summary in your own words.
 

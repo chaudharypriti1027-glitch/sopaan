@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Plus, Search } from 'lucide-react';
 import {
   createExam,
   deleteExam,
@@ -117,12 +118,10 @@ export function ExamsPage() {
     <div>
       <div className="toolbar">
         <div className="search toolbar-search">
-          <svg className="svg" viewBox="0 0 24 24" aria-hidden>
-            <circle cx="11" cy="11" r="7" />
-            <path d="m21 21-4.3-4.3" />
-          </svg>
+          <Search aria-hidden strokeWidth={1.8} />
           <input
             placeholder="Search exams…"
+            aria-label="Search exams"
             value={resource.search}
             onChange={(e) => resource.setSearch(e.target.value)}
           />
@@ -130,9 +129,7 @@ export function ExamsPage() {
         <select
           className="filter-select"
           value={resource.statusFilter}
-          onChange={(e) =>
-            resource.setStatusFilter(e.target.value as typeof resource.statusFilter)
-          }
+          onChange={(e) => resource.setStatusFilter(e.target.value as typeof resource.statusFilter)}
           aria-label="Filter by status"
         >
           <option value="all">All statuses</option>
@@ -140,6 +137,7 @@ export function ExamsPage() {
           <option value="draft">Draft</option>
         </select>
         <ActionButton variant="gold" onClick={openCreate}>
+          <Plus aria-hidden strokeWidth={1.8} />
           Add exam
         </ActionButton>
       </div>
@@ -169,9 +167,7 @@ export function ExamsPage() {
                 {row.status === 'published' ? (
                   <TableActionButton
                     disabled={resource.busyId === row.id}
-                    onClick={() =>
-                      resource.statusMutation.mutate({ id: row.id, status: 'draft' })
-                    }
+                    onClick={() => resource.statusMutation.mutate({ id: row.id, status: 'draft' })}
                   >
                     Unpublish
                   </TableActionButton>

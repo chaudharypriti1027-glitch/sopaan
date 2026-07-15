@@ -6,6 +6,7 @@ import { mapAnthropicError } from './anthropicErrorMapper.js';
 import { isGlobalBudgetExceeded } from './aiGlobalBudget.js';
 import { FEATURE_MODEL_TIER, resolveEffectiveTier } from './aiModelRouting.js';
 import { logger } from '../../observability/logger.js';
+import { AppError } from '../../utils/AppError.js';
 
 export { FEATURE_MODEL_TIER };
 
@@ -28,6 +29,8 @@ const DEFAULT_MAX_TOKENS = 4096;
 const DEFAULT_TIMEOUT_MS = 60_000;
 const MAX_RETRIES = 3;
 const BASE_BACKOFF_MS = 1000;
+const OUTPUT_COMPATIBILITY_SUFFIX =
+  'Use plain text without emoji, decorative Unicode symbols, or font-dependent glyphs. Use simple ASCII labels and hyphen bullets.';
 
 const client = new Anthropic({
   apiKey: env.anthropicApiKey,
@@ -104,7 +107,7 @@ function parseJsonResponse(text) {
     return JSON.parse(cleaned);
   } catch (err) {
     throw new Error(
-      `Failed to parse Claude JSON response: ${err.message}. Raw text: ${cleaned.slice(0, 200)}`,
+      `Failed to parse Claude JSON response: ${err.message}. Raw text: ${cleaned.slice(0, 200)}`
     );
   }
 }
@@ -153,19 +156,27 @@ export function buildMessageContent({ text, imageBase64 }) {
 }
 
 function resolveSystemParam({ system, stableSystem, dynamicSystemSuffix, cacheSystem }) {
+  const compatibleDynamicSuffix = [dynamicSystemSuffix, OUTPUT_COMPATIBILITY_SUFFIX]
+    .filter(Boolean)
+    .join('\n');
+
   if (stableSystem) {
     return buildCachedSystem({
       stableText: stableSystem,
-      dynamicSuffix: dynamicSystemSuffix,
+      dynamicSuffix: compatibleDynamicSuffix,
       cache: cacheSystem,
     });
   }
 
   if (system && cacheSystem) {
-    return buildCachedSystem({ stableText: system, cache: true });
+    return buildCachedSystem({
+      stableText: system,
+      dynamicSuffix: OUTPUT_COMPATIBILITY_SUFFIX,
+      cache: true,
+    });
   }
 
-  return system;
+  return [system, OUTPUT_COMPATIBILITY_SUFFIX].filter(Boolean).join('\n');
 }
 
 async function createMessageWithRetry(params, timeoutMs) {
@@ -230,6 +241,14 @@ export async function complete({
   returnMeta = false,
   timeoutMs = DEFAULT_TIMEOUT_MS,
 }) {
+  if (!env.anthropicApiKey) {
+    throw new AppError(
+      'AI is temporarily unavailable because its provider is not configured.',
+      503,
+      'AI_UNAVAILABLE'
+    );
+  }
+
   const budgetExceeded = await isGlobalBudgetExceeded();
   const effectiveTier = resolveEffectiveTier({ tier, feature, budgetExceeded });
   const resolvedModel = resolveModel({ tier: effectiveTier, model });
@@ -254,11 +273,11 @@ export async function complete({
     ? content.map((block) =>
         block?.type === 'text' && typeof block.text === 'string'
           ? { ...block, text: sanitizeAiUserText(block.text) }
-          : block,
+          : block
       )
     : content;
 
-  if (userId) {
+  if (userId && feature === 'doubt_solver') {
     await assertWithinDailyLimit(userId, effectiveTier);
   }
 
@@ -269,10 +288,11 @@ export async function complete({
       model: resolvedModel,
       max_tokens: maxTokens,
       ...(temperature !== undefined ? { temperature } : {}),
-      system: typeof resolvedSystem === 'string' ? sanitizeAiUserText(resolvedSystem) : resolvedSystem,
+      system:
+        typeof resolvedSystem === 'string' ? sanitizeAiUserText(resolvedSystem) : resolvedSystem,
       messages: [{ role: 'user', content: sanitizedContent ?? sanitizedUser }],
     },
-    timeoutMs,
+    timeoutMs
   );
 
   const latencyMs = Date.now() - startedAt;

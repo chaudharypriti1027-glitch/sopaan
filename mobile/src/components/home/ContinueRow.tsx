@@ -5,15 +5,14 @@ import {
   View,
   type ListRenderItem,
 } from 'react-native';
+import Svg, { Circle } from 'react-native-svg';
 import { LinearGradient } from 'expo-linear-gradient';
-import { HomeSlotIcon } from './HomePremiumIcon';
+import { Play } from 'lucide-react-native';
 import { HomeFeedCard } from './HomeFeedCard';
-import { HomePlayChip } from './HomePlayChip';
 import { NumText } from '../NumText';
 import { Text } from '../Text';
 import { useTheme } from '../../theme';
 import type { ContinueItem } from '../../types/home';
-import { continueAccentTone, continueItemIcon } from './homeIcons';
 import { CONTINUE_CARD_WIDTH } from './homeUtils';
 import { HOME_UI } from './homeTheme';
 
@@ -22,105 +21,140 @@ type ContinueRowProps = {
   onItemPress?: (deeplink: string) => void;
 };
 
-function progressGradient(accent: ContinueItem['accent']): [string, string] {
-  if (accent === 'teal') return [HOME_UI.sage, HOME_UI.sageDeep];
-  if (accent === 'gold') return [HOME_UI.goldLt, HOME_UI.gold];
-  if (accent === 'coral') return ['#D4A08C', '#A8503E'];
-  return [...HOME_UI.accentGradient];
+const RING = 54;
+const STROKE = 3.5;
+const R = (RING - STROKE) / 2;
+const CIRC = 2 * Math.PI * R;
+
+function ContinueRing({ progress }: { progress: number }) {
+  const clamped = Math.min(Math.max(progress, 0), 100);
+  const offset = CIRC - (clamped / 100) * CIRC;
+
+  return (
+    <View style={ringStyles.wrap}>
+      <Svg width={RING} height={RING} style={StyleSheet.absoluteFill}>
+        <Circle
+          cx={RING / 2}
+          cy={RING / 2}
+          r={R}
+          stroke="#EFE9DA"
+          strokeWidth={STROKE}
+          fill="none"
+        />
+        <Circle
+          cx={RING / 2}
+          cy={RING / 2}
+          r={R}
+          stroke={HOME_UI.gold}
+          strokeWidth={STROKE}
+          fill="none"
+          strokeLinecap="round"
+          strokeDasharray={`${CIRC} ${CIRC}`}
+          strokeDashoffset={offset}
+          transform={`rotate(-90 ${RING / 2} ${RING / 2})`}
+        />
+      </Svg>
+      <LinearGradient
+        colors={[...HOME_UI.accentGradient]}
+        start={{ x: 0.2, y: 0 }}
+        end={{ x: 0.9, y: 1 }}
+        style={ringStyles.play}
+      >
+        <Play size={14} color={HOME_UI.goldLt} fill={HOME_UI.goldLt} style={{ marginLeft: 2 }} />
+      </LinearGradient>
+    </View>
+  );
 }
 
-function ContinueProgressBar({
-  value,
-  accent,
+const ringStyles = StyleSheet.create({
+  wrap: {
+    width: RING,
+    height: RING,
+    position: 'relative',
+    flexShrink: 0,
+  },
+  play: {
+    position: 'absolute',
+    top: 7,
+    left: 7,
+    right: 7,
+    bottom: 7,
+    borderRadius: 99,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});
+
+function ContinueCard({
+  item,
+  fullWidth,
+  onPress,
 }: {
-  value: number;
-  accent: ContinueItem['accent'];
+  item: ContinueItem;
+  fullWidth: boolean;
+  onPress?: () => void;
 }) {
   const { theme } = useTheme();
-  const styles = useMemo(
-    () =>
-      StyleSheet.create({
-        row: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          gap: 8,
-        },
-        track: {
-          flex: 1,
-          height: 6,
-          borderRadius: 99,
-          backgroundColor: HOME_UI.borderSoft,
-          overflow: 'hidden',
-        },
-        fill: {
-          height: '100%',
-          borderRadius: 99,
-        },
-        pct: {
-          fontSize: 11,
-          fontFamily: theme.typography.fonts.ui.bold,
-          fontWeight: '800',
-          color: HOME_UI.muted,
-          minWidth: 32,
-          textAlign: 'right',
-        },
-      }),
-    [theme],
-  );
-  const clamped = Math.min(Math.max(value, 0), 100);
+  const styles = useMemo(() => createStyles(theme), [theme]);
+  const clamped = Math.min(Math.max(item.progressPct, 0), 100);
   const fillWidth = `${clamped}%` as `${number}%`;
 
   return (
-    <View style={styles.row}>
-      <View style={styles.track}>
-        <LinearGradient
-          colors={progressGradient(accent)}
-          start={{ x: 0, y: 0.5 }}
-          end={{ x: 1, y: 0.5 }}
-          style={[styles.fill, { width: fillWidth }]}
-        />
+    <HomeFeedCard
+      onPress={onPress}
+      accentTop
+      style={[styles.cardWrap, fullWidth && styles.cardFull]}
+      contentStyle={styles.cardBody}
+    >
+      <View style={styles.row}>
+        <ContinueRing progress={clamped} />
+        <View style={styles.copy}>
+          <Text style={styles.kind} numberOfLines={1} ellipsizeMode="tail">
+            {item.subtitle}
+          </Text>
+          <Text style={styles.title} numberOfLines={2} ellipsizeMode="tail">
+            {item.title}
+          </Text>
+          <View style={styles.progressRow}>
+            <View style={styles.track}>
+              <View style={[styles.fill, { width: fillWidth }]} />
+            </View>
+            <NumText style={styles.pct}>{clamped}%</NumText>
+          </View>
+        </View>
       </View>
-      <NumText style={styles.pct}>{clamped}%</NumText>
-    </View>
+    </HomeFeedCard>
   );
 }
 
 export function ContinueRow({ items, onItemPress }: ContinueRowProps) {
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
+  const single = items.length === 1;
 
   const renderItem = useCallback<ListRenderItem<ContinueItem>>(
-    ({ item }) => {
-      const Icon = continueItemIcon(item.kind);
-      const iconTone = continueAccentTone(item.accent);
-
-      return (
-        <HomeFeedCard
-          onPress={() => onItemPress?.(item.deeplink)}
-          style={styles.cardWrap}
-          contentStyle={styles.cardBody}
-        >
-          <View style={styles.top}>
-            <HomeSlotIcon slot="shortcut" Icon={Icon} tone={iconTone} />
-            <View style={styles.copy}>
-              <Text style={styles.kind} numberOfLines={1}>
-                {item.subtitle}
-              </Text>
-              <Text style={styles.title} numberOfLines={2}>
-                {item.title}
-              </Text>
-            </View>
-            <HomePlayChip onPress={() => onItemPress?.(item.deeplink)} />
-          </View>
-          <ContinueProgressBar value={item.progressPct} accent={item.accent} />
-        </HomeFeedCard>
-      );
-    },
-    [onItemPress, styles],
+    ({ item }) => (
+      <ContinueCard
+        item={item}
+        fullWidth={false}
+        onPress={() => onItemPress?.(item.deeplink)}
+      />
+    ),
+    [onItemPress],
   );
 
   if (!items.length) {
     return null;
+  }
+
+  if (single) {
+    return (
+      <ContinueCard
+        item={items[0]}
+        fullWidth
+        onPress={() => onItemPress?.(items[0].deeplink)}
+      />
+    );
   }
 
   return (
@@ -140,45 +174,73 @@ export function ContinueRow({ items, onItemPress }: ContinueRowProps) {
 function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
     list: {
-      marginHorizontal: -HOME_UI.sectionPanelPad,
+      marginHorizontal: -HOME_UI.horizontalPad,
     },
     listContent: {
       gap: 12,
-      paddingHorizontal: HOME_UI.sectionPanelPad,
+      paddingHorizontal: HOME_UI.horizontalPad,
     },
     cardWrap: {
       width: CONTINUE_CARD_WIDTH,
+      borderRadius: 22,
+    },
+    cardFull: {
+      width: '100%',
     },
     cardBody: {
-      padding: 15,
-      gap: 12,
+      padding: 16,
     },
-    top: {
+    row: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 11,
+      gap: 14,
     },
     copy: {
       flex: 1,
-      gap: 2,
       minWidth: 0,
+      gap: 3,
     },
     kind: {
       fontSize: 9.5,
       lineHeight: 12,
       fontFamily: theme.typography.fonts.ui.bold,
       fontWeight: '800',
-      letterSpacing: 0.5,
+      letterSpacing: 1.2,
       textTransform: 'uppercase',
       color: HOME_UI.goldDeep,
     },
     title: {
-      fontSize: 14.5,
-      lineHeight: 18,
+      fontSize: 16,
+      lineHeight: 20,
+      fontFamily: theme.typography.fonts.ui.bold,
+      fontWeight: '700',
+      color: HOME_UI.ink,
+    },
+    progressRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      marginTop: 9,
+    },
+    track: {
+      flex: 1,
+      height: 6,
+      borderRadius: 99,
+      backgroundColor: '#F0EBDC',
+      overflow: 'hidden',
+    },
+    fill: {
+      height: '100%',
+      borderRadius: 99,
+      backgroundColor: HOME_UI.accent,
+    },
+    pct: {
+      fontSize: 12,
       fontFamily: theme.typography.fonts.ui.bold,
       fontWeight: '800',
-      color: HOME_UI.ink,
-      letterSpacing: -0.2,
+      color: HOME_UI.goldDeep,
+      minWidth: 34,
+      textAlign: 'right',
     },
   });
 }

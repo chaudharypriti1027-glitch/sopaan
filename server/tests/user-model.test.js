@@ -44,6 +44,7 @@ describe('User model', () => {
       onboardingComplete: false,
       role: 'student',
       isPremium: false,
+      premiumTrialUsed: false,
     });
     expect(profile.passwordHash).toBeUndefined();
   });

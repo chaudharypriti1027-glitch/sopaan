@@ -5,8 +5,7 @@ import { aiRuntimeConfig } from '../../config/aiRuntimeConfig.js';
 import { cacheGet, cacheSet } from '../../lib/cache.js';
 import { isRedisReady } from '../../lib/redis.js';
 import { logger } from '../../observability/logger.js';
-import { client, MODELS, TIERS } from '../ai/claudeClient.js';
-import { recordAiUsage } from '../ai/aiUsageService.js';
+import { complete } from '../ai/claudeClient.js';
 import { getStreak } from './getStreak.js';
 import { getCountdown } from './getCountdown.js';
 import { getRank } from './getRank.js';
@@ -18,7 +17,7 @@ const MAX_MEMORY_CACHE_ENTRIES = 500;
 const VALID_TONES = new Set(['urgent', 'streak', 'info', 'opportunity']);
 
 const SYSTEM_PROMPT =
-  'You write 1-3 short motivational study nudges for an Indian govt-exam aspirant. ' +
+  'You write 1-3 short motivational study nudges for an exam aspirant preparing for any exam worldwide. ' +
   'Return ONLY JSON array of {tone,icon,title,body,deeplink}. ' +
   'tone ∈ urgent|streak|info|opportunity. title ≤ 6 words, body ≤ 18 words. ' +
   'Map weak topics → urgent + deeplink /drill/{topicId}; streak at risk → streak; ' +
@@ -55,7 +54,7 @@ export function topicToSlug(name) {
       .trim()
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '') || 'topic',
+      .replace(/^-|-$/g, '') || 'topic'
   );
 }
 
@@ -197,8 +196,12 @@ async function collectWeakestTopics(userId, limit = 3) {
     return [];
   }
 
-  const testIds = [...new Set(attempts.map((attempt) => attempt.testId?.toString()).filter(Boolean))];
-  const tests = await Test.find({ _id: { $in: testIds } }).select('subject topic').lean();
+  const testIds = [
+    ...new Set(attempts.map((attempt) => attempt.testId?.toString()).filter(Boolean)),
+  ];
+  const tests = await Test.find({ _id: { $in: testIds } })
+    .select('subject topic')
+    .lean();
   const testsById = new Map(tests.map((test) => [test._id.toString(), test]));
 
   const topicAcc = new Map();
@@ -241,8 +244,12 @@ async function getLastMockPct(userId) {
     return null;
   }
 
-  const testIds = [...new Set(attempts.map((attempt) => attempt.testId?.toString()).filter(Boolean))];
-  const tests = await Test.find({ _id: { $in: testIds }, type: 'mock' }).select('_id').lean();
+  const testIds = [
+    ...new Set(attempts.map((attempt) => attempt.testId?.toString()).filter(Boolean)),
+  ];
+  const tests = await Test.find({ _id: { $in: testIds }, type: 'mock' })
+    .select('_id')
+    .lean();
   const mockIds = new Set(tests.map((test) => test._id.toString()));
 
   for (const attempt of attempts) {
@@ -321,37 +328,18 @@ async function writeNudgesCache(cacheKey, value) {
   memoryCacheSet(cacheKey, value, NUDGES_CACHE_TTL_SEC);
 }
 
-function extractResponseText(response) {
-  const block = response.content?.[0];
-  return block?.type === 'text' ? block.text : '';
-}
-
 async function generateNudgesFromClaude(state, userId) {
-  const startedAt = Date.now();
-
-  const response = await client.messages.create(
-    {
-      model: MODELS.FAST,
-      max_tokens: 400,
-      temperature: 0.5,
-      system: SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: JSON.stringify(state) }],
-    },
-    { signal: AbortSignal.timeout(NUDGES_API_TIMEOUT_MS) },
-  );
-
-  const latencyMs = Date.now() - startedAt;
-
-  await recordAiUsage({
+  return complete({
+    stableSystem: SYSTEM_PROMPT,
+    user: JSON.stringify(state),
     userId,
-    tier: TIERS.FAST,
+    tier: 'fast',
     feature: 'home_ai_nudges',
-    model: MODELS.FAST,
-    usage: response.usage,
-    latencyMs,
+    maxTokens: 400,
+    temperature: 0.5,
+    json: true,
+    timeoutMs: NUDGES_API_TIMEOUT_MS,
   });
-
-  return extractResponseText(response);
 }
 
 async function resolveNudgesForState(state, userId) {

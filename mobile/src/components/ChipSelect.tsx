@@ -6,6 +6,7 @@ import {
   type PressableProps,
   type ViewStyle,
 } from 'react-native';
+import type { LucideIcon } from 'lucide-react-native';
 import { scalableTextProps } from '../a11y/textProps';
 import { useTheme } from '../theme';
 
@@ -14,7 +15,8 @@ type ChipSelectProps = {
   selected?: boolean;
   onPress?: PressableProps['onPress'];
   style?: ViewStyle;
-  emoji?: string;
+  /** Offline-safe Lucide icon (preferred over emoji). */
+  Icon?: LucideIcon;
   testID?: string;
 };
 
@@ -23,13 +25,14 @@ export function ChipSelect({
   selected = false,
   onPress,
   style,
-  emoji,
+  Icon,
   testID,
 }: ChipSelectProps) {
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme, selected), [theme, selected]);
   const resolvedTestId =
     testID ?? `chip-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}`;
+  const iconColor = selected ? theme.colors.brand.primary : theme.colors.text.secondary;
 
   return (
     <Pressable
@@ -40,7 +43,7 @@ export function ChipSelect({
       onPress={onPress}
       style={({ pressed }) => [styles.chip, pressed && styles.pressed, style]}
     >
-      {emoji ? <Text style={styles.emoji}>{emoji}</Text> : null}
+      {Icon ? <Icon size={16} color={iconColor} strokeWidth={2.2} /> : null}
       <Text {...scalableTextProps} style={styles.label}>
         {label}
       </Text>
@@ -64,9 +67,6 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme'], selected: boo
     },
     pressed: {
       opacity: 0.92,
-    },
-    emoji: {
-      fontSize: theme.typography.scale.fontSize.md,
     },
     label: {
       ...theme.typography.presets.bodyMedium,

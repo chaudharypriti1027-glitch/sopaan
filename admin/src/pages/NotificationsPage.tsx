@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
+import { BellRing, CalendarClock, Send } from 'lucide-react';
 import {
   createAdminNotification,
   fetchAdminNotificationAudienceCount,
@@ -13,6 +14,7 @@ import type { AdminExam } from '../api/contentTypes';
 import { ActionButton } from '../components/ActionButton';
 import { DataTable } from '../components/DataTable';
 import { FormField } from '../components/content/FormField';
+import { QueryErrorBanner } from '../components/QueryErrorBanner';
 import { useToast } from '../components/Toast';
 import './notifications.css';
 
@@ -46,14 +48,16 @@ function toLocalInputValue(date: Date) {
 export function NotificationsPage() {
   const { showToast } = useToast();
   const queryClient = useQueryClient();
-  const [title, setTitle] = useState('New mock is live! 🎯');
+  const [title, setTitle] = useState('New mock is live');
   const [body, setBody] = useState(
-    'SSC CGL Full Mock just dropped. Take it now and climb the leaderboard.',
+    'SSC CGL Full Mock just dropped. Take it now and climb the leaderboard.'
   );
   const [audience, setAudience] = useState<AdminNotificationAudience>('all');
   const [exam, setExam] = useState('');
   const [sendMode, setSendMode] = useState<SendMode>('now');
-  const [sendAt, setSendAt] = useState(() => toLocalInputValue(new Date(Date.now() + 60 * 60 * 1000)));
+  const [sendAt, setSendAt] = useState(() =>
+    toLocalInputValue(new Date(Date.now() + 60 * 60 * 1000))
+  );
 
   const statsQuery = useQuery({
     queryKey: ['admin', 'stats'],
@@ -69,10 +73,7 @@ export function NotificationsPage() {
   const audienceCountQuery = useQuery({
     queryKey: ['admin', 'notifications', 'audience-count', audience, exam],
     queryFn: () =>
-      fetchAdminNotificationAudienceCount(
-        audience,
-        audience === 'byExam' ? exam : undefined,
-      ),
+      fetchAdminNotificationAudienceCount(audience, audience === 'byExam' ? exam : undefined),
   });
 
   const recentQuery = useQuery({
@@ -86,7 +87,7 @@ export function NotificationsPage() {
       showToast(
         row.status === 'scheduled'
           ? `Scheduled for ${formatWhen(row.sendAt)}`
-          : `Sent to ${row.stats.targeted} students`,
+          : `Sent to ${row.stats.targeted} students`
       );
       queryClient.invalidateQueries({ queryKey: ['admin', 'notifications'] });
     },
@@ -124,15 +125,26 @@ export function NotificationsPage() {
       return;
     }
 
+    let scheduledAt: string | undefined;
+    if (sendMode === 'schedule') {
+      const date = new Date(sendAt);
+      if (!sendAt || Number.isNaN(date.getTime())) {
+        showToast('Choose a valid send time');
+        return;
+      }
+      if (date.getTime() <= Date.now()) {
+        showToast('Scheduled time must be in the future');
+        return;
+      }
+      scheduledAt = date.toISOString();
+    }
+
     createMutation.mutate({
       title: title.trim(),
       body: body.trim(),
       audience,
       exam: audience === 'byExam' ? exam.trim() : undefined,
-      sendAt:
-        sendMode === 'schedule' && sendAt
-          ? new Date(sendAt).toISOString()
-          : undefined,
+      sendAt: scheduledAt,
     });
   }
 
@@ -141,7 +153,10 @@ export function NotificationsPage() {
       <div className="notifications-grid">
         <div className="panel">
           <div className="ph">
-            <h3>Compose notification</h3>
+            <h3 className="panel-title-icon">
+              <BellRing aria-hidden strokeWidth={1.8} />
+              Compose notification
+            </h3>
           </div>
           <div className="drawer-form" style={{ padding: '0 16px 16px' }}>
             <FormField id="notif-title" label="Title">
@@ -188,12 +203,22 @@ export function NotificationsPage() {
             </FormField>
             {audience === 'byExam' ? (
               <FormField id="notif-exam" label="Exam">
+                {examsQuery.isError ? (
+                  <QueryErrorBanner
+                    error={examsQuery.error}
+                    onRetry={() => void examsQuery.refetch()}
+                  />
+                ) : null}
                 <select
                   id="notif-exam"
                   className="form-input"
                   value={exam}
                   onChange={(e) => setExam(e.target.value)}
+                  disabled={examsQuery.isLoading || examsQuery.isError}
                 >
+                  <option value="">
+                    {examsQuery.isLoading ? 'Loading exams…' : 'Select an exam'}
+                  </option>
                   {(examsQuery.data?.items ?? []).map((item: AdminExam) => (
                     <option key={item.id} value={item.name}>
                       {item.name}
@@ -224,11 +249,12 @@ export function NotificationsPage() {
                 />
               </FormField>
             ) : null}
-            <ActionButton
-              variant="gold"
-              onClick={handleSend}
-              disabled={createMutation.isPending}
-            >
+            <ActionButton variant="gold" onClick={handleSend} disabled={createMutation.isPending}>
+              {sendMode === 'schedule' ? (
+                <CalendarClock aria-hidden strokeWidth={1.8} />
+              ) : (
+                <Send aria-hidden strokeWidth={1.8} />
+              )}
               {createMutation.isPending
                 ? 'Sending…'
                 : sendMode === 'schedule'
@@ -275,7 +301,9 @@ export function NotificationsPage() {
             key: 'status',
             header: 'Status',
             render: (row) => (
-              <span className={`pill ${row.status === 'sent' ? 'p-pub' : row.status === 'scheduled' ? 'p-draft' : 'p-draft'}`}>
+              <span
+                className={`pill ${row.status === 'sent' ? 'p-pub' : row.status === 'scheduled' ? 'p-draft' : 'p-draft'}`}
+              >
                 {row.status}
               </span>
             ),
@@ -294,8 +322,7 @@ export function NotificationsPage() {
             key: 'openRate',
             header: 'Open rate',
             align: 'right',
-            render: (row) =>
-              row.stats.delivered > 0 ? `${row.stats.openRate}%` : '—',
+            render: (row) => (row.stats.delivered > 0 ? `${row.stats.openRate}%` : '—'),
           },
         ]}
       />

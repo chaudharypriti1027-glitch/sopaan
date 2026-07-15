@@ -3,12 +3,12 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ChevronRight, Radio, Users } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
-import { HomeSlotIcon } from './HomePremiumIcon';
 import { Text } from '../Text';
 import { useTheme } from '../../theme';
 import type { LiveClass } from '../../api/liveClasses';
 import { platformShadow } from '../../utils/platformShadow';
 import { HOME_UI, homePressFeedback } from './homeTheme';
+import { LIVE } from '../live/liveTheme';
 
 type HomeLiveNowBannerProps = {
   liveClass: LiveClass;
@@ -35,7 +35,9 @@ export function HomeLiveNowBanner({ liveClass, onPress }: HomeLiveNowBannerProps
         end={{ x: 1, y: 1 }}
         style={styles.card}
       >
-        <HomeSlotIcon slot="hero" Icon={Radio} tone="gold" />
+        <View style={styles.leadIcon}>
+          <Radio size={16} color={HOME_UI.goldLt} strokeWidth={2.2} />
+        </View>
 
         <View style={styles.copy}>
           <View style={styles.livePill}>
@@ -50,7 +52,7 @@ export function HomeLiveNowBanner({ liveClass, onPress }: HomeLiveNowBannerProps
               {liveClass.instructor}
             </Text>
             <View style={styles.viewers}>
-              <HomeSlotIcon slot="inline" Icon={Users} tone="slate" />
+              <Users size={11} color="rgba(255,255,255,0.65)" strokeWidth={2.2} />
               <Text style={styles.viewerText}>
                 {t('liveClasses.watching', { count: viewerCount })}
               </Text>
@@ -60,7 +62,7 @@ export function HomeLiveNowBanner({ liveClass, onPress }: HomeLiveNowBannerProps
 
         <View style={styles.ctaWrap}>
           <Text style={styles.cta}>{t('home.joinLive')}</Text>
-          <HomeSlotIcon slot="button" Icon={ChevronRight} tone="gold" />
+          <ChevronRight size={15} color={HOME_UI.goldLt} strokeWidth={2.4} />
         </View>
       </LinearGradient>
     </Pressable>
@@ -86,28 +88,39 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       borderColor: 'rgba(226,201,127,0.22)',
       ...platformShadow({ color: HOME_UI.accent, offsetY: 12, opacity: 0.35, radius: 18, elevation: 6 }),
     },
+    leadIcon: {
+      width: 34,
+      height: 34,
+      borderRadius: 11,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: 'rgba(201,162,75,0.22)',
+      borderWidth: 1,
+      borderColor: 'rgba(233,207,141,0.35)',
+      flexShrink: 0,
+    },
     livePill: {
       flexDirection: 'row',
       alignItems: 'center',
       alignSelf: 'flex-start',
       gap: 5,
-      backgroundColor: '#D64545',
+      backgroundColor: LIVE.red,
       borderRadius: 99,
       paddingHorizontal: 8,
       paddingVertical: 4,
       marginBottom: 4,
     },
     liveDot: {
-      width: 6,
-      height: 6,
-      borderRadius: 3,
+      width: 5,
+      height: 5,
+      borderRadius: 2.5,
       backgroundColor: '#FFFFFF',
     },
     livePillText: {
       fontSize: 9,
       fontFamily: theme.typography.fonts.ui.bold,
       fontWeight: '800',
-      letterSpacing: 0.4,
+      letterSpacing: 0.5,
       color: '#FFFFFF',
     },
     copy: {

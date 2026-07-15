@@ -20,7 +20,8 @@ describe('homeSectionConfig', () => {
 
     const sections = visibleHomeSections(feed);
     expect(sections.indexOf('dailyChallenge')).toBe(-1);
-    expect(sections[0]).toBe('features');
+    expect(sections[0]).toBe('continue');
+    expect(sections).toContain('features');
     expect(sections).toContain('nudges');
     expect(sections[sections.length - 1]).toBe('league');
     expect(sections[sections.length - 2]).toBe('nudges');
@@ -57,7 +58,7 @@ describe('homeSectionConfig', () => {
 
   it('exposes section metadata for feed rendering', () => {
     expect(HOME_SECTION_META.features.titleKey).toBe('explore');
-    expect(HOME_SECTION_META.features.compactWhenFirst).toBe(true);
+    expect(HOME_SECTION_META.continue.compactWhenFirst).toBe(true);
     expect(HOME_SECTION_META.features.subtitleKey).toBe('exploreSubtitle');
     expect(HOME_SECTION_META.nudges.titleKey).toBe('aiActionsTitle');
     expect(HOME_SECTION_META.continue.actionKey).toBe('seeAll');

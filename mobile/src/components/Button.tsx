@@ -62,7 +62,7 @@ export function Button({
   ) : (
     <View style={styles.content}>
       {icon}
-      <Text {...scalableTextProps} style={styles.label}>
+      <Text {...scalableTextProps} numberOfLines={1} ellipsizeMode="tail" style={styles.label}>
         {label}
       </Text>
     </View>
@@ -164,13 +164,17 @@ function createStyles(
     content: {
       flexDirection: 'row',
       alignItems: 'center',
+      justifyContent: 'center',
       gap: theme.spacing.sm,
+      minWidth: 0,
     },
     label: {
+      flexShrink: 1,
       fontFamily: theme.typography.fonts.ui.bold,
       fontWeight: '800',
       fontSize: sizeMap.fontSize,
       color: labelColor,
+      textAlign: 'center',
     },
   });
 }

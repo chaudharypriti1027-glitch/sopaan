@@ -45,6 +45,7 @@ const { User } = await import('../src/models/User.js');
 const { clearTestDatabase, setupTestDatabase, teardownTestDatabase } = await import(
   './helpers/db.js'
 );
+const { updatePlatformSettings } = await import('../src/services/platformSettingsService.js');
 const { withPrivacyConsent } = await import('./helpers/privacy.js');
 
 async function createAuthedUser({ premium = false } = {}) {
@@ -119,6 +120,7 @@ describe('AI routes', () => {
   });
 
   it('POST /api/ai/evaluate-answer blocks free users with quota exceeded and allows pro users', async () => {
+    await updatePlatformSettings({ freeAiEvaluationsPerDay: 0 });
     const { token: freeToken } = await createAuthedUser();
     const blocked = await request(app)
       .post('/api/ai/evaluate-answer')

@@ -91,14 +91,12 @@ describe('HomeScreen integration', () => {
 
     expect(sectionOrder(screen)).toEqual([
       'home-section-greeting',
-      'home-section-countdown',
       'home-section-streak',
       'home-section-ai-plan',
-      'home-section-features',
-      'home-section-explore-shortcuts',
-      'home-section-daily-challenge',
       'home-section-continue',
+      'home-section-daily-challenge',
       'home-section-recommended',
+      'home-section-features',
       'home-section-affairs',
       'home-section-nudges',
       'home-section-nudge-nudge-weak-topic',

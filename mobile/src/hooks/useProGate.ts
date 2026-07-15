@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useCallback, useMemo } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useTranslation } from 'react-i18next';
 import { getTierStatus, type TierFeatureKey, type TierStatusResponse } from '../api/tier';
 import { parseApiError, type ApiError } from '../api/errors';
 import { useAuth } from '../auth';
@@ -14,11 +15,6 @@ export type PaywallParams = {
   feature?: TierFeatureKey;
   paywallTitle?: string;
   paywallMessage?: string;
-};
-
-const DEFAULT_PAYWALL: PaywallParams = {
-  paywallTitle: 'Upgrade to Sopaan Pro',
-  paywallMessage: 'Unlock unlimited AI, mocks, and detailed analytics.',
 };
 
 function isProGateError(error: ApiError): boolean {
@@ -44,12 +40,19 @@ export function useTierStatus(enabled = true) {
 export function useProGate() {
   const navigation = useNavigation<ProNav>();
   const { user } = useAuth();
+  const { t } = useTranslation('app');
   const tierQuery = useTierStatus();
 
+  // Idle/loading/refetch: allow session premium so checkout unlocks immediately.
+  // Settled success: trust server tier so expired cancel periods drop Pro correctly.
   const isPro =
-    user?.role === 'admin' || tierQuery.data?.isPro || user?.isPremium || false;
+    user?.role === 'admin' ||
+    (tierQuery.isSuccess && !tierQuery.isFetching
+      ? Boolean(tierQuery.data?.isPro)
+      : Boolean(user?.isPremium) || Boolean(tierQuery.data?.isPro));
   const showAds = tierQuery.data?.showAds ?? !isPro;
   const tier = tierQuery.data;
+  const tierPending = tierQuery.isLoading || (tierQuery.isFetching && !tierQuery.isSuccess);
 
   const getFeatureConfig = useCallback(
     (feature: TierFeatureKey) => tier?.features?.[feature] ?? null,
@@ -63,11 +66,15 @@ export function useProGate() {
 
       navigation.navigate('Premium', {
         feature,
-        paywallTitle: params?.paywallTitle ?? fromTier?.title ?? DEFAULT_PAYWALL.paywallTitle,
-        paywallMessage: params?.paywallMessage ?? fromTier?.message ?? DEFAULT_PAYWALL.paywallMessage,
+        paywallTitle:
+          params?.paywallTitle ?? fromTier?.title ?? t('premium.paywallDefaultTitle'),
+        paywallMessage:
+          params?.paywallMessage ??
+          fromTier?.message ??
+          t('premium.paywallDefaultMessage'),
       });
     },
-    [navigation, getFeatureConfig],
+    [navigation, getFeatureConfig, t],
   );
 
   const handleProError = useCallback(
@@ -95,7 +102,8 @@ export function useProGate() {
 
       const config = getFeatureConfig(feature);
       if (!config) {
-        return false;
+        // Avoid premature paywalls before /tier/status lands.
+        return tierPending;
       }
 
       if (config.type === 'pro_only') {
@@ -115,10 +123,13 @@ export function useProGate() {
       if (feature === 'ai_doubt') {
         return tier.usage.remaining.aiDoubtsFast > 0;
       }
+      if (feature === 'ai_evaluate') {
+        return (tier.usage.remaining.aiEvaluations ?? 0) > 0;
+      }
 
-      return true;
+      return false;
     },
-    [isPro, getFeatureConfig, tier],
+    [isPro, getFeatureConfig, tier, tierPending],
   );
 
   const guardFeature = useCallback(

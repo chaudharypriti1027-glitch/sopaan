@@ -8,7 +8,7 @@ export const TARGET_EXAM_OPTIONS = [
   { label: 'State PSC', value: 'State PSC', description: 'State services' },
   { label: 'UPSC', value: 'UPSC CSE', description: 'Civil Services' },
   { label: 'Police', value: 'Police Constable', description: 'Constable / SI' },
-  { label: 'Other', value: 'Other', description: 'Type your exam name' },
+  { label: 'Other', value: 'Other', description: 'Any exam — type the name' },
 ] as const;
 
 /** Sentinel value for the “Other” chip — use resolveTargetExam() before saving. */

@@ -6,14 +6,16 @@ Reproducible container builds live in `server/Dockerfile`. Local full stack: `do
 
 Background jobs must not run on every API replica. Use `PROCESS_ROLE`:
 
-| Role | Entrypoint | HTTP | BullMQ repeatables | BullMQ worker | node-cron fallback |
-|------|------------|------|--------------------|---------------|-------------------|
-| `all` (default) | `node src/index.js` | yes | yes | yes | yes (if Redis down) |
-| `api` | `node src/index.js` | yes | no | no | no |
-| `worker` | `node src/worker.js` | no | yes | yes | yes (if Redis down) |
-| `scheduler` | `node src/worker.js` | no | yes | no | no |
+| Role            | Entrypoint           | HTTP | BullMQ repeatables | BullMQ worker | node-cron fallback  |
+| --------------- | -------------------- | ---- | ------------------ | ------------- | ------------------- |
+| `all` (default) | `node src/index.js`  | yes  | yes                | yes           | yes (if Redis down) |
+| `api`           | `node src/index.js`  | yes  | no                 | no            | no                  |
+| `worker`        | `node src/worker.js` | no   | yes                | yes           | yes (if Redis down) |
+| `scheduler`     | `node src/worker.js` | no   | yes                | no            | no                  |
 
 **Production (recommended):** one or more `api` services + one `worker` service (scale workers for throughput). Repeatable cron schedules are registered by the worker on startup (idempotent `jobId` per job).
+
+AI book generation specifically requires `REDIS_URL`, `JOBS_ENABLED=true`, and a process running `node src/worker.js` with `PROCESS_ROLE=worker`. Book jobs use bounded exponential retries and expose `queued`, `running`, `done`, or `failed` through the admin status endpoint.
 
 **Local Docker Compose:** `api` runs with `PROCESS_ROLE=api`; `worker` runs `node src/worker.js` with `PROCESS_ROLE=worker`.
 
@@ -47,20 +49,21 @@ docker build -t sopaan-api:local .
 
 Copy `server/.env.example` for the full list. Minimum for containers:
 
-| Variable | Required | Notes |
-|----------|----------|-------|
-| `PORT` | yes | Default `4000` |
-| `MONGODB_URI` | yes | Atlas or `mongodb://…` |
-| `JWT_SECRET` / `JWT_REFRESH_SECRET` | yes | ≥32 chars, must differ |
-| `NODE_ENV` | yes | `production` in prod |
-| `CLIENT_URL` | yes | CORS origin (Expo / web) |
-| `REDIS_URL` | prod | Enables cache, rate limits, BullMQ |
-| `REDIS_ENABLED` | prod | Set `true` when Redis is provisioned |
-| `PROCESS_ROLE` | prod | `api` on API service, `worker` on worker service |
-| `JOBS_ENABLED` | optional | Default `true`; set `false` to disable all jobs |
-| `ANTHROPIC_API_KEY` | prod | Or `DEV_STUB_AI=true` for local only |
-| `SENTRY_DSN` | prod | Error tracking |
-| `RAZORPAY_*` | prod | Payments + webhook secret |
+| Variable                            | Required             | Notes                                                                                                  |
+| ----------------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------ |
+| `PORT`                              | yes                  | Default `4000`                                                                                         |
+| `MONGODB_URI`                       | yes                  | Atlas or `mongodb://…`                                                                                 |
+| `JWT_SECRET` / `JWT_REFRESH_SECRET` | yes                  | ≥32 chars, must differ                                                                                 |
+| `NODE_ENV`                          | yes                  | `production` in prod                                                                                   |
+| `CLIENT_URL`                        | yes                  | CORS origin (Expo / web)                                                                               |
+| `REDIS_URL`                         | prod                 | Enables cache, rate limits, BullMQ                                                                     |
+| `REDIS_ENABLED`                     | prod                 | Set `true` when Redis is provisioned                                                                   |
+| `PROCESS_ROLE`                      | prod                 | `api` on API service, `worker` on worker service                                                       |
+| `JOBS_ENABLED`                      | optional             | Default `true`; set `false` to disable all jobs                                                        |
+| `ANTHROPIC_API_KEY`                 | AI in prod           | Without it the API still boots, but AI calls return `AI_UNAVAILABLE`; `DEV_STUB_AI` is local/test only |
+| `NEWSAPI_AI_KEY`                    | live current affairs | Without it external news ingestion returns a structured `503`; stored current affairs remain available |
+| `SENTRY_DSN`                        | prod                 | Error tracking                                                                                         |
+| `RAZORPAY_*`                        | prod                 | Payments + webhook secret                                                                              |
 
 See also [STAGING.md](./STAGING.md) for staging-specific wiring.
 
@@ -68,11 +71,11 @@ See also [STAGING.md](./STAGING.md) for staging-specific wiring.
 
 All platforms use the Sopaan API container image.
 
-| Deploy target | Root directory | Dockerfile path |
-|---------------|----------------|-----------------|
-| Render (see `render.yaml`) | `server` | `Dockerfile` |
-| Railway / similar | `server` | `Dockerfile` |
-| Monorepo / Compose | `server` or repo root | `server/Dockerfile` or `/Dockerfile` |
+| Deploy target              | Root directory        | Dockerfile path                      |
+| -------------------------- | --------------------- | ------------------------------------ |
+| Render (see `render.yaml`) | `server`              | `Dockerfile`                         |
+| Railway / similar          | `server`              | `Dockerfile`                         |
+| Monorepo / Compose         | `server` or repo root | `server/Dockerfile` or `/Dockerfile` |
 
 **Important:** Root directory must match the Dockerfile. `server/Dockerfile` expects context `server/` (`package.json`, `src/`). Root `/Dockerfile` expects the monorepo root (`server/src`, `package-lock.json`). A mismatch causes `"/server/src": not found`.
 

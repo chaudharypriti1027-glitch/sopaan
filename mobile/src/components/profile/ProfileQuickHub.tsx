@@ -66,7 +66,7 @@ export function ProfileQuickHub({ summary, onNavigate }: ProfileQuickHubProps) {
               <View style={[styles.icon, { backgroundColor: tone.bg }]}>
                 <Icon size={20} color={tone.fg} strokeWidth={1.75} />
               </View>
-              <Text style={styles.label} numberOfLines={2}>
+              <Text style={styles.label} numberOfLines={2} ellipsizeMode="tail">
                 {t(`profile.${item.labelKey}`)}
               </Text>
               {count != null ? (
@@ -103,7 +103,9 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       width: '31%',
       flexGrow: 1,
       minWidth: 96,
+      minHeight: 108,
       alignItems: 'center',
+      justifyContent: 'flex-start',
       gap: 6,
       paddingVertical: 12,
       paddingHorizontal: 6,
@@ -124,12 +126,14 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       justifyContent: 'center',
     },
     label: {
+      width: '100%',
       fontSize: 10.5,
       lineHeight: 13,
       fontFamily: theme.typography.fonts.ui.bold,
       fontWeight: '700',
       color: PROFILE.ink2,
       textAlign: 'center',
+      minHeight: 26,
     },
     count: {
       fontSize: 10,

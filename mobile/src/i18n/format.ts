@@ -1,8 +1,51 @@
 import type { AppLocale } from './config';
 import { LOCALE_INTL } from './config';
 
+/** Fallback shown when a date cannot be parsed or formatted. */
+export const INVALID_DATE_FALLBACK = '—';
+
 export function getIntlLocale(locale: AppLocale): string {
   return LOCALE_INTL[locale] ?? LOCALE_INTL.en;
+}
+
+/**
+ * Normalize API / epoch / ISO date inputs into a valid `Date`.
+ * Handles seconds-vs-ms timestamps and rejects unparseable values.
+ */
+export function parseDate(value: Date | string | number | null | undefined): Date | null {
+  if (value == null || value === '') {
+    return null;
+  }
+
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value;
+  }
+
+  if (typeof value === 'number') {
+    if (!Number.isFinite(value)) {
+      return null;
+    }
+    // Values below 1e12 are almost certainly unix seconds (ms would be year ~2001+).
+    const ms = Math.abs(value) < 1e12 ? value * 1000 : value;
+    const date = new Date(ms);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed || trimmed === 'null' || trimmed === 'undefined') {
+      return null;
+    }
+
+    if (/^-?\d+(\.\d+)?$/.test(trimmed)) {
+      return parseDate(Number(trimmed));
+    }
+
+    const date = new Date(trimmed);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  return null;
 }
 
 export function formatNumber(value: number, locale: AppLocale, options?: Intl.NumberFormatOptions): string {
@@ -18,15 +61,26 @@ export function formatPercent(value: number, locale: AppLocale, digits = 0): str
 }
 
 export function formatDate(
-  value: Date | string | number,
+  value: Date | string | number | null | undefined,
   locale: AppLocale,
   options?: Intl.DateTimeFormatOptions,
 ): string {
-  const date = value instanceof Date ? value : new Date(value);
-  return new Intl.DateTimeFormat(getIntlLocale(locale), options).format(date);
+  const date = parseDate(value);
+  if (!date) {
+    return INVALID_DATE_FALLBACK;
+  }
+
+  try {
+    return new Intl.DateTimeFormat(getIntlLocale(locale), options).format(date);
+  } catch {
+    return INVALID_DATE_FALLBACK;
+  }
 }
 
-export function formatRelativeDay(value: Date | string, locale: AppLocale): string {
+export function formatRelativeDay(
+  value: Date | string | number | null | undefined,
+  locale: AppLocale,
+): string {
   return formatDate(value, locale, { day: 'numeric', month: 'short', year: 'numeric' });
 }
 

@@ -1,4 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  Eye,
+  Hand,
+  Mic,
+  MonitorUp,
+  PhoneOff,
+  Pin,
+  Send,
+  Video,
+  VolumeX,
+} from 'lucide-react';
 import type { AdminLiveClass } from '../../api/liveClasses';
 import { useHostLiveRoom, type HostRoomCredentials } from '../../hooks/useHostLiveRoom';
 import { useDevStreamRelay } from '../../hooks/useDevStreamRelay';
@@ -257,12 +268,17 @@ export function LiveControlRoom({
             </div>
           ) : null}
           <div className="live-class-title">{liveClass.title}</div>
+          <div
+            className={`live-connection ${room.connected ? 'connected' : room.connecting ? 'connecting' : 'offline'}`}
+            role="status"
+          >
+            <span aria-hidden />
+            {room.connected ? 'Host connected' : room.connecting ? 'Connecting host' : 'Host offline'}
+          </div>
           <div className="live-viewers">
-            <svg viewBox="0 0 24 24">
-              <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z" />
-              <circle cx="12" cy="12" r="3" />
-            </svg>
+            <Eye aria-hidden strokeWidth={1.8} />
             <span className="num">{chat.presenceCount}</span>
+            <span className="live-viewer-label">watching</span>
           </div>
         </div>
 
@@ -272,9 +288,7 @@ export function LiveControlRoom({
         {pinnedMessage ? (
           <div className="live-pinned">
             <div className="ic">
-              <svg viewBox="0 0 24 24">
-                <path d="M12 17v5M9 2h6l-1 7 4 3H6l4-3z" />
-              </svg>
+              <Pin aria-hidden strokeWidth={1.8} />
             </div>
             <div className="tx">
               <b>PINNED · {(liveClass.instructor || 'HOST').toUpperCase()}</b>
@@ -298,57 +312,59 @@ export function LiveControlRoom({
             type="button"
             className={`live-ctrl ${room.micEnabled ? '' : 'off'}`}
             title="Toggle microphone"
+            aria-label={room.micEnabled ? 'Mute microphone' : 'Unmute microphone'}
+            aria-pressed={room.micEnabled}
             onClick={() => void room.toggleMic()}
           >
-            <svg viewBox="0 0 24 24">
-              <rect x="9" y="3" width="6" height="11" rx="3" />
-              <path d="M5 11a7 7 0 0 0 14 0M12 18v3" />
-            </svg>
+            <Mic aria-hidden strokeWidth={1.8} />
           </button>
           <button
             type="button"
             className={`live-ctrl ${room.cameraEnabled ? '' : 'off'}`}
             title="Toggle camera"
+            aria-label={room.cameraEnabled ? 'Turn camera off' : 'Turn camera on'}
+            aria-pressed={room.cameraEnabled}
             onClick={() => void room.toggleCamera()}
           >
-            <svg viewBox="0 0 24 24">
-              <rect x="2" y="6" width="14" height="12" rx="3" />
-              <path d="m22 8-6 4 6 4z" />
-            </svg>
+            <Video aria-hidden strokeWidth={1.8} />
           </button>
           <button
             type="button"
-            className={`live-ctrl ${room.screenEnabled ? 'off' : ''}`}
-            title="Share screen"
+            className={`live-ctrl ${room.screenEnabled ? 'active' : ''}`}
+            title={room.screenEnabled ? 'Stop sharing screen' : 'Share screen'}
+            aria-label={room.screenEnabled ? 'Stop sharing screen' : 'Share screen'}
+            aria-pressed={room.screenEnabled}
             onClick={() => void room.toggleScreenShare()}
           >
-            <svg viewBox="0 0 24 24">
-              <rect x="2" y="4" width="20" height="13" rx="2" />
-              <path d="M8 21h8M12 17v4" />
-            </svg>
+            <MonitorUp aria-hidden strokeWidth={1.8} />
           </button>
-          <button type="button" className="live-ctrl" title="Mute all students" onClick={handleMuteAll}>
-            <svg viewBox="0 0 24 24">
-              <path d="M16 4H8a4 4 0 0 0 0 8h8M9 20a4 4 0 0 0 4-4" />
-            </svg>
+          <button
+            type="button"
+            className="live-ctrl"
+            title="Mute all students"
+            aria-label="Mute all students"
+            onClick={handleMuteAll}
+          >
+            <VolumeX aria-hidden strokeWidth={1.8} />
           </button>
           <button
             type="button"
             className="live-ctrl end"
             title="End class"
+            aria-label="End class"
             disabled={ending}
             onClick={() => void handleEndClass()}
           >
-            <svg viewBox="0 0 24 24">
-              <path d="M6 6l12 12M18 6 6 18" />
-            </svg>
+            <PhoneOff aria-hidden strokeWidth={1.8} />
           </button>
         </div>
       </div>
 
       <div className="live-side">
         {latestHand ? (
-          <div className="live-hand-toast">✋ {latestHand.userName} raised a hand</div>
+          <div className="live-hand-toast">
+            <Hand aria-hidden strokeWidth={1.8} /> {latestHand.userName} raised a hand
+          </div>
         ) : null}
 
         <div className="live-parts">
@@ -375,7 +391,7 @@ export function LiveControlRoom({
             <div className="live-hand-list">
               {chat.raisedHands.map((hand) => (
                 <div key={hand.userId} className="live-hand-item">
-                  ✋ {hand.userName}
+                  <Hand aria-hidden strokeWidth={1.8} /> {hand.userName}
                 </div>
               ))}
             </div>
@@ -498,10 +514,8 @@ export function LiveControlRoom({
                 }
               }}
             />
-            <button type="button" onClick={handleSendMessage}>
-              <svg viewBox="0 0 24 24">
-                <path d="M22 2 11 13M22 2l-7 20-4-9-9-4z" />
-              </svg>
+            <button type="button" onClick={handleSendMessage} aria-label="Send message" title="Send message">
+              <Send aria-hidden strokeWidth={1.8} />
             </button>
           </div>
         </div>

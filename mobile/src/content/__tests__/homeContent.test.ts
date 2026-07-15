@@ -3,6 +3,7 @@ import { createMockHomeFeed } from '../../test/fixtures/homeFeed';
 import {
   HOME_AI_ACTION_TILES,
   HOME_COACH_PROMPTS,
+  HOME_EXPLORE_GRID,
   HOME_SECTION_META,
   HOME_SECTION_ORDER,
   resolveHomeSectionVisibility,
@@ -11,7 +12,8 @@ import {
 
 describe('homeContent', () => {
   it('keeps canonical section order', () => {
-    expect(HOME_SECTION_ORDER[0]).toBe('features');
+    expect(HOME_SECTION_ORDER[0]).toBe('continue');
+    expect(HOME_SECTION_ORDER[3]).toBe('features');
     expect(HOME_SECTION_ORDER.at(-1)).toBe('league');
   });
 
@@ -42,8 +44,9 @@ describe('homeContent', () => {
   it('defines subtitles and panel tones for premium sections', () => {
     expect(HOME_SECTION_META.features.subtitleKey).toBe('exploreSubtitle');
     expect(HOME_SECTION_META.nudges.titleKey).toBe('aiActionsTitle');
-    expect(HOME_SECTION_META.league.panelTone).toBe('gold');
+    expect(HOME_SECTION_META.league.panelTone).toBe(false);
     expect(HOME_SECTION_META.features.panelTone).toBe(false);
+    expect(HOME_SECTION_META.continue.compactWhenFirst).toBe(true);
   });
 
   it('lists AI action tiles and coach prompts', () => {
@@ -54,5 +57,14 @@ describe('homeContent', () => {
       'plan',
     ]);
     expect(HOME_COACH_PROMPTS.length).toBeGreaterThanOrEqual(4);
+  });
+
+  it('uses a dense 3-column explore feature grid', () => {
+    expect(HOME_EXPLORE_GRID).toEqual({
+      columns: 3,
+      cardPad: 10,
+      tileGap: 4,
+      rowGap: 8,
+    });
   });
 });

@@ -12,6 +12,7 @@ import { PremiumIcon } from './premium';
 import type { PremiumIconTone } from './premium/premiumIconTokens';
 import { FLOATING_TAB_BAR_HEIGHT } from '../navigation/tabBarConstants';
 import { isAskAiScreenOpen, navigateToAskAI } from '../navigation/askAiNavigation';
+import { GlassSurface } from './GlassSurface';
 
 type TabRoute = 'Home' | 'Practice' | 'CurrentAffairs' | 'Profile';
 
@@ -76,7 +77,11 @@ export function TabBar({ state, navigation }: TabBarProps) {
         accessibilityLabel={t(TAB_LABEL_KEYS[routeName])}
         accessibilityState={{ selected: isFocused }}
         onPress={() => navigation.navigate(route.name)}
-        style={({ pressed }) => [styles.tab, pressed && styles.tabPressed]}
+        style={({ pressed }) => [
+          styles.tab,
+          isFocused && styles.tabFocused,
+          pressed && styles.tabPressed,
+        ]}
       >
         <PremiumIcon
           Icon={Icon}
@@ -100,7 +105,8 @@ export function TabBar({ state, navigation }: TabBarProps) {
       pointerEvents="box-none"
     >
       <View style={[styles.shadowWrap, premiumNavShadow(theme)]}>
-        <View style={styles.bar}>
+        <GlassSurface tone="light" intensity={72} borderRadius={28} style={styles.bar}>
+          <View style={styles.glassHighlight} pointerEvents="none" />
           <View style={styles.sideGroup}>{LEFT_TABS.map(renderTab)}</View>
 
           <Pressable
@@ -108,7 +114,11 @@ export function TabBar({ state, navigation }: TabBarProps) {
             accessibilityLabel={t('fabAskAi')}
             accessibilityState={{ selected: aiFocused }}
             onPress={openAskAi}
-            style={({ pressed }) => [styles.aiTab, pressed && styles.tabPressed]}
+            style={({ pressed }) => [
+              styles.aiTab,
+              aiFocused && styles.aiTabFocused,
+              pressed && styles.tabPressed,
+            ]}
           >
             <PremiumIcon
               Icon={Sparkles}
@@ -125,7 +135,7 @@ export function TabBar({ state, navigation }: TabBarProps) {
           </Pressable>
 
           <View style={styles.sideGroup}>{RIGHT_TABS.map(renderTab)}</View>
-        </View>
+        </GlassSurface>
       </View>
     </View>
   );
@@ -156,12 +166,18 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme'], horizontalPad
       justifyContent: 'space-between',
       minHeight: FLOATING_TAB_BAR_HEIGHT,
       paddingHorizontal: 8,
-      paddingVertical: 10,
+      paddingVertical: 8,
       borderRadius: 28,
-      backgroundColor: '#FFFFFF',
-      borderWidth: 1,
-      borderColor: 'rgba(236,232,221,0.95)',
       overflow: 'hidden',
+    },
+    glassHighlight: {
+      position: 'absolute',
+      top: 1,
+      left: 22,
+      right: 22,
+      height: 1,
+      borderRadius: 99,
+      backgroundColor: 'rgba(255,255,255,0.95)',
     },
     sideGroup: {
       flex: 1,
@@ -177,6 +193,10 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme'], horizontalPad
       minHeight: 56,
       paddingHorizontal: 2,
     },
+    tabFocused: {
+      borderRadius: 18,
+      backgroundColor: 'rgba(44,53,104,0.055)',
+    },
     aiTab: {
       alignItems: 'center',
       justifyContent: 'center',
@@ -184,6 +204,10 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme'], horizontalPad
       minWidth: 58,
       minHeight: 56,
       paddingHorizontal: 4,
+    },
+    aiTabFocused: {
+      borderRadius: 18,
+      backgroundColor: 'rgba(201,162,75,0.09)',
     },
     tabPressed: {
       opacity: 0.9,

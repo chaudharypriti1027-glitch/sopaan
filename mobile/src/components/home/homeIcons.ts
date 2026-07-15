@@ -58,6 +58,7 @@ export { HOME_COACH_PROMPTS } from '../../content/homeContent';
 export const HOME_ICON_SLOTS = {
   section: { size: 'sm' as PremiumIconSize, elevated: true, filled: true },
   feed: { size: 'md' as PremiumIconSize, elevated: true, filled: true },
+  /** Compact tile for Explore 3-col hub — sm (36px) fits labels without crowding. */
   grid: { size: 'sm' as PremiumIconSize, elevated: true, filled: true },
   hero: { size: 'sm' as PremiumIconSize, elevated: true, filled: true, surface: 'dark' as const },
   featured: { size: 'lg' as PremiumIconSize, elevated: true, filled: true },

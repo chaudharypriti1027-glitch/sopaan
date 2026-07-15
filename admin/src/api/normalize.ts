@@ -17,10 +17,16 @@ export function normalizeDoc<T extends WithMongoId>(doc: T): T & { id: string } 
 }
 
 export function normalizeList<T extends WithMongoId>(
-  response: PaginatedResponse<T>,
+  response: PaginatedResponse<T> | null | undefined,
 ): PaginatedResponse<T & { id: string }> {
+  const items = Array.isArray(response?.items) ? response.items : [];
   return {
-    ...response,
-    items: response.items.map(normalizeDoc),
+    items: items.map(normalizeDoc),
+    pagination: {
+      total: response?.pagination?.total ?? items.length,
+      limit: response?.pagination?.limit ?? items.length,
+      offset: response?.pagination?.offset ?? 0,
+      hasMore: Boolean(response?.pagination?.hasMore),
+    },
   };
 }

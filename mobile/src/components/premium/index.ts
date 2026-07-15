@@ -25,6 +25,11 @@ export { QueryStateSkeleton } from './QueryStateSkeleton';
 export { PremiumDialog } from './PremiumDialog';
 export { PremiumDialogProvider, usePremiumDialog } from './PremiumDialogProvider';
 export { showPremiumDialog, closePremiumDialog } from './premiumDialogBridge';
+export {
+  SubscriptionSuccessDialog,
+  type SubscriptionSuccessDetail,
+  type SubscriptionSuccessDialogProps,
+} from './SubscriptionSuccessDialog';
 export type {
   PremiumDialogConfig,
   PremiumConfirmOptions,

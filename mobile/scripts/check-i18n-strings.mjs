@@ -9,6 +9,20 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
+const LOCALES_ROOT = path.join(ROOT, 'src/i18n/locales');
+const LOCALES = ['en', 'hi', 'gu'];
+const PARITY_SCOPES = {
+  app: ['answerEvaluation.', 'manageSubscription.'],
+  auth: ['forgot.', 'changePassword.'],
+  common: [''],
+  navigation: [''],
+  settings: [
+    'termsOfService',
+    'termsOfServiceDesc',
+    'changePassword',
+    'changePasswordDesc',
+  ],
+};
 
 /** High-traffic screens and their supporting UI — expand as coverage grows. */
 const PRIORITY_FILES = [
@@ -233,17 +247,67 @@ function scanFile(relativePath) {
   return violations;
 }
 
+function collectLeafKeys(value, prefix = '', keys = []) {
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    for (const [key, child] of Object.entries(value)) {
+      collectLeafKeys(child, prefix ? `${prefix}.${key}` : key, keys);
+    }
+  } else {
+    keys.push(prefix);
+  }
+  return keys;
+}
+
+function scanLocaleKeyParity() {
+  const violations = [];
+
+  for (const [namespace, scopes] of Object.entries(PARITY_SCOPES)) {
+    const keysByLocale = Object.fromEntries(
+      LOCALES.map((locale) => {
+        const filePath = path.join(LOCALES_ROOT, locale, `${namespace}.json`);
+        const parsed = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+        const keys = collectLeafKeys(parsed).filter((key) =>
+          scopes.some((scope) => (scope.endsWith('.') ? key.startsWith(scope) : key === scope || scope === '')),
+        );
+        return [locale, new Set(keys)];
+      }),
+    );
+    const reference = keysByLocale.en;
+
+    for (const locale of LOCALES.filter((item) => item !== 'en')) {
+      for (const key of reference) {
+        if (!keysByLocale[locale].has(key)) {
+          violations.push(`${locale}/${namespace}.json missing "${key}"`);
+        }
+      }
+      for (const key of keysByLocale[locale]) {
+        if (!reference.has(key)) {
+          violations.push(`${locale}/${namespace}.json has extra "${key}"`);
+        }
+      }
+    }
+  }
+
+  return violations;
+}
+
 function main() {
   const all = PRIORITY_FILES.flatMap(scanFile);
+  const localeViolations = scanLocaleKeyParity();
 
-  if (all.length === 0) {
-    console.log(`i18n check passed — no hardcoded strings in ${PRIORITY_FILES.length} priority files.`);
+  if (all.length === 0 && localeViolations.length === 0) {
+    console.log(
+      `i18n check passed — no hardcoded strings in ${PRIORITY_FILES.length} priority files and locale keys match.`,
+    );
     process.exit(0);
   }
 
   console.error(`Found ${all.length} likely hardcoded user-facing string(s):\n`);
   for (const v of all) {
     console.error(`  ${v.file}:${v.line} [${v.kind}] "${v.text}"`);
+  }
+  for (const violation of localeViolations) {
+    console.error(`  ${violation}`);
   }
   console.error('\nWrap copy in t() / i18n.t() or add // i18n-ok with justification.');
   process.exit(1);

@@ -32,7 +32,7 @@ export function buildProfileMenuSections(profile: Profile): ProfileMenuSection[]
       titleKey: 'rewards',
       items: [
         { id: 'wallet', labelKey: 'wallet', route: 'Rewards', tone: 'teal', icon: Wallet, countKey: 'coins' },
-        { id: 'downloads', labelKey: 'downloads', route: 'Notes', tone: 'indigo', icon: Download, countKey: 'downloads' },
+        { id: 'downloads', labelKey: 'downloads', route: 'Books', tone: 'indigo', icon: Download, countKey: 'downloads' },
         { id: 'refer', labelKey: 'refer', route: 'ReferEarn', tone: 'gold', icon: UserPlus, badge: '₹100' },
       ],
     },

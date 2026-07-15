@@ -88,6 +88,11 @@ const platformSettingsSchema = new mongoose.Schema(
       min: 0,
       max: 100_000,
     },
+    /** When true, brand-new students receive 1 month of free Pro on signup. */
+    welcomeMonthEnabled: {
+      type: Boolean,
+      default: true,
+    },
   },
   {
     timestamps: true,

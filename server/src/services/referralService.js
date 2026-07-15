@@ -39,7 +39,7 @@ export function buildReferralLinks(code) {
     code: normalized,
     appLink: `${REFERRAL_APP_SCHEME}://refer?code=${encoded}`,
     webLink: `${REFERRAL_LINK_BASE}/${normalized.replace('SOPAAN-', '')}`,
-    shareText: `Join me on Sopaan for SSC, Banking & UPSC prep. Use my code ${normalized} to get bonus coins when you complete your first mock.`,
+    shareText: `Join me on Sopaan — AI prep to crack any exam. Use my code ${normalized} to get bonus coins when you complete your first mock.`,
   };
 }
 

@@ -6,29 +6,42 @@ import {
   Crown,
   RefreshCw,
   ShieldCheck,
+  Sparkles,
   XCircle,
 } from 'lucide-react-native';
 import { useCallback, useMemo } from 'react';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Button, Card, FeatureScreenLayout, Pill, PremiumHeroCard, QueryStateView } from '../../components';
-import { PREMIUM, PremiumIcon, PremiumSectionLabel } from '../../components/premium';
+import { PREMIUM, PremiumIcon, PremiumSectionLabel, usePremiumDialog } from '../../components/premium';
 import { useAuth } from '../../auth';
 import {
   useCancelSubscription,
   useNetworkStatus,
+  useProGate,
   useRestorePurchases,
   useSubscriptionEntitlement,
 } from '../../hooks';
 import type { EntitlementStatus } from '../../api/payments';
 import type { MainStackParamList } from '../../navigation/types';
 import { useTheme } from '../../theme';
+import { INVALID_DATE_FALLBACK } from '../../i18n/format';
 import { useFormat } from '../../i18n/useFormat';
+import { getUserFacingMessage } from '../../errors/getUserFacingMessage';
 
 type ManageNav = NativeStackNavigationProp<MainStackParamList, 'ManageSubscription'>;
 
-function statusVariant(status: EntitlementStatus): 'gold' | 'teal' | 'muted' {
-  if (status === 'active' || status === 'trialing') return 'gold';
+function statusVariant(
+  status: EntitlementStatus,
+  cancelAtPeriodEnd: boolean,
+  hasAccess: boolean,
+): 'gold' | 'teal' | 'muted' {
+  if (hasAccess && (status === 'active' || status === 'trialing') && !cancelAtPeriodEnd) {
+    return 'gold';
+  }
+  if (hasAccess && (cancelAtPeriodEnd || status === 'cancelled')) {
+    return 'teal';
+  }
   return 'muted';
 }
 
@@ -45,6 +58,8 @@ export function ManageSubscriptionScreen() {
   const { theme } = useTheme();
   const { t } = useTranslation('app');
   const { formatDate } = useFormat();
+  const { alert, confirm } = usePremiumDialog();
+  const { isPro, tier, refetchTier } = useProGate();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   const { isOffline } = useNetworkStatus();
@@ -54,84 +69,103 @@ export function ManageSubscriptionScreen() {
 
   const entitlement = entitlementQuery.data?.entitlement;
   const history = entitlementQuery.data?.history ?? [];
+  const hasAccess = entitlement?.hasAccess ?? Boolean(user?.isPremium);
+  const endingSoon = Boolean(hasAccess && (entitlement?.cancelAtPeriodEnd || entitlement?.status === 'cancelled'));
 
   const statusLabel = useCallback(
     (status: EntitlementStatus) => {
+      if (endingSoon && hasAccess) {
+        return t('manageSubscription.statusEnding');
+      }
       if (status === 'trialing') return t('manageSubscription.statusTrialing');
       if (status === 'active') return t('manageSubscription.statusActive');
       if (status === 'past_due') return t('manageSubscription.statusPastDue');
       if (status === 'cancelled') return t('manageSubscription.statusCancelled');
       return t('manageSubscription.statusExpired');
     },
-    [t],
+    [endingSoon, hasAccess, t],
   );
 
   const formatEntitlementDate = useCallback(
-    (value?: string | null) => {
-      if (!value) return '—';
-      return formatDate(value, { day: 'numeric', month: 'short', year: 'numeric' });
+    (value?: string | number | Date | null) => {
+      const label = formatDate(value, { day: 'numeric', month: 'short', year: 'numeric' });
+      return label === INVALID_DATE_FALLBACK ? t('manageSubscription.expired') : label;
     },
-    [formatDate],
+    [formatDate, t],
+  );
+
+  const syncAfterBillingChange = useCallback(
+    async (nextUser: typeof user) => {
+      if (nextUser) {
+        setSessionUser(nextUser);
+      }
+      await Promise.all([refreshUser(), refetchTier(), entitlementQuery.refetch()]);
+    },
+    [entitlementQuery, refetchTier, refreshUser, setSessionUser],
   );
 
   const handleRestore = async () => {
     try {
       const result = await restoreMutation.mutateAsync();
-      setSessionUser(result.user);
-      await refreshUser();
-      Alert.alert(
-        result.restored
+      await syncAfterBillingChange(result.user);
+      alert({
+        title: result.restored
           ? t('manageSubscription.restoredTitle')
           : t('manageSubscription.upToDateTitle'),
-        result.restored
+        message: result.restored
           ? t('manageSubscription.restoredBody')
           : t('manageSubscription.upToDateBody'),
-      );
+        icon: 'sparkles',
+        iconTone: 'gold',
+      });
     } catch (error) {
-      Alert.alert(
-        t('manageSubscription.restoreFailed'),
-        error instanceof Error ? error.message : t('common:retry'),
-      );
+      alert({
+        title: t('manageSubscription.restoreFailed'),
+        message: getUserFacingMessage(error),
+        icon: 'info',
+        iconTone: 'coral',
+      });
     }
   };
 
   const handleCancel = () => {
-    Alert.alert(
-      t('manageSubscription.cancelTitle'),
-      entitlement?.autoRenews
-        ? t('manageSubscription.cancelBodyAutoRenew')
-        : t('manageSubscription.cancelBodyNoRenew'),
-      [
-        { text: t('manageSubscription.keepPro'), style: 'cancel' },
-        {
-          text: t('manageSubscription.cancelAtPeriodEnd'),
-          style: 'destructive',
-          onPress: () => {
-            void (async () => {
-              try {
-                const result = await cancelMutation.mutateAsync({ atPeriodEnd: true });
-                setSessionUser(result.user);
-                await refreshUser();
-                Alert.alert(
-                  t('manageSubscription.cancelledTitle'),
-                  t('manageSubscription.cancelledBody', {
-                    date: formatEntitlementDate(entitlement?.currentPeriodEnd),
-                  }),
-                );
-              } catch (error) {
-                Alert.alert(
-                  t('manageSubscription.cancelFailed'),
-                  error instanceof Error ? error.message : t('common:retry'),
-                );
-              }
-            })();
-          },
-        },
-      ],
-    );
+    const periodEndLabel = formatEntitlementDate(entitlement?.currentPeriodEnd);
+    confirm({
+      title: t('manageSubscription.cancelTitle'),
+      message: entitlement?.autoRenews
+        ? t('manageSubscription.cancelBodyAutoRenew', { date: periodEndLabel })
+        : t('manageSubscription.cancelBodyNoRenew', { date: periodEndLabel }),
+      cancelLabel: t('manageSubscription.keepPro'),
+      confirmLabel: t('manageSubscription.cancelAtPeriodEnd'),
+      tone: 'danger',
+      icon: 'logout',
+      onConfirm: () => {
+        void (async () => {
+          try {
+            const result = await cancelMutation.mutateAsync({ atPeriodEnd: true });
+            await syncAfterBillingChange(result.user);
+            const endsOn = formatEntitlementDate(
+              result.entitlement?.currentPeriodEnd ?? entitlement?.currentPeriodEnd,
+            );
+            alert({
+              title: t('manageSubscription.cancelledTitle'),
+              message: t('manageSubscription.cancelledBody', { date: endsOn }),
+              icon: 'info',
+              iconTone: 'navy',
+            });
+          } catch (error) {
+            alert({
+              title: t('manageSubscription.cancelFailed'),
+              message: getUserFacingMessage(error),
+              icon: 'info',
+              iconTone: 'coral',
+            });
+          }
+        })();
+      },
+    });
   };
 
-  const hasAccess = entitlement?.hasAccess ?? user?.isPremium;
   const heroIcon = (
     <PremiumIcon Icon={Crown} tone="gold" size="lg" filled surface="dark" />
   );
@@ -141,6 +175,16 @@ export function ManageSubscriptionScreen() {
       ? t('manageSubscription.trial')
       : t('premium.planSuffix', { plan: entitlement.plan })
     : t('manageSubscription.heroTitle');
+
+  const freeLimits = tier?.limits;
+  const showFreeLimits = !hasAccess && !isPro && Boolean(freeLimits);
+
+  const canCancel =
+    hasAccess &&
+    entitlement &&
+    entitlement.status !== 'expired' &&
+    !entitlement.cancelAtPeriodEnd &&
+    entitlement.status !== 'cancelled';
 
   return (
     <FeatureScreenLayout
@@ -164,7 +208,11 @@ export function ManageSubscriptionScreen() {
             entitlement ? (
               <Pill
                 label={statusLabel(entitlement.status)}
-                variant={statusVariant(entitlement.status)}
+                variant={statusVariant(
+                  entitlement.status,
+                  Boolean(entitlement.cancelAtPeriodEnd),
+                  Boolean(hasAccess),
+                )}
               />
             ) : undefined
           }
@@ -187,10 +235,27 @@ export function ManageSubscriptionScreen() {
           hint={!entitlement ? t('manageSubscription.noEntitlement') : undefined}
         />
 
+        {endingSoon && entitlement ? (
+          <View
+            style={styles.endingBanner}
+            accessibilityRole="text"
+            accessibilityLabel={t('manageSubscription.endingBannerA11y', {
+              date: formatEntitlementDate(entitlement.currentPeriodEnd),
+            })}
+          >
+            <AlertCircle size={18} color={PREMIUM.accent} />
+            <Text style={styles.endingBannerText}>
+              {t('manageSubscription.endingBanner', {
+                date: formatEntitlementDate(entitlement.currentPeriodEnd),
+              })}
+            </Text>
+          </View>
+        ) : null}
+
         {entitlement ? (
           <Card style={styles.details} padded>
             <View style={styles.detailRow}>
-              <PremiumIcon Icon={Calendar} tone="lavender" size="sm" filled />
+              <Calendar size={18} color={PREMIUM.accent} strokeWidth={2.2} />
               <View style={styles.detailText}>
                 <Text style={styles.detailLabel}>{t('manageSubscription.periodEnds')}</Text>
                 <Text style={styles.detailValue}>
@@ -200,7 +265,7 @@ export function ManageSubscriptionScreen() {
             </View>
 
             <View style={styles.detailRow}>
-              <PremiumIcon Icon={ShieldCheck} tone="mint" size="sm" filled />
+              <ShieldCheck size={18} color={PREMIUM.accent} strokeWidth={2.2} />
               <View style={styles.detailText}>
                 <Text style={styles.detailLabel}>{t('manageSubscription.access')}</Text>
                 <Text style={styles.detailValue}>
@@ -211,9 +276,9 @@ export function ManageSubscriptionScreen() {
               </View>
             </View>
 
-            {entitlement.cancelAtPeriodEnd ? (
+            {entitlement.cancelAtPeriodEnd || entitlement.status === 'cancelled' ? (
               <View style={styles.detailRow}>
-                <PremiumIcon Icon={XCircle} tone="gold" size="sm" filled />
+                <XCircle size={18} color={PREMIUM.accent} strokeWidth={2.2} />
                 <View style={styles.detailText}>
                   <Text style={styles.detailLabel}>{t('manageSubscription.renewal')}</Text>
                   <Text style={styles.detailValue}>
@@ -226,11 +291,36 @@ export function ManageSubscriptionScreen() {
             ) : null}
 
             {entitlement.status === 'past_due' ? (
-              <View style={styles.alertBox}>
+              <View style={styles.alertBox} accessibilityRole="alert">
                 <AlertCircle size={18} color={theme.colors.semantic.error} />
                 <Text style={styles.alertText}>{t('manageSubscription.pastDueAlert')}</Text>
               </View>
             ) : null}
+          </Card>
+        ) : null}
+
+        {showFreeLimits && freeLimits ? (
+          <Card style={styles.limitsCard} padded>
+            <View style={styles.limitsHeader}>
+              <Sparkles size={18} color={PREMIUM.accent} strokeWidth={2.2} />
+              <Text style={styles.limitsTitle}>{t('manageSubscription.freeLimitsTitle')}</Text>
+            </View>
+            <Text style={styles.limitsBody}>{t('manageSubscription.freeLimitsBody')}</Text>
+            <View style={styles.limitsList}>
+              <Text style={styles.limitRow}>
+                {t('manageSubscription.limitAiTests', { count: freeLimits.aiGenerateTestsPerDay })}
+              </Text>
+              <Text style={styles.limitRow}>
+                {t('manageSubscription.limitAiDoubts', { count: freeLimits.aiDoubtsFastPerDay })}
+              </Text>
+              <Text style={styles.limitRow}>
+                {t('manageSubscription.limitAiEval', { count: freeLimits.aiEvaluationsPerDay })}
+              </Text>
+              <Text style={styles.limitRow}>
+                {t('manageSubscription.limitMocks', { count: freeLimits.mocksPerDay })}
+              </Text>
+              <Text style={styles.limitRow}>{t('manageSubscription.limitAnalytics')}</Text>
+            </View>
           </Card>
         ) : null}
 
@@ -242,6 +332,7 @@ export function ManageSubscriptionScreen() {
             icon={<RefreshCw size={18} color={PREMIUM.accent} />}
             loading={restoreMutation.isPending}
             onPress={() => void handleRestore()}
+            accessibilityHint={t('manageSubscription.restoreA11yHint')}
             fullWidth
           />
 
@@ -250,19 +341,18 @@ export function ManageSubscriptionScreen() {
               label={t('manageSubscription.upgradeToPro')}
               variant="gold"
               onPress={() => navigation.navigate('Premium')}
+              accessibilityHint={t('manageSubscription.upgradeA11yHint')}
               fullWidth
             />
           ) : null}
 
-          {hasAccess &&
-          entitlement &&
-          entitlement.status !== 'cancelled' &&
-          entitlement.status !== 'expired' ? (
+          {canCancel ? (
             <Button
               label={t('manageSubscription.cancelSubscription')}
               variant="ghost"
               loading={cancelMutation.isPending}
               onPress={handleCancel}
+              accessibilityHint={t('manageSubscription.cancelA11yHint')}
               fullWidth
             />
           ) : null}
@@ -289,7 +379,11 @@ export function ManageSubscriptionScreen() {
                     label={
                       item.status === 'paid'
                         ? t('manageSubscription.paid')
-                        : item.status
+                        : item.status === 'failed'
+                          ? t('manageSubscription.paymentFailed')
+                          : item.status === 'refunded'
+                            ? t('manageSubscription.refunded')
+                            : item.status
                     }
                     variant={item.status === 'paid' ? 'teal' : 'muted'}
                   />
@@ -313,6 +407,8 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     },
     details: {
       gap: theme.spacing.lg,
+      borderRadius: PREMIUM.cardRadius,
+      borderColor: PREMIUM.goldBorder,
     },
     detailRow: {
       flexDirection: 'row',
@@ -335,6 +431,54 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       ...theme.typography.presets.bodyMedium,
       color: PREMIUM.ink,
       fontFamily: theme.typography.fonts.ui.semibold,
+    },
+    endingBanner: {
+      flexDirection: 'row',
+      gap: theme.spacing.sm,
+      alignItems: 'flex-start',
+      backgroundColor: PREMIUM.goldSoft,
+      borderRadius: theme.radii.lg,
+      padding: theme.spacing.md,
+      borderWidth: 1,
+      borderColor: PREMIUM.goldBorder,
+    },
+    endingBannerText: {
+      ...theme.typography.presets.caption,
+      color: PREMIUM.ink,
+      flex: 1,
+      lineHeight: 18,
+      fontFamily: theme.typography.fonts.ui.semibold,
+    },
+    limitsCard: {
+      gap: theme.spacing.sm,
+      borderRadius: PREMIUM.cardRadius,
+      borderColor: PREMIUM.hairline,
+    },
+    limitsHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.sm,
+    },
+    limitsTitle: {
+      ...theme.typography.presets.bodyMedium,
+      color: PREMIUM.ink,
+      fontFamily: theme.typography.fonts.ui.bold,
+      fontWeight: '700',
+      flex: 1,
+    },
+    limitsBody: {
+      ...theme.typography.presets.caption,
+      color: PREMIUM.sectionLabel,
+      lineHeight: 18,
+    },
+    limitsList: {
+      gap: 6,
+      marginTop: 4,
+    },
+    limitRow: {
+      ...theme.typography.presets.caption,
+      color: PREMIUM.ink,
+      lineHeight: 18,
     },
     alertBox: {
       flexDirection: 'row',
@@ -363,6 +507,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     },
     history: {
       gap: theme.spacing.md,
+      borderRadius: PREMIUM.cardRadius,
     },
     historyRow: {
       flexDirection: 'row',

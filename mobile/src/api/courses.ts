@@ -32,7 +32,7 @@ export async function listCourses(
   const { data } = await apiClient.get<PaginatedResponse<RawCourse>>('/courses', {
     params: withLanguageParams(params),
   });
-  return { ...data, items: data.items.map(normalizeCourse) };
+  return { ...data, items: (data.items ?? []).map(normalizeCourse) };
 }
 
 export async function getCourse(

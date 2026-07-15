@@ -97,9 +97,15 @@ export function stubAnswerEvaluation(maxMarks = 10) {
       structure: Math.min(maxMarks, Math.max(1, Math.round(maxMarks * 0.25))),
       clarity: Math.min(maxMarks, Math.max(1, Math.round(maxMarks * 0.15))),
     },
-    feedback: [
+    strengths: [
       'Local dev stub: Clear structure and main points covered.',
+    ],
+    feedback: [
       'Add one concrete example or fact to strengthen the answer.',
+      'Tighten the conclusion so it directly answers the question.',
+    ],
+    nextSteps: [
+      'Rewrite the answer once with one example and a sharper conclusion.',
     ],
   };
 }

@@ -1,6 +1,5 @@
 import { useMemo, useState, useCallback } from 'react';
 import {
-  Alert,
   Linking,
   Pressable,
   ScrollView,
@@ -98,7 +97,7 @@ export function ProfileScreen() {
 
   const mainNav = () => navigation.getParent<NativeStackNavigationProp<MainStackParamList>>();
 
-  const { confirm } = usePremiumDialog();
+  const { confirm, alert } = usePremiumDialog();
 
   const handleLogout = () => {
     confirm({
@@ -130,6 +129,11 @@ export function ProfileScreen() {
       return;
     }
 
+    if (item.route === 'Books' && item.id === 'downloads') {
+      mainNav()?.navigate('Books', { downloadedOnly: true });
+      return;
+    }
+
     if (item.route) {
       mainNav()?.navigate(item.route as never);
     }
@@ -158,7 +162,12 @@ export function ProfileScreen() {
       void queryClient.invalidateQueries({ queryKey: queryKeys.account.summary() });
       setAvatarPickerOpen(false);
     } catch (err) {
-      Alert.alert(t('app:profile.couldNotUpload'), parseApiError(err).message);
+      alert({
+        title: t('app:profile.couldNotUpload'),
+        message: parseApiError(err).message,
+        icon: 'info',
+        iconTone: 'coral',
+      });
     } finally {
       setAvatarLoading(false);
     }
@@ -179,7 +188,12 @@ export function ProfileScreen() {
       }
       setAvatarPickerOpen(false);
     } catch (err) {
-      Alert.alert(t('app:profile.couldNotSave'), parseApiError(err).message);
+      alert({
+        title: t('app:profile.couldNotSave'),
+        message: parseApiError(err).message,
+        icon: 'info',
+        iconTone: 'coral',
+      });
     } finally {
       setAvatarLoading(false);
     }
@@ -353,7 +367,12 @@ export function ProfileScreen() {
             }
             setEditOpen(false);
           } catch (err) {
-            Alert.alert(t('app:profile.couldNotSave'), parseApiError(err).message);
+            alert({
+              title: t('app:profile.couldNotSave'),
+              message: parseApiError(err).message,
+              icon: 'info',
+              iconTone: 'coral',
+            });
           }
         }}
       />

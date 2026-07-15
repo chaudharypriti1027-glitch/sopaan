@@ -18,6 +18,10 @@ jest.mock('@react-navigation/native', () => ({
 jest.mock('../../hooks', () => ({
   useAttempts: (...args: unknown[]) => mockUseAttempts(...args),
   useAttempt: (...args: unknown[]) => mockUseAttempt(...args),
+  useProGate: () => ({
+    isPro: true,
+    openPaywall: jest.fn(),
+  }),
 }));
 
 describe('MockAnalysisScreen', () => {

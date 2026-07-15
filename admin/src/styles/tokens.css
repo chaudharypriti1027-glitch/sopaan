@@ -1,21 +1,22 @@
 :root {
-  --navy: #232a4d;
-  --navy-2: #2e3766;
-  --navy-deep: #12162b;
-  --navy-mid: #1a1f3b;
-  --navy-soft: #e9ebf3;
-  --gold: #c29a4e;
+  /* Brand-aligned navy / gold — elevated from existing Sopaan admin palette */
+  --navy: #2c3568;
+  --navy-2: #3a4478;
+  --navy-deep: #131a3c;
+  --navy-mid: #1c2450;
+  --navy-soft: #e8eaf3;
+  --gold: #c9a24b;
   --gold-lt: #e3c97f;
   --gold-deep: #a67c33;
-  --gold-soft: #f4ebd8;
-  --gold-glow: rgba(226, 201, 127, 0.35);
+  --gold-soft: #f5edd9;
+  --gold-glow: rgba(201, 162, 75, 0.35);
   --sage: #5f8a7b;
   --sage-deep: #4c7264;
   --sage-soft: #e4ede9;
-  --bg: #f0ede4;
-  --bg-elevated: #f7f5ef;
+  --bg: #f3f0e8;
+  --bg-elevated: #faf8f2;
   --surface: #ffffff;
-  --surface-glass: rgba(255, 255, 255, 0.82);
+  --surface-glass: rgba(255, 255, 255, 0.86);
   --ink: #141626;
   --ink-2: #3d3f55;
   --muted: #7d7f92;
@@ -24,24 +25,31 @@
   --hair: #f3f1ea;
   --red: #c0503f;
   --red-soft: #fbe9e7;
-  --sh: 0 22px 48px -28px rgba(18, 22, 43, 0.45);
-  --sh-sm: 0 10px 24px -16px rgba(18, 22, 43, 0.28);
-  --sh-lg: 0 32px 64px -32px rgba(18, 22, 43, 0.5);
-  --ring: 0 0 0 3px rgba(194, 154, 78, 0.22);
-  --grad-navy: linear-gradient(145deg, #2a3260 0%, #12162b 55%, #1a1f3b 100%);
-  --grad-gold: linear-gradient(135deg, #f0dfa8 0%, #e3c97f 42%, #c29a4e 100%);
-  --grad-page: radial-gradient(ellipse 120% 80% at 100% -20%, rgba(194, 154, 78, 0.12), transparent 50%),
-    radial-gradient(ellipse 80% 60% at -10% 100%, rgba(35, 42, 77, 0.08), transparent 45%),
-    var(--bg);
-  --side-width: 252px;
-  --radius-sm: 10px;
-  --radius-md: 14px;
-  --radius-lg: 18px;
-  --radius-xl: 24px;
+  --sh: 0 18px 40px -26px rgba(22, 27, 54, 0.42);
+  --sh-sm: 0 8px 20px -14px rgba(22, 27, 54, 0.24);
+  --sh-lg: 0 28px 56px -30px rgba(22, 27, 54, 0.48);
+  --ring: 0 0 0 3px rgba(201, 162, 75, 0.24);
+  --grad-navy: linear-gradient(175deg, #1c2450 0%, #131a3c 100%);
+  --grad-gold: linear-gradient(135deg, #e9cf8d 0%, #c9a24b 100%);
+  --grad-page: var(--bg);
+  --side-width: 240px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --control-h: 42px;
 
-  /* Legacy aliases used in page-specific CSS */
+  /* Legacy / page CSS aliases */
   --border: var(--line);
+  --text: var(--ink);
   --text-muted: var(--muted);
+  --text-tertiary: var(--faint);
   --danger: var(--red);
   --accent: var(--gold);
   --surface-2: var(--hair);

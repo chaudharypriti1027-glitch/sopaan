@@ -9,6 +9,7 @@ import { runObservabilitySpikeCheckJob } from './handlers/observabilitySpikeChec
 import { runDailyLeagueMaintenanceJob } from './handlers/dailyLeagueMaintenance.js';
 import { runAdminNotificationSendJob } from './handlers/adminNotificationSend.js';
 import { runBookGenHandler } from './handlers/bookGen.js';
+import { runAttemptCoachingHandler } from './handlers/attemptCoaching.js';
 import { startBullMqScheduler, stopBullMqScheduler } from './bullmqScheduler.js';
 import { getBullMqConnection } from '../lib/redis.js';
 import { processConfig } from '../config/processConfig.js';
@@ -23,6 +24,7 @@ const JOB_HANDLERS = Object.freeze({
   [JOB_NAMES.DAILY_LEAGUE_MAINTENANCE]: runDailyLeagueMaintenanceJob,
   [JOB_NAMES.ADMIN_NOTIFICATION_SEND]: runAdminNotificationSendJob,
   [JOB_NAMES.BOOK_GEN]: runBookGenHandler,
+  [JOB_NAMES.ATTEMPT_COACHING]: runAttemptCoachingHandler,
 });
 
 const scheduledTasks = [];
@@ -120,7 +122,7 @@ function startCronScheduler() {
 
     scheduledTasks.push(task);
     console.info(
-      `[jobs] registered ${definition.name} schedule="${schedule}" timezone="${jobConfig.timezone}"`,
+      `[jobs] registered ${definition.name} schedule="${schedule}" timezone="${jobConfig.timezone}"`
     );
   }
 

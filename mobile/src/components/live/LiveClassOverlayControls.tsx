@@ -1,12 +1,11 @@
 import { useMemo, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Hand, MessageCircle, Send } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
+import { LIVE_REACTIONS } from '../../content/liveClassesContent';
 import { useTheme } from '../../theme';
 import { LIVE } from './liveTheme';
-
-const REACTIONS = ['👍', '🔥', '👏', '❤️'] as const;
 
 type LiveClassOverlayControlsProps = {
   handRaised: boolean;
@@ -43,23 +42,24 @@ export function LiveClassOverlayControls({
 
   return (
     <View style={styles.root}>
-      <View style={styles.reactBar}>
-        {REACTIONS.map((emoji) => (
+      <View style={styles.reactBar} testID="live-reaction-bar">
+        {LIVE_REACTIONS.map(({ emoji, Icon, labelKey }) => (
           <Pressable
             key={emoji}
             accessibilityRole="button"
-            accessibilityLabel={t('reactA11y', { emoji })}
+            accessibilityLabel={t('reactA11y', { reaction: t(`reactions.${labelKey}`) })}
             onPress={() => onReaction(emoji)}
             style={({ pressed }) => [styles.reactBtn, pressed && styles.pressed]}
+            testID={`live-reaction-${emoji}`}
           >
-            <Text style={styles.reactEmoji}>{emoji}</Text>
+            <Icon size={19} color={LIVE.goldLt} strokeWidth={2.15} />
           </Pressable>
         ))}
       </View>
 
       <View style={styles.inputBar}>
         <View style={styles.field}>
-          <MessageCircle size={17} color={LIVE.textFaint} strokeWidth={1.75} />
+          <MessageCircle size={16} color={LIVE.textFaint} strokeWidth={1.85} />
           <TextInput
             value={draft}
             onChangeText={setDraft}
@@ -86,16 +86,22 @@ export function LiveClassOverlayControls({
               style={StyleSheet.absoluteFill}
             />
           ) : null}
-          <Hand size={20} color={handRaised ? LIVE.inkPin : '#FFFFFF'} strokeWidth={1.75} />
+          <Hand size={19} color={handRaised ? LIVE.inkPin : '#FFFFFF'} strokeWidth={1.85} />
         </Pressable>
 
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={t('sendComment')}
           onPress={submit}
-          style={({ pressed }) => [styles.iconBtn, pressed && styles.pressed]}
+          style={({ pressed }) => [
+            styles.iconBtn,
+            styles.sendBtn,
+            !connected && styles.iconBtnDisabled,
+            pressed && styles.pressed,
+          ]}
+          disabled={!connected}
         >
-          <Send size={20} color="#FFFFFF" strokeWidth={1.75} />
+          <Send size={18} color={LIVE.inkPin} strokeWidth={2} />
         </Pressable>
       </View>
     </View>
@@ -105,30 +111,34 @@ export function LiveClassOverlayControls({
 function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
     root: {
-      gap: 12,
+      gap: 11,
     },
     reactBar: {
       flexDirection: 'row',
       justifyContent: 'center',
       gap: 8,
+      paddingVertical: 4,
+      paddingHorizontal: 6,
+      alignSelf: 'center',
+      borderRadius: 16,
+      backgroundColor: 'rgba(0,0,0,0.22)',
+      borderWidth: 1,
+      borderColor: 'rgba(255,255,255,0.08)',
     },
     reactBtn: {
-      width: 44,
-      height: 44,
-      borderRadius: 14,
-      backgroundColor: 'rgba(255,255,255,0.08)',
+      width: 42,
+      height: 42,
+      borderRadius: 13,
+      backgroundColor: 'rgba(201,162,75,0.12)',
       borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.1)',
+      borderColor: 'rgba(233,207,141,0.22)',
       alignItems: 'center',
       justifyContent: 'center',
-    },
-    reactEmoji: {
-      fontSize: 20,
     },
     inputBar: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 9,
+      gap: 8,
     },
     field: {
       flex: 1,
@@ -139,8 +149,9 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       borderWidth: 1,
       borderColor: 'rgba(255,255,255,0.14)',
       borderRadius: 15,
-      paddingHorizontal: 14,
-      paddingVertical: 12,
+      paddingHorizontal: 13,
+      paddingVertical: 11,
+      minHeight: 46,
     },
     input: {
       flex: 1,
@@ -161,8 +172,15 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       justifyContent: 'center',
       overflow: 'hidden',
     },
+    sendBtn: {
+      backgroundColor: LIVE.goldLt,
+      borderColor: 'transparent',
+    },
     iconBtnOn: {
       borderColor: 'transparent',
+    },
+    iconBtnDisabled: {
+      opacity: 0.55,
     },
     pressed: {
       opacity: 0.9,

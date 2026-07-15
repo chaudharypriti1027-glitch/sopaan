@@ -14,7 +14,7 @@ export type BookExplainStreamResult = {
 type SsePayload =
   | { type: 'delta'; text: string }
   | { type: 'done'; ok: boolean; cached?: boolean }
-  | { type: 'error'; ok: false; message: string };
+  | { type: 'error'; ok: false; code?: string; message: string };
 
 function parseSseChunk(buffer: string): { events: SsePayload[]; remainder: string } {
   const events: SsePayload[] = [];
@@ -22,9 +22,7 @@ function parseSseChunk(buffer: string): { events: SsePayload[]; remainder: strin
   const remainder = parts.pop() ?? '';
 
   for (const part of parts) {
-    const line = part
-      .split('\n')
-      .find((entry) => entry.startsWith('data:'));
+    const line = part.split('\n').find((entry) => entry.startsWith('data:'));
     if (!line) {
       continue;
     }
@@ -151,7 +149,7 @@ export function useBookExplain(bookId: string | undefined) {
         }
       }
     },
-    [bookId],
+    [bookId]
   );
 
   useEffect(() => () => reset(), [reset]);

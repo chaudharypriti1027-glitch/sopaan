@@ -1,5 +1,4 @@
 import { fireEvent, waitFor } from '@testing-library/react-native';
-import { Alert } from 'react-native';
 import { PremiumScreen } from '../app/PremiumScreen';
 import { renderWithProviders } from '../../test/render';
 import { MOCK_PREMIUM_PLANS } from '../../test/fixtures/stackScreens';
@@ -10,6 +9,7 @@ const mockRefreshUser = jest.fn();
 const mockTrackEvent = jest.fn();
 const mockCheckout = jest.fn();
 const mockStartTrial = jest.fn();
+const mockRefetchEntitlement = jest.fn();
 
 const mockPlansQuery: {
   data: typeof MOCK_PREMIUM_PLANS | undefined;
@@ -28,6 +28,7 @@ const mockEntitlementQuery = {
     },
   },
   isLoading: false,
+  refetch: mockRefetchEntitlement,
 };
 
 const mockAuthUser = {
@@ -35,6 +36,8 @@ const mockAuthUser = {
   email: 'arjun@example.com',
   phone: '+919876543210',
   isPremium: false,
+  premiumExpiresAt: null as string | null,
+  premiumPlan: null as string | null,
 };
 
 jest.mock('@react-navigation/native', () => ({
@@ -66,6 +69,11 @@ jest.mock('../../experiments', () => ({
 jest.mock('../../hooks', () => ({
   usePremiumPlans: () => mockPlansQuery,
   useSubscriptionEntitlement: () => mockEntitlementQuery,
+  useProGate: () => ({
+    tier: { welcomeMonthEnabled: true },
+    isPro: false,
+    refetchTier: jest.fn(),
+  }),
 }));
 
 jest.mock('../../payments/subscriptionFlow', () => ({
@@ -85,10 +93,25 @@ describe('PremiumScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockAuthUser.isPremium = false;
+    mockAuthUser.premiumExpiresAt = null;
+    mockAuthUser.premiumPlan = null;
     mockPlansQuery.isLoading = false;
     mockPlansQuery.data = MOCK_PREMIUM_PLANS;
-    mockCheckout.mockResolvedValue({ user: { ...mockAuthUser, isPremium: true } });
-    mockStartTrial.mockResolvedValue({ ...mockAuthUser, isPremium: true, premiumPlan: 'trial' });
+    mockCheckout.mockResolvedValue({
+      user: {
+        ...mockAuthUser,
+        isPremium: true,
+        premiumPlan: 'yearly',
+        premiumExpiresAt: '2027-07-14T00:00:00.000Z',
+      },
+      plan: 'yearly',
+    });
+    mockStartTrial.mockResolvedValue({
+      ...mockAuthUser,
+      isPremium: true,
+      premiumPlan: 'trial',
+      premiumExpiresAt: '2026-07-21T00:00:00.000Z',
+    });
     mockRefreshUser.mockResolvedValue(undefined);
   });
 
@@ -114,9 +137,8 @@ describe('PremiumScreen', () => {
     expect(mockTrackEvent).toHaveBeenCalledWith('paywall_view', { screen: 'Premium' });
   });
 
-  it('starts a free trial from the paywall CTA', async () => {
-    const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
-    const { getByTestId } = renderWithProviders(<PremiumScreen />);
+  it('shows congratulations dialog after starting a free trial', async () => {
+    const { getByTestId, getByText } = renderWithProviders(<PremiumScreen />);
 
     fireEvent.press(getByTestId('premium-start-trial'));
 
@@ -124,10 +146,10 @@ describe('PremiumScreen', () => {
       expect(mockStartTrial).toHaveBeenCalled();
       expect(mockSetSessionUser).toHaveBeenCalled();
       expect(mockRefreshUser).toHaveBeenCalled();
-      expect(alertSpy).toHaveBeenCalledWith('Trial started', expect.any(String));
+      expect(getByTestId('subscription-success-dialog')).toBeTruthy();
+      expect(getByText('Welcome — 1 month free')).toBeTruthy();
+      expect(getByTestId('subscription-success-primary')).toBeTruthy();
     });
-
-    alertSpy.mockRestore();
   });
 
   it('renders active subscription state for premium users', () => {
@@ -136,9 +158,50 @@ describe('PremiumScreen', () => {
     const { getAllByText, getByText } = renderWithProviders(<PremiumScreen />);
 
     expect(getAllByText("You're on Sopaan Pro").length).toBeGreaterThanOrEqual(1);
+    expect(getByText('31 Dec 2026')).toBeTruthy();
     expect(getByText('Manage subscription')).toBeTruthy();
 
     fireEvent.press(getByText('Manage subscription'));
     expect(mockNavigate).toHaveBeenCalledWith('ManageSubscription');
+  });
+
+  it('shows congratulations dialog with plan details after purchase', async () => {
+    const { getByTestId, getByText } = renderWithProviders(<PremiumScreen />);
+
+    fireEvent.press(getByTestId('premium-subscribe'));
+
+    await waitFor(() => {
+      expect(mockCheckout).toHaveBeenCalled();
+      expect(getByTestId('subscription-success-dialog')).toBeTruthy();
+      expect(getByText('Welcome to Sopaan Pro')).toBeTruthy();
+      expect(getByText('Explore Pro')).toBeTruthy();
+      expect(getByText('14 Jul 2027')).toBeTruthy();
+    });
+  });
+
+  it('shows Coming soon when payments are not configured', () => {
+    mockPlansQuery.data = {
+      ...MOCK_PREMIUM_PLANS,
+      configured: false,
+    };
+
+    const { getByTestId, queryByTestId } = renderWithProviders(<PremiumScreen />);
+
+    expect(getByTestId('premium-coming-soon')).toBeTruthy();
+    expect(getByTestId('premium-subscribe-unavailable')).toBeTruthy();
+    expect(queryByTestId('premium-subscribe')).toBeNull();
+  });
+
+  it('navigates to Practice when exploring after purchase', async () => {
+    const { getByTestId } = renderWithProviders(<PremiumScreen />);
+
+    fireEvent.press(getByTestId('premium-subscribe'));
+
+    await waitFor(() => {
+      expect(getByTestId('subscription-success-primary')).toBeTruthy();
+    });
+
+    fireEvent.press(getByTestId('subscription-success-primary'));
+    expect(mockNavigate).toHaveBeenCalledWith('AppTabs', { screen: 'Home' });
   });
 });

@@ -8,14 +8,20 @@
 .pc {
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 18px;
+  border-radius: var(--radius-xl);
   padding: 16px;
-  box-shadow: var(--sh);
+  box-shadow: var(--sh-sm);
   display: flex;
   flex-direction: column;
   gap: 12px;
   position: relative;
   overflow: hidden;
+  transition: box-shadow 0.15s, transform 0.15s;
+}
+
+.pc:hover {
+  box-shadow: var(--sh);
+  transform: translateY(-1px);
 }
 
 .pc::before {

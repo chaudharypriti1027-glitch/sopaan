@@ -11,6 +11,14 @@ import {
 } from '../services/entitlementService.js';
 import { AppError } from '../utils/AppError.js';
 
+function toIsoOrNull(value) {
+  if (value == null || value === '') {
+    return null;
+  }
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
 function formatUser(user) {
   return {
     id: user._id ?? user.id,
@@ -20,16 +28,22 @@ function formatUser(user) {
     role: user.role,
     isPremium: user.isPremium,
     premiumPlan: user.premiumPlan ?? null,
-    premiumExpiresAt: user.premiumExpiresAt ?? null,
+    premiumExpiresAt: toIsoOrNull(user.premiumExpiresAt),
+    premiumTrialUsed: Boolean(user.premiumTrialUsed),
     coins: user.coins,
     streak: user.streak,
   };
 }
 
 export async function listPlans(_req, res) {
+  const configured = Boolean(
+    process.env.RAZORPAY_KEY_ID?.trim() && process.env.RAZORPAY_KEY_SECRET?.trim(),
+  );
+
   res.status(200).json({
     provider: 'razorpay',
     currency: 'INR',
+    configured,
     plans: listPublicPlans(),
   });
 }
@@ -60,6 +74,10 @@ export async function verifyPayment(req, res) {
 
 export async function startTrial(req, res) {
   const result = await premiumService.startFreeTrial(req.user._id);
+
+  if (result?.error === 'WELCOME_OFFER_DISABLED') {
+    throw new AppError('Welcome free month offer is not available', 400, 'WELCOME_OFFER_DISABLED');
+  }
 
   if (result?.error === 'TRIAL_ALREADY_USED') {
     throw new AppError('Free trial already used', 400, 'TRIAL_ALREADY_USED');

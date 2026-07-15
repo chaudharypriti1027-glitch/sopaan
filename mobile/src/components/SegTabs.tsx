@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View, type ViewStyle } from 'react-native';
 import { denseTextProps } from '../a11y/textProps';
 import { useTheme } from '../theme';
-import { PREMIUM } from './premium/premiumStyles';
+import { HOME_UI } from './home/homeTheme';
 import { platformShadow } from '../utils/platformShadow';
 
 export type SegTabOption<T extends string> = {
@@ -34,7 +34,14 @@ export function SegTabs<T extends string>({ options, value, onChange, style }: S
             onPress={() => onChange(option.key)}
             style={[styles.tab, selected && styles.tabSelected]}
           >
-            <Text {...denseTextProps} style={[styles.label, selected && styles.labelSelected]}>
+            <Text
+              {...denseTextProps}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.78}
+              ellipsizeMode="clip"
+              style={[styles.label, selected && styles.labelSelected]}
+            >
               {option.label}
             </Text>
           </Pressable>
@@ -48,41 +55,45 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
     container: {
       flexDirection: 'row',
-      backgroundColor: PREMIUM.accentSoft,
-      borderRadius: 18,
-      padding: 4,
-      gap: 4,
-      borderWidth: 1,
-      borderColor: 'rgba(219,222,234,0.8)',
+      backgroundColor: HOME_UI.borderSoft,
+      borderRadius: 999,
+      padding: 3,
+      gap: 1,
+      borderWidth: 0,
     },
     tab: {
       flex: 1,
+      minWidth: 0,
       alignItems: 'center',
       justifyContent: 'center',
-      minHeight: 40,
-      paddingVertical: theme.spacing.sm,
-      borderRadius: 14,
+      minHeight: 36,
+      paddingVertical: 7,
+      paddingHorizontal: 2,
+      borderRadius: 999,
     },
     tabSelected: {
       backgroundColor: '#FFFFFF',
       ...platformShadow({
-        color: PREMIUM.accent,
-        offsetY: 2,
-        opacity: 0.14,
+        color: HOME_UI.shadow,
+        offsetY: 3,
+        opacity: 0.1,
         radius: 8,
         elevation: 2,
       }),
     },
     label: {
-      fontSize: 13,
+      width: '100%',
+      textAlign: 'center',
+      fontSize: 12,
+      letterSpacing: -0.15,
       fontFamily: theme.typography.fonts.ui.semibold,
       fontWeight: '600',
-      color: PREMIUM.sectionLabel,
+      color: HOME_UI.muted,
     },
     labelSelected: {
-      color: PREMIUM.accent,
+      color: HOME_UI.ink,
       fontFamily: theme.typography.fonts.ui.bold,
-      fontWeight: '800',
+      fontWeight: '700',
     },
   });
 }

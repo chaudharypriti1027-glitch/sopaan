@@ -15,6 +15,14 @@ import {
   syncUserPremiumFields,
 } from './entitlementService.js';
 
+function toIsoOrNull(value) {
+  if (value == null || value === '') {
+    return null;
+  }
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
 function formatUser(user) {
   return {
     id: user._id,
@@ -24,7 +32,8 @@ function formatUser(user) {
     role: user.role,
     isPremium: user.isPremium,
     premiumPlan: user.premiumPlan ?? null,
-    premiumExpiresAt: user.premiumExpiresAt ?? null,
+    premiumExpiresAt: toIsoOrNull(user.premiumExpiresAt),
+    premiumTrialUsed: Boolean(user.premiumTrialUsed),
     coins: user.coins,
     streak: user.streak,
     pushNotificationsEnabled: user.pushNotificationsEnabled ?? true,

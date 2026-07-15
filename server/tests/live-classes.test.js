@@ -130,6 +130,9 @@ describe('live classes', () => {
       email: 'student-live@test.com',
       passwordHash: 'hash',
       role: 'student',
+      isPremium: true,
+      premiumPlan: 'monthly',
+      premiumExpiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
     });
 
     const created = await createLiveClass(admin._id, {
@@ -152,6 +155,35 @@ describe('live classes', () => {
     expect(token.attendeeCount).toBe(42);
   });
 
+  it('requires Pro for free students joining a live class', async () => {
+    const admin = await createTestUser({
+      name: 'Admin',
+      email: 'admin-live-pro@test.com',
+      passwordHash: 'hash',
+      role: 'admin',
+    });
+    const freeStudent = await createTestUser({
+      name: 'Free Student',
+      email: 'student-live-free@test.com',
+      passwordHash: 'hash',
+      role: 'student',
+    });
+
+    const created = await createLiveClass(admin._id, {
+      title: 'Pro-only Live',
+      instructor: 'Faculty',
+      exam: 'General',
+      startsAt: new Date(),
+      durationMin: 40,
+    });
+    await startLiveClass(admin._id, created.id);
+
+    await expect(createViewerToken(freeStudent._id, created.id)).rejects.toMatchObject({
+      code: 'PRO_REQUIRED',
+      statusCode: 403,
+    });
+  });
+
   it('issues host tokens for the class educator', async () => {
     const mentor = await createTestUser({
       name: 'Mentor',
@@ -164,6 +196,9 @@ describe('live classes', () => {
       email: 'student-live3@test.com',
       passwordHash: 'hash',
       role: 'student',
+      isPremium: true,
+      premiumPlan: 'monthly',
+      premiumExpiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
     });
 
     const created = await createLiveClass(mentor._id, {
@@ -346,7 +381,12 @@ describe('live classes', () => {
     expect(started.body.status).toBe('live');
     expect(started.body.egressId).toBe('egress-mock-1');
 
-    const { token: studentToken } = await loginUser({ role: 'student' });
+    const { token: studentToken } = await loginUser({
+      role: 'student',
+      isPremium: true,
+      premiumPlan: 'monthly',
+      premiumExpiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+    });
     const liveToken = await request(app)
       .get(`/api/live/${created.body.id}/token`)
       .set('Authorization', `Bearer ${studentToken}`)

@@ -15,6 +15,7 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
+import type { LucideIcon } from 'lucide-react-native';
 import { scalableTextProps } from '../../a11y/textProps';
 import { AUTH_FONTS, AUTH_UI } from './authTheme';
 
@@ -29,6 +30,7 @@ type PrimaryButtonProps = {
   style?: ViewStyle;
   testID?: string;
   accessibilityHint?: string;
+  trailingIcon?: LucideIcon;
 };
 
 export function PrimaryButton({
@@ -40,6 +42,7 @@ export function PrimaryButton({
   style,
   testID,
   accessibilityHint,
+  trailingIcon: TrailingIcon,
 }: PrimaryButtonProps) {
   const styles = useMemo(() => createStyles(), []);
   const scale = useSharedValue(1);
@@ -77,9 +80,12 @@ export function PrimaryButton({
     >
       {isDisabled && !loading ? (
         <View style={[styles.button, styles.disabled]}>
-          <Text {...scalableTextProps} style={styles.disabledLabel}>
-            {label}
-          </Text>
+          <View style={styles.content}>
+            <Text {...scalableTextProps} style={styles.disabledLabel}>
+              {label}
+            </Text>
+            {TrailingIcon ? <TrailingIcon size={17} color={AUTH_UI.muted} strokeWidth={2.3} /> : null}
+          </View>
         </View>
       ) : (
         <LinearGradient
@@ -95,9 +101,14 @@ export function PrimaryButton({
           {loading ? (
             <ActivityIndicator color={AUTH_UI.accentDark} size="small" />
           ) : (
-            <Text {...scalableTextProps} style={[styles.label, isDisabled && styles.disabledLabel]}>
-              {label}
-            </Text>
+            <View style={styles.content}>
+              <Text {...scalableTextProps} style={[styles.label, isDisabled && styles.disabledLabel]}>
+                {label}
+              </Text>
+              {TrailingIcon ? (
+                <TrailingIcon size={17} color="#2A2110" strokeWidth={2.3} />
+              ) : null}
+            </View>
           )}
         </LinearGradient>
       )}
@@ -122,6 +133,12 @@ function createStyles() {
       shadowOpacity: 0.28,
       shadowRadius: 16,
       elevation: 5,
+    },
+    content: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
     },
     disabled: {
       backgroundColor: AUTH_UI.border,

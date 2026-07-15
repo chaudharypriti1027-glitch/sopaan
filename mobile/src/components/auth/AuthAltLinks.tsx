@@ -72,7 +72,7 @@ function createStyles() {
     label: {
       fontSize: 12,
       fontWeight: '700',
-      color: AUTH_UI.goldDeep,
+      color: AUTH_UI.accent,
     },
   });
 }

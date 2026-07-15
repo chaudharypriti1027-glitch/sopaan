@@ -21,10 +21,10 @@
   display: flex;
   gap: 12px;
   padding: 16px;
-  border-radius: 16px;
-  background: #fff;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
   border: 1px solid var(--border);
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+  box-shadow: var(--sh-sm);
 }
 
 .push-preview-icon {

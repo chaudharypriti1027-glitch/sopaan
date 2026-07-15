@@ -1,6 +1,5 @@
 import { useCallback, useMemo } from 'react';
 import {
-  Alert,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -24,6 +23,7 @@ import {
   HomeTopBanner,
   HOME_UI,
 } from '../components/home';
+import { usePremiumDialog } from '../components/premium';
 import { useHomeFeed } from '../hooks/useHomeFeed';
 import { useHomeBanner } from '../hooks/useHomeBanner';
 import { useLiveClasses } from '../hooks';
@@ -55,6 +55,7 @@ export function HomeScreen() {
 function HomeStudentScreen() {
   const { t } = useTranslation(['app', 'common']);
   const navigation = useNavigation<HomeNav>();
+  const { alert } = usePremiumDialog();
   const styles = useMemo(() => createStyles(), []);
 
   const { data: feed, isLoading, isError, isOffline, refetch, isRefetching } = useHomeFeed();
@@ -93,7 +94,7 @@ function HomeStudentScreen() {
 
   const handleTestPress = useCallback(
     (testId: string) => {
-      handleDeeplink(`/stack/Quiz/${testId}`);
+      handleDeeplink(`/stack/TestReady/${testId}`);
     },
     [handleDeeplink],
   );
@@ -137,36 +138,36 @@ function HomeStudentScreen() {
     if (!liveNow) return;
     void lightImpact();
     if (liveClasses?.streamingConfigured === false) {
-      Alert.alert(
-        t('app:liveClasses.comingSoonAlert'),
-        liveClasses?.message ?? t('app:liveClasses.comingSoonDefault'),
-      );
+      alert({
+        title: t('app:liveClasses.comingSoonAlert'),
+        message: liveClasses?.message ?? t('app:liveClasses.comingSoonDefault'),
+        icon: 'bell',
+        iconTone: 'navy',
+      });
       return;
     }
     navigation.getParent<NativeStackNavigationProp<MainStackParamList>>()?.navigate('LiveClassViewer', {
       liveClassId: liveNow.id,
     });
-  }, [liveClasses?.message, liveClasses?.streamingConfigured, liveNow, navigation, t]);
+  }, [alert, liveClasses?.message, liveClasses?.streamingConfigured, liveNow, navigation, t]);
 
   if (isLoading && !feed) {
     return <HomeSkeleton />;
   }
 
-  if (isError && !feed) {
+  if (!feed) {
     return (
       <View style={styles.safe}>
         <View style={styles.errorWrap}>
           <Card style={styles.errorCard}>
-            <Text variant="bodyMedium">{t('app:home.loadError')}</Text>
+            <Text variant="bodyMedium">
+              {isError ? t('app:home.loadError') : t('app:home.emptyFeed')}
+            </Text>
             <Button label={t('common:retry')} onPress={() => void refetch()} fullWidth />
           </Card>
         </View>
       </View>
     );
-  }
-
-  if (!feed) {
-    return null;
   }
 
   return (

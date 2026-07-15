@@ -2,8 +2,9 @@ import { Hand } from 'lucide-react-native';
 import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { LIVE_REACTION_EMOJIS } from '../../content/liveClassesContent';
+import { LIVE_REACTIONS } from '../../content/liveClassesContent';
 import { useTheme } from '../../theme';
+import { LIVE } from './liveTheme';
 
 type LiveClassReactionsBarProps = {
   handRaised: boolean;
@@ -30,20 +31,22 @@ export function LiveClassReactionsBar({
         onPress={handRaised ? onLowerHand : onRaiseHand}
         style={[styles.raiseBtn, handRaised ? styles.raiseBtnActive : null]}
       >
-        <Hand size={18} color={theme.colors.brand.onPrimary} />
-        <Text style={styles.raiseLabel}>{handRaised ? t('lowerHand') : t('raiseHand')}</Text>
+        <Hand size={17} color={handRaised ? LIVE.inkPin : '#FFFFFF'} strokeWidth={2.1} />
+        <Text style={[styles.raiseLabel, handRaised && styles.raiseLabelActive]}>
+          {handRaised ? t('lowerHand') : t('raiseHand')}
+        </Text>
       </Pressable>
 
-      <View style={styles.emojiRow}>
-        {LIVE_REACTION_EMOJIS.map((emoji) => (
+      <View style={styles.reactRow} testID="live-reactions-bar">
+        {LIVE_REACTIONS.map(({ emoji, Icon, labelKey }) => (
           <Pressable
             key={emoji}
             accessibilityRole="button"
-            accessibilityLabel={t('reactA11y', { emoji })}
+            accessibilityLabel={t('reactA11y', { reaction: t(`reactions.${labelKey}`) })}
             onPress={() => onReaction(emoji)}
-            style={styles.emojiBtn}
+            style={styles.reactBtn}
           >
-            <Text style={styles.emoji}>{emoji}</Text>
+            <Icon size={17} color={LIVE.navy} strokeWidth={2.15} />
           </Pressable>
         ))}
       </View>
@@ -57,43 +60,48 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       gap: theme.spacing.sm,
       paddingHorizontal: theme.spacing.md,
       paddingVertical: theme.spacing.sm,
-      backgroundColor: theme.colors.surface.default,
+      backgroundColor: LIVE.listBgTop,
       borderTopWidth: 1,
-      borderTopColor: theme.colors.border.default,
+      borderTopColor: LIVE.border,
     },
     raiseBtn: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
       gap: theme.spacing.xs,
-      backgroundColor: theme.colors.brand.primary,
-      borderRadius: theme.radii.pill,
-      paddingVertical: 10,
+      backgroundColor: LIVE.navy,
+      borderRadius: 14,
+      paddingVertical: 11,
       paddingHorizontal: theme.spacing.lg,
+      minHeight: 44,
     },
     raiseBtnActive: {
-      backgroundColor: theme.colors.semantic.warning,
+      backgroundColor: LIVE.goldLt,
     },
     raiseLabel: {
       ...theme.typography.presets.caption,
       fontFamily: theme.typography.fonts.ui.semibold,
-      color: theme.colors.brand.onPrimary,
+      color: '#FFFFFF',
     },
-    emojiRow: {
+    raiseLabelActive: {
+      color: LIVE.inkPin,
+    },
+    reactRow: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: theme.spacing.sm,
+      gap: 8,
       flexWrap: 'wrap',
     },
-    emojiBtn: {
-      minWidth: 40,
-      minHeight: 40,
+    reactBtn: {
+      width: 42,
+      height: 42,
       alignItems: 'center',
       justifyContent: 'center',
-      borderRadius: theme.radii.pill,
-      backgroundColor: theme.colors.surface.muted,
+      borderRadius: 13,
+      backgroundColor: LIVE.goldSoft,
+      borderWidth: 1,
+      borderColor: LIVE.goldBorder,
     },
-    emoji: { fontSize: 20 },
   });
 }

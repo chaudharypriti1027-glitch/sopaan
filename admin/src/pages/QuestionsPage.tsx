@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
+import { FileUp, Search } from 'lucide-react';
 import { ApiError } from '../api/types';
 import {
   deleteQuestion,
@@ -101,15 +102,13 @@ export function QuestionsPage() {
   const pagination = query.data?.pagination;
 
   return (
-    <div>
+    <div className="content-page questions-page">
       <div className="toolbar">
         <div className="search toolbar-search">
-          <svg className="svg" viewBox="0 0 24 24" aria-hidden>
-            <circle cx="11" cy="11" r="7" />
-            <path d="m21 21-4.3-4.3" />
-          </svg>
+          <Search aria-hidden strokeWidth={1.8} />
           <input
             placeholder="Search questions…"
+            aria-label="Search questions"
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
@@ -135,9 +134,7 @@ export function QuestionsPage() {
           onClick={() => fileRef.current?.click()}
           disabled={importMutation.isPending}
         >
-          <svg className="svg" viewBox="0 0 24 24" aria-hidden>
-            <path d="M12 3v12M8 11l4 4 4-4M5 21h14" />
-          </svg>
+          <FileUp aria-hidden strokeWidth={1.8} />
           Import questions
         </ActionButton>
         <input
@@ -158,6 +155,7 @@ export function QuestionsPage() {
       <DataTable
         rows={rows}
         emptyMessage="No questions found"
+        emptyHint="Adjust the filters or import a JSON question set to get started."
         isLoading={query.isLoading}
         error={query.isError ? query.error : undefined}
         onRetry={() => void query.refetch()}

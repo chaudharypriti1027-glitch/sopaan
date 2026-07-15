@@ -1,4 +1,4 @@
-import { ChevronLeft } from 'lucide-react-native';
+import { ChevronLeft, Coins } from 'lucide-react-native';
 import { useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Text } from '../Text';
@@ -33,7 +33,7 @@ export function GamesScreenHeader({ greeting, title, coins, onBack }: GamesScree
         <Text style={styles.title}>{title}</Text>
       </View>
       <View style={styles.coinPill}>
-        <Text style={styles.coinEmoji}>🪙</Text>
+        <Coins size={14} color={GAMES_UI.gold} strokeWidth={2.2} />
         <Text style={styles.coinValue}>{coins}</Text>
       </View>
     </View>
@@ -88,7 +88,6 @@ function createStyles() {
       borderWidth: 1,
       borderColor: GAMES_UI.border,
     },
-    coinEmoji: { fontSize: 14 },
     coinValue: {
       fontSize: 14,
       fontWeight: '800',

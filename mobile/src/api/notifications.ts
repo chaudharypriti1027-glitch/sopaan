@@ -53,7 +53,7 @@ export async function listNotifications(
   });
   return {
     ...data,
-    items: data.items.map(normalizeNotification),
+    items: (data.items ?? []).map(normalizeNotification),
   };
 }
 

@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Linking, Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Check } from 'lucide-react-native';
+import { PRIVACY_POLICY_URL, TERMS_OF_SERVICE_URL } from '../../config/externalLinks';
 import { Text } from '../Text';
 import { AUTH_FONTS, AUTH_UI } from './authTheme';
 
@@ -11,9 +12,6 @@ type AuthTermsBoxProps = {
   policyVersion: string;
   testID?: string;
 };
-
-const PRIVACY_URL = 'https://sopaan.app/privacy';
-const TERMS_URL = 'https://sopaan.app/terms';
 
 export function AuthTermsBox({ checked, onToggle, policyVersion, testID }: AuthTermsBoxProps) {
   const { t } = useTranslation('auth');
@@ -33,11 +31,19 @@ export function AuthTermsBox({ checked, onToggle, policyVersion, testID }: AuthT
       </View>
       <Text variant="caption" color="secondary" style={styles.text}>
         {t('otp.consentPolicyBefore')}{' '}
-        <Text variant="label" style={styles.link} onPress={() => void Linking.openURL(PRIVACY_URL)}>
+        <Text
+          variant="label"
+          style={styles.link}
+          onPress={() => void Linking.openURL(PRIVACY_POLICY_URL)}
+        >
           {t('otp.consentPrivacyLink')}
         </Text>{' '}
         {t('otp.consentAnd')}{' '}
-        <Text variant="label" style={styles.link} onPress={() => void Linking.openURL(TERMS_URL)}>
+        <Text
+          variant="label"
+          style={styles.link}
+          onPress={() => void Linking.openURL(TERMS_OF_SERVICE_URL)}
+        >
           {t('otp.consentTermsLink')}
         </Text>
       </Text>

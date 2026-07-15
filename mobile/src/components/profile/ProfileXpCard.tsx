@@ -8,7 +8,7 @@ import { Text } from '../Text';
 import { useTheme } from '../../theme';
 import { AnimatedProgressBar } from './AnimatedProgressBar';
 import { PROFILE, profileCard } from './profileTheme';
-import { getLevelTitle, getXpProgress } from './profileUtils';
+import { getLevelTitleKey, getXpProgress } from './profileUtils';
 
 type ProfileXpCardProps = {
   level: number;
@@ -21,7 +21,8 @@ export function ProfileXpCard({ level, xp, replayKey = 0 }: ProfileXpCardProps) 
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const progress = useMemo(() => getXpProgress(xp, level), [xp, level]);
-  const title = getLevelTitle(level);
+  const titleKey = getLevelTitleKey(level);
+  const title = t(`profile.levelTitle.${titleKey}`);
 
   return (
     <View style={styles.card}>

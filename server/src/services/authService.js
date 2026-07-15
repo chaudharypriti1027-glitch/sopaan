@@ -7,6 +7,7 @@ import {
   revokeAllSessions,
 } from './tokens.js';
 import { createAndSendOtp, createAndSendEmailOtp, verifyAndConsumeOtp, verifyAndConsumeEmailOtp } from './otpService.js';
+import { isEmailOtpConfigured } from './email/sendOtpEmail.js';
 import { normalizeIndianPhone } from '../utils/phone.js';
 import { applyReferralAtSignup, ensureUserReferralCode } from './referralService.js';
 import { securityConfig } from '../config/securityConfig.js';
@@ -14,6 +15,15 @@ import { logger } from '../observability/logger.js';
 import { buildConsentRecord } from './privacy/privacyService.js';
 import { verifyGoogleIdToken } from './googleAuthService.js';
 import { assertAccountCanAuthenticate } from '../utils/accountAuthPolicy.js';
+import { env } from '../config/env.js';
+
+function toIsoOrNull(value) {
+  if (value == null || value === '') {
+    return null;
+  }
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
 
 function formatUser(user) {
   const id = user._id ?? user.id;
@@ -26,7 +36,8 @@ function formatUser(user) {
     role: user.role,
     isPremium: user.isPremium,
     premiumPlan: user.premiumPlan ?? null,
-    premiumExpiresAt: user.premiumExpiresAt ?? null,
+    premiumExpiresAt: toIsoOrNull(user.premiumExpiresAt),
+    premiumTrialUsed: Boolean(user.premiumTrialUsed),
     coins: user.coins,
     streak: user.streak,
   };
@@ -37,10 +48,24 @@ async function issueAuthTokens(user, { familyId } = {}) {
   return issueTokenPair(userId, { role: user.role, familyId });
 }
 
+async function grantWelcomeMonthQuietly(userId) {
+  try {
+    const { grantWelcomeMonthForNewStudent } = await import('./premiumService.js');
+    await grantWelcomeMonthForNewStudent(userId);
+  } catch (err) {
+    console.warn(`[premium] welcome month grant failed for ${userId}:`, err.message);
+  }
+}
+
 async function issueAuthResult(user, { isNewUser }) {
   assertAccountCanAuthenticate(user);
   const tokens = await issueAuthTokens(user);
-  const profile = user.toProfile();
+  let freshUser = user;
+  if (isNewUser) {
+    await grantWelcomeMonthQuietly(user._id ?? user.id);
+    freshUser = (await User.findById(user._id ?? user.id)) ?? user;
+  }
+  const profile = freshUser.toProfile();
 
   return {
     token: tokens.accessToken,
@@ -57,6 +82,7 @@ async function issueAuthResult(user, { isNewUser }) {
       isPremium: profile.isPremium ?? false,
       premiumPlan: profile.premiumPlan ?? null,
       premiumExpiresAt: profile.premiumExpiresAt ?? null,
+      premiumTrialUsed: Boolean(freshUser.premiumTrialUsed),
       coins: profile.coins ?? 0,
       streak:
         profile.streak != null
@@ -79,6 +105,7 @@ function legacySessionFromAuthResult(result) {
       isPremium: result.profile.isPremium ?? false,
       premiumPlan: result.profile.premiumPlan ?? null,
       premiumExpiresAt: result.profile.premiumExpiresAt ?? null,
+      premiumTrialUsed: Boolean(result.user?.premiumTrialUsed),
       coins: result.profile.coins ?? 0,
       streak:
         result.profile.streak != null
@@ -242,6 +269,97 @@ export async function setPassword(userId, password) {
   await user.save();
 
   return { message: 'Password set successfully' };
+}
+
+/**
+ * Request a password-reset OTP. Always returns the same shape so callers cannot
+ * enumerate which emails are registered.
+ */
+export async function forgotPassword({ email }) {
+  // Fail identically for every email when SMTP is missing in production —
+  // never leak which accounts exist via EMAIL_UNAVAILABLE vs 200.
+  if (env.isProduction && !isEmailOtpConfigured()) {
+    throw new AppError(
+      'Password reset email is not configured on the server',
+      503,
+      'EMAIL_UNAVAILABLE',
+    );
+  }
+
+  const normalizedEmail = String(email).trim().toLowerCase();
+  const user = await User.findOne({ email: normalizedEmail });
+
+  if (user && user.accountStatus !== 'deleted') {
+    try {
+      await createAndSendEmailOtp(normalizedEmail);
+    } catch (err) {
+      // Swallow send failures after the user lookup so response shape stays
+      // identical for known vs unknown emails (no account enumeration).
+      logger.error('[auth] forgot-password OTP send failed', {
+        message: err?.message,
+        code: err?.code,
+      });
+    }
+  }
+
+  return { sent: true };
+}
+
+/**
+ * Verify email OTP and set a new password for an existing account (no signup).
+ * Revokes all sessions, then issues a fresh AuthResult.
+ */
+export async function resetPassword({ email, code, password }) {
+  const normalizedEmail = String(email).trim().toLowerCase();
+  const trimmedCode = String(code).trim();
+
+  await verifyAndConsumeEmailOtp(normalizedEmail, trimmedCode);
+
+  const user = await User.findOne({ email: normalizedEmail }).select('+passwordHash');
+
+  if (!user || user.accountStatus === 'deleted') {
+    throw new AppError('Invalid or expired OTP', 400, 'INVALID_OTP');
+  }
+
+  assertAccountCanAuthenticate(user);
+
+  await user.setPassword(password);
+  await user.save();
+  await resetFailedLogin(user);
+  await revokeAllSessions(user._id);
+
+  return issueAuthResult(user, { isNewUser: false });
+}
+
+/**
+ * Authenticated password change. Users without a password may set one by
+ * omitting currentPassword; otherwise currentPassword is required.
+ * Other sessions are revoked; a fresh AuthResult is returned for the current device.
+ */
+export async function changePassword(userId, { currentPassword, newPassword }) {
+  const user = await User.findById(userId).select('+passwordHash');
+
+  if (!user || user.accountStatus === 'deleted') {
+    throw new AppError('User not found', 404, 'NOT_FOUND');
+  }
+
+  if (user.passwordHash) {
+    if (!currentPassword) {
+      throw new AppError('Current password is required', 400, 'VALIDATION_ERROR');
+    }
+
+    const isValid = await user.verifyPassword(currentPassword);
+    if (!isValid) {
+      throw new AppError('Current password is incorrect', 401, 'INVALID_CREDENTIALS');
+    }
+  }
+
+  await user.setPassword(newPassword);
+  await user.save();
+  await revokeAllSessions(user._id);
+
+  const auth = await issueAuthResult(user, { isNewUser: false });
+  return { message: 'Password updated successfully', ...auth };
 }
 
 export async function refreshAccessToken(refreshToken) {

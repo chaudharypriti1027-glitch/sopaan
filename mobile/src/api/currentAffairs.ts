@@ -53,7 +53,7 @@ export async function listCurrentAffairs(
   const { data } = await apiClient.get<PaginatedResponse<RawAffair>>('/current-affairs', {
     params,
   });
-  return { ...data, items: data.items.map(normalizeAffair) };
+  return { ...data, items: (data.items ?? []).map(normalizeAffair) };
 }
 
 export async function getCurrentAffair(id: string): Promise<CurrentAffair> {
@@ -63,7 +63,10 @@ export async function getCurrentAffair(id: string): Promise<CurrentAffair> {
 
 export async function getTodayDigest(): Promise<CurrentAffairDigest> {
   const { data } = await apiClient.get<CurrentAffairDigest>('/current-affairs/digest/today');
-  return data;
+  return {
+    ...data,
+    affairs: (data.affairs ?? []).map((item) => normalizeAffair(item as RawAffair)),
+  };
 }
 
 export async function getAffairAiSummary(

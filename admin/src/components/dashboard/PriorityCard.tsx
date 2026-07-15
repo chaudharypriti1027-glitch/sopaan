@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useCountUp } from '../../hooks/useCountUp';
 import './dashboard.css';
@@ -37,9 +38,7 @@ export function PriorityCard({
       </div>
       <Link className="go" to={to}>
         {cta}
-        <svg className="svg" viewBox="0 0 24 24" aria-hidden>
-          <path d="M5 12h14M13 6l6 6-6 6" />
-        </svg>
+        <ArrowRight aria-hidden strokeWidth={1.8} />
       </Link>
     </div>
   );

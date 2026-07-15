@@ -10,7 +10,9 @@ function isTruthyFlag(value) {
 }
 
 function formatIssues(issues) {
-  return issues.map((issue) => `  - ${issue.path.join('.') || '(root)'}: ${issue.message}`).join('\n');
+  return issues
+    .map((issue) => `  - ${issue.path.join('.') || '(root)'}: ${issue.message}`)
+    .join('\n');
 }
 
 /**
@@ -22,7 +24,7 @@ export function validateEnvironment(raw = process.env) {
 
   if (!NODE_ENVS.includes(nodeEnv)) {
     throw new Error(
-      `Invalid NODE_ENV: "${raw.NODE_ENV}". Must be one of: ${NODE_ENVS.join(', ')}.`,
+      `Invalid NODE_ENV: "${raw.NODE_ENV}". Must be one of: ${NODE_ENVS.join(', ')}.`
     );
   }
 
@@ -33,12 +35,11 @@ export function validateEnvironment(raw = process.env) {
     throw new Error('DEV_STUB_AI cannot be enabled when NODE_ENV=production');
   }
 
-  const deployEnv =
-    raw.DEPLOY_ENV?.trim() || (isProduction ? 'production' : 'development');
+  const deployEnv = raw.DEPLOY_ENV?.trim() || (isProduction ? 'production' : 'development');
 
   if (!DEPLOY_ENVS.includes(deployEnv)) {
     throw new Error(
-      `Invalid DEPLOY_ENV: "${deployEnv}". Must be one of: ${DEPLOY_ENVS.join(', ')}.`,
+      `Invalid DEPLOY_ENV: "${deployEnv}". Must be one of: ${DEPLOY_ENVS.join(', ')}.`
     );
   }
 
@@ -52,9 +53,7 @@ export function validateEnvironment(raw = process.env) {
 
   const stubAiMode =
     !isProduction &&
-    (isTruthyFlag(raw.DEV_STUB_AI) ||
-      isTruthyFlag(raw.E2E_STUB_AI) ||
-      isTruthyFlag(raw.E2E_MODE));
+    (isTruthyFlag(raw.DEV_STUB_AI) || isTruthyFlag(raw.E2E_STUB_AI) || isTruthyFlag(raw.E2E_MODE));
 
   const baseSchema = z.object({
     PORT: z.coerce.number().int().min(1).max(65535),
@@ -91,9 +90,12 @@ export function validateEnvironment(raw = process.env) {
   const parsed = baseSchema.safeParse(raw);
   if (!parsed.success) {
     throw new Error(
-      ['Invalid environment configuration:', formatIssues(parsed.error.issues), '', 'Copy server/.env.example to server/.env and set all values.'].join(
-        '\n',
-      ),
+      [
+        'Invalid environment configuration:',
+        formatIssues(parsed.error.issues),
+        '',
+        'Copy server/.env.example to server/.env and set all values.',
+      ].join('\n')
     );
   }
 
@@ -105,18 +107,28 @@ export function validateEnvironment(raw = process.env) {
   }
 
   if (isProduction) {
-    const productionRequired = [
-      ['ANTHROPIC_API_KEY', data.ANTHROPIC_API_KEY],
-      ['RAZORPAY_KEY_ID', data.RAZORPAY_KEY_ID],
-      ['RAZORPAY_KEY_SECRET', data.RAZORPAY_KEY_SECRET],
-      ['RAZORPAY_WEBHOOK_SECRET', data.RAZORPAY_WEBHOOK_SECRET],
-      ['NEWSAPI_AI_KEY', data.NEWSAPI_AI_KEY],
-      ['SENTRY_DSN', data.SENTRY_DSN],
-    ];
+    // Core production requirements. Provider-backed features are optional at boot so
+    // request handlers can return structured unavailable errors when a key is absent.
+    const productionRequired = [['SENTRY_DSN', data.SENTRY_DSN]];
 
     for (const [key, value] of productionRequired) {
       if (!value) {
         missing.push(key);
+      }
+    }
+
+    // Partial Razorpay config is a configuration mistake — require all-or-nothing.
+    const razorpayParts = [
+      ['RAZORPAY_KEY_ID', data.RAZORPAY_KEY_ID],
+      ['RAZORPAY_KEY_SECRET', data.RAZORPAY_KEY_SECRET],
+      ['RAZORPAY_WEBHOOK_SECRET', data.RAZORPAY_WEBHOOK_SECRET],
+    ];
+    const razorpaySet = razorpayParts.filter(([, value]) => Boolean(value));
+    if (razorpaySet.length > 0 && razorpaySet.length < razorpayParts.length) {
+      for (const [key, value] of razorpayParts) {
+        if (!value) {
+          missing.push(`${key} (required when any Razorpay key is set)`);
+        }
       }
     }
 
@@ -129,6 +141,33 @@ export function validateEnvironment(raw = process.env) {
     if (data.JWT_SECRET === data.JWT_REFRESH_SECRET) {
       throw new Error('JWT_SECRET and JWT_REFRESH_SECRET must differ in production.');
     }
+
+    const smsProvider = (raw.SMS_PROVIDER ?? 'dev').trim().toLowerCase();
+    if (smsProvider !== 'dev') {
+      const twilioRequired = [
+        ['TWILIO_ACCOUNT_SID', raw.TWILIO_ACCOUNT_SID],
+        ['TWILIO_AUTH_TOKEN', raw.TWILIO_AUTH_TOKEN],
+        ['TWILIO_VERIFY_SERVICE_SID', raw.TWILIO_VERIFY_SERVICE_SID],
+      ];
+      for (const [key, value] of twilioRequired) {
+        if (!value?.trim()) {
+          missing.push(key);
+        }
+      }
+    }
+
+    if (isTruthyFlag(raw.OTP_EMAIL_REQUIRED) || raw.SMTP_HOST?.trim()) {
+      const smtpRequired = [
+        ['SMTP_HOST', raw.SMTP_HOST],
+        ['SMTP_USER', raw.SMTP_USER],
+        ['SMTP_PASS', raw.SMTP_PASS],
+      ];
+      for (const [key, value] of smtpRequired) {
+        if (!value?.trim()) {
+          missing.push(`${key} (required when SMTP_HOST / OTP_EMAIL_REQUIRED is set)`);
+        }
+      }
+    }
   }
 
   if (missing.length > 0) {
@@ -140,7 +179,7 @@ export function validateEnvironment(raw = process.env) {
         ...missing.map((key) => `  - ${key}`),
         '',
         'See server/.env.example and README Production setup.',
-      ].join('\n'),
+      ].join('\n')
     );
   }
 
@@ -163,7 +202,7 @@ export function validateEnvironment(raw = process.env) {
         [
           'LIVEKIT_EGRESS_ENABLED=true but recording storage is incomplete:',
           ...egressMissing.map((key) => `  - ${key}`),
-        ].join('\n'),
+        ].join('\n')
       );
     }
   }
@@ -213,9 +252,7 @@ export function validateEnvironment(raw = process.env) {
       .split(',')
       .map((value) => value.trim())
       .filter(Boolean),
-    embeddingProvider:
-      raw.EMBEDDING_PROVIDER ??
-      (raw.VOYAGE_API_KEY?.trim() ? 'voyage' : 'noop'),
+    embeddingProvider: raw.EMBEDDING_PROVIDER ?? (raw.VOYAGE_API_KEY?.trim() ? 'voyage' : 'noop'),
     voyageApiKey: raw.VOYAGE_API_KEY ?? '',
     embeddingModel: raw.EMBEDDING_MODEL ?? 'voyage-3-lite',
     embeddingDimensions: Number(raw.EMBEDDING_DIMENSIONS ?? 512),

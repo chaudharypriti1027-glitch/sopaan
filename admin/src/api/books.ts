@@ -20,7 +20,7 @@ export type BookGenStartResponse = {
 export type BookGenStatusResponse = {
   jobId: string;
   bookId: string;
-  state: 'queued' | 'running' | 'completed' | 'failed';
+  state: 'queued' | 'running' | 'done' | 'failed';
   progress: number;
   error: string | null;
   metrics?: {
@@ -44,6 +44,6 @@ export function fetchBookGenStatus(jobId: string) {
 export function publishAdminBook(bookId: string) {
   return apiRequest<{ book: { id: string; title: string; status: string } }>(
     `/api/admin/books/${bookId}/publish`,
-    { method: 'POST', body: JSON.stringify({}) },
+    { method: 'POST', body: JSON.stringify({}) }
   );
 }

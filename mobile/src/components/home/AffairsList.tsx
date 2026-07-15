@@ -52,27 +52,29 @@ export function AffairsList({ items, onItemPress }: AffairsListProps) {
   return (
     <View style={styles.card}>
       {items.slice(0, 3).map((item, index) => (
-          <View key={item.id}>
-            {index > 0 ? <View style={styles.divider} /> : null}
-            <Pressable
-              accessibilityRole="button"
-              onPress={() => onItemPress?.(item.id)}
-              style={({ pressed }) => [styles.row, pressed && styles.pressed]}
-            >
-              <AffairThumb item={item} index={index} />
-              <View style={styles.content}>
-                <Text style={styles.source}>{item.source}</Text>
-                <Text style={styles.headline} numberOfLines={2}>
-                  {item.headline}
-                </Text>
-                <View style={styles.timeRow}>
-                  <HomeSlotIcon slot="inline" Icon={Clock} tone="slate" />
-                  <Text style={styles.readTime}>{t('home.readMin', { count: item.readMin })}</Text>
-                </View>
+        <View key={item.id}>
+          {index > 0 ? <View style={styles.divider} /> : null}
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => onItemPress?.(item.id)}
+            style={({ pressed }) => [styles.row, pressed && styles.pressed]}
+          >
+            <AffairThumb item={item} index={index} />
+            <View style={styles.content}>
+              <Text style={styles.source} numberOfLines={1}>
+                {item.source}
+              </Text>
+              <Text style={styles.headline} numberOfLines={2} ellipsizeMode="tail">
+                {item.headline}
+              </Text>
+              <View style={styles.timeRow}>
+                <Clock size={11} color={HOME_UI.muted} strokeWidth={2.2} />
+                <Text style={styles.readTime}>{t('home.readMin', { count: item.readMin })}</Text>
               </View>
-              <HomeSlotIcon slot="button" Icon={ChevronRight} tone="slate" style={styles.chev} />
-            </Pressable>
-          </View>
+            </View>
+            <ChevronRight size={16} color={HOME_UI.muted} strokeWidth={2.2} />
+          </Pressable>
+        </View>
       ))}
     </View>
   );
@@ -81,9 +83,9 @@ export function AffairsList({ items, onItemPress }: AffairsListProps) {
 function createThumbStyles() {
   return StyleSheet.create({
     thumbWrap: {
-      width: 52,
-      height: 52,
-      borderRadius: HOME_UI.innerRadius,
+      width: 54,
+      height: 54,
+      borderRadius: 14,
       alignItems: 'center',
       justifyContent: 'center',
       flexShrink: 0,
@@ -95,7 +97,7 @@ function createThumbStyles() {
     thumbImage: {
       width: '100%',
       height: '100%',
-      borderRadius: HOME_UI.innerRadius,
+      borderRadius: 14,
     },
   });
 }
@@ -103,49 +105,48 @@ function createThumbStyles() {
 function createStyles() {
   return StyleSheet.create({
     card: {
-      paddingVertical: 4,
+      paddingVertical: 2,
       ...homeFeedCard(),
     },
     row: {
       flexDirection: 'row',
-      alignItems: 'flex-start',
+      alignItems: 'center',
       gap: 12,
-      paddingVertical: 13,
-      paddingHorizontal: 16,
+      paddingVertical: 12,
+      paddingHorizontal: 14,
     },
     pressed: homePressFeedback,
     divider: {
       height: StyleSheet.hairlineWidth,
       backgroundColor: HOME_UI.border,
-      marginLeft: 82,
+      marginLeft: 80,
+      marginRight: 14,
     },
-    content: { flex: 1, minWidth: 0 },
+    content: { flex: 1, minWidth: 0, gap: 3 },
     source: {
-      fontSize: 9.5,
+      fontSize: 10,
       fontWeight: '800',
-      letterSpacing: 0.6,
+      letterSpacing: 0.55,
       textTransform: 'uppercase',
-      marginBottom: 3,
       color: HOME_UI.sageDeep,
     },
     headline: {
-      fontSize: 13.5,
+      fontSize: 14,
       fontWeight: '700',
       color: HOME_UI.ink,
       lineHeight: 18,
-      marginBottom: 5,
-      letterSpacing: -0.1,
+      letterSpacing: -0.15,
     },
     timeRow: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 4,
+      marginTop: 2,
     },
     readTime: {
-      fontSize: 10.5,
+      fontSize: 11,
       color: HOME_UI.muted,
       fontWeight: '600',
     },
-    chev: { marginTop: 2, flexShrink: 0 },
   });
 }

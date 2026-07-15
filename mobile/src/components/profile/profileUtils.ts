@@ -10,11 +10,25 @@ import {
 
 export const XP_PER_LEVEL = 500;
 
-const LEVEL_TITLES = ['Starter', 'Learner', 'Scholar', 'Expert', 'Master', 'Legend'] as const;
+export const LEVEL_TITLE_KEYS = [
+  'starter',
+  'learner',
+  'scholar',
+  'expert',
+  'master',
+  'legend',
+] as const;
 
+export function getLevelTitleKey(level: number): (typeof LEVEL_TITLE_KEYS)[number] {
+  const index = Math.min(Math.max(level - 1, 0), LEVEL_TITLE_KEYS.length - 1);
+  return LEVEL_TITLE_KEYS[index];
+}
+
+/** @deprecated Prefer getLevelTitleKey + i18n `profile.levelTitle.*`. */
 export function getLevelTitle(level: number): string {
-  const index = Math.min(Math.max(level - 1, 0), LEVEL_TITLES.length - 1);
-  return LEVEL_TITLES[index];
+  const titles = ['Starter', 'Learner', 'Scholar', 'Expert', 'Master', 'Legend'] as const;
+  const index = Math.min(Math.max(level - 1, 0), titles.length - 1);
+  return titles[index];
 }
 
 export function getXpProgress(xp: number, level: number) {

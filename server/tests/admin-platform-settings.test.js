@@ -73,6 +73,7 @@ describe('admin platform settings', () => {
 
     expect(res.body.settings.freeAiQuota).toBe(10);
     expect(res.body.settings.proPriceMonthly).toBe(299);
+    expect(typeof res.body.settings.welcomeMonthEnabled).toBe('boolean');
     expect(res.body.integrations.razorpay.editable).toBe(false);
     expect(res.body.integrations.anthropic.editable).toBe(false);
     expect(res.body.integrations.razorpay.source).toBe('env');

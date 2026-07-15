@@ -2,6 +2,7 @@
 
 export const HELP_CENTER_URL = 'https://sopaan.app/help';
 export const PRIVACY_POLICY_URL = 'https://sopaan.app/privacy';
+export const TERMS_OF_SERVICE_URL = 'https://sopaan.app/terms';
 export const SUPPORT_EMAIL = 'mailto:support@sopaan.app';
 
 /** Official Sopaan student WhatsApp community for updates and announcements. */

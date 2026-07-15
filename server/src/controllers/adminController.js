@@ -23,6 +23,7 @@ import { verifyMediaUploadToken } from '../services/media/mediaObjectStorage.js'
 import { listPublicPlans } from '../config/premiumPlans.js';
 import * as platformSettingsService from '../services/platformSettingsService.js';
 import * as adminSystemCheckService from '../services/admin/adminSystemCheckService.js';
+import * as premiumService from '../services/premiumService.js';
 
 export async function getStats(_req, res) {
   const result = await adminStatsService.getAdminStats();
@@ -366,6 +367,15 @@ export async function getPlatformSettings(_req, res) {
 
 export async function updatePlatformSettings(req, res) {
   res.status(200).json(await platformSettingsService.updatePlatformSettings(req.body));
+}
+
+export async function revokeWelcomeMonthForAll(req, res) {
+  const result = await premiumService.revokeAllWelcomeMonthEntitlements();
+  res.status(200).json({
+    success: true,
+    ...result,
+    message: `Revoked free Pro for ${result.revoked} student${result.revoked === 1 ? '' : 's'}. Paid subscriptions were not changed.`,
+  });
 }
 
 export async function createAdminLiveClass(req, res) {

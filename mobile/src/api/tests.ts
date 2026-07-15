@@ -67,7 +67,7 @@ export async function listTests(params?: ListTestsParams): Promise<PaginatedResp
   const { data } = await apiClient.get<PaginatedResponse<RawTestSummary>>('/tests', { params });
   return {
     ...data,
-    items: data.items.map(normalizeSummary),
+    items: (data.items ?? []).map(normalizeSummary),
   };
 }
 
@@ -144,7 +144,7 @@ export async function listCommunityTests(
   });
   return {
     ...data,
-    items: data.items.map(normalizeSummary),
+    items: (data.items ?? []).map(normalizeSummary),
   };
 }
 

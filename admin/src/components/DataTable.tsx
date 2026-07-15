@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { Inbox } from 'lucide-react';
 import { QueryErrorBanner } from './QueryErrorBanner';
 import { ADMIN_SHELL_COPY } from '../content/adminShellContent';
 import './ui.css';
@@ -14,6 +15,7 @@ interface DataTableProps<T> {
   columns: TableColumn<T>[];
   rows: T[];
   emptyMessage?: string;
+  emptyHint?: string;
   error?: unknown;
   onRetry?: () => void;
   isLoading?: boolean;
@@ -23,6 +25,7 @@ export function DataTable<T extends { id?: string }>({
   columns,
   rows,
   emptyMessage = 'No rows yet',
+  emptyHint,
   error,
   onRetry,
   isLoading = false,
@@ -32,11 +35,25 @@ export function DataTable<T extends { id?: string }>({
   }
 
   if (isLoading) {
-    return <p className="table-empty">{ADMIN_SHELL_COPY.loading}</p>;
+    return (
+      <div className="table-wrap table-state" role="status" aria-live="polite">
+        <p className="table-empty">{ADMIN_SHELL_COPY.loading}</p>
+      </div>
+    );
   }
 
   if (!rows.length) {
-    return <p className="table-empty">{emptyMessage}</p>;
+    return (
+      <div className="table-wrap table-state">
+        <div className="table-empty-block">
+          <div className="empty-icon" aria-hidden>
+            <Inbox strokeWidth={1.7} />
+          </div>
+          <p className="table-empty">{emptyMessage}</p>
+          {emptyHint ? <p className="table-empty-hint">{emptyHint}</p> : null}
+        </div>
+      </div>
+    );
   }
 
   return (

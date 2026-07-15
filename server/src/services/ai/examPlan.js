@@ -15,7 +15,7 @@ function fallbackAdvice({ examTrack, daysLeft, todayProgress, physicalPrep }) {
     summary: daysLeft != null
       ? `${daysLeft} days to ${examTrack}. Stay consistent with today's ${todayProgress.total} planned sessions.`
       : `Build momentum for ${examTrack} with focused daily sessions.`,
-    dreamMessage: `Your dream government job through ${examTrack} is built one focused week at a time — start today.`,
+    dreamMessage: `Cracking ${examTrack} is built one focused week at a time — start today.`,
     focusAreas,
     weeklyStrategy: 'Alternate concept revision with mocks and error analysis.',
     physicalPrep: physicalPrep?.hasPhysicalStage

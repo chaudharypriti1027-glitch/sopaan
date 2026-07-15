@@ -1,6 +1,6 @@
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { PlayCircle, Radio } from 'lucide-react-native';
+import { PlayCircle, Radio, Video } from 'lucide-react-native';
 import { useMemo } from 'react';
 import {
   ActivityIndicator,
@@ -12,7 +12,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ApiError } from '../../api/errors';
-import { BackButton, Card, Pill, Screen, SectionTitle } from '../../components';
+import { BackButton, Button, Card, Pill, Screen, SectionTitle } from '../../components';
 import { usePremiumDialog } from '../../components/premium/PremiumDialogProvider';
 import { LiveClassComingSoon } from '../../components/live/LiveClassComingSoon';
 import { LiveClassImmersiveShell } from '../../components/live/LiveClassImmersiveShell';
@@ -28,11 +28,13 @@ import {
   useLiveClass,
   useLiveClassViewerToken,
   useLiveClasses,
+  useProGate,
 } from '../../hooks';
 import { useLiveClassOrientation } from '../../hooks/useLiveClassOrientation';
 import { useLiveClassChat } from '../../hooks/useSocket';
 import type { MainStackParamList } from '../../navigation/types';
 import { useTheme } from '../../theme';
+import { platformShadow } from '../../utils/platformShadow';
 
 export function LiveClassViewerScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
@@ -40,8 +42,11 @@ export function LiveClassViewerScreen() {
   const { liveClassId } = route.params;
   const { theme } = useTheme();
   const { t } = useTranslation('app', { keyPrefix: 'liveClassViewer' });
+  const { t: tLive } = useTranslation('app', { keyPrefix: 'liveClasses' });
+  const { t: tApp } = useTranslation('app');
   const styles = useMemo(() => createStyles(theme), [theme]);
   const { confirm } = usePremiumDialog();
+  const { isPro, isLoading: isTierLoading, openPaywall } = useProGate();
 
   const listQuery = useLiveClasses();
   const classQuery = useLiveClass(liveClassId);
@@ -55,16 +60,21 @@ export function LiveClassViewerScreen() {
     Boolean(liveClass?.recordingUrl) &&
     liveClass?.recordingStatus === 'ready';
 
-  const tokenQuery = useLiveClassViewerToken(streamingConfigured && isLive ? liveClassId : undefined);
-  const chat = useLiveClassChat(streamingConfigured && isLive ? liveClassId : undefined);
+  const tokenQuery = useLiveClassViewerToken(streamingConfigured && isLive && isPro ? liveClassId : undefined);
+  const chat = useLiveClassChat(streamingConfigured && isLive && isPro ? liveClassId : undefined);
   const viewerCount =
     chat.presenceCount > 0 ? chat.presenceCount : liveClass?.attendeeCount ?? liveClass?.viewers ?? 0;
 
   const isLoadingMeta = classQuery.isLoading;
   const isJoiningLive = isLive && streamingConfigured && tokenQuery.isLoading;
-  const showComingSoon = streamingConfigured === false && !hasRecording;
+  const streamingUnavailableFromToken =
+    tokenQuery.isError &&
+    tokenQuery.error instanceof ApiError &&
+    tokenQuery.error.code === 'STREAMING_NOT_CONFIGURED';
+  const showComingSoon =
+    (streamingConfigured === false || streamingUnavailableFromToken) && !hasRecording;
 
-  useLiveClassOrientation(isLive && !showComingSoon);
+  useLiveClassOrientation(isLive && isPro && !showComingSoon);
 
   const instructorSubtitle = liveClass
     ? [liveClass.examTag, liveClass.topic].filter(Boolean).join(' · ')
@@ -80,6 +90,42 @@ export function LiveClassViewerScreen() {
       onConfirm: () => navigation.goBack(),
     });
   };
+
+  if (isTierLoading && !isPro) {
+    return (
+      <Screen scroll={false} padded={false} style={styles.screen}>
+        <View style={styles.centered}>
+          <ActivityIndicator color={theme.colors.brand.primary} size="large" />
+        </View>
+      </Screen>
+    );
+  }
+
+  if (!isPro) {
+    return (
+      <Screen scroll={false} padded={false} style={styles.lockedScreen}>
+        <View style={styles.lockedHeader}>
+          <BackButton onPress={() => navigation.goBack()} />
+        </View>
+        <View style={styles.lockedBody}>
+          <View style={styles.lockedCard}>
+            <View style={styles.lockedIconWell}>
+              <Video size={28} color={LIVE.goldDeep} strokeWidth={1.85} />
+            </View>
+            <Text style={styles.lockedTitle}>{tLive('lockedTitle')}</Text>
+            <Text style={styles.lockedCopy}>{tLive('lockedBody')}</Text>
+            <Button
+              label={tApp('manageSubscription.upgradeToPro')}
+              variant="gold"
+              fullWidth
+              onPress={() => openPaywall()}
+              accessibilityHint={tApp('manageSubscription.upgradeA11yHint')}
+            />
+          </View>
+        </View>
+      </Screen>
+    );
+  }
 
   if (showComingSoon) {
     return (
@@ -163,7 +209,9 @@ export function LiveClassViewerScreen() {
           </Text>
         </View>
         <View style={styles.centered}>
-          <PlayCircle size={32} color={theme.colors.text.secondary} />
+          <View style={styles.endedIconWell}>
+            <PlayCircle size={28} color={LIVE.goldDeep} strokeWidth={1.85} />
+          </View>
           <Text style={styles.errorText}>{t('recordingPending')}</Text>
         </View>
       </Screen>
@@ -196,6 +244,12 @@ export function LiveClassViewerScreen() {
     if (tokenQuery.isError) {
       const needsSignIn =
         tokenQuery.error instanceof ApiError && tokenQuery.error.status === 401;
+      const streamingUnavailable =
+        tokenQuery.error instanceof ApiError &&
+        tokenQuery.error.code === 'STREAMING_NOT_CONFIGURED';
+      if (streamingUnavailable) {
+        return <LiveClassComingSoon message={listQuery.data?.message} />;
+      }
       return (
         <View style={styles.centered}>
           <Radio size={28} color={theme.colors.semantic.error} />
@@ -281,45 +335,98 @@ export function LiveClassViewerScreen() {
 
 function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
-    screen: { flex: 1, backgroundColor: theme.colors.surface.default },
-    liveRoot: { flex: 1, backgroundColor: '#12162B' },
+    screen: { flex: 1, backgroundColor: LIVE.listBg },
+    lockedScreen: { flex: 1, backgroundColor: LIVE.listBg },
+    lockedHeader: {
+      paddingHorizontal: theme.spacing.lg,
+      paddingTop: theme.spacing.md,
+    },
+    lockedBody: {
+      flex: 1,
+      justifyContent: 'center',
+      paddingHorizontal: theme.spacing.lg,
+      paddingBottom: theme.spacing.xl,
+    },
+    lockedCard: {
+      alignItems: 'center',
+      gap: theme.spacing.md,
+      paddingVertical: theme.spacing.xl,
+      paddingHorizontal: theme.spacing.lg,
+      borderRadius: 24,
+      backgroundColor: LIVE.surface,
+      borderWidth: 1,
+      borderColor: LIVE.border,
+      ...platformShadow({ color: LIVE.shadow, offsetY: 10, opacity: 0.08, radius: 20, elevation: 3 }),
+    },
+    lockedIconWell: {
+      width: 64,
+      height: 64,
+      borderRadius: 20,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: LIVE.goldSoft,
+      borderWidth: 1,
+      borderColor: LIVE.goldBorder,
+      marginBottom: theme.spacing.xs,
+    },
+    lockedTitle: {
+      ...theme.typography.presets.h3,
+      color: LIVE.ink,
+      textAlign: 'center',
+      fontFamily: theme.typography.fonts.ui.bold,
+    },
+    lockedCopy: {
+      ...theme.typography.presets.body,
+      color: LIVE.muted,
+      textAlign: 'center',
+      lineHeight: 22,
+      marginBottom: theme.spacing.xs,
+    },
+    liveRoot: { flex: 1, backgroundColor: LIVE.stageDeep },
     scheduledHeader: {
       flexDirection: 'row',
       alignItems: 'flex-start',
-      gap: 8,
+      gap: 10,
       paddingHorizontal: 16,
-      paddingTop: 8,
-      paddingBottom: 4,
+      paddingTop: 10,
+      paddingBottom: 12,
       backgroundColor: LIVE.navyDeep,
+      borderBottomWidth: 1,
+      borderBottomColor: 'rgba(233,207,141,0.16)',
     },
-    scheduledHeaderText: { flex: 1, gap: 2, paddingTop: 4 },
+    scheduledHeaderText: { flex: 1, gap: 3, paddingTop: 6 },
     scheduledTitle: {
-      fontSize: 16,
+      fontSize: 17,
       fontFamily: theme.typography.fonts.ui.bold,
       fontWeight: '800',
       color: '#FFFFFF',
+      lineHeight: 22,
     },
     scheduledInstructor: {
       fontSize: 12,
-      color: 'rgba(255,255,255,0.7)',
+      fontFamily: theme.typography.fonts.ui.semibold,
+      color: LIVE.goldLt,
     },
     header: {
       gap: theme.spacing.sm,
       paddingHorizontal: theme.spacing.lg,
       paddingTop: theme.spacing.md,
       paddingBottom: theme.spacing.sm,
-      backgroundColor: theme.colors.surface.default,
+      backgroundColor: LIVE.listBgTop,
+      borderBottomWidth: 1,
+      borderBottomColor: LIVE.border,
     },
     headerMeta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
     title: {
       ...theme.typography.presets.h3,
-      color: theme.colors.text.primary,
+      color: LIVE.ink,
+      fontFamily: theme.typography.fonts.ui.bold,
     },
-    instructor: { ...theme.typography.presets.caption, color: theme.colors.text.secondary },
+    instructor: { ...theme.typography.presets.caption, color: LIVE.muted },
     playerWrap: {
       flex: 1,
       minHeight: 280,
-      backgroundColor: '#0b1020',
+      backgroundColor: LIVE.stageDeep,
       position: 'relative',
     },
     centered: {
@@ -329,14 +436,32 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       gap: theme.spacing.md,
       padding: theme.spacing.lg,
     },
-    loadingText: { ...theme.typography.presets.body, color: theme.colors.text.secondary },
+    endedIconWell: {
+      width: 64,
+      height: 64,
+      borderRadius: 20,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: LIVE.goldSoft,
+      borderWidth: 1,
+      borderColor: LIVE.goldBorder,
+      marginBottom: 4,
+    },
+    loadingText: { ...theme.typography.presets.body, color: LIVE.muted },
     loadingTextDark: { ...theme.typography.presets.body, color: 'rgba(255,255,255,0.75)' },
     errorText: {
       ...theme.typography.presets.body,
-      color: theme.colors.text.secondary,
+      color: LIVE.muted,
       textAlign: 'center',
+      lineHeight: 22,
+      maxWidth: 280,
     },
-    descriptionCard: { margin: theme.spacing.lg, gap: theme.spacing.sm },
-    description: { ...theme.typography.presets.body, color: theme.colors.text.secondary },
+    descriptionCard: {
+      margin: theme.spacing.lg,
+      gap: theme.spacing.sm,
+      backgroundColor: LIVE.surface,
+      borderColor: LIVE.border,
+    },
+    description: { ...theme.typography.presets.body, color: LIVE.muted, lineHeight: 22 },
   });
 }

@@ -9,7 +9,12 @@ import {
 } from 'livekit-server-sdk';
 import { env } from '../config/env.js';
 import { logger } from '../observability/logger.js';
+import { AppError } from '../utils/AppError.js';
 import { buildPublicUrl } from './media/mediaObjectStorage.js';
+
+function streamingNotConfigured() {
+  return new AppError('Live streaming is not configured', 503, 'STREAMING_NOT_CONFIGURED');
+}
 
 const TOKEN_TTL_SEC = 60 * 60;
 
@@ -100,7 +105,7 @@ export async function mintRoomToken({ identity, name, roomName, role }) {
   const config = getConfig();
 
   if (!config) {
-    throw new Error('LiveKit is not configured');
+    throw streamingNotConfigured();
   }
 
   const token = new AccessToken(config.apiKey, config.apiSecret, {
@@ -270,7 +275,7 @@ export async function verifyLiveKitWebhook(rawBody, authHeader, { skipAuth = fal
   const receiver = createWebhookReceiver();
 
   if (!receiver) {
-    throw new Error('LiveKit is not configured');
+    throw streamingNotConfigured();
   }
 
   const body = typeof rawBody === 'string' ? rawBody : rawBody.toString('utf8');

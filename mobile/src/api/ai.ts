@@ -112,10 +112,15 @@ export type AiDoubtHistoryItem = {
 };
 
 export async function askDoubt(input: AskDoubtInput): Promise<AskDoubtResponse> {
-  const { data } = await apiClient.post<AskDoubtResponse>('/ai/ask', {
-    ...input,
-    language: input.language ?? getAppLanguage(),
-  });
+  // Server allows up to ~75s per attempt and may retry a weak answer once.
+  const { data } = await apiClient.post<AskDoubtResponse>(
+    '/ai/ask',
+    {
+      ...input,
+      language: input.language ?? getAppLanguage(),
+    },
+    { timeout: 160_000 },
+  );
   return data;
 }
 
@@ -142,15 +147,24 @@ export type EvaluateAnswerResponse = {
     structure: number;
     clarity: number;
   };
+  strengths?: string[];
   feedback: string[];
+  nextSteps?: string[];
+  evaluationId?: string;
+  maxMarks?: number;
 };
 
 export async function evaluateAnswer(input: EvaluateAnswerInput): Promise<EvaluateAnswerResponse> {
-  const { data } = await apiClient.post<EvaluateAnswerResponse>('/ai/evaluate-answer', {
-    maxMarks: 15,
-    ...input,
-    language: input.language ?? getAppLanguage(),
-  });
+  // Server uses 90s per attempt × up to 2 validation retries — keep client above that.
+  const { data } = await apiClient.post<EvaluateAnswerResponse>(
+    '/ai/evaluate-answer',
+    {
+      maxMarks: 15,
+      ...input,
+      language: input.language ?? getAppLanguage(),
+    },
+    { timeout: 200_000 },
+  );
   return data;
 }
 

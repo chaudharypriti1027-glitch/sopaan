@@ -1,14 +1,17 @@
 import crypto from 'crypto';
 import { aiRuntimeConfig } from '../config/aiRuntimeConfig.js';
+import { env } from '../config/env.js';
 import { cacheGet, cacheSet } from '../lib/cache.js';
 import { recordAiUsage } from './ai/aiUsageService.js';
 import { stubBookExplain } from './ai/e2eStubs.js';
 import { getBookById } from './libraryService.js';
-import { client, MODELS } from './ai/claudeClient.js';
+import { client, resolveModel } from './ai/claudeClient.js';
+import { mapAnthropicError } from './ai/anthropicErrorMapper.js';
 import { logger } from '../observability/logger.js';
+import { AppError } from '../utils/AppError.js';
 
 const EXPLAIN_SYSTEM_PROMPT =
-  'Explain this passage simply for an Indian government-exam aspirant. Use plain English, a short everyday analogy if helpful, and end with one \'Remember this\' line. Do not add new facts beyond the passage.';
+  "Explain this passage simply for an exam aspirant preparing for any exam worldwide. Use plain English, a short everyday analogy if helpful, and end with one 'Remember this' line. Do not add new facts beyond the passage. Use plain text without emoji or decorative Unicode symbols.";
 
 const EXPLAIN_CACHE_TTL_SEC = 30 * 24 * 60 * 60;
 const EXPLAIN_MAX_TOKENS = 600;
@@ -75,13 +78,25 @@ async function streamLiveExplanation({ res, passage, userId, bookId }) {
   let fullText = '';
 
   try {
-    const stream = client.messages.stream({
-      model: MODELS.FAST,
-      max_tokens: EXPLAIN_MAX_TOKENS,
-      temperature: 0.3,
-      system: EXPLAIN_SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: passage }],
-    });
+    if (!env.anthropicApiKey) {
+      throw new AppError(
+        'AI is temporarily unavailable because its provider is not configured.',
+        503,
+        'AI_UNAVAILABLE'
+      );
+    }
+
+    const model = resolveModel({ tier: 'fast' });
+    const stream = client.messages.stream(
+      {
+        model,
+        max_tokens: EXPLAIN_MAX_TOKENS,
+        temperature: 0.3,
+        system: EXPLAIN_SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: passage }],
+      },
+      { signal: AbortSignal.timeout(75_000) }
+    );
 
     for await (const event of stream) {
       if (event.type === 'content_block_delta' && event.delta?.type === 'text_delta') {
@@ -101,27 +116,25 @@ async function streamLiveExplanation({ res, passage, userId, bookId }) {
       userId,
       tier: 'fast',
       feature: 'book_explain',
-      model: MODELS.FAST,
+      model,
       usage: finalMessage.usage,
       latencyMs,
     });
 
     const explanation = fullText.trim();
     if (explanation) {
-      await cacheSet(
-        buildExplainCacheKey(bookId, passage),
-        { explanation },
-        EXPLAIN_CACHE_TTL_SEC,
-      );
+      await cacheSet(buildExplainCacheKey(bookId, passage), { explanation }, EXPLAIN_CACHE_TTL_SEC);
     }
 
     writeSse(res, { type: 'done', ok: true, cached: false });
     res.end();
   } catch (err) {
+    const mapped = mapAnthropicError(err);
     logger.warn('[bookExplain] streaming failed', {
       bookId,
       userId,
-      message: err.message,
+      code: mapped.code,
+      message: mapped.message,
     });
 
     if (!res.headersSent) {
@@ -132,6 +145,7 @@ async function streamLiveExplanation({ res, passage, userId, bookId }) {
     writeSse(res, {
       type: 'error',
       ok: false,
+      code: mapped.code,
       message: EXPLAIN_FALLBACK_MESSAGE,
     });
     res.end();

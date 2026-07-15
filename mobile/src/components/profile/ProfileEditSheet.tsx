@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import {
-  Alert,
   Modal,
   Pressable,
   ScrollView,
@@ -19,6 +18,7 @@ import {
 } from '../../utils/examTarget';
 import { Field, PrimaryButton } from '../auth';
 import { Text } from '../Text';
+import { usePremiumDialog } from '../premium';
 import type {
   EducationLevel,
   Profile,
@@ -52,6 +52,7 @@ type ProfileEditSheetProps = {
 export function ProfileEditSheet({ visible, profile, loading, onClose, onSave }: ProfileEditSheetProps) {
   const { t } = useTranslation(['app', 'common', 'auth']);
   const { theme } = useTheme();
+  const { alert } = usePremiumDialog();
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   const initialExam = splitTargetExam(profile.targetExam);
@@ -97,7 +98,12 @@ export function ProfileEditSheet({ visible, profile, loading, onClose, onSave }:
     const trimmedExam = resolveTargetExam(examSelection, customExamName);
 
     if (!trimmedName || !trimmedState || !isValidTargetExam(examSelection, customExamName)) {
-      Alert.alert(t('app:profile.editMissingTitle'), t('app:profile.editMissingBody'));
+      alert({
+        title: t('app:profile.editMissingTitle'),
+        message: t('app:profile.editMissingBody'),
+        icon: 'info',
+        iconTone: 'coral',
+      });
       return;
     }
 

@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { BadgeIndianRupee, ReceiptText, RotateCcw, Send, UsersRound, WalletCards } from 'lucide-react';
 import {
   fetchRevenueSummary,
   listAdminTransactions,
@@ -85,18 +86,22 @@ export function RevenuePage() {
       ) : null}
       <div className="revenue-metrics">
         <div className="revenue-metric-card">
+          <span className="revenue-metric-icon"><BadgeIndianRupee aria-hidden strokeWidth={1.8} /></span>
           <div className="label">MRR</div>
           <div className="value currency">{formatInr(summary?.mrr ?? 0)}</div>
         </div>
         <div className="revenue-metric-card">
+          <span className="revenue-metric-icon"><UsersRound aria-hidden strokeWidth={1.8} /></span>
           <div className="label">Active subscriptions</div>
           <div className="value">{summary?.activeSubs ?? 0}</div>
         </div>
         <div className="revenue-metric-card">
+          <span className="revenue-metric-icon"><WalletCards aria-hidden strokeWidth={1.8} /></span>
           <div className="label">ARPU</div>
           <div className="value currency">{formatInr(summary?.arpu ?? 0)}</div>
         </div>
         <div className="revenue-metric-card">
+          <span className="revenue-metric-icon"><RotateCcw aria-hidden strokeWidth={1.8} /></span>
           <div className="label">Refunds (30d)</div>
           <div className="value">{summary?.refunds30d ?? 0}</div>
         </div>
@@ -104,6 +109,10 @@ export function RevenuePage() {
 
       <div className="sec-t">Transactions</div>
       <div className="panel">
+        <h3 className="panel-title-icon revenue-table-title">
+          <ReceiptText aria-hidden strokeWidth={1.8} />
+          Payment activity
+        </h3>
         <DataTable<AdminTransaction>
           rows={rows}
           emptyMessage="No payment transactions yet"
@@ -185,6 +194,7 @@ export function RevenuePage() {
                         }
                       }}
                     >
+                      <RotateCcw aria-hidden strokeWidth={1.8} />
                       Refund
                     </button>
                   ) : null}
@@ -195,6 +205,7 @@ export function RevenuePage() {
                       disabled={remindMutation.isPending}
                       onClick={() => remindMutation.mutate(row.id)}
                     >
+                      <Send aria-hidden strokeWidth={1.8} />
                       Remind
                     </button>
                   ) : null}

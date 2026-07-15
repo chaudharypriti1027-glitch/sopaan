@@ -233,9 +233,10 @@ router.get(
   validate(adminStudentQuerySchema, 'query'),
   asyncHandler(adminController.listStudents),
 );
-router.get('/students/:id', asyncHandler(adminController.getStudent));
+router.get('/students/:id', validateId, asyncHandler(adminController.getStudent));
 router.patch(
   '/students/:id/status',
+  validateId,
   validate(studentStatusSchema),
   asyncHandler(adminController.setStudentStatus),
 );
@@ -249,6 +250,12 @@ router.put(
   adminOnly,
   validate(platformSettingsUpdateSchema),
   asyncHandler(adminController.updatePlatformSettings),
+);
+router.post(
+  '/settings/welcome-month/revoke',
+  adminOnly,
+  validateEmptyBody,
+  asyncHandler(adminController.revokeWelcomeMonthForAll),
 );
 
 router.get('/revenue', adminOnly, asyncHandler(adminController.getRevenueSummary));

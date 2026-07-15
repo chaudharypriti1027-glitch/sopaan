@@ -149,6 +149,9 @@ describe('subscription entitlement service', () => {
       hasAccess: true,
     });
     expect(dto.currentPeriodEnd).toBeTruthy();
+    expect(typeof dto.currentPeriodEnd).toBe('string');
+    expect(() => new Date(dto.currentPeriodEnd).toISOString()).not.toThrow();
+    expect(Number.isNaN(new Date(dto.currentPeriodEnd).getTime())).toBe(false);
   });
 });
 

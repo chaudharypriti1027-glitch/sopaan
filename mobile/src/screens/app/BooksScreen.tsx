@@ -1,4 +1,5 @@
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import type { RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
@@ -33,6 +34,7 @@ import type { MainStackParamList } from '../../navigation/types';
 import { useTheme } from '../../theme';
 
 type BooksNav = NativeStackNavigationProp<MainStackParamList, 'Books'>;
+type BooksRoute = RouteProp<MainStackParamList, 'Books'>;
 
 function mergeBooks(
   items: LibraryBook[],
@@ -43,6 +45,7 @@ function mergeBooks(
 
 export function BooksScreen() {
   const navigation = useNavigation<BooksNav>();
+  const route = useRoute<BooksRoute>();
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
   const { t } = useTranslation('app');
@@ -51,7 +54,15 @@ export function BooksScreen() {
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [subjectFilter, setSubjectFilter] = useState<string | null>(null);
-  const [showDownloadedOnly, setShowDownloadedOnly] = useState(false);
+  const [showDownloadedOnly, setShowDownloadedOnly] = useState(
+    Boolean(route.params?.downloadedOnly),
+  );
+
+  useEffect(() => {
+    if (route.params?.downloadedOnly) {
+      setShowDownloadedOnly(true);
+    }
+  }, [route.params?.downloadedOnly]);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedQuery(query.trim()), 300);

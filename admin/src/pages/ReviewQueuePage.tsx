@@ -1,11 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
-import {
-  fetchReviewQueue,
-  mergeQuestion,
-  recheckQuestion,
-  rejectQuestion,
-} from '../api/questions';
+import { Search } from 'lucide-react';
+import { fetchReviewQueue, mergeQuestion, recheckQuestion, rejectQuestion } from '../api/questions';
 import { DataTable } from '../components/DataTable';
 import { PaginationBar } from '../components/questions/PaginationBar';
 import { ReviewIssuePill } from '../components/questions/QuestionStatusPill';
@@ -89,12 +85,10 @@ export function ReviewQueuePage() {
 
       <div className="toolbar">
         <div className="search toolbar-search">
-          <svg className="svg" viewBox="0 0 24 24" aria-hidden>
-            <circle cx="11" cy="11" r="7" />
-            <path d="m21 21-4.3-4.3" />
-          </svg>
+          <Search aria-hidden strokeWidth={1.8} />
           <input
             placeholder="Search review queue…"
+            aria-label="Search review queue"
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
@@ -148,9 +142,7 @@ export function ReviewQueuePage() {
                   <TableActionButton
                     variant="primary"
                     disabled={busyId === row.id}
-                    onClick={() =>
-                      mergeMutation.mutate({ id: row.id, into: row.duplicateOf!.id })
-                    }
+                    onClick={() => mergeMutation.mutate({ id: row.id, into: row.duplicateOf!.id })}
                   >
                     Merge
                   </TableActionButton>

@@ -14,6 +14,7 @@ type HomeNav = CompositeNavigationProp<
 /** Stack routes that accept a single string id from `/stack/Screen/id`. */
 const STACK_ID_PARAMS: Partial<Record<keyof MainStackParamList, string>> = {
   Quiz: 'testId',
+  TestReady: 'testId',
   CourseDetail: 'courseId',
   BookReader: 'bookId',
   GamePlay: 'gameId',

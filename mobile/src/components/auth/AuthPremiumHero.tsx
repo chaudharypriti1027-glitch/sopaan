@@ -22,9 +22,15 @@ type AuthPremiumHeroProps = {
   variant: AuthHeroVariant;
   /** Overrides config subtitle — e.g. OTP verify with masked phone. */
   subtitle?: string;
+  /** Tighter, separated treatment for form-first auth screens. */
+  compact?: boolean;
 };
 
-export function AuthPremiumHero({ variant, subtitle }: AuthPremiumHeroProps) {
+/**
+ * Brand-first auth hero — logo / wordmark + one line of support copy.
+ * Value chips, badges, and motivation tickers stay opt-in per variant.
+ */
+export function AuthPremiumHero({ variant, subtitle, compact = false }: AuthPremiumHeroProps) {
   const { t } = useTranslation('auth');
   const config = AUTH_HERO_VARIANTS[variant];
   const reducedMotion = useReducedMotion();
@@ -39,105 +45,53 @@ export function AuthPremiumHero({ variant, subtitle }: AuthPremiumHeroProps) {
     [t],
   );
 
+  const enter = reducedMotion
+    ? undefined
+    : FadeInDown.duration(420).reduceMotion(ReduceMotion.System);
+  const enterLater = reducedMotion
+    ? undefined
+    : FadeInDown.duration(400).delay(140).reduceMotion(ReduceMotion.System);
+
   return (
     <Animated.View
-      entering={
-        reducedMotion
-          ? undefined
-          : FadeInDown.duration(420).reduceMotion(ReduceMotion.System)
-      }
-      style={styles.wrap}
+      entering={enter}
+      style={[styles.wrap, compact && styles.wrapCompact]}
       testID={config.testID}
     >
       <LinearGradient
         colors={[...PREMIUM.heroGradient]}
         start={{ x: 0.12, y: 0 }}
         end={{ x: 0.88, y: 1 }}
-        style={styles.hero}
+        style={[styles.hero, compact && styles.heroCompact]}
       >
         <AuthHeroAmbient />
 
-        <Animated.View
-          entering={
-            reducedMotion
-              ? undefined
-              : FadeInDown.duration(360).delay(60).reduceMotion(ReduceMotion.System)
-          }
-          style={styles.badge}
-        >
-          <Text style={styles.badgeText}>{t(config.badgeKey)}</Text>
-        </Animated.View>
-
         <View style={styles.logoStack}>
-          <AuthLogoGlow size={config.showWordmark ? 96 : 88} />
+          <AuthLogoGlow size={compact ? 78 : config.showWordmark ? 96 : 88} />
           {config.showWordmark ? (
-            <Animated.View
-              entering={
-                reducedMotion
-                  ? undefined
-                  : FadeInDown.duration(420).delay(120).reduceMotion(ReduceMotion.System)
-              }
-              style={styles.logoWrap}
-            >
-              <SopaanLogo size={72} />
-            </Animated.View>
+            <View style={styles.logoWrap}>
+              <SopaanLogo size={compact ? 58 : 72} />
+            </View>
           ) : (
-            <Animated.View
-              entering={
-                reducedMotion
-                  ? undefined
-                  : FadeInDown.duration(420).delay(120).reduceMotion(ReduceMotion.System)
-              }
-            >
-              <AuthLogo />
-            </Animated.View>
+            <AuthLogo />
           )}
         </View>
 
-        {config.showWordmark ? (
-          <Animated.View
-            entering={
-              reducedMotion
-                ? undefined
-                : FadeInDown.duration(400).delay(180).reduceMotion(ReduceMotion.System)
-            }
-          >
-            <Text style={styles.wordmark}>
-              S<Text style={styles.wordmarkO}>O</Text>PAAN
+        <Animated.View entering={enterLater} style={styles.copy}>
+          {config.showWordmark ? (
+            <Text style={[styles.wordmark, compact && styles.wordmarkCompact]}>
+              S<Text style={[styles.wordmarkO, compact && styles.wordmarkCompact]}>O</Text>PAAN
             </Text>
-          </Animated.View>
-        ) : null}
+          ) : null}
 
-        {config.titleKey ? (
-          <Animated.View
-            entering={
-              reducedMotion
-                ? undefined
-                : FadeInDown.duration(400).delay(180).reduceMotion(ReduceMotion.System)
-            }
-          >
+          {config.titleKey && !config.showWordmark ? (
             <Text style={styles.title}>{t(config.titleKey)}</Text>
-          </Animated.View>
-        ) : null}
+          ) : null}
 
-        <Animated.View
-          entering={
-            reducedMotion
-              ? undefined
-              : FadeInDown.duration(400).delay(220).reduceMotion(ReduceMotion.System)
-          }
-        >
           <Text style={styles.subtitle}>{resolvedSubtitle}</Text>
-        </Animated.View>
 
-        <Animated.View
-          entering={
-            reducedMotion
-              ? undefined
-              : FadeInDown.duration(360).delay(260).reduceMotion(ReduceMotion.System)
-          }
-          style={styles.hairline}
-        />
+          <View style={styles.hairline} />
+        </Animated.View>
 
         {config.showMotivation ? (
           <AuthMotivationTicker
@@ -150,27 +104,17 @@ export function AuthPremiumHero({ variant, subtitle }: AuthPremiumHeroProps) {
 
         {config.showValueChips ? (
           <View style={styles.valueRow}>
-            {AUTH_BRAND_VALUES.map((item, chipIndex) => {
+            {AUTH_BRAND_VALUES.map((item) => {
               const Icon = item.icon;
               return (
-                <Animated.View
-                  key={item.key}
-                  entering={
-                    reducedMotion
-                      ? undefined
-                      : FadeInDown.duration(360)
-                          .delay(300 + chipIndex * 70)
-                          .reduceMotion(ReduceMotion.System)
-                  }
-                  style={styles.valueChip}
-                >
+                <View key={item.key} style={styles.valueChip}>
                   <View style={styles.valueIcon}>
-                    <Icon size={14} color="#E3C97F" strokeWidth={2.2} />
+                    <Icon size={14} color={AUTH_UI.goldLt} strokeWidth={2.2} />
                   </View>
                   <Text style={styles.valueLabel} numberOfLines={2}>
                     {t(item.labelKey)}
                   </Text>
-                </Animated.View>
+                </View>
               );
             })}
           </View>
@@ -186,30 +130,22 @@ function createStyles() {
       marginBottom: -18,
       zIndex: 2,
     },
+    wrapCompact: {
+      marginBottom: -8,
+    },
     hero: {
       borderRadius: AUTH_UI.cardRadius,
-      paddingHorizontal: 20,
-      paddingTop: 22,
-      paddingBottom: 26,
+      paddingHorizontal: 22,
+      paddingTop: 28,
+      paddingBottom: 30,
       alignItems: 'center',
       gap: AUTH_SPACING.stack,
       overflow: 'hidden',
     },
-    badge: {
-      paddingHorizontal: 12,
-      paddingVertical: 5,
-      borderRadius: 99,
-      backgroundColor: 'rgba(245,158,11,0.18)',
-      borderWidth: 1,
-      borderColor: 'rgba(245,158,11,0.38)',
-    },
-    badgeText: {
-      fontFamily: AUTH_FONTS.bold,
-      fontSize: 10,
-      fontWeight: '800',
-      letterSpacing: 0.6,
-      textTransform: 'uppercase',
-      color: '#E3C97F',
+    heroCompact: {
+      paddingTop: 20,
+      paddingBottom: 22,
+      gap: 10,
     },
     logoStack: {
       alignItems: 'center',
@@ -222,20 +158,28 @@ function createStyles() {
       shadowRadius: 20,
       elevation: 8,
     },
+    copy: {
+      alignItems: 'center',
+      gap: 10,
+    },
     wordmark: {
       fontFamily: 'SpaceGrotesk_700Bold',
-      fontSize: 26,
-      lineHeight: 32,
-      letterSpacing: 1.1,
+      fontSize: 28,
+      lineHeight: 34,
+      letterSpacing: 1.2,
       color: '#FFFFFF',
       textAlign: 'center',
     },
     wordmarkO: {
       fontFamily: 'SpaceGrotesk_700Bold',
-      fontSize: 26,
-      lineHeight: 32,
-      letterSpacing: 1.1,
-      color: '#E3C97F',
+      fontSize: 28,
+      lineHeight: 34,
+      letterSpacing: 1.2,
+      color: AUTH_UI.goldLt,
+    },
+    wordmarkCompact: {
+      fontSize: 24,
+      lineHeight: 29,
     },
     title: {
       fontFamily: AUTH_FONTS.bold,
@@ -248,14 +192,14 @@ function createStyles() {
     },
     subtitle: {
       fontFamily: AUTH_FONTS.medium,
-      fontSize: 14,
-      lineHeight: 20,
-      color: 'rgba(255,255,255,0.76)',
+      fontSize: 15,
+      lineHeight: 21,
+      color: 'rgba(255,255,255,0.78)',
       textAlign: 'center',
-      maxWidth: 300,
+      maxWidth: 280,
     },
     hairline: {
-      width: 44,
+      width: 40,
       height: 2,
       borderRadius: 99,
       backgroundColor: AUTH_UI.gold,

@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import { ArrowDown, ArrowUp, FileText, Plus, Trash2, Upload } from 'lucide-react';
 import { ActionButton } from '../ActionButton';
 import { FormField } from '../content/FormField';
 import { CoverImageField } from '../media/MediaPicker';
@@ -195,14 +196,17 @@ export function LessonEditor({ lessons, onChange, disabled }: LessonEditorProps)
           </p>
         </div>
         <ActionButton variant="navy" onClick={addLesson} disabled={disabled}>
+          <Plus aria-hidden strokeWidth={1.8} />
           Add lesson
         </ActionButton>
       </div>
 
       {lessons.length === 0 ? (
-        <p className="empty-note lesson-editor-empty">
-          No lessons yet. Add at least one lesson before publishing.
-        </p>
+        <div className="lesson-editor-empty">
+          <FileText aria-hidden strokeWidth={1.7} />
+          <strong>No lessons yet</strong>
+          <span>Add at least one lesson before publishing this course.</span>
+        </div>
       ) : (
         <div className="lesson-list">
           {lessons.map((lesson, index) => (
@@ -215,16 +219,20 @@ export function LessonEditor({ lessons, onChange, disabled }: LessonEditorProps)
                     className="tbtn ghost sm"
                     disabled={disabled || index === 0}
                     onClick={() => moveLesson(index, -1)}
+                    aria-label={`Move lesson ${index + 1} up`}
+                    title="Move lesson up"
                   >
-                    ↑
+                    <ArrowUp aria-hidden strokeWidth={1.8} />
                   </button>
                   <button
                     type="button"
                     className="tbtn ghost sm"
                     disabled={disabled || index === lessons.length - 1}
                     onClick={() => moveLesson(index, 1)}
+                    aria-label={`Move lesson ${index + 1} down`}
+                    title="Move lesson down"
                   >
-                    ↓
+                    <ArrowDown aria-hidden strokeWidth={1.8} />
                   </button>
                   <button
                     type="button"
@@ -232,21 +240,39 @@ export function LessonEditor({ lessons, onChange, disabled }: LessonEditorProps)
                     disabled={disabled}
                     onClick={() => removeLesson(index)}
                   >
+                    <Trash2 aria-hidden strokeWidth={1.8} />
                     Remove
                   </button>
                 </div>
               </header>
 
-              <FormField id={`lesson-title-${index}`} label="Lesson title">
-                <input
-                  id={`lesson-title-${index}`}
-                  className="form-input"
-                  value={lesson.title}
-                  disabled={disabled}
-                  placeholder="Introduction to percentages"
-                  onChange={(e) => updateLesson(index, { title: e.target.value })}
-                />
-              </FormField>
+              <div className="lesson-fields-row">
+                <FormField id={`lesson-title-${index}`} label="Lesson title">
+                  <input
+                    id={`lesson-title-${index}`}
+                    className="form-input"
+                    value={lesson.title}
+                    disabled={disabled}
+                    placeholder="Introduction to percentages"
+                    onChange={(e) => updateLesson(index, { title: e.target.value })}
+                  />
+                </FormField>
+                <FormField id={`lesson-duration-${index}`} label="Duration (minutes)">
+                  <input
+                    id={`lesson-duration-${index}`}
+                    className="form-input"
+                    type="number"
+                    min={1}
+                    disabled={disabled}
+                    value={lesson.durationMin}
+                    placeholder="15"
+                    onChange={(e) => updateLesson(index, { durationMin: e.target.value })}
+                  />
+                  {lesson.durationMin ? (
+                    <span className="form-hint">{formatDuration(lesson.durationMin)}</span>
+                  ) : null}
+                </FormField>
+              </div>
 
               <CoverImageField
                 label="Lesson video"
@@ -254,22 +280,6 @@ export function LessonEditor({ lessons, onChange, disabled }: LessonEditorProps)
                 value={lesson.videoUrl}
                 onChange={(url) => updateLesson(index, { videoUrl: url })}
               />
-
-              <FormField id={`lesson-duration-${index}`} label="Duration (minutes)">
-                <input
-                  id={`lesson-duration-${index}`}
-                  className="form-input"
-                  type="number"
-                  min={1}
-                  disabled={disabled}
-                  value={lesson.durationMin}
-                  placeholder="15"
-                  onChange={(e) => updateLesson(index, { durationMin: e.target.value })}
-                />
-                {lesson.durationMin ? (
-                  <span className="form-hint">{formatDuration(lesson.durationMin)}</span>
-                ) : null}
-              </FormField>
 
               <FormField id={`lesson-notes-${index}`} label="Study notes">
                 <textarea
@@ -290,6 +300,7 @@ export function LessonEditor({ lessons, onChange, disabled }: LessonEditorProps)
                       notesFileRef.current?.click();
                     }}
                   >
+                    <FileText aria-hidden strokeWidth={1.8} />
                     Import text notes
                   </ActionButton>
                   <span className="form-hint">Supports .txt and .md files</span>
@@ -332,6 +343,7 @@ export function LessonEditor({ lessons, onChange, disabled }: LessonEditorProps)
                       materialFileRef.current?.click();
                     }}
                   >
+                    <Upload aria-hidden strokeWidth={1.8} />
                     Upload material
                   </ActionButton>
                   <span className="form-hint">PDF up to 50 MB</span>

@@ -86,6 +86,8 @@ async function ensureAnswerEvaluation(feedback, snapshot) {
     score: aiGrade,
     subScores: snapshot.subScores ?? {},
     feedback: Array.isArray(snapshot.feedback) ? snapshot.feedback : [],
+    strengths: Array.isArray(snapshot.strengths) ? snapshot.strengths : [],
+    nextSteps: Array.isArray(snapshot.nextSteps) ? snapshot.nextSteps : [],
     reviewStatus: 'pending',
     attemptId: feedback.attemptId ?? null,
   });
@@ -144,6 +146,8 @@ export async function persistAnswerEvaluation(userId, payload, result) {
     score: result.score,
     subScores: result.subScores,
     feedback: result.feedback,
+    strengths: result.strengths ?? [],
+    nextSteps: result.nextSteps ?? [],
     reviewStatus: 'none',
     attemptId: payload.attemptId ?? null,
   });

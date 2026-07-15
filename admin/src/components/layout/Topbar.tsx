@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Bell, Search } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { PAGE_GROUPS, PAGE_SUBTITLES, PAGE_TITLES } from '../../navigation';
 import { GenerateExamButton } from '../exam/GenerateExamButton';
@@ -45,10 +46,7 @@ export function Topbar() {
         <p className="topbar-sub">{subtitle}</p>
       </div>
       <div className="search search-live">
-        <svg className="svg" viewBox="0 0 24 24" aria-hidden>
-          <circle cx="11" cy="11" r="7" />
-          <path d="m21 21-4.3-4.3" />
-        </svg>
+        <Search aria-hidden strokeWidth={1.8} />
         <input
           placeholder="Quick search pages…"
           aria-label="Search admin pages"
@@ -83,10 +81,8 @@ export function Topbar() {
         aria-label="Open notifications"
         onClick={() => navigate('/notifications')}
       >
-        <svg className="svg" viewBox="0 0 24 24" aria-hidden>
-          <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
-          <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
-        </svg>
+        <Bell aria-hidden strokeWidth={1.8} />
+        <span className="d" aria-hidden />
       </button>
     </header>
   );

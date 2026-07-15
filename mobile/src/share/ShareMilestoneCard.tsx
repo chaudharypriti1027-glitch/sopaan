@@ -71,7 +71,7 @@ export function ShareMilestoneCard({
 
       <View style={styles.footer}>
         <Text style={styles.footerTitle}>
-          {footerNote ?? 'Prep smarter for SSC, Banking & UPSC'}
+          {footerNote ?? 'Prep smarter for any exam — boards to global certifications'}
         </Text>
         {referralCode ? (
           <Text style={styles.referralCode}>Use code {referralCode}</Text>

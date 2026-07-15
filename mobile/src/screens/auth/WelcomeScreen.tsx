@@ -5,15 +5,12 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import {
-  AuthAnimatedSection,
   AuthFormCard,
-  AuthFormIntro,
   AuthPremiumHero,
   AuthScreen,
   AuthTrustNote,
   GhostButton,
   PrimaryButton,
-  WelcomeFeatureGrid,
 } from '../../components/auth';
 import type { AuthStackParamList } from '../../navigation/types';
 
@@ -28,32 +25,20 @@ export function WelcomeScreen() {
     <AuthScreen scrollProps={{ bounces: false }}>
       <AuthPremiumHero variant="welcome" />
 
-      <Animated.View entering={FadeInDown.duration(440).delay(80)}>
+      <Animated.View entering={FadeInDown.duration(400).delay(80)}>
         <AuthFormCard overlap>
-          <AuthFormIntro
-            eyebrow={t('welcome.eyebrow')}
-            title={t('welcome.title')}
-            subtitle={t('welcome.highlight')}
-          />
-
-          <AuthAnimatedSection index={0}>
-            <WelcomeFeatureGrid />
-          </AuthAnimatedSection>
-
-          <AuthAnimatedSection index={1}>
-            <View style={styles.cta}>
-              <PrimaryButton
-                label={t('welcome.getStarted')}
-                onPress={() => navigation.navigate('OtpLogin')}
-                testID="welcome-get-started"
-              />
-              <GhostButton
-                label={t('welcome.useEmail')}
-                onPress={() => navigation.navigate('Login')}
-                testID="welcome-email-link"
-              />
-            </View>
-          </AuthAnimatedSection>
+          <View style={styles.cta}>
+            <PrimaryButton
+              label={t('welcome.getStarted')}
+              onPress={() => navigation.navigate('OtpLogin')}
+              testID="welcome-get-started"
+            />
+            <GhostButton
+              label={t('welcome.useEmail')}
+              onPress={() => navigation.navigate('Login')}
+              testID="welcome-email-link"
+            />
+          </View>
         </AuthFormCard>
 
         <AuthTrustNote message={t('brand.trustNote')} testID="welcome-trust-note" />
@@ -66,7 +51,6 @@ function createStyles() {
   return StyleSheet.create({
     cta: {
       gap: 10,
-      marginTop: 4,
     },
   });
 }

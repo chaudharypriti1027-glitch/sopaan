@@ -1,9 +1,9 @@
 import { Crown } from 'lucide-react-native';
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { HomeSlotIcon } from './HomePremiumIcon';
-import { HomePremiumButton } from './HomePremiumButton';
+import { HomeProUpgradeStrip } from './HomeProUpgradeStrip';
 import { SegTabs } from '../SegTabs';
 import { Text } from '../Text';
 import { useProGate } from '../../hooks/useProGate';
@@ -16,16 +16,12 @@ import {
 import {
   HOME_EXPLORE_GRID,
   HOME_EXPLORE_TAB_LABEL_KEYS,
-  HOME_PREMIUM_STRIP,
 } from '../../content/homeContent';
-import { toneForText } from '../../utils/iconTone';
+import { denseTextProps } from '../../a11y/textProps';
 import { useTheme } from '../../theme';
 import type { HomeFeed } from '../../types/home';
 import { featureLinkPremiumTone } from './homeIcons';
-import { resolveHomeIcon } from './homeUtils';
 import { HOME_UI, homeFeedCard, homePressFeedback } from './homeTheme';
-
-const SECTION_PAD = HOME_UI.horizontalPad;
 
 type HomeFeaturesHubProps = {
   quickActions: HomeFeed['quickActions'];
@@ -33,25 +29,22 @@ type HomeFeaturesHubProps = {
   onShortcutPress: (deeplink: string) => void;
 };
 
-export function HomeFeaturesHub({
-  quickActions,
-  onFeaturePress,
-  onShortcutPress,
-}: HomeFeaturesHubProps) {
+function exploreLabel(
+  t: (key: string) => string,
+  labelKey: HomeFeatureLink['labelKey'],
+) {
+  if (labelKey === 'revisionCapsules') {
+    return t('navigation:revisionShort');
+  }
+  return t(`navigation:${labelKey}`);
+}
+
+export function HomeFeaturesHub({ onFeaturePress }: HomeFeaturesHubProps) {
   const { t } = useTranslation(['app', 'navigation']);
   const { theme } = useTheme();
   const { isPro, openPaywall } = useProGate();
-  const { width: screenWidth } = useWindowDimensions();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const [activeSection, setActiveSection] = useState<HomeFeatureSectionKey>('learning');
-
-  const tileWidth = useMemo(() => {
-    const contentWidth = screenWidth - SECTION_PAD * 2 - HOME_EXPLORE_GRID.cardPad * 2;
-    return Math.floor(
-      (contentWidth - HOME_EXPLORE_GRID.tileGap * (HOME_EXPLORE_GRID.columns - 1)) /
-        HOME_EXPLORE_GRID.columns,
-    );
-  }, [screenWidth]);
 
   const section = HOME_FEATURE_SECTIONS.find((entry) => entry.titleKey === activeSection);
   const tabOptions = useMemo(
@@ -64,8 +57,14 @@ export function HomeFeaturesHub({
   );
 
   const handleFeatureTap = (link: HomeFeatureLink) => {
-    if (!isPro && (link.proHighlight || link.tierFeature)) {
-      openPaywall(link.tierFeature ? { feature: link.tierFeature } : undefined);
+    // Soft badge only for marketing; screens + server enforce free quotas / pro-only.
+    // Hard-block true Pro-only entry points here so Explore matches locked screens.
+    if (!isPro && link.tierFeature === 'detailed_analytics') {
+      openPaywall({ feature: 'detailed_analytics' });
+      return;
+    }
+    if (!isPro && link.proHighlight && !link.tierFeature) {
+      openPaywall();
       return;
     }
     onFeaturePress(link);
@@ -73,33 +72,6 @@ export function HomeFeaturesHub({
 
   return (
     <View style={styles.wrap}>
-      {quickActions.length > 0 ? (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.shortcutsRow}
-          testID="home-section-explore-shortcuts"
-        >
-          {quickActions.map((action) => {
-            const Icon = resolveHomeIcon(action.icon);
-            const tone = toneForText(action.key);
-            return (
-              <Pressable
-                key={action.key}
-                accessibilityRole="button"
-                onPress={() => onShortcutPress(action.deeplink)}
-                style={({ pressed }) => [styles.shortcut, pressed && homePressFeedback]}
-              >
-                <HomeSlotIcon slot="shortcut" Icon={Icon} tone={tone} />
-                <Text style={styles.shortcutLabel} numberOfLines={1}>
-                  {action.label}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
-      ) : null}
-
       <View style={styles.exploreCard}>
         <View style={styles.cardInner}>
           <SegTabs
@@ -113,7 +85,7 @@ export function HomeFeaturesHub({
             {section?.links.map((link) => {
               const Icon = link.icon;
               const iconTone = featureLinkPremiumTone(link.tone);
-              const label = t(`navigation:${link.labelKey}`);
+              const label = exploreLabel(t, link.labelKey);
               const showPro = !isPro && link.proHighlight;
 
               return (
@@ -122,15 +94,27 @@ export function HomeFeaturesHub({
                   accessibilityRole="button"
                   accessibilityLabel={label}
                   onPress={() => handleFeatureTap(link)}
-                  style={({ pressed }) => [styles.tile, { width: tileWidth }, pressed && homePressFeedback]}
+                  style={({ pressed }) => [
+                    styles.tile,
+                    pressed && homePressFeedback,
+                  ]}
                 >
-                  <HomeSlotIcon slot="grid" Icon={Icon} tone={iconTone} />
-                  {showPro ? (
-                    <View style={styles.proBadge}>
-                      <HomeSlotIcon slot="micro" Icon={Crown} tone="gold" />
-                    </View>
-                  ) : null}
-                  <Text style={styles.tileLabel} numberOfLines={2}>
+                  <View style={styles.iconWell}>
+                    <HomeSlotIcon slot="grid" Icon={Icon} tone={iconTone} />
+                    {showPro ? (
+                      <View style={styles.proBadge}>
+                        <Crown size={9} color="#FFFFFF" strokeWidth={2.6} />
+                      </View>
+                    ) : null}
+                  </View>
+                  <Text
+                    {...denseTextProps}
+                    style={styles.tileLabel}
+                    numberOfLines={2}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.8}
+                    ellipsizeMode="tail"
+                  >
                     {label}
                   </Text>
                 </Pressable>
@@ -140,28 +124,7 @@ export function HomeFeaturesHub({
         </View>
       </View>
 
-      {!isPro ? (
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => openPaywall()}
-          style={({ pressed }) => [styles.proStrip, pressed && homePressFeedback]}
-          testID={HOME_PREMIUM_STRIP.testID}
-        >
-          <HomeSlotIcon slot="shortcut" Icon={Crown} tone="gold" />
-          <View style={styles.proCopy}>
-            <Text style={styles.proTitle}>{t(`app:home.${HOME_PREMIUM_STRIP.titleKey}`)}</Text>
-            <Text style={styles.proSubtitle} numberOfLines={1}>
-              {t(`app:home.${HOME_PREMIUM_STRIP.subtitleKey}`)}
-            </Text>
-          </View>
-          <HomePremiumButton
-            label={t(`app:home.${HOME_PREMIUM_STRIP.ctaKey}`)}
-            variant="outline"
-            size="sm"
-            onPress={() => openPaywall()}
-          />
-        </Pressable>
-      ) : null}
+      {!isPro ? <HomeProUpgradeStrip onPress={() => openPaywall()} /> : null}
     </View>
   );
 }
@@ -169,95 +132,64 @@ export function HomeFeaturesHub({
 function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
     wrap: {
-      gap: 14,
-    },
-    shortcutsRow: {
-      gap: 10,
-      paddingVertical: 2,
-      paddingRight: 4,
-    },
-    shortcut: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-      paddingHorizontal: 12,
-      paddingVertical: 9,
-      borderRadius: 12,
-      backgroundColor: HOME_UI.surface,
-      borderWidth: 1,
-      borderColor: HOME_UI.border,
-    },
-    shortcutLabel: {
-      fontSize: 12.5,
-      fontFamily: theme.typography.fonts.ui.semibold,
-      fontWeight: '700',
-      color: HOME_UI.ink,
-      maxWidth: 110,
+      gap: 12,
     },
     exploreCard: {
       ...homeFeedCard(),
+      borderRadius: 24,
       overflow: 'hidden',
     },
     cardInner: {
-      padding: HOME_EXPLORE_GRID.cardPad + 2,
-      gap: 12,
+      padding: HOME_EXPLORE_GRID.cardPad,
+      gap: 10,
     },
     tabs: {
-      marginBottom: 2,
+      marginBottom: 0,
     },
     grid: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap: HOME_EXPLORE_GRID.tileGap + 2,
+      marginHorizontal: -(HOME_EXPLORE_GRID.tileGap / 2),
     },
     tile: {
+      width: `${100 / HOME_EXPLORE_GRID.columns}%`,
       alignItems: 'center',
-      gap: 6,
-      paddingVertical: 6,
-      paddingHorizontal: 2,
+      justifyContent: 'flex-start',
+      gap: 4,
+      paddingTop: 2,
+      paddingBottom: HOME_EXPLORE_GRID.rowGap,
+      paddingHorizontal: HOME_EXPLORE_GRID.tileGap / 2,
       position: 'relative',
+    },
+    iconWell: {
+      position: 'relative',
+      alignItems: 'center',
+      justifyContent: 'center',
     },
     proBadge: {
       position: 'absolute',
-      top: 0,
-      right: 4,
+      top: -3,
+      right: -4,
       zIndex: 2,
+      width: 15,
+      height: 15,
+      borderRadius: 8,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: HOME_UI.gold,
+      borderWidth: 1.5,
+      borderColor: '#FFFFFF',
     },
     tileLabel: {
-      fontSize: 10.5,
-      lineHeight: 13,
-      textAlign: 'center',
-      fontFamily: theme.typography.fonts.ui.semibold,
-      fontWeight: '700',
-      color: HOME_UI.ink,
-      minHeight: 26,
-    },
-    proStrip: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 10,
-      backgroundColor: HOME_UI.goldSoft,
-      borderRadius: HOME_UI.innerRadius,
-      borderWidth: 1,
-      borderColor: HOME_UI.goldBorder,
-      paddingHorizontal: 12,
-      paddingVertical: 10,
-    },
-    proCopy: {
-      flex: 1,
-      gap: 1,
-    },
-    proTitle: {
-      fontSize: 13,
-      lineHeight: 16,
-      fontFamily: theme.typography.fonts.ui.bold,
-      fontWeight: '700',
-      color: HOME_UI.goldDeep,
-    },
-    proSubtitle: {
+      width: '100%',
       fontSize: 11,
       lineHeight: 13,
-      color: HOME_UI.goldDeep,
+      letterSpacing: -0.15,
+      textAlign: 'center',
+      fontFamily: theme.typography.fonts.ui.semibold,
+      fontWeight: '600',
+      color: HOME_UI.ink,
+      paddingHorizontal: 1,
     },
   });
 }

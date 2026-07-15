@@ -1,45 +1,68 @@
 .books-page {
   display: grid;
-  gap: 1.25rem;
+  gap: 16px;
 }
 
 .books-form {
   display: grid;
-  gap: 0.85rem;
-  margin: 1rem 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin: 18px 0;
+  padding: 16px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+}
+
+.books-form > :last-child {
+  grid-column: 1 / -1;
 }
 
 .books-form .field {
   display: grid;
-  gap: 0.35rem;
+  gap: 6px;
 }
 
 .books-status-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: 12px;
 }
 
 .books-progress {
   height: 8px;
-  border-radius: 999px;
+  border-radius: 99px;
   background: var(--border);
   overflow: hidden;
-  margin: 0.75rem 0 0.35rem;
+  margin: 12px 0 6px;
 }
 
 .books-progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, var(--gold), var(--accent));
+  background: var(--grad-gold);
 }
 
 .books-meta {
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .books-error {
   color: var(--danger);
-  margin-top: 0.5rem;
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+@media (max-width: 760px) {
+  .books-form {
+    grid-template-columns: 1fr;
+    padding: 14px;
+  }
+
+  .books-form > :last-child {
+    grid-column: auto;
+  }
 }

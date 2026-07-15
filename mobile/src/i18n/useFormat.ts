@@ -8,6 +8,7 @@ import {
   formatOrdinal,
   formatPercent,
   formatRelativeDay,
+  parseDate,
 } from './format';
 
 export function useFormat() {
@@ -16,6 +17,7 @@ export function useFormat() {
 
   return {
     locale,
+    parseDate,
     formatNumber: useCallback(
       (value: number, options?: Intl.NumberFormatOptions) => formatNumber(value, locale, options),
       [locale],
@@ -25,12 +27,12 @@ export function useFormat() {
       [locale],
     ),
     formatDate: useCallback(
-      (value: Date | string | number, options?: Intl.DateTimeFormatOptions) =>
+      (value: Date | string | number | null | undefined, options?: Intl.DateTimeFormatOptions) =>
         formatDate(value, locale, options),
       [locale],
     ),
     formatRelativeDay: useCallback(
-      (value: Date | string) => formatRelativeDay(value, locale),
+      (value: Date | string | number | null | undefined) => formatRelativeDay(value, locale),
       [locale],
     ),
     formatCurrencyPaise: useCallback(

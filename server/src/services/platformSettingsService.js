@@ -16,7 +16,7 @@ export function buildDefaultPlatformSettings() {
     freeAiQuota: Number(process.env.FREE_AI_DOUBTS_PER_DAY ?? 10),
     freeAiTestsPerDay: Number(process.env.FREE_AI_TESTS_PER_DAY ?? 2),
     freeAiQualityDoubtsPerDay: Number(process.env.FREE_AI_QUALITY_DOUBTS_PER_DAY ?? 2),
-    freeAiEvaluationsPerDay: Number(process.env.FREE_AI_EVALUATIONS_PER_DAY ?? 0),
+    freeAiEvaluationsPerDay: Number(process.env.FREE_AI_EVALUATIONS_PER_DAY ?? 2),
     freeMocksPerDay: Number(process.env.FREE_MOCKS_PER_DAY ?? 3),
     freeShowAds: process.env.FREE_SHOW_ADS !== 'false',
     freeDetailedAnalytics: process.env.FREE_DETAILED_ANALYTICS === 'true',
@@ -27,6 +27,11 @@ export function buildDefaultPlatformSettings() {
     proAiQualityDoubtsPerDay: Number(process.env.PRO_AI_QUALITY_DOUBTS_PER_DAY ?? 50),
     proAiEvaluationsPerDay: Number(process.env.PRO_AI_EVALUATIONS_PER_DAY ?? 999),
     proMocksPerDay: Number(process.env.PRO_MOCKS_PER_DAY ?? 999),
+    // Tests stay free by default so quota / free-tier suites don't inherit welcome Pro.
+    welcomeMonthEnabled:
+      process.env.NODE_ENV === 'test'
+        ? process.env.WELCOME_MONTH_ON_SIGNUP === 'true'
+        : process.env.WELCOME_MONTH_ON_SIGNUP !== 'false',
   };
 }
 
@@ -47,6 +52,7 @@ function serializeSettings(doc) {
     proAiQualityDoubtsPerDay: source.proAiQualityDoubtsPerDay,
     proAiEvaluationsPerDay: source.proAiEvaluationsPerDay,
     proMocksPerDay: source.proMocksPerDay,
+    welcomeMonthEnabled: source.welcomeMonthEnabled !== false,
     updatedAt: source.updatedAt ?? null,
   };
 }
@@ -179,6 +185,7 @@ const EDITABLE_FIELDS = [
   'proAiQualityDoubtsPerDay',
   'proAiEvaluationsPerDay',
   'proMocksPerDay',
+  'welcomeMonthEnabled',
 ];
 
 export async function updatePlatformSettings(updates) {

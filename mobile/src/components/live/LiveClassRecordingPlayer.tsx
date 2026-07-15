@@ -1,9 +1,10 @@
 import { useEffect, useMemo } from 'react';
 import { ActivityIndicator, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useVideoPlayer, VideoView } from 'expo-video';
-import { PlayCircle } from 'lucide-react-native';
+import { ExternalLink, PlayCircle } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../theme';
+import { LIVE } from './liveTheme';
 
 type LiveClassRecordingPlayerProps = {
   recordingUrl: string;
@@ -33,7 +34,7 @@ export function LiveClassRecordingPlayer({ recordingUrl, title }: LiveClassRecor
       />
       {title ? (
         <View style={styles.caption}>
-          <PlayCircle size={16} color={theme.colors.brand.onPrimary} />
+          <PlayCircle size={16} color={LIVE.goldLt} strokeWidth={1.9} />
           <Text style={styles.captionText} numberOfLines={2}>
             {title}
           </Text>
@@ -44,6 +45,7 @@ export function LiveClassRecordingPlayer({ recordingUrl, title }: LiveClassRecor
         onPress={() => void Linking.openURL(recordingUrl)}
         style={styles.externalBtn}
       >
+        <ExternalLink size={14} color={LIVE.gold} strokeWidth={2} />
         <Text style={styles.externalLabel}>{t('openExternally')}</Text>
       </Pressable>
     </View>
@@ -57,7 +59,7 @@ export function LiveClassRecordingLoading() {
 
   return (
     <View style={styles.root}>
-      <ActivityIndicator color={theme.colors.brand.primary} size="large" />
+      <ActivityIndicator color={LIVE.goldLt} size="large" />
       <Text style={styles.label}>{t('recordingLoading')}</Text>
     </View>
   );
@@ -70,11 +72,11 @@ function createLoadingStyles(theme: ReturnType<typeof useTheme>['theme']) {
       alignItems: 'center',
       justifyContent: 'center',
       gap: theme.spacing.md,
-      backgroundColor: '#0b1020',
+      backgroundColor: LIVE.stageDeep,
     },
     label: {
       ...theme.typography.presets.body,
-      color: theme.colors.text.secondary,
+      color: LIVE.textMuted,
     },
   });
 }
@@ -83,7 +85,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
     root: {
       flex: 1,
-      backgroundColor: '#0b1020',
+      backgroundColor: LIVE.stageDeep,
     },
     video: {
       flex: 1,
@@ -97,24 +99,32 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       flexDirection: 'row',
       alignItems: 'center',
       gap: theme.spacing.xs,
-      backgroundColor: 'rgba(0,0,0,0.55)',
-      borderRadius: theme.radii.md,
+      backgroundColor: LIVE.glassDark,
+      borderWidth: 1,
+      borderColor: LIVE.glassBorder,
+      borderRadius: 12,
       paddingHorizontal: theme.spacing.md,
       paddingVertical: theme.spacing.sm,
     },
     captionText: {
       ...theme.typography.presets.caption,
-      color: theme.colors.brand.onPrimary,
+      color: '#FFFFFF',
+      fontFamily: theme.typography.fonts.ui.semibold,
       flex: 1,
     },
     externalBtn: {
       alignSelf: 'center',
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
       paddingVertical: theme.spacing.sm,
       paddingHorizontal: theme.spacing.md,
+      marginTop: 4,
     },
     externalLabel: {
       ...theme.typography.presets.caption,
-      color: theme.colors.brand.primary,
+      fontFamily: theme.typography.fonts.ui.semibold,
+      color: LIVE.goldDeep,
     },
   });
 }

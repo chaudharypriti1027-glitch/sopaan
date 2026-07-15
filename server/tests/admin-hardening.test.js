@@ -265,7 +265,12 @@ describe('admin hardening', () => {
       expect(hostToken.body.token).toBe('host-token');
       expect(hostToken.body.canPublish).toBe(true);
 
-      const student = await createTestUser({ role: 'student' });
+      const student = await createTestUser({
+        role: 'student',
+        isPremium: true,
+        premiumPlan: 'monthly',
+        premiumExpiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      });
       const studentLogin = await request(app)
         .post('/api/auth/login')
         .send({ email: student.email, password: 'Password123!' })

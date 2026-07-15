@@ -5,8 +5,9 @@ import { useMemo, useState } from 'react';
 import { Alert, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Button, Card, Screen, SectionTitle, TextField } from '../../components';
-import { parseApiError, privacyApi } from '../../api';
+import { authApi, privacyApi } from '../../api';
 import { useAuth } from '../../auth';
+import { getUserFacingMessage } from '../../errors/getUserFacingMessage';
 import { getRefreshToken } from '../../lib/secure';
 import type { MainStackParamList } from '../../navigation/types';
 import { useTheme } from '../../theme';
@@ -17,7 +18,7 @@ export function DeleteAccountScreen() {
   const navigation = useNavigation<DeleteNav>();
   const { logout, user } = useAuth();
   const { theme } = useTheme();
-  const { t } = useTranslation(['app', 'common']);
+  const { t } = useTranslation(['app', 'common', 'auth']);
   const styles = useMemo(() => createStyles(theme), [theme]);
 
   const [password, setPassword] = useState('');
@@ -26,9 +27,23 @@ export function DeleteAccountScreen() {
   const [deletionToken, setDeletionToken] = useState<string | null>(null);
   const [requiredPhrase, setRequiredPhrase] = useState('DELETE MY ACCOUNT');
   const [loading, setLoading] = useState(false);
+  const [otpSending, setOtpSending] = useState(false);
   const [step, setStep] = useState<'verify' | 'confirm'>('verify');
 
   const isPhoneOnly = Boolean(user?.phone && !user?.email);
+
+  const handleSendOtp = async () => {
+    if (!user?.phone || otpSending) return;
+    setOtpSending(true);
+    try {
+      await authApi.requestOtp({ phone: user.phone });
+      Alert.alert(t('auth:otp.otpSentTitle'), t('auth:otp.otpSentBody'));
+    } catch (err) {
+      Alert.alert(t('app:deleteAccount.startFailed'), getUserFacingMessage(err));
+    } finally {
+      setOtpSending(false);
+    }
+  };
 
   const handleRequest = async () => {
     setLoading(true);
@@ -42,7 +57,7 @@ export function DeleteAccountScreen() {
       setRequiredPhrase(result.confirmPhrase);
       setStep('confirm');
     } catch (err) {
-      Alert.alert(t('app:deleteAccount.startFailed'), parseApiError(err).message);
+      Alert.alert(t('app:deleteAccount.startFailed'), getUserFacingMessage(err));
     } finally {
       setLoading(false);
     }
@@ -68,7 +83,7 @@ export function DeleteAccountScreen() {
         },
       ]);
     } catch (err) {
-      Alert.alert(t('app:deleteAccount.deleteFailed'), parseApiError(err).message);
+      Alert.alert(t('app:deleteAccount.deleteFailed'), getUserFacingMessage(err));
     } finally {
       setLoading(false);
     }
@@ -88,6 +103,14 @@ export function DeleteAccountScreen() {
           {isPhoneOnly ? (
             <>
               <Text style={styles.hint}>{t('app:deleteAccount.otpHint')}</Text>
+              <Button
+                label={t('auth:login.sendOtp')}
+                variant="ghost"
+                loading={otpSending}
+                disabled={loading}
+                onPress={() => void handleSendOtp()}
+                fullWidth
+              />
               <TextField
                 label={t('app:deleteAccount.otpCode')}
                 value={otpCode}

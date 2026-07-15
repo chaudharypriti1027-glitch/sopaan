@@ -15,6 +15,7 @@ export function useAskDoubt() {
     mutationFn: (input: AskDoubtInput) => aiApi.askDoubt(input),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.ai.doubts() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.tier.all });
     },
   });
 }
@@ -31,8 +32,13 @@ export function useAiDoubtHistory() {
 }
 
 export function useEvaluateAnswer() {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (input: EvaluateAnswerInput) => aiApi.evaluateAnswer(input),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.tier.all });
+    },
   });
 }
 

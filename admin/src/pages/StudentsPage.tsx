@@ -1,17 +1,32 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import {
+  Activity,
+  Ban,
+  Download,
+  Eye,
+  GraduationCap,
+  History,
+  ReceiptIndianRupee,
+  Search,
+  UserRound,
+  WalletCards,
+} from 'lucide-react';
+import {
   downloadStudentsCsv,
   fetchStudent,
   fetchStudents,
   setStudentStatus,
   type AdminStudent,
   type AdminStudentDetail,
+  type StudentAccountStatus,
+  type StudentPremiumFilter,
 } from '../api/students';
 import { ActionButton } from '../components/ActionButton';
 import { DataTable } from '../components/DataTable';
 import { Drawer } from '../components/content/Drawer';
 import { PaginationBar } from '../components/questions/PaginationBar';
+import { QueryErrorBanner } from '../components/QueryErrorBanner';
 import { TableActionButton } from '../components/questions/TableActionButton';
 import { useToast } from '../components/Toast';
 
@@ -39,14 +54,46 @@ function formatDate(value: string | null | undefined) {
   }
 }
 
-function TierPill({ tier, isPremium }: { tier: string; isPremium: boolean }) {
+function formatMoney(paise: number, currency = 'INR') {
+  const amount = paise / 100;
+  try {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  } catch {
+    return `${currency} ${amount.toFixed(0)}`;
+  }
+}
+
+function formatPlanLabel(plan: string | null | undefined) {
+  if (!plan) return '—';
+  if (plan === 'trial') return 'Trial';
+  if (plan === 'monthly') return 'Monthly';
+  if (plan === 'yearly') return 'Yearly';
+  return plan;
+}
+
+function TierPill({
+  tier,
+  isPremium,
+  plan,
+}: {
+  tier: string;
+  isPremium: boolean;
+  plan?: string | null;
+}) {
+  if (isPremium && plan === 'trial') {
+    return <span className="pill q-draft">Trial</span>;
+  }
   if (isPremium) {
     return <span className="pill q-pub">Pro</span>;
   }
   return <span className="pill q-draft">{tier}</span>;
 }
 
-function StatusPill({ status }: { status: AdminStudent['accountStatus'] }) {
+function StatusPill({ status }: { status: AdminStudent['accountStatus'] | null | undefined }) {
   if (status === 'suspended') {
     return <span className="pill q-rev">Suspended</span>;
   }
@@ -58,19 +105,26 @@ export function StudentsPage() {
   const queryClient = useQueryClient();
 
   const [search, setSearch] = useState('');
+  const [premiumFilter, setPremiumFilter] = useState<'all' | StudentPremiumFilter>('all');
+  const [examFilter, setExamFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | StudentAccountStatus>('all');
   const [offset, setOffset] = useState(0);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
 
+  const listParams = {
+    q: search.trim() || undefined,
+    premium: premiumFilter === 'all' ? undefined : premiumFilter,
+    exam: examFilter.trim() || undefined,
+    status: statusFilter === 'all' ? undefined : statusFilter,
+    limit: PAGE_SIZE,
+    offset,
+  };
+
   const query = useQuery({
-    queryKey: ['admin', 'students', { search, offset }],
-    queryFn: () =>
-      fetchStudents({
-        q: search.trim() || undefined,
-        limit: PAGE_SIZE,
-        offset,
-      }),
+    queryKey: ['admin', 'students', listParams],
+    queryFn: () => fetchStudents(listParams),
   });
 
   const detailQuery = useQuery({
@@ -87,11 +141,11 @@ export function StudentsPage() {
     onSuccess: (data) => {
       showToast(data.accountStatus === 'suspended' ? 'Student suspended' : 'Student reactivated');
       queryClient.invalidateQueries({ queryKey: ['admin', 'students'] });
-      if (selectedId === data.id) {
-        queryClient.invalidateQueries({ queryKey: ['admin', 'students', 'detail', data.id] });
+      if (selectedId && (selectedId === data.id || !data.id)) {
+        queryClient.invalidateQueries({ queryKey: ['admin', 'students', 'detail', selectedId] });
       }
     },
-    onError: (err: Error) => showToast(err.message),
+    onError: (err: Error) => showToast(err.message || 'Status update failed'),
   });
 
   const rows = query.data?.items ?? [];
@@ -100,7 +154,12 @@ export function StudentsPage() {
   async function handleExport() {
     setExporting(true);
     try {
-      await downloadStudentsCsv(search.trim() || undefined);
+      await downloadStudentsCsv({
+        q: listParams.q,
+        premium: listParams.premium,
+        exam: listParams.exam,
+        status: listParams.status,
+      });
       showToast('CSV downloaded');
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Export failed');
@@ -110,11 +169,15 @@ export function StudentsPage() {
   }
 
   function handleSuspend(row: AdminStudent) {
+    if (!row.id) {
+      showToast('Student id missing');
+      return;
+    }
     const next = row.accountStatus === 'suspended' ? 'active' : 'suspended';
     const verb = next === 'suspended' ? 'Suspend' : 'Unsuspend';
     if (
       !window.confirm(
-        `${verb} ${row.name}?${next === 'suspended' ? ' They will be logged out and unable to sign in.' : ''}`,
+        `${verb} ${row.name || 'this student'}?${next === 'suspended' ? ' They will be logged out and unable to sign in.' : ''}`
       )
     ) {
       return;
@@ -122,24 +185,65 @@ export function StudentsPage() {
     statusMutation.mutate({ id: row.id, status: next });
   }
 
+  function resetOffset() {
+    setOffset(0);
+  }
+
   return (
     <div>
       <div className="toolbar">
         <div className="search toolbar-search">
-          <svg className="svg" viewBox="0 0 24 24" aria-hidden>
-            <circle cx="11" cy="11" r="7" />
-            <path d="m21 21-4.3-4.3" />
-          </svg>
+          <Search aria-hidden strokeWidth={1.8} />
           <input
-            placeholder="Search students…"
+            placeholder="Search name, phone, email…"
+            aria-label="Search students"
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
-              setOffset(0);
+              resetOffset();
             }}
           />
         </div>
+        <select
+          className="filter-select"
+          value={premiumFilter}
+          onChange={(e) => {
+            setPremiumFilter(e.target.value as typeof premiumFilter);
+            resetOffset();
+          }}
+          aria-label="Filter by premium status"
+        >
+          <option value="all">All plans</option>
+          <option value="pro">Pro (paid)</option>
+          <option value="trial">Trial</option>
+          <option value="free">Free</option>
+        </select>
+        <input
+          className="filter-select"
+          style={{ minWidth: 120 }}
+          placeholder="Exam tag…"
+          value={examFilter}
+          onChange={(e) => {
+            setExamFilter(e.target.value);
+            resetOffset();
+          }}
+          aria-label="Filter by exam"
+        />
+        <select
+          className="filter-select"
+          value={statusFilter}
+          onChange={(e) => {
+            setStatusFilter(e.target.value as typeof statusFilter);
+            resetOffset();
+          }}
+          aria-label="Filter by account status"
+        >
+          <option value="all">All statuses</option>
+          <option value="active">Active</option>
+          <option value="suspended">Suspended</option>
+        </select>
         <ActionButton variant="ghost" onClick={() => void handleExport()} disabled={exporting}>
+          <Download aria-hidden strokeWidth={1.8} />
           {exporting ? 'Exporting…' : 'Export CSV'}
         </ActionButton>
       </div>
@@ -147,6 +251,7 @@ export function StudentsPage() {
       <DataTable
         rows={rows}
         emptyMessage="No students found"
+        emptyHint="Try clearing filters or searching by name, phone, or email."
         isLoading={query.isLoading}
         error={query.isError ? query.error : undefined}
         onRetry={() => void query.refetch()}
@@ -186,8 +291,14 @@ export function StudentsPage() {
           },
           {
             key: 'tier',
-            header: 'Tier',
-            render: (row) => <TierPill tier={row.tier} isPremium={row.isPremium} />,
+            header: 'Plan',
+            render: (row) => (
+              <TierPill
+                tier={row.tier || 'Free'}
+                isPremium={Boolean(row.isPremium)}
+                plan={row.premiumPlan}
+              />
+            ),
           },
           {
             key: 'status',
@@ -200,12 +311,20 @@ export function StudentsPage() {
             align: 'right',
             render: (row) => (
               <div className="act">
-                <TableActionButton onClick={() => setSelectedId(row.id)}>View</TableActionButton>
+                <TableActionButton
+                  onClick={() => {
+                    if (row.id) setSelectedId(row.id);
+                  }}
+                >
+                  <Eye aria-hidden strokeWidth={1.8} />
+                  View
+                </TableActionButton>
                 <TableActionButton
                   variant={row.accountStatus === 'suspended' ? 'ok' : 'danger'}
-                  disabled={busyId === row.id}
+                  disabled={!row.id || busyId === row.id}
                   onClick={() => handleSuspend(row)}
                 >
+                  <Ban aria-hidden strokeWidth={1.8} />
                   {row.accountStatus === 'suspended' ? 'Unsuspend' : 'Suspend'}
                 </TableActionButton>
               </div>
@@ -227,6 +346,8 @@ export function StudentsPage() {
         open={Boolean(selectedId)}
         student={detailQuery.data ?? null}
         loading={detailQuery.isLoading}
+        error={detailQuery.isError ? detailQuery.error : undefined}
+        onRetry={() => void detailQuery.refetch()}
         onClose={() => setSelectedId(null)}
         onSuspend={(student) => handleSuspend(student)}
         busy={busyId === selectedId}
@@ -239,6 +360,8 @@ function StudentProfileDrawer({
   open,
   student,
   loading,
+  error,
+  onRetry,
   onClose,
   onSuspend,
   busy,
@@ -246,6 +369,8 @@ function StudentProfileDrawer({
   open: boolean;
   student: AdminStudentDetail | null;
   loading: boolean;
+  error?: unknown;
+  onRetry: () => void;
   onClose: () => void;
   onSuspend: (student: AdminStudent) => void;
   busy: boolean;
@@ -264,6 +389,7 @@ function StudentProfileDrawer({
             disabled={busy}
             onClick={() => onSuspend(student)}
           >
+            <Ban aria-hidden strokeWidth={1.8} />
             {student.accountStatus === 'suspended' ? 'Unsuspend' : 'Suspend'}
           </ActionButton>
         ) : null
@@ -271,60 +397,195 @@ function StudentProfileDrawer({
     >
       {loading ? (
         <p className="empty-note">Loading profile…</p>
+      ) : error ? (
+        <QueryErrorBanner error={error} onRetry={onRetry} />
       ) : !student ? (
         <p className="empty-note">Student not found.</p>
       ) : (
         <div className="student-profile">
-          <div className="detail-grid">
-            <DetailItem label="Email" value={student.email ?? '—'} />
-            <DetailItem label="Phone" value={student.phone ?? '—'} />
-            <DetailItem label="Target exam" value={student.targetExam ?? '—'} />
-            <DetailItem label="Attempts" value={String(student.attempts)} />
-            <DetailItem label="Accuracy" value={formatAccuracy(student.accuracy)} />
-            <DetailItem label="Streak" value={String(student.streak)} />
-            <DetailItem label="Tier" value={student.tier} />
-            <DetailItem label="Status" value={student.accountStatus} />
-            <DetailItem label="Coins" value={String(student.coins)} />
-            <DetailItem label="Level" value={String(student.level)} />
-            <DetailItem label="Joined" value={formatDate(student.joinedAt)} />
-            <DetailItem label="Last attempt" value={formatDate(student.lastAttemptAt)} />
-          </div>
-
-          <h3 className="sec-t">Attempt history</h3>
-          {student.attemptHistory.length === 0 ? (
-            <p className="empty-note">No attempts yet.</p>
-          ) : (
-            <div className="table-wrap">
-              <table className="tbl compact">
-                <thead>
-                  <tr>
-                    <th>Test</th>
-                    <th>Score</th>
-                    <th>Accuracy</th>
-                    <th>When</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {student.attemptHistory.map((attempt) => (
-                    <tr key={attempt.id}>
-                      <td>
-                        <div>{attempt.testTitle}</div>
-                        {attempt.examTag ? (
-                          <div className="sub">{attempt.examTag}</div>
-                        ) : null}
-                      </td>
-                      <td>{attempt.score ?? '—'}</td>
-                      <td>{formatAccuracy(attempt.accuracy)}</td>
-                      <td>{formatDate(attempt.createdAt)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          <section className="drawer-section">
+            <SectionTitle icon={UserRound}>Profile</SectionTitle>
+            <div className="detail-grid">
+              <DetailItem label="Email" value={student.email ?? '—'} />
+              <DetailItem label="Phone" value={student.phone ?? '—'} />
+              <DetailItem label="Joined" value={formatDate(student.joinedAt)} />
+              <DetailItem label="Last active" value={formatDate(student.lastActiveAt)} />
+              <DetailItem label="Status" value={student.accountStatus} />
+              <DetailItem
+                label="Onboarding"
+                value={student.onboardingComplete ? 'Complete' : 'Incomplete'}
+              />
+              <DetailItem label="Language" value={student.language ?? '—'} />
+              <DetailItem label="Education" value={student.educationLevel ?? '—'} />
+              <DetailItem label="State" value={student.state ?? '—'} />
+              <DetailItem label="Category" value={student.category ?? '—'} />
             </div>
-          )}
+          </section>
+
+          <section className="drawer-section">
+            <SectionTitle icon={GraduationCap}>Exam goals</SectionTitle>
+            <div className="detail-grid">
+              <DetailItem label="Preferred exam" value={student.targetExam ?? '—'} />
+              <DetailItem label="Exam date" value={formatDate(student.examDate)} />
+            </div>
+            {(student.goals ?? []).length === 0 ? (
+              <p className="empty-note">No saved goals.</p>
+            ) : (
+              <div className="table-wrap">
+                <table className="tbl compact">
+                  <thead>
+                    <tr>
+                      <th>Exam</th>
+                      <th>Date</th>
+                      <th>Target rank</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(student.goals ?? []).map((goal, index) => (
+                      <tr key={goal.id || `goal-${index}`}>
+                        <td>{goal.examName || '—'}</td>
+                        <td>{formatDate(goal.examDate)}</td>
+                        <td>{goal.targetRank ?? '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+
+          <section className="drawer-section">
+            <SectionTitle icon={WalletCards}>Subscription</SectionTitle>
+            <div className="detail-grid">
+              <DetailItem
+                label="Access"
+                value={
+                  student.premium?.isPremium
+                    ? student.premium.source === 'trial'
+                      ? 'Trial Pro'
+                      : 'Pro'
+                    : 'Free'
+                }
+              />
+              <DetailItem label="Plan" value={formatPlanLabel(student.premium?.plan)} />
+              <DetailItem label="Expires" value={formatDate(student.premium?.expiresAt)} />
+              <DetailItem label="Trial used" value={student.premium?.trialUsed ? 'Yes' : 'No'} />
+              <DetailItem label="Status" value={student.premium?.status ?? '—'} />
+              <DetailItem
+                label="Cancelled"
+                value={
+                  student.premium?.cancelled
+                    ? student.premium.cancelAtPeriodEnd
+                      ? 'At period end'
+                      : 'Yes'
+                    : 'No'
+                }
+              />
+              {student.entitlement ? (
+                <>
+                  <DetailItem
+                    label="Period start"
+                    value={formatDate(student.entitlement.currentPeriodStart)}
+                  />
+                  <DetailItem
+                    label="Period end"
+                    value={formatDate(student.entitlement.currentPeriodEnd)}
+                  />
+                  <DetailItem
+                    label="Auto-renews"
+                    value={student.entitlement.autoRenews ? 'Yes' : 'No'}
+                  />
+                </>
+              ) : null}
+            </div>
+          </section>
+
+          {(student.payments ?? []).length > 0 ? (
+            <section className="drawer-section">
+              <SectionTitle icon={ReceiptIndianRupee}>Recent payments</SectionTitle>
+              <div className="table-wrap">
+                <table className="tbl compact">
+                  <thead>
+                    <tr>
+                      <th>Plan</th>
+                      <th>Amount</th>
+                      <th>Status</th>
+                      <th>When</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(student.payments ?? []).map((payment, index) => (
+                      <tr key={payment.id || `payment-${index}`}>
+                        <td>{formatPlanLabel(payment.plan)}</td>
+                        <td>{formatMoney(payment.amountPaise ?? 0, payment.currency)}</td>
+                        <td>{payment.status || '—'}</td>
+                        <td>{formatDate(payment.createdAt)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          ) : null}
+
+          <section className="drawer-section">
+            <SectionTitle icon={Activity}>Activity</SectionTitle>
+            <div className="detail-grid">
+              <DetailItem label="Attempts" value={String(student.attempts ?? 0)} />
+              <DetailItem label="Accuracy" value={formatAccuracy(student.accuracy)} />
+              <DetailItem label="Streak" value={String(student.streak ?? 0)} />
+              <DetailItem label="Last attempt" value={formatDate(student.lastAttemptAt)} />
+              <DetailItem label="Coins" value={String(student.coins ?? 0)} />
+              <DetailItem label="Level / XP" value={`${student.level ?? 0} / ${student.xp ?? 0}`} />
+            </div>
+          </section>
+
+          <section className="drawer-section">
+            <SectionTitle icon={History}>Attempt history</SectionTitle>
+            {(student.attemptHistory ?? []).length === 0 ? (
+              <p className="empty-note">No attempts yet.</p>
+            ) : (
+              <div className="table-wrap">
+                <table className="tbl compact">
+                  <thead>
+                    <tr>
+                      <th>Test</th>
+                      <th>Score</th>
+                      <th>Accuracy</th>
+                      <th>When</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(student.attemptHistory ?? []).map((attempt, index) => (
+                      <tr key={attempt.id || `attempt-${index}`}>
+                        <td>
+                          <div>{attempt.testTitle || '—'}</div>
+                          <div className="sub">
+                            {[attempt.examTag, attempt.testType].filter(Boolean).join(' · ') || '—'}
+                          </div>
+                        </td>
+                        <td>{attempt.score ?? '—'}</td>
+                        <td>{formatAccuracy(attempt.accuracy)}</td>
+                        <td>{formatDate(attempt.createdAt)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
         </div>
       )}
     </Drawer>
+  );
+}
+
+function SectionTitle({ icon: Icon, children }: { icon: typeof UserRound; children: string }) {
+  return (
+    <h3 className="sec-t section-title-icon">
+      <Icon aria-hidden strokeWidth={1.8} />
+      {children}
+    </h3>
   );
 }
 
@@ -332,7 +593,7 @@ function DetailItem({ label, value }: { label: string; value: string }) {
   return (
     <div className="detail-item">
       <span className="detail-label">{label}</span>
-      <span className="detail-value">{value}</span>
+      <span className="detail-value">{value || '—'}</span>
     </div>
   );
 }

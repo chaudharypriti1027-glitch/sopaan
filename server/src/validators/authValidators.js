@@ -62,6 +62,31 @@ export const setPasswordSchema = z.object({
   password: passwordSchema,
 });
 
+export const forgotPasswordSchema = z.object({
+  email: z.string().trim().email('Invalid email'),
+});
+
+export const resetPasswordSchema = z.object({
+  email: z.string().trim().email('Invalid email'),
+  code: otpCodeSchema,
+  password: passwordSchema,
+});
+
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1).optional(),
+    newPassword: passwordSchema,
+  })
+  .superRefine((data, ctx) => {
+    if (data.currentPassword && data.currentPassword === data.newPassword) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'New password must be different from current password',
+        path: ['newPassword'],
+      });
+    }
+  });
+
 export const refreshSchema = z.object({
   refreshToken: z.string().min(1, 'Refresh token is required'),
 });

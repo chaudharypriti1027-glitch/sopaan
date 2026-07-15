@@ -1,8 +1,9 @@
 import { useMemo } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
 import { Text } from '../Text';
+import { denseTextProps } from '../../a11y/textProps';
 import { HOME_AI_ACTION_TILES } from '../../content/homeContent';
 import { useTheme } from '../../theme';
 import { HOME_UI, homePressFeedback } from './homeTheme';
@@ -39,18 +40,23 @@ export function HomeAiActionStrip({
       HOME_AI_ACTION_TILES.map((tile) => ({
         ...tile,
         label: t(`home.${tile.labelKey}`),
-        subtitle: t(`home.${tile.subtitleKey}`),
         onPress: pressByKey[tile.key],
       })),
     [pressByKey, t],
   );
 
   return (
-    <View style={styles.wrap} testID="home-ai-action-strip">
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={styles.wrap}
+      testID="home-ai-action-strip"
+    >
       {tiles.map((tile) => (
         <Pressable
           key={tile.key}
           accessibilityRole="button"
+          accessibilityLabel={tile.label}
           onPress={tile.onPress}
           style={({ pressed }) => [styles.tile, pressed && homePressFeedback]}
           testID={tile.testID}
@@ -61,66 +67,56 @@ export function HomeAiActionStrip({
             end={{ x: 1, y: 1 }}
             style={styles.iconWrap}
           >
-            <tile.Icon size={18} color="#FFFFFF" strokeWidth={2.2} />
+            <tile.Icon size={16} color="#FFFFFF" strokeWidth={2.2} />
           </LinearGradient>
-          <View style={styles.copy}>
-            <Text style={styles.label} numberOfLines={1}>
-              {tile.label}
-            </Text>
-            <Text style={styles.subtitle} numberOfLines={2}>
-              {tile.subtitle}
-            </Text>
-          </View>
+          <Text
+            {...denseTextProps}
+            style={styles.label}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {tile.label}
+          </Text>
         </Pressable>
       ))}
-    </View>
+    </ScrollView>
   );
 }
 
 function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
     wrap: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      gap: 10,
+      gap: 8,
+      paddingRight: 4,
+      alignItems: 'center',
     },
     tile: {
-      width: '48%',
-      flexGrow: 1,
-      minWidth: '46%',
       flexDirection: 'row',
-      alignItems: 'flex-start',
-      gap: 10,
-      padding: 12,
-      borderRadius: HOME_UI.innerRadius,
+      alignItems: 'center',
+      gap: 8,
+      height: 42,
+      maxWidth: 160,
+      paddingHorizontal: 12,
+      borderRadius: 12,
       backgroundColor: HOME_UI.surface,
       borderWidth: 1,
       borderColor: HOME_UI.border,
     },
     iconWrap: {
-      width: 38,
-      height: 38,
-      borderRadius: 12,
+      width: 26,
+      height: 26,
+      borderRadius: 8,
       alignItems: 'center',
       justifyContent: 'center',
     },
-    copy: {
-      flex: 1,
-      gap: 3,
-      paddingTop: 1,
-    },
     label: {
-      fontSize: 13,
+      flexShrink: 1,
+      fontSize: 12,
+      lineHeight: 16,
       fontFamily: theme.typography.fonts.ui.bold,
-      fontWeight: '800',
+      fontWeight: '700',
       color: HOME_UI.ink,
-      letterSpacing: -0.2,
-    },
-    subtitle: {
-      fontSize: 10.5,
-      lineHeight: 14,
-      fontWeight: '600',
-      color: HOME_UI.muted,
+      letterSpacing: -0.1,
     },
   });
 }

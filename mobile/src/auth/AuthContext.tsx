@@ -148,6 +148,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
         ...(nextUser.email ? { email: nextUser.email } : {}),
         coins: nextUser.coins ?? current.coins,
         ...(nextUser.streak?.count != null ? { streak: nextUser.streak.count } : {}),
+        ...(typeof nextUser.isPremium === 'boolean' ? { isPremium: nextUser.isPremium } : {}),
+        ...(nextUser.premiumPlan !== undefined ? { premiumPlan: nextUser.premiumPlan } : {}),
+        ...(nextUser.premiumExpiresAt !== undefined
+          ? { premiumExpiresAt: nextUser.premiumExpiresAt }
+          : {}),
       });
     },
     [setProfile],

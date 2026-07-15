@@ -8,7 +8,7 @@ function createNavigation() {
   const stackNav = {
     navigate: mockStackNavigate,
     getState: () => ({
-      routeNames: ['AppTabs', 'AskAI', 'Quiz', 'Games', 'GamePlay'],
+      routeNames: ['AppTabs', 'AskAI', 'TestReady', 'Quiz', 'Games', 'GamePlay'],
       routes: [{ name: 'AppTabs' }],
       index: 0,
     }),
@@ -91,6 +91,12 @@ describe('navigateHomeDeeplink', () => {
     const navigation = createNavigation();
     navigateHomeDeeplink(navigation, '/stack/AskAI');
     expect(mockStackNavigate).toHaveBeenCalledWith('AskAI');
+  });
+
+  it('opens recommended tests on the readiness screen', () => {
+    const navigation = createNavigation();
+    navigateHomeDeeplink(navigation, '/stack/TestReady/test-42');
+    expect(mockStackNavigate).toHaveBeenCalledWith('TestReady', { testId: 'test-42' });
   });
 
   it('routes drill deeplinks to Practice with topic', () => {

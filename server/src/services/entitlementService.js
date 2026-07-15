@@ -12,6 +12,15 @@ function nowDate() {
   return new Date();
 }
 
+/** Serialize dates as ISO strings for mobile clients (never raw Date / epoch). */
+function toIsoOrNull(value) {
+  if (value == null || value === '') {
+    return null;
+  }
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
 export function entitlementGrantsAccess(entitlement, at = nowDate()) {
   if (!entitlement) {
     return false;
@@ -76,15 +85,15 @@ export function formatEntitlementDto(entitlement) {
     id: entitlement._id,
     plan: entitlement.plan,
     status: entitlement.status,
-    currentPeriodStart: entitlement.currentPeriodStart,
-    currentPeriodEnd: entitlement.currentPeriodEnd,
+    currentPeriodStart: toIsoOrNull(entitlement.currentPeriodStart),
+    currentPeriodEnd: toIsoOrNull(entitlement.currentPeriodEnd),
     cancelAtPeriodEnd: entitlement.cancelAtPeriodEnd,
-    cancelledAt: entitlement.cancelledAt,
+    cancelledAt: toIsoOrNull(entitlement.cancelledAt),
     provider: entitlement.provider,
     providerSubscriptionId: entitlement.providerSubscriptionId,
     autoRenews: Boolean(entitlement.providerSubscriptionId) && !entitlement.cancelAtPeriodEnd,
     hasAccess: entitlementGrantsAccess(entitlement),
-    updatedAt: entitlement.updatedAt,
+    updatedAt: toIsoOrNull(entitlement.updatedAt),
   };
 }
 
@@ -334,8 +343,8 @@ export async function listPaymentHistory(userId, query = {}) {
     status: order.status,
     orderId: order.razorpayOrderId,
     paymentId: order.razorpayPaymentId,
-    createdAt: order.createdAt,
-    updatedAt: order.updatedAt,
+    createdAt: toIsoOrNull(order.createdAt),
+    updatedAt: toIsoOrNull(order.updatedAt),
   }));
 
   return buildPaginatedResult({ items, total, limit, offset });

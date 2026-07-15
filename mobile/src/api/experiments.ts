@@ -44,7 +44,9 @@ export type ExperimentEventName =
   | 'onboarding_complete'
   | 'first_test'
   | 'trial_start'
-  | 'paywall_view';
+  | 'paywall_view'
+  | 'paywall_purchase_success'
+  | 'paywall_trial_success';
 
 export async function fetchExperiments(installId: string): Promise<ExperimentsResponse> {
   const { data } = await apiClient.get<ExperimentsResponse>('/experiments', {

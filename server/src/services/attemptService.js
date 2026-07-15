@@ -3,9 +3,7 @@ import { Test } from '../models/Test.js';
 import { Question } from '../models/Question.js';
 import { AppError } from '../utils/AppError.js';
 import { buildPaginatedResult, parsePagination } from '../utils/pagination.js';
-import {
-  average,
-} from '../utils/testHelpers.js';
+import { average } from '../utils/testHelpers.js';
 import { feedbackForAttempt, instantAttemptCoaching } from './ai/coach.js';
 import { recordAttemptOutcomes } from './adaptive/masteryService.js';
 import { handleAttemptRewards } from './gamificationService.js';
@@ -14,6 +12,8 @@ import { recordFeatureUsage } from './quotaService.js';
 import { upsertHomeProgress } from './home/upsertHomeProgress.js';
 import { cacheDel, cacheInvalidatePrefix, stableCacheKey } from '../lib/cache.js';
 import { bustHomeFeedCache } from './home/buildHomeFeed.js';
+import { JOB_NAMES } from '../config/jobConfig.js';
+import { enqueueJob } from '../jobs/bullmqScheduler.js';
 
 async function getTestForSubmit(testId, userId) {
   const test = await Test.findOne({ _id: testId });
@@ -35,9 +35,7 @@ async function getTestForSubmit(testId, userId) {
 
 function gradeAnswers(testQuestionIds, questions, submittedAnswers) {
   const questionMap = new Map(questions.map((question) => [question._id.toString(), question]));
-  const submittedMap = new Map(
-    submittedAnswers.map((answer) => [answer.questionId, answer])
-  );
+  const submittedMap = new Map(submittedAnswers.map((answer) => [answer.questionId, answer]));
 
   const gradedAnswers = [];
   const weakTopicSet = new Set();
@@ -84,7 +82,7 @@ async function updateTestStats(test, newScore) {
   const nextAttempts = attempts + 1;
   const nextAvg =
     nextAttempts > 0
-      ? Math.round((((avgScore * attempts) + newScore) / nextAttempts) * 10) / 10
+      ? Math.round(((avgScore * attempts + newScore) / nextAttempts) * 10) / 10
       : newScore;
 
   await Test.findByIdAndUpdate(test._id, {
@@ -144,7 +142,22 @@ async function runPostSubmitSideEffects({
   score,
   _accuracy,
 }) {
-  void enrichAttemptCoaching(attempt._id, { attempt, test, questions, userId });
+  const coachingJob = await enqueueJob(
+    JOB_NAMES.ATTEMPT_COACHING,
+    { attemptId: attempt._id.toString() },
+    {
+      jobId: `attempt-coaching-${attempt._id.toString()}`,
+      attempts: 3,
+      backoff: { type: 'exponential', delay: 3_000 },
+    }
+  ).catch((err) => {
+    console.warn(`[coach] failed to enqueue coaching for ${attempt._id}:`, err.message);
+    return null;
+  });
+
+  if (!coachingJob) {
+    void enrichAttemptCoaching(attempt._id, { attempt, test, questions, userId });
+  }
 
   try {
     await Promise.all([
@@ -211,7 +224,11 @@ export async function submitTest(userId, testId, submittedAnswers) {
 
   for (const id of expectedIds) {
     if (!submittedIds.has(id)) {
-      throw new AppError('Answers must be provided for all test questions', 400, 'VALIDATION_ERROR');
+      throw new AppError(
+        'Answers must be provided for all test questions',
+        400,
+        'VALIDATION_ERROR'
+      );
     }
   }
 

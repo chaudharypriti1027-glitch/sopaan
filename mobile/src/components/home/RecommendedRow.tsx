@@ -1,6 +1,5 @@
 import { useCallback, useMemo } from 'react';
 import {
-  Dimensions,
   FlatList,
   StyleSheet,
   View,
@@ -16,7 +15,8 @@ import type { TestCard } from '../../types/home';
 import { resolveTestSubjectIcon, testDifficultyIconTone } from './homeIcons';
 import { HOME_UI } from './homeTheme';
 
-const CARD_WIDTH = Math.round(Dimensions.get('window').width * 0.72);
+const CARD_WIDTH = 218;
+const CARD_HEIGHT = 198;
 
 type RecommendedRowProps = {
   tests: TestCard[];
@@ -50,8 +50,11 @@ export function RecommendedRow({ tests, onTestPress }: RecommendedRowProps) {
       const pill = difficultyStyle(item.difficulty, t);
       const SubjectIcon = resolveTestSubjectIcon(item.tag, item.title);
       const iconTone = difficultyTone(item.difficulty);
-      const subject = item.tag ?? t('home.general');
-      const difficultyLabel = t(`practice.difficulty${item.difficulty.charAt(0).toUpperCase()}${item.difficulty.slice(1)}` as 'practice.difficultyEasy');
+      const displayTitle = item.title
+        .replace(/\s*\((easy|medium|hard)\)\s*$/i, '')
+        .trim();
+      const questionLabel = t('practice.questionCount', { count: item.qCount });
+      const durationLabel = t('practice.durationMin', { count: item.durationMin });
 
       return (
         <HomeFeedCard
@@ -64,24 +67,24 @@ export function RecommendedRow({ tests, onTestPress }: RecommendedRowProps) {
             <HomeSlotIcon slot="shortcut" Icon={SubjectIcon} tone={iconTone} />
             <View style={[styles.badge, { backgroundColor: pill.bg }]}>
               <View style={[styles.badgeDot, { backgroundColor: pill.color }]} />
-              <Text style={[styles.badgeText, { color: pill.color }]}>
+              <Text style={[styles.badgeText, { color: pill.color }]} numberOfLines={1}>
                 {pill.label.replace('● ', '')}
               </Text>
             </View>
           </View>
-          <Text style={styles.title} numberOfLines={2}>
-            {item.title}
-          </Text>
-          <Text style={styles.sub}>
-            {subject} · {difficultyLabel}
-          </Text>
-          <View style={styles.metaRow}>
-            <HomeSlotIcon slot="inline" Icon={Clock} tone="slate" />
-            <Text style={styles.meta}>
-              {t('practice.questionCount', { count: item.qCount })} ·{' '}
-              {t('practice.durationMin', { count: item.durationMin })}
+
+          <View style={styles.mid}>
+            <Text style={styles.title} numberOfLines={2} ellipsizeMode="tail">
+              {displayTitle}
             </Text>
+            <View style={styles.metaRow}>
+              <Clock size={12} color={HOME_UI.muted} strokeWidth={1.8} />
+              <Text style={styles.meta} numberOfLines={1}>
+                {`${questionLabel} · ${durationLabel}`}
+              </Text>
+            </View>
           </View>
+
           <HomePremiumButton
             label={t('home.startTest')}
             variant="navy"
@@ -117,74 +120,71 @@ export function RecommendedRow({ tests, onTestPress }: RecommendedRowProps) {
 function createStyles() {
   return StyleSheet.create({
     list: {
-      marginHorizontal: -HOME_UI.sectionPanelPad,
+      marginHorizontal: -HOME_UI.horizontalPad,
     },
     listContent: {
       gap: 12,
-      paddingHorizontal: HOME_UI.sectionPanelPad,
+      paddingHorizontal: HOME_UI.horizontalPad,
     },
     cardWrap: {
       width: CARD_WIDTH,
+      height: CARD_HEIGHT,
+      borderRadius: 22,
     },
     cardBody: {
-      paddingVertical: 16,
-      paddingHorizontal: 16,
-      minHeight: 200,
-      gap: 0,
+      flex: 1,
+      padding: 14,
+      justifyContent: 'flex-start',
     },
     topRow: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      marginBottom: 12,
+    },
+    mid: {
+      flex: 1,
+      marginTop: 10,
+      gap: 6,
     },
     title: {
-      fontSize: 15,
-      fontWeight: '800',
+      minHeight: 38,
+      fontSize: 14,
+      fontWeight: '700',
       color: HOME_UI.ink,
       lineHeight: 19,
-      marginBottom: 3,
-      letterSpacing: -0.2,
-    },
-    sub: {
-      fontSize: 11.5,
-      color: HOME_UI.muted,
-      fontWeight: '600',
-      marginBottom: 10,
-      letterSpacing: 0.2,
-      textTransform: 'capitalize',
     },
     metaRow: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 5,
-      marginBottom: 14,
+      marginTop: 2,
     },
     meta: {
-      fontSize: 11,
+      flex: 1,
+      fontSize: 12,
       color: HOME_UI.muted,
-      fontWeight: '500',
+      fontWeight: '600',
     },
     badge: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 5,
-      alignSelf: 'flex-start',
       borderRadius: 99,
-      paddingHorizontal: 10,
-      paddingVertical: 5,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
       borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.5)',
+      borderColor: HOME_UI.goldBorder,
+      backgroundColor: HOME_UI.goldSoft,
     },
     badgeDot: {
-      width: 6,
-      height: 6,
+      width: 5,
+      height: 5,
       borderRadius: 3,
     },
     badgeText: {
-      fontSize: 9.5,
+      fontSize: 9,
       fontWeight: '800',
-      letterSpacing: 0.4,
+      letterSpacing: 1,
       textTransform: 'uppercase',
     },
   });

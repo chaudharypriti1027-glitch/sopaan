@@ -15,8 +15,7 @@ export const DEFAULT_EXPERIMENT_PAYLOADS: ExperimentPayloads = {
   },
   paywall_copy: {
     heroTitle: 'Sopaan Pro',
-    heroSub:
-      'Secure checkout via Razorpay (UPI, cards, netbanking). Prices are set by our servers.',
+    heroSub: 'Unlimited AI, mocks, and analytics — built for serious exam prep.',
     benefitsTitle: 'What you get',
     benefits: [
       'Unlimited AI doubt solving & answer evaluation',
@@ -25,7 +24,7 @@ export const DEFAULT_EXPERIMENT_PAYLOADS: ExperimentPayloads = {
       'Ad-free study planner & focus sessions',
       'Physical test tracker with AI fitness plans',
     ],
-    trialCta: 'Start 7-day free trial',
+    trialCta: 'Claim 1 month free',
     subscribeCta: 'Subscribe now',
   },
   home_layout: {

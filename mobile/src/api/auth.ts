@@ -84,6 +84,45 @@ export async function loginWithGoogle(input: GoogleAuthInput): Promise<AuthResul
   return data;
 }
 
+export type ForgotPasswordInput = {
+  email: string;
+};
+
+export type ResetPasswordInput = {
+  email: string;
+  code: string;
+  password: string;
+};
+
+export type ChangePasswordInput = {
+  currentPassword?: string;
+  newPassword: string;
+};
+
+export type ChangePasswordResult = AuthResult & {
+  message: string;
+};
+
+export async function forgotPassword(input: ForgotPasswordInput): Promise<{ sent: true }> {
+  const { data } = await apiClient.post<{ sent: true }>('/auth/forgot-password', input);
+  return data;
+}
+
+export async function resetPassword(input: ResetPasswordInput): Promise<AuthResult> {
+  const { data } = await apiClient.post<AuthResult>('/auth/reset-password', input);
+  return data;
+}
+
+export async function setPassword(password: string): Promise<{ message: string }> {
+  const { data } = await apiClient.post<{ message: string }>('/auth/set-password', { password });
+  return data;
+}
+
+export async function changePassword(input: ChangePasswordInput): Promise<ChangePasswordResult> {
+  const { data } = await apiClient.post<ChangePasswordResult>('/auth/change-password', input);
+  return data;
+}
+
 /** @deprecated use requestOtp */
 export async function requestOtpLegacy(input: OtpRequestInput): Promise<{ message: string }> {
   const { data } = await apiClient.post<{ message: string }>('/auth/otp/request', input);

@@ -2,6 +2,13 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { paymentsApi, type PremiumPlanId, type VerifyPaymentInput } from '../api';
 import { queryKeys } from './queryKeys';
 
+/** Keep entitlement, profile, and tier caches aligned after billing changes. */
+export function invalidateSubscriptionCaches(queryClient: ReturnType<typeof useQueryClient>) {
+  void queryClient.invalidateQueries({ queryKey: queryKeys.payments.all });
+  void queryClient.invalidateQueries({ queryKey: queryKeys.profile.all });
+  void queryClient.invalidateQueries({ queryKey: queryKeys.tier.all });
+}
+
 export function usePremiumPlans() {
   return useQuery({
     queryKey: queryKeys.payments.plans(),
@@ -31,8 +38,7 @@ export function useVerifyPayment() {
   return useMutation({
     mutationFn: (input: VerifyPaymentInput) => paymentsApi.verifyPayment(input),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.payments.all });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.profile.all });
+      invalidateSubscriptionCaches(queryClient);
     },
   });
 }
@@ -43,8 +49,7 @@ export function useStartFreeTrial() {
   return useMutation({
     mutationFn: paymentsApi.startFreeTrial,
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.payments.all });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.profile.all });
+      invalidateSubscriptionCaches(queryClient);
     },
   });
 }
@@ -54,9 +59,15 @@ export function useRestorePurchases() {
 
   return useMutation({
     mutationFn: paymentsApi.restorePurchases,
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.payments.all });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.profile.all });
+    onSuccess: (result) => {
+      queryClient.setQueryData(queryKeys.payments.entitlement(), (prev: unknown) => {
+        const previous = prev as { entitlement?: unknown; history?: unknown } | undefined;
+        return {
+          entitlement: result.entitlement,
+          history: previous?.history ?? [],
+        };
+      });
+      invalidateSubscriptionCaches(queryClient);
     },
   });
 }
@@ -66,9 +77,15 @@ export function useCancelSubscription() {
 
   return useMutation({
     mutationFn: (input?: { atPeriodEnd?: boolean }) => paymentsApi.cancelSubscription(input),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.payments.all });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.profile.all });
+    onSuccess: (result) => {
+      queryClient.setQueryData(queryKeys.payments.entitlement(), (prev: unknown) => {
+        const previous = prev as { entitlement?: unknown; history?: unknown } | undefined;
+        return {
+          entitlement: result.entitlement,
+          history: previous?.history ?? [],
+        };
+      });
+      invalidateSubscriptionCaches(queryClient);
     },
   });
 }

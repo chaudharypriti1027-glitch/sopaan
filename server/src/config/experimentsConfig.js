@@ -12,6 +12,8 @@ export const CONVERSION_EVENTS = Object.freeze([
   'first_test',
   'trial_start',
   'paywall_view',
+  'paywall_purchase_success',
+  'paywall_trial_success',
 ]);
 
 export const EXPERIMENTS = Object.freeze({

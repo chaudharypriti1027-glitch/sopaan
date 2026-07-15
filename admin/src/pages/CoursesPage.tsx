@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Plus, Search } from 'lucide-react';
 import type { AdminCourse } from '../api/contentTypes';
 import {
   createCourse,
@@ -58,7 +59,7 @@ function toForm(row: AdminCourse): FormState {
 
 function validateForm(
   form: FormState,
-  lessons: LessonFormState[],
+  lessons: LessonFormState[]
 ): Partial<Record<keyof FormState, string>> & { lessons?: string } {
   const errors: Partial<Record<keyof FormState, string>> & { lessons?: string } = {};
   if (!form.title.trim()) errors.title = 'Title is required';
@@ -177,15 +178,13 @@ export function CoursesPage() {
   }
 
   return (
-    <div>
+    <div className="content-page courses-page">
       <div className="toolbar">
         <div className="search toolbar-search">
-          <svg className="svg" viewBox="0 0 24 24" aria-hidden>
-            <circle cx="11" cy="11" r="7" />
-            <path d="m21 21-4.3-4.3" />
-          </svg>
+          <Search aria-hidden strokeWidth={1.8} />
           <input
             placeholder="Search courses…"
+            aria-label="Search courses"
             value={resource.search}
             onChange={(e) => resource.setSearch(e.target.value)}
           />
@@ -193,9 +192,7 @@ export function CoursesPage() {
         <select
           className="filter-select"
           value={resource.statusFilter}
-          onChange={(e) =>
-            resource.setStatusFilter(e.target.value as typeof resource.statusFilter)
-          }
+          onChange={(e) => resource.setStatusFilter(e.target.value as typeof resource.statusFilter)}
           aria-label="Filter by status"
         >
           <option value="all">All statuses</option>
@@ -203,6 +200,7 @@ export function CoursesPage() {
           <option value="draft">Draft</option>
         </select>
         <ActionButton variant="gold" onClick={openCreate}>
+          <Plus aria-hidden strokeWidth={1.8} />
           Add course
         </ActionButton>
       </div>
@@ -210,6 +208,7 @@ export function CoursesPage() {
       <DataTable
         rows={resource.rows}
         emptyMessage="No courses found"
+        emptyHint="Adjust the filters or create a course with its first lesson."
         isLoading={resource.query.isLoading}
         error={resource.query.isError ? resource.query.error : undefined}
         onRetry={() => void resource.query.refetch()}
@@ -263,9 +262,7 @@ export function CoursesPage() {
                 {row.status === 'published' ? (
                   <TableActionButton
                     disabled={resource.busyId === row.id}
-                    onClick={() =>
-                      resource.statusMutation.mutate({ id: row.id, status: 'draft' })
-                    }
+                    onClick={() => resource.statusMutation.mutate({ id: row.id, status: 'draft' })}
                   >
                     Unpublish
                   </TableActionButton>
@@ -305,12 +302,13 @@ export function CoursesPage() {
       <Drawer
         open={drawerOpen}
         title={editing ? `Edit course — ${editing.title}` : 'Add course'}
+        size="wide"
         onClose={closeDrawer}
         onSubmit={() => void handleSave()}
         submitting={resource.saveMutation.isPending}
         submitLabel={editing ? 'Save course & lessons' : 'Create course'}
       >
-        <div className="drawer-form">
+        <div className="drawer-form course-editor-form">
           {loadingCourse ? <p className="empty-note">Loading lessons…</p> : null}
 
           <FormField id="course-title" label="Course title" error={errors.title}>

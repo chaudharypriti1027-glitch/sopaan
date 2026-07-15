@@ -153,4 +153,26 @@ describe('QuizScreen', () => {
 
     alertSpy.mockRestore();
   });
+
+  it('still submits when previous attempts cannot be loaded', async () => {
+    mockListAttempts.mockRejectedValueOnce(new Error('offline'));
+    const { getByText, getByTestId } = renderWithProviders(<QuizScreen />);
+
+    fireEvent.press(getByTestId('quiz-option-b'));
+    fireEvent.press(getByTestId('quiz-next'));
+    await waitFor(() => expect(getByText('Who wrote the Indian Constitution?')).toBeTruthy());
+    fireEvent.press(getByTestId('quiz-option-a'));
+
+    await act(async () => {
+      fireEvent.press(getByTestId('quiz-submit'));
+    });
+
+    await waitFor(() => {
+      expect(mockMutateAsync).toHaveBeenCalledTimes(1);
+      expect(mockReplace).toHaveBeenCalledWith(
+        'Result',
+        expect.objectContaining({ previousRank: undefined }),
+      );
+    });
+  });
 });

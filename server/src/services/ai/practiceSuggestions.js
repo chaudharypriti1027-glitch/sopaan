@@ -208,7 +208,7 @@ function buildHeuristicSuggestions({
       count: 10,
       reason: isHi
         ? 'हाल की घटनाओं पर ताज़ा अभ्यास — परीक्षा में अक्सर पूछा जाता है।'
-        : 'Fresh current-affairs practice — frequently tested across government exams.',
+        : 'Fresh current-affairs practice — frequently tested across many exams.',
     });
   }
 

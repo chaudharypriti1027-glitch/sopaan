@@ -84,11 +84,13 @@ export function getFeaturePaywallCopy(featureKey) {
 
 export function listPublicTierConfig(isPro) {
   const limits = getTierLimits(isPro);
+  const settings = getSettingsSnapshot();
 
   return {
     isPro,
     showAds: isPro ? false : limits.showAds,
     detailedAnalytics: isPro ? true : limits.detailedAnalytics,
+    welcomeMonthEnabled: settings.welcomeMonthEnabled !== false,
     limits: {
       aiGenerateTestsPerDay: limits.aiGenerateTestsPerDay,
       aiDoubtsFastPerDay: limits.aiDoubtsFastPerDay,

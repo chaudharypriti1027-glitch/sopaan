@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
+import { Plus, Search } from 'lucide-react';
 import type { AdminCurrentAffair } from '../api/contentTypes';
 import {
   createCurrentAffair,
@@ -159,7 +160,7 @@ export function CurrentAffairsPage() {
   function handleAi(id: string) {
     if (
       !window.confirm(
-        'Generate an exam-angle summary and 3 quiz questions with AI? This replaces the current summary and quiz.',
+        'Generate an exam-angle summary and 3 quiz questions with AI? This replaces the current summary and quiz.'
       )
     ) {
       return;
@@ -168,15 +169,13 @@ export function CurrentAffairsPage() {
   }
 
   return (
-    <div>
+    <div className="content-page current-affairs-page">
       <div className="toolbar">
         <div className="search toolbar-search">
-          <svg className="svg" viewBox="0 0 24 24" aria-hidden>
-            <circle cx="11" cy="11" r="7" />
-            <path d="m21 21-4.3-4.3" />
-          </svg>
+          <Search aria-hidden strokeWidth={1.8} />
           <input
             placeholder="Search articles…"
+            aria-label="Search current affairs"
             value={resource.search}
             onChange={(e) => resource.setSearch(e.target.value)}
           />
@@ -184,9 +183,7 @@ export function CurrentAffairsPage() {
         <select
           className="filter-select"
           value={resource.statusFilter}
-          onChange={(e) =>
-            resource.setStatusFilter(e.target.value as typeof resource.statusFilter)
-          }
+          onChange={(e) => resource.setStatusFilter(e.target.value as typeof resource.statusFilter)}
           aria-label="Filter by status"
         >
           <option value="all">All statuses</option>
@@ -194,6 +191,7 @@ export function CurrentAffairsPage() {
           <option value="draft">Draft</option>
         </select>
         <ActionButton variant="gold" onClick={openCreate}>
+          <Plus aria-hidden strokeWidth={1.8} />
           Add article
         </ActionButton>
       </div>
@@ -201,6 +199,7 @@ export function CurrentAffairsPage() {
       <DataTable
         rows={resource.rows}
         emptyMessage="No articles found"
+        emptyHint="Adjust the filters or add a current-affairs article."
         isLoading={resource.query.isLoading}
         error={resource.query.isError ? resource.query.error : undefined}
         onRetry={() => void resource.query.refetch()}
@@ -239,9 +238,7 @@ export function CurrentAffairsPage() {
                 {row.status === 'published' ? (
                   <TableActionButton
                     disabled={resource.busyId === row.id}
-                    onClick={() =>
-                      resource.statusMutation.mutate({ id: row.id, status: 'draft' })
-                    }
+                    onClick={() => resource.statusMutation.mutate({ id: row.id, status: 'draft' })}
                   >
                     Unpublish
                   </TableActionButton>

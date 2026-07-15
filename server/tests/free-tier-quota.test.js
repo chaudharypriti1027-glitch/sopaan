@@ -90,6 +90,14 @@ describe('free tier quotas', () => {
       role: 'student',
     });
 
+    await expect(assertFeatureAccess(user, 'ai_evaluate')).resolves.toMatchObject({
+      isPro: false,
+      feature: 'ai_evaluate',
+    });
+
+    await recordFeatureUsage(user._id, 'ai_evaluate');
+    await recordFeatureUsage(user._id, 'ai_evaluate');
+
     await expect(assertFeatureAccess(user, 'ai_evaluate')).rejects.toMatchObject({
       code: 'QUOTA_EXCEEDED',
       details: expect.objectContaining({

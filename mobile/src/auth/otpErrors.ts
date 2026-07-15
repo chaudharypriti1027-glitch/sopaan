@@ -1,4 +1,5 @@
 import type { ApiError } from '../api/errors';
+import i18n from '../i18n';
 
 type OtpErrorDetails = {
   attemptsRemaining?: number;
@@ -26,11 +27,11 @@ export function formatOtpError(error: ApiError): string {
   }
 
   if (error.code === 'EMAIL_UNAVAILABLE') {
-    return 'Could not send the OTP email. Please try again in a moment.';
+    return i18n.t('common:emailUnavailable');
   }
 
   if (error.code === 'SMS_UNAVAILABLE') {
-    return 'Could not send the OTP SMS. Try again in a moment.';
+    return i18n.t('common:smsUnavailable');
   }
 
   if (error.code === 'SMS_TRIAL_RESTRICTED') {

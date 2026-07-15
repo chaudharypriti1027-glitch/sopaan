@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+import { Check } from 'lucide-react';
 
 interface ToastContextValue {
   showToast: (message: string) => void;
@@ -22,9 +23,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     <ToastContext.Provider value={value}>
       {children}
       <div id="toast" className={visible ? 'show' : ''} role="status" aria-live="polite">
-        <svg className="svg" viewBox="0 0 24 24" aria-hidden>
-          <path d="M9 11l3 3L22 4" />
-        </svg>
+        <Check aria-hidden strokeWidth={2} />
         <span>{message}</span>
       </div>
     </ToastContext.Provider>

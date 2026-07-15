@@ -15,6 +15,8 @@ export type PremiumPlan = {
 export type PremiumPlansResponse = {
   provider: string;
   currency: string;
+  /** False when Razorpay keys are unset — checkout is unavailable. */
+  configured?: boolean;
   plans: PremiumPlan[];
 };
 

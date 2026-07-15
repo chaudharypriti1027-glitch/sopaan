@@ -2,10 +2,7 @@ import { User } from '../../models/User.js';
 import { AiCallLog } from '../../models/AiCallLog.js';
 import { AiDailyUsage } from '../../models/AiDailyUsage.js';
 import { AppError } from '../../utils/AppError.js';
-import {
-  assertAiTierAccess,
-  utcDateKey,
-} from '../quotaService.js';
+import { assertAiTierAccess, utcDateKey } from '../quotaService.js';
 import { getUsageFieldForTier } from './aiUsageLimits.js';
 import { logger } from '../../observability/logger.js';
 import { recordAiUsage as recordAiMetrics } from '../../observability/metrics.js';
@@ -81,7 +78,9 @@ export async function recordAiUsage({
     latencyMs,
   });
 
-  if (!userId) {
+  // AiDailyUsage backs the Ask AI fast/quality quota. Other AI features have
+  // dedicated feature quotas and must not consume the student's doubt allowance.
+  if (!userId || feature !== 'doubt_solver') {
     return;
   }
 
@@ -100,6 +99,6 @@ export async function recordAiUsage({
       },
       $setOnInsert: { userId, dateKey },
     },
-    { upsert: true, new: true },
+    { upsert: true, new: true }
   );
 }

@@ -163,7 +163,7 @@ describe('Razorpay payment webhook', () => {
     expect(entitlementCount).toBe(1);
   });
 
-  it('does not grant on client verify — webhook is source of truth', async () => {
+  it('grants entitlement on client verify when payment is captured (webhook stays idempotent)', async () => {
     const { token, userId } = await signupUser();
 
     const createOrder = await request(app)
@@ -190,11 +190,14 @@ describe('Razorpay payment webhook', () => {
 
     expect(verify.status).toBe(200);
     expect(verify.body.verified).toBe(true);
-    expect(verify.body.pending).toBe(true);
-    expect(verify.body.active).toBe(false);
+    expect(verify.body.pending).toBe(false);
+    expect(verify.body.active).toBe(true);
+    expect(verify.body.user?.isPremium).toBe(true);
+    expect(verify.body.user?.premiumExpiresAt).toBeTruthy();
+    expect(Number.isNaN(new Date(verify.body.user.premiumExpiresAt).getTime())).toBe(false);
 
-    const userBeforeWebhook = await User.findById(userId);
-    expect(userBeforeWebhook?.isPremium).toBe(false);
+    const userAfterVerify = await User.findById(userId);
+    expect(userAfterVerify?.isPremium).toBe(true);
 
     const webhookPayload = paymentCapturedPayload({
       orderId,
@@ -212,9 +215,11 @@ describe('Razorpay payment webhook', () => {
       .send(rawBody);
 
     expect(webhook.status).toBe(200);
+    expect(webhook.body.duplicate).toBe(false);
 
-    const userAfterWebhook = await User.findById(userId);
-    expect(userAfterWebhook?.isPremium).toBe(true);
+    const entitlementCount = await SubscriptionEntitlement.countDocuments({ userId });
+    expect(entitlementCount).toBe(1);
+    expect((await User.findById(userId))?.isPremium).toBe(true);
   });
 
   it('revokes entitlement on payment.refunded', async () => {
@@ -278,5 +283,41 @@ describe('Razorpay payment webhook', () => {
 
     const entitlement = await SubscriptionEntitlement.findOne({ userId });
     expect(entitlement?.status).toBe('expired');
+  });
+
+  it('returns PAYMENTS_NOT_CONFIGURED when Razorpay keys are unset', async () => {
+    const prev = {
+      id: process.env.RAZORPAY_KEY_ID,
+      secret: process.env.RAZORPAY_KEY_SECRET,
+      webhook: process.env.RAZORPAY_WEBHOOK_SECRET,
+    };
+
+    delete process.env.RAZORPAY_KEY_ID;
+    delete process.env.RAZORPAY_KEY_SECRET;
+    delete process.env.RAZORPAY_WEBHOOK_SECRET;
+
+    try {
+      const { token } = await signupUser();
+
+      const plans = await request(app)
+        .get('/api/payments/plans')
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(plans.status).toBe(200);
+      expect(plans.body.configured).toBe(false);
+      expect(Array.isArray(plans.body.plans)).toBe(true);
+
+      const createOrder = await request(app)
+        .post('/api/payments/create-order')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ plan: 'monthly' });
+
+      expect(createOrder.status).toBe(503);
+      expect(createOrder.body.error?.code).toBe('PAYMENTS_NOT_CONFIGURED');
+    } finally {
+      process.env.RAZORPAY_KEY_ID = prev.id;
+      process.env.RAZORPAY_KEY_SECRET = prev.secret;
+      process.env.RAZORPAY_WEBHOOK_SECRET = prev.webhook;
+    }
   });
 });

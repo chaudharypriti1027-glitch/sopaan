@@ -1,13 +1,21 @@
 import i18n from '../i18n';
 import { ApiError, parseApiError } from '../api/errors';
 
-const OFFLINE_CODES = new Set(['NETWORK_ERROR', 'ECONNABORTED', 'ERR_NETWORK']);
+const OFFLINE_CODES = new Set(['NETWORK_ERROR', 'ERR_NETWORK']);
+const AI_RATE_LIMIT_CODES = new Set(['RATE_LIMITED', 'AI_RATE_LIMITED', 'AI_RATE_LIMIT_EXCEEDED']);
 
 export function getUserFacingMessage(error: unknown): string {
   const parsed = parseApiError(error);
 
   if (parsed instanceof ApiError) {
-    if (OFFLINE_CODES.has(parsed.code) || (parsed.status === 0 && !parsed.message.includes('refresh'))) {
+    if (parsed.code === 'ECONNABORTED' || parsed.code === 'AI_TIMEOUT') {
+      return i18n.t('common:aiTimedOut');
+    }
+
+    if (
+      OFFLINE_CODES.has(parsed.code) ||
+      (parsed.status === 0 && !parsed.message.includes('refresh'))
+    ) {
       return i18n.t('common:offlineHint');
     }
 
@@ -15,11 +23,15 @@ export function getUserFacingMessage(error: unknown): string {
       return i18n.t('common:sessionExpired');
     }
 
-    if (parsed.status === 429 || parsed.code === 'RATE_LIMITED' || parsed.code === 'AI_RATE_LIMITED') {
+    if (parsed.code === 'QUOTA_EXCEEDED') {
+      return i18n.t('common:quotaExceeded');
+    }
+
+    if (parsed.status === 429 || AI_RATE_LIMIT_CODES.has(parsed.code)) {
       return i18n.t('common:aiRateLimited');
     }
 
-    if (parsed.code === 'AI_NOT_CONFIGURED') {
+    if (parsed.code === 'AI_UNAVAILABLE' || parsed.code === 'AI_NOT_CONFIGURED') {
       return i18n.t('common:aiNotConfigured');
     }
 
@@ -31,12 +43,24 @@ export function getUserFacingMessage(error: unknown): string {
       return i18n.t('common:aiGenerationFailed');
     }
 
-    if (parsed.code === 'QUOTA_EXCEEDED') {
-      return i18n.t('common:quotaExceeded');
-    }
-
     if (parsed.code === 'PRO_REQUIRED' || parsed.code === 'PREMIUM_REQUIRED') {
       return i18n.t('common:proRequired');
+    }
+
+    if (parsed.code === 'PAYMENTS_NOT_CONFIGURED') {
+      return i18n.t('common:paymentsNotConfigured');
+    }
+
+    if (parsed.code === 'STREAMING_NOT_CONFIGURED') {
+      return i18n.t('common:streamingNotConfigured');
+    }
+
+    if (parsed.code === 'EMAIL_UNAVAILABLE') {
+      return i18n.t('common:emailUnavailable');
+    }
+
+    if (parsed.code === 'SMS_UNAVAILABLE') {
+      return i18n.t('common:smsUnavailable');
     }
 
     if (parsed.code === 'VALIDATION_ERROR') {

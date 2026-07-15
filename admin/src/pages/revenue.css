@@ -1,7 +1,6 @@
 .revenue-page {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
+  display: grid;
+  gap: 16px;
 }
 
 .revenue-metrics {
@@ -12,26 +11,53 @@
 
 .revenue-metric-card {
   background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  box-shadow: var(--sh-sm);
+  position: relative;
+  min-height: 126px;
+}
+
+.revenue-metric-icon {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 13px;
+  border-radius: 10px;
+  background: var(--navy-soft);
+  color: var(--navy);
+}
+
+.revenue-metric-icon svg {
+  width: 17px;
+  height: 17px;
 }
 
 .revenue-metric-card .label {
-  font-size: 12px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
   color: var(--text-muted);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
+}
+
+.revenue-table-title {
+  margin-bottom: 14px !important;
 }
 
 .revenue-metric-card .value {
-  font-size: 28px;
+  font-size: 26px;
   font-weight: 700;
+  font-family: 'Space Grotesk', sans-serif;
   color: var(--text);
   line-height: 1.1;
 }
 
 .revenue-metric-card .value.currency {
-  font-size: 24px;
+  font-size: 22px;
 }
 
 @media (max-width: 960px) {

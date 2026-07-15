@@ -3,12 +3,12 @@ import { Gamepad2, ListChecks, MessageCircle, Sparkles } from 'lucide-react-nati
 import type { HomeFeatureSectionKey } from '../navigation/homeFeatureConfig';
 import type { HomeFeed } from '../types/home';
 
-/** Canonical home feed section order (below hero). Explore first; AI hub before league. */
+/** Canonical home feed — matches Home Page HTML reference order. */
 export const HOME_SECTION_ORDER = [
-  'features',
-  'dailyChallenge',
   'continue',
+  'dailyChallenge',
   'recommended',
+  'features',
   'affairs',
   'nudges',
   'league',
@@ -36,54 +36,48 @@ export const HOME_SECTION_META: Record<HomeSectionKey, HomeSectionMeta> = {
     testId: 'home-section-features',
     titleKey: 'explore',
     subtitleKey: 'exploreSubtitle',
-    compactWhenFirst: true,
     padded: true,
     panelTone: false,
   },
   nudges: {
     testId: 'home-section-nudges',
     titleKey: 'aiActionsTitle',
-    subtitleKey: 'aiActionsSubtitle',
     padded: true,
     panelTone: false,
   },
   dailyChallenge: {
     testId: 'home-section-daily-challenge',
     titleKey: 'dailyChallenge',
-    subtitleKey: 'dailyChallengeSubtitle',
     padded: true,
-    panelTone: 'default',
+    panelTone: false,
   },
   continue: {
     testId: 'home-section-continue',
     titleKey: 'continueLearning',
-    subtitleKey: 'continueSubtitle',
     actionKey: 'seeAll',
+    compactWhenFirst: true,
     padded: true,
-    panelTone: 'default',
+    panelTone: false,
   },
   recommended: {
     testId: 'home-section-recommended',
     titleKey: 'recommendedTests',
-    subtitleKey: 'recommendedSubtitle',
     actionKey: 'seeAll',
     padded: true,
-    panelTone: 'default',
+    panelTone: false,
   },
   affairs: {
     testId: 'home-section-affairs',
     titleKey: 'todaysAffairs',
-    subtitleKey: 'affairsSubtitle',
     actionKey: 'allAffairs',
     padded: true,
-    panelTone: 'default',
+    panelTone: false,
   },
   league: {
     testId: 'home-section-league',
     titleKey: 'yourLeague',
-    subtitleKey: 'leagueSubtitle',
     padded: true,
-    panelTone: 'gold',
+    panelTone: false,
   },
 };
 
@@ -109,9 +103,9 @@ export function visibleHomeSections(feed: HomeFeed): HomeSectionKey[] {
 
 /** Staggered enter animation for feed sections. */
 export const HOME_SECTION_MOTION = {
-  baseMs: 260,
-  staggerMs: 35,
-  maxStaggerIndex: 4,
+  baseMs: 320,
+  staggerMs: 48,
+  maxStaggerIndex: 5,
 } as const;
 
 /** Explore hub tab labels — keys under `app:home.*`. */
@@ -123,9 +117,10 @@ export const HOME_EXPLORE_TAB_LABEL_KEYS: Record<HomeFeatureSectionKey, string> 
 };
 
 export const HOME_EXPLORE_GRID = {
-  columns: 5,
-  cardPad: 12,
-  tileGap: 6,
+  columns: 3,
+  cardPad: 10,
+  tileGap: 4,
+  rowGap: 8,
 } as const;
 
 export type HomeAiActionKey = 'generate' | 'games' | 'ask' | 'plan';

@@ -143,7 +143,10 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     text: {
       fontFamily: theme.typography.fonts.ui.semibold,
       fontWeight: '500',
-      color: 'rgba(255,255,255,0.9)',
+      color: 'rgba(255,255,255,0.92)',
+      textShadowColor: 'rgba(0,0,0,0.45)',
+      textShadowOffset: { width: 0, height: 1 },
+      textShadowRadius: 3,
     },
   });
 }

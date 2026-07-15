@@ -39,8 +39,14 @@ export function HomeSectionHeader({
             <View style={styles.accent} />
           )}
           <View style={styles.titleTextCol}>
-            <Text style={styles.title}>{title}</Text>
-            {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+            <Text style={styles.title} numberOfLines={1}>
+              {title}
+            </Text>
+            {subtitle ? (
+              <Text style={styles.subtitle} numberOfLines={1}>
+                {subtitle}
+              </Text>
+            ) : null}
           </View>
         </View>
       </View>
@@ -54,8 +60,10 @@ export function HomeSectionHeader({
             hitSlop={8}
             style={({ pressed }) => [styles.actionBtn, pressed && onActionPress && styles.pressed]}
           >
-            <Text style={[styles.action, !onActionPress && styles.actionMuted]}>{actionLabel}</Text>
-            {onActionPress ? <ChevronRight size={14} color={HOME_UI.accent} strokeWidth={2.5} /> : null}
+            <Text style={[styles.action, !onActionPress && styles.actionMuted]} numberOfLines={1}>
+              {actionLabel}
+            </Text>
+            {onActionPress ? <ChevronRight size={14} color={HOME_UI.goldDeep} strokeWidth={2.5} /> : null}
           </Pressable>
         ) : null}
       </View>
@@ -67,18 +75,19 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme'], compact: bool
   return StyleSheet.create({
     row: {
       flexDirection: 'row',
-      alignItems: 'flex-start',
+      alignItems: 'center',
       justifyContent: 'space-between',
-      marginBottom: 12,
+      marginBottom: 14,
       marginTop: compact ? 0 : 2,
       gap: theme.spacing.sm,
     },
     titleCol: {
       flex: 1,
+      minWidth: 0,
     },
     titleWrap: {
       flexDirection: 'row',
-      alignItems: 'flex-start',
+      alignItems: 'center',
       gap: 10,
     },
     accent: {
@@ -86,28 +95,28 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme'], compact: bool
       height: 18,
       borderRadius: 2,
       backgroundColor: HOME_UI.gold,
-      marginTop: 3,
     },
     sectionIcon: {
-      marginTop: 1,
+      marginTop: 0,
     },
     titleTextCol: {
       flex: 1,
       gap: 2,
+      minWidth: 0,
     },
     title: {
-      fontSize: 17,
+      fontSize: 18,
       lineHeight: 22,
       fontFamily: theme.typography.fonts.ui.bold,
       fontWeight: '800',
-      letterSpacing: -0.35,
+      letterSpacing: -0.4,
       color: HOME_UI.ink,
     },
     subtitle: {
       fontSize: 12,
       lineHeight: 16,
-      fontFamily: theme.typography.fonts.ui.semibold,
-      fontWeight: '600',
+      fontFamily: theme.typography.fonts.ui.medium,
+      fontWeight: '500',
       color: HOME_UI.muted,
     },
     trailing: {
@@ -115,13 +124,12 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme'], compact: bool
       alignItems: 'center',
       gap: 6,
       flexShrink: 0,
-      paddingTop: 2,
     },
     action: {
       fontSize: 12,
       fontFamily: theme.typography.fonts.ui.bold,
       fontWeight: '700',
-      color: HOME_UI.accent,
+      color: HOME_UI.goldDeep,
     },
     actionMuted: {
       opacity: 0.55,
@@ -129,8 +137,9 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme'], compact: bool
     actionBtn: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 2,
+      gap: 1,
       paddingVertical: 2,
+      paddingLeft: 4,
     },
     pressed: homePressFeedback,
   });

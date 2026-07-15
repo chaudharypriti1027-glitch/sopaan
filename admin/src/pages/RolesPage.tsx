@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
+import { LockKeyhole, ShieldCheck, Trash2, UserPlus } from 'lucide-react';
 import {
   inviteTeamMember,
   listTeamMembers,
@@ -110,7 +111,10 @@ export function RolesPage() {
   return (
     <div className="roles-page">
       <div className="panel roles-invite">
-        <h3>Invite teammate</h3>
+        <h3 className="panel-title-icon">
+          <UserPlus aria-hidden strokeWidth={1.8} />
+          Invite teammate
+        </h3>
         <p className="page-sub">Send a signup link for new accounts or upgrade an existing user immediately.</p>
         <div className="roles-invite-form">
           <FormField id="invite-email" label="Email">
@@ -140,13 +144,17 @@ export function RolesPage() {
             onClick={() => inviteMutation.mutate()}
             disabled={inviteMutation.isPending}
           >
+            <UserPlus aria-hidden strokeWidth={1.8} />
             {inviteMutation.isPending ? 'Sending…' : 'Send invite'}
           </ActionButton>
         </div>
       </div>
 
       <div className="panel">
-        <h3>Team</h3>
+        <h3 className="panel-title-icon">
+          <ShieldCheck aria-hidden strokeWidth={1.8} />
+          Team access
+        </h3>
         <p className="page-sub">
           Owner account ({teamQuery.data?.ownerEmail ?? 'seed admin'}) is locked. Role changes apply on the next
           request.
@@ -188,7 +196,12 @@ export function RolesPage() {
               header: 'Actions',
               render: (row: TeamMember) => {
                 if (row.isOwner) {
-                  return <span className="roles-locked">Owner (locked)</span>;
+                  return (
+                    <span className="roles-locked">
+                      <LockKeyhole aria-hidden strokeWidth={1.8} />
+                      Owner (locked)
+                    </span>
+                  );
                 }
 
                 if (row.type === 'invite') {
@@ -198,6 +211,7 @@ export function RolesPage() {
                       onClick={() => removeMutation.mutate(row.id)}
                       disabled={removeMutation.isPending}
                     >
+                      <Trash2 aria-hidden strokeWidth={1.8} />
                       Revoke
                     </ActionButton>
                   );
@@ -226,6 +240,7 @@ export function RolesPage() {
                       onClick={() => removeMutation.mutate(row.id)}
                       disabled={removeMutation.isPending || isSelf}
                     >
+                      <Trash2 aria-hidden strokeWidth={1.8} />
                       Remove
                     </ActionButton>
                   </div>

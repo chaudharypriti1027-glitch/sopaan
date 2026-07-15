@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
+import { Plus, Search } from 'lucide-react';
 import {
   createMentor,
   fetchMentors,
@@ -164,7 +165,7 @@ export function MentorsPage() {
     const verb = nextActive ? 'Reactivate' : 'Deactivate';
     if (
       !window.confirm(
-        `${verb} ${row.name}?${nextActive ? '' : ' They will be hidden from the student mentor list.'}`,
+        `${verb} ${row.name}?${nextActive ? '' : ' They will be hidden from the student mentor list.'}`
       )
     ) {
       return;
@@ -176,12 +177,10 @@ export function MentorsPage() {
     <div>
       <div className="toolbar">
         <div className="search toolbar-search">
-          <svg className="svg" viewBox="0 0 24 24" aria-hidden>
-            <circle cx="11" cy="11" r="7" />
-            <path d="m21 21-4.3-4.3" />
-          </svg>
+          <Search aria-hidden strokeWidth={1.8} />
           <input
             placeholder="Search mentors…"
+            aria-label="Search mentors"
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
@@ -190,6 +189,7 @@ export function MentorsPage() {
           />
         </div>
         <ActionButton variant="gold" onClick={openCreate}>
+          <Plus aria-hidden strokeWidth={1.8} />
           Add mentor
         </ActionButton>
       </div>
@@ -295,7 +295,11 @@ export function MentorsPage() {
               placeholder="Dr. Sharma"
             />
           </FormField>
-          <FormField id="mentor-subjects" label="Subjects (comma-separated)" error={errors.subjects}>
+          <FormField
+            id="mentor-subjects"
+            label="Subjects (comma-separated)"
+            error={errors.subjects}
+          >
             <input
               id="mentor-subjects"
               className="form-input"

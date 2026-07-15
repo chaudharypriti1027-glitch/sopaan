@@ -1,3 +1,16 @@
+import type { LucideIcon } from 'lucide-react-native';
+import {
+  BookOpen,
+  Building2,
+  ClipboardList,
+  Landmark,
+  MapPin,
+  Shield,
+  Sparkles,
+  Swords,
+  TrainFront,
+} from 'lucide-react-native';
+
 export type ExamCategoryId =
   | 'UPSC'
   | 'SSC'
@@ -11,16 +24,16 @@ export type ExamCategoryId =
 
 export type ProfileCategory = 'GEN' | 'OBC' | 'SC' | 'ST' | 'EWS';
 
-export const EXAM_CATEGORIES: { id: ExamCategoryId; label: string; emoji: string }[] = [
-  { id: 'UPSC', label: 'UPSC CSE', emoji: '🏛️' },
-  { id: 'SSC', label: 'SSC', emoji: '📋' },
-  { id: 'Banking', label: 'Banking', emoji: '🏦' },
-  { id: 'Railways', label: 'Railways', emoji: '🚆' },
-  { id: 'Police', label: 'Police', emoji: '🛡️' },
-  { id: 'Defence', label: 'Defence', emoji: '⚔️' },
-  { id: 'State PSC', label: 'State PSC', emoji: '📍' },
-  { id: 'Teaching', label: 'Teaching', emoji: '📚' },
-  { id: 'Other', label: 'Other', emoji: '✨' },
+export const EXAM_CATEGORIES: { id: ExamCategoryId; label: string; Icon: LucideIcon }[] = [
+  { id: 'UPSC', label: 'UPSC CSE', Icon: Landmark },
+  { id: 'SSC', label: 'SSC', Icon: ClipboardList },
+  { id: 'Banking', label: 'Banking', Icon: Building2 },
+  { id: 'Railways', label: 'Railways', Icon: TrainFront },
+  { id: 'Police', label: 'Police', Icon: Shield },
+  { id: 'Defence', label: 'Defence', Icon: Swords },
+  { id: 'State PSC', label: 'State PSC', Icon: MapPin },
+  { id: 'Teaching', label: 'Teaching', Icon: BookOpen },
+  { id: 'Other', label: 'Any exam', Icon: Sparkles },
 ];
 
 export type CareerGoal = {
@@ -90,8 +103,8 @@ export const CAREER_GOALS: CareerGoal[] = [
   },
   {
     id: 'other-govt-job',
-    title: 'Other Government Job',
-    subtitle: 'PSU, clerk, or any sarkari role',
+    title: 'Any other exam',
+    subtitle: 'Boards, entrance, professional, international, or custom',
     examTrack: 'Other',
     categories: ['Other'],
   },

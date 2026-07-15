@@ -5,9 +5,11 @@ import { OtpScreen } from '../screens/OtpScreen';
 import { ProfileSetupScreen } from '../screens/ProfileSetupScreen';
 import { SignupScreen } from '../screens/SignupScreen';
 import {
+  ForgotPasswordScreen,
   GoalSetupScreen,
   OnboardingScreen,
   OtpLoginScreen,
+  ResetPasswordScreen,
   WelcomeScreen,
 } from '../screens/auth';
 import { AdminPortalScreen } from '../screens/auth/AdminPortalScreen';
@@ -31,6 +33,8 @@ export function AuthStack() {
         <Stack.Screen name="Signup" component={SignupScreen} />
         <Stack.Screen name="ProfileSetup" component={ProfileSetupScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+        <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
         <Stack.Screen name="Otp" component={OtpScreen} />
         <Stack.Screen name="OtpLogin" component={OtpLoginScreen} />
         <Stack.Screen name="AdminPortal" component={AdminPortalScreen} />

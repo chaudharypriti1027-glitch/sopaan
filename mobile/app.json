@@ -23,7 +23,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon-foreground.png",
-        "backgroundColor": "#C29A4E"
+        "backgroundColor": "#060D1C"
       },
       "package": "com.sopaan.app",
       "intentFilters": [
@@ -75,8 +75,11 @@
     ],
     "splash": {
       "image": "./assets/splash-icon.png",
-      "backgroundColor": "#232A4D",
+      "backgroundColor": "#060D1C",
       "resizeMode": "contain"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
     },
     "extra": {
       "eas": {

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
+import { EyeOff, Megaphone, Pencil, Save, Trash2, Upload, X } from 'lucide-react';
 import {
   createAdminBanner,
   deleteAdminBanner,
@@ -126,7 +127,9 @@ export function AnnouncementsPage() {
     }
 
     if (needsRef && !form.linkRef.trim()) {
-      showToast(selectedLink?.hint ? `${selectedLink.hint} is required` : 'Link reference is required');
+      showToast(
+        selectedLink?.hint ? `${selectedLink.hint} is required` : 'Link reference is required'
+      );
       return;
     }
 
@@ -184,11 +187,8 @@ export function AnnouncementsPage() {
               </FormField>
             ) : null}
             <div className="banner-actions">
-              <ActionButton
-                variant="gold"
-                onClick={handleSave}
-                disabled={saveMutation.isPending}
-              >
+              <ActionButton variant="gold" onClick={handleSave} disabled={saveMutation.isPending}>
+                <Save aria-hidden strokeWidth={1.8} />
                 {saveMutation.isPending ? 'Saving…' : editingId ? 'Save changes' : 'Save banner'}
               </ActionButton>
               {editingId ? (
@@ -200,6 +200,7 @@ export function AnnouncementsPage() {
                     setForm(defaultForm);
                   }}
                 >
+                  <X aria-hidden strokeWidth={1.8} />
                   Cancel edit
                 </button>
               ) : null}
@@ -213,9 +214,7 @@ export function AnnouncementsPage() {
           </div>
           <div className="home-banner-preview">
             <div className="home-banner-preview-icon" aria-hidden>
-              <svg viewBox="0 0 24 24" className="svg">
-                <path d="m3 11 18-5v12L3 14z" />
-              </svg>
+              <Megaphone strokeWidth={1.8} />
             </div>
             <div>
               <strong>{form.message.trim() || 'Your banner message'}</strong>
@@ -256,6 +255,7 @@ export function AnnouncementsPage() {
             render: (row) => (
               <div className="act">
                 <button type="button" className="abtn" onClick={() => startEdit(row)}>
+                  <Pencil aria-hidden strokeWidth={1.8} />
                   Edit
                 </button>
                 {row.active ? (
@@ -265,6 +265,7 @@ export function AnnouncementsPage() {
                     disabled={publishMutation.isPending}
                     onClick={() => publishMutation.mutate({ id: row.id, active: false })}
                   >
+                    <EyeOff aria-hidden strokeWidth={1.8} />
                     Hide
                   </button>
                 ) : (
@@ -274,6 +275,7 @@ export function AnnouncementsPage() {
                     disabled={publishMutation.isPending}
                     onClick={() => publishMutation.mutate({ id: row.id, active: true })}
                   >
+                    <Upload aria-hidden strokeWidth={1.8} />
                     Publish
                   </button>
                 )}
@@ -283,6 +285,7 @@ export function AnnouncementsPage() {
                   disabled={deleteMutation.isPending}
                   onClick={() => deleteMutation.mutate(row.id)}
                 >
+                  <Trash2 aria-hidden strokeWidth={1.8} />
                   Delete
                 </button>
               </div>

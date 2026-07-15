@@ -127,15 +127,22 @@ export function QuizScreen() {
   }) => {
     setSubmitError(null);
     try {
-      const priorAttempts = await queryClient.fetchQuery({
-        queryKey: queryKeys.attempts.list({ limit: 20 }),
-        queryFn: () => attemptsApi.listAttempts({ limit: 20 }),
-      });
+      let previousRank: number | undefined;
+      try {
+        const priorAttempts = await queryClient.fetchQuery({
+          queryKey: queryKeys.attempts.list({ limit: 20 }),
+          queryFn: () => attemptsApi.listAttempts({ limit: 20 }),
+        });
 
-      const previousRank = priorAttempts?.items.find((a) => {
-        const tid = (a.test as { id?: string; _id?: string })?.id ?? (a.test as { _id?: string })?._id;
-        return tid === testId;
-      })?.rank;
+        previousRank = priorAttempts?.items.find((a) => {
+          const tid =
+            (a.test as { id?: string; _id?: string })?.id ??
+            (a.test as { _id?: string })?._id;
+          return tid === testId;
+        })?.rank;
+      } catch {
+        // Rank comparison is optional and must never prevent a test submission.
+      }
 
       const result = await submitTest.mutateAsync(payload);
 
@@ -158,13 +165,27 @@ export function QuizScreen() {
   }, [handleProError, navigation, queryClient, submitTest, testId]);
 
   const handleSubmit = useCallback(async () => {
-    recordTimeForCurrent();
+    const elapsed = currentQuestion
+      ? Math.round((Date.now() - questionStartedAt.current) / 1000)
+      : 0;
+    const snapshot = currentQuestion
+      ? {
+          ...answers,
+          [currentQuestion.id]: {
+            selectedKey: answers[currentQuestion.id]?.selectedKey,
+            timeSec: (answers[currentQuestion.id]?.timeSec ?? 0) + elapsed,
+          },
+        }
+      : answers;
+
+    setAnswers(snapshot);
+    questionStartedAt.current = Date.now();
 
     const payload = {
       answers: questions.map((q) => ({
         questionId: q.id,
-        selectedKey: answers[q.id]?.selectedKey,
-        timeSec: answers[q.id]?.timeSec ?? 0,
+        selectedKey: snapshot[q.id]?.selectedKey,
+        timeSec: snapshot[q.id]?.timeSec ?? 0,
       })),
     };
 
@@ -182,7 +203,7 @@ export function QuizScreen() {
     }
 
     await doSubmit(payload);
-  }, [answers, doSubmit, questions, recordTimeForCurrent, t]);
+  }, [answers, currentQuestion, doSubmit, questions, t]);
 
   submitOnExpireRef.current = () => {
     if (totalQuestions > 0 && !submitTest.isPending) {

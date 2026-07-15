@@ -33,6 +33,7 @@ appId: com.sopaan.app
 - extendedWaitUntil:
     visible: 'Welcome to Sopaan Pro'
     timeout: 20000
-- tapOn: 'OK'
+- tapOn:
+    id: subscription-success-primary
 - tapOn: 'Profile'
 - assertVisible: 'Sopaan Pro'

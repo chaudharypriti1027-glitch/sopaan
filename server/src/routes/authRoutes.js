@@ -9,6 +9,9 @@ import {
   signupSchema,
   loginSchema,
   setPasswordSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+  changePasswordSchema,
   refreshSchema,
   logoutSchema,
   requestOtpSchema,
@@ -27,6 +30,20 @@ router.get('/team-invite/:token', asyncHandler(authController.getTeamInvite));
 router.post('/login', validate(loginSchema), asyncHandler(authController.login));
 router.post('/google', validate(googleAuthSchema), asyncHandler(authController.googleAuth));
 router.post('/set-password', requireAuth, validate(setPasswordSchema), asyncHandler(authController.setPassword));
+router.post(
+  '/forgot-password',
+  otpBurstLimiter,
+  otpHourlyLimiter,
+  validate(forgotPasswordSchema),
+  asyncHandler(authController.forgotPassword),
+);
+router.post('/reset-password', validate(resetPasswordSchema), asyncHandler(authController.resetPassword));
+router.post(
+  '/change-password',
+  requireAuth,
+  validate(changePasswordSchema),
+  asyncHandler(authController.changePassword),
+);
 router.post('/refresh', validate(refreshSchema), asyncHandler(authController.refresh));
 router.post('/logout', optionalAuth, validate(logoutSchema), asyncHandler(authController.logout));
 router.post('/request-otp', otpBurstLimiter, otpHourlyLimiter, validate(requestOtpSchema), asyncHandler(authController.requestOtp));

@@ -17,6 +17,40 @@ describe('outputValidation', () => {
 
     expect(result.score).toBe(8);
     expect(result.subScores.content).toBe(7);
+    expect(result.strengths).toEqual([]);
+    expect(result.nextSteps).toEqual([]);
+  });
+
+  it('accepts optional strengths and nextSteps lists', () => {
+    const result = validateAnswerEvaluation(
+      {
+        score: 8,
+        subScores: { content: 7, structure: 6, clarity: 8 },
+        strengths: ['  Clear opening  '],
+        feedback: ['Add one example'],
+        nextSteps: ['Rewrite conclusion', 'Practice one timed answer'],
+      },
+      10,
+    );
+
+    expect(result.strengths).toEqual(['Clear opening']);
+    expect(result.nextSteps).toEqual(['Rewrite conclusion', 'Practice one timed answer']);
+  });
+
+  it('treats null strengths and nextSteps as empty arrays', () => {
+    const result = validateAnswerEvaluation(
+      {
+        score: 5,
+        subScores: { content: 5, structure: 5, clarity: 5 },
+        strengths: null,
+        feedback: ['Keep practicing'],
+        nextSteps: null,
+      },
+      10,
+    );
+
+    expect(result.strengths).toEqual([]);
+    expect(result.nextSteps).toEqual([]);
   });
 
   it('rejects evaluation scores above max marks', () => {

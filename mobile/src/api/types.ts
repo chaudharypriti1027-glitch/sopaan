@@ -16,6 +16,7 @@ export type User = {
   isPremium: boolean;
   premiumPlan?: 'monthly' | 'yearly' | 'trial' | null;
   premiumExpiresAt?: string | null;
+  premiumTrialUsed?: boolean;
   coins: number;
   streak?: UserStreak;
   pushNotificationsEnabled?: boolean;

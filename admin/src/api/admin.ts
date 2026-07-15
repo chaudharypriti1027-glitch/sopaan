@@ -3,6 +3,23 @@ import type { AdminStats, AttemptsSeriesResponse, AuditLogResponse, LoginRespons
 import { persistSession } from './storage';
 import { isStaffRole } from '../auth/roles';
 
+const EMPTY_STATS: AdminStats = {
+  activeStudents: 0,
+  totalStudents: 0,
+  attemptsLast30Days: 0,
+  testsPublished: 0,
+  pendingReviews: 0,
+  pendingQuestionReviews: 0,
+  questionsTotal: 0,
+  questionsPublished: 0,
+  coursesPublished: 0,
+  currentAffairsPublished: 0,
+  liveClasses: 0,
+  examsTotal: 0,
+  mentorsTotal: 0,
+  aiFeedbackPending: 0,
+};
+
 export async function loginAdmin(email: string, password: string) {
   const data = await apiRequest<LoginResponse>(
     '/api/auth/login',
@@ -10,7 +27,7 @@ export async function loginAdmin(email: string, password: string) {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     },
-    { retryOn401: false },
+    { retryOn401: false }
   );
 
   const role = data.profile.role ?? 'student';
@@ -32,16 +49,32 @@ export async function loginAdmin(email: string, password: string) {
   return data;
 }
 
-export function fetchAdminStats() {
-  return apiRequest<AdminStats>('/api/admin/stats');
+export async function fetchAdminStats() {
+  const data = await apiRequest<Partial<AdminStats> | null>('/api/admin/stats');
+  return { ...EMPTY_STATS, ...(data ?? {}) };
 }
 
-export function fetchAttemptsSeries(days = 14) {
-  return apiRequest<AttemptsSeriesResponse>(`/api/admin/stats/attempts?days=${days}`);
+export async function fetchAttemptsSeries(days = 14) {
+  const data = await apiRequest<AttemptsSeriesResponse | null>(
+    `/api/admin/stats/attempts?days=${days}`
+  );
+  const series = Array.isArray(data?.series) ? data.series : [];
+  return {
+    days: data?.days ?? days,
+    series: series.map((point) => ({
+      date: point?.date ?? '',
+      label: point?.label ?? '',
+      value: Number.isFinite(point?.value) ? point.value : 0,
+    })),
+  };
 }
 
-export function fetchAuditLogs(limit = 20) {
-  return apiRequest<AuditLogResponse>(`/api/admin/audit-logs?limit=${limit}`);
+export async function fetchAuditLogs(limit = 20) {
+  const data = await apiRequest<AuditLogResponse | null>(`/api/admin/audit-logs?limit=${limit}`);
+  return {
+    items: Array.isArray(data?.items) ? data.items : [],
+    nextCursor: data?.nextCursor ?? null,
+  };
 }
 
 export function recordAuditTest() {

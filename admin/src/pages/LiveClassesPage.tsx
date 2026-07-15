@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
+import { CalendarPlus, CircleX, ExternalLink, EyeOff, Radio, Upload } from 'lucide-react';
 import {
   cancelAdminLiveClass,
   createAdminLiveClass,
@@ -68,7 +69,7 @@ export function LiveClassesPage() {
   const liveNow = items.find((row) => row.status === 'live') ?? null;
   const upcoming = items.filter((row) => row.status === 'scheduled');
   const recordings = (recordingsQuery.data?.items ?? items).filter(
-    (row) => row.status === 'ended' && row.recordingUrl,
+    (row) => row.status === 'ended' && row.recordingUrl
   );
 
   const hasLiveClasses = (query.data?.summary.liveCount ?? 0) > 0;
@@ -90,7 +91,7 @@ export function LiveClassesPage() {
 
   const activeClass = useMemo(
     () => items.find((row) => row.id === activeClassId) ?? liveNow,
-    [items, activeClassId, liveNow],
+    [items, activeClassId, liveNow]
   );
 
   const tokenQuery = useQuery({
@@ -218,6 +219,7 @@ export function LiveClassesPage() {
             type="button"
             className={`subtab ${tab === key ? 'on' : ''}`}
             onClick={() => setTab(key)}
+            aria-pressed={tab === key}
           >
             {key === 'room' && liveNow ? <span className="lv" /> : null}
             {copy.tabs[labelKey]}
@@ -331,11 +333,8 @@ export function LiveClassesPage() {
               />
               {copy.schedule.notifyLabel}
             </label>
-            <ActionButton
-              variant="gold"
-              onClick={handleCreate}
-              disabled={createMutation.isPending}
-            >
+            <ActionButton variant="gold" onClick={handleCreate} disabled={createMutation.isPending}>
+              <CalendarPlus aria-hidden strokeWidth={1.8} />
               {copy.schedule.submit}
             </ActionButton>
           </div>
@@ -346,6 +345,7 @@ export function LiveClassesPage() {
         <>
           <div className="toolbar">
             <ActionButton variant="gold" onClick={() => setTab('schedule')}>
+              <CalendarPlus aria-hidden strokeWidth={1.8} />
               {copy.upcoming.scheduleBtn}
             </ActionButton>
           </div>
@@ -366,14 +366,18 @@ export function LiveClassesPage() {
                 key: 'when',
                 header: copy.upcoming.columns.when,
                 render: (row) =>
-                  row.status === 'live' ? copy.upcoming.now : formatWhen(row.startsAt ?? row.scheduledAt),
+                  row.status === 'live'
+                    ? copy.upcoming.now
+                    : formatWhen(row.startsAt ?? row.scheduledAt),
               },
               {
                 key: 'status',
                 header: copy.upcoming.columns.status,
                 render: (row) => (
                   <span className={`pill ${row.status === 'live' ? 'p-live' : 'p-draft'}`}>
-                    {row.status === 'live' ? copy.upcoming.statusLive : copy.upcoming.statusScheduled}
+                    {row.status === 'live'
+                      ? copy.upcoming.statusLive
+                      : copy.upcoming.statusScheduled}
                   </span>
                 ),
               },
@@ -383,15 +387,27 @@ export function LiveClassesPage() {
                 align: 'right',
                 render: (row) => (
                   <div className="act">
-                    <button type="button" className="abtn pri" onClick={() => openRoom(row)}>
+                    <button
+                      type="button"
+                      className="abtn pri"
+                      disabled={startMutation.isPending}
+                      onClick={() => openRoom(row)}
+                    >
+                      <Radio aria-hidden strokeWidth={1.8} />
                       {row.status === 'live' ? copy.upcoming.openRoom : copy.upcoming.goLive}
                     </button>
                     {row.status === 'scheduled' ? (
                       <button
                         type="button"
                         className="abtn no"
-                        onClick={() => cancelMutation.mutate(row.id)}
+                        disabled={cancelMutation.isPending}
+                        onClick={() => {
+                          if (window.confirm(`Cancel “${row.title}”?`)) {
+                            cancelMutation.mutate(row.id);
+                          }
+                        }}
                       >
+                        <CircleX aria-hidden strokeWidth={1.8} />
                         {copy.upcoming.cancel}
                       </button>
                     ) : null}
@@ -448,7 +464,7 @@ export function LiveClassesPage() {
                     ? copy.recordings.statusPublished
                     : row.recordingStatus === 'ready'
                       ? copy.recordings.statusReady
-                      : row.recordingStatus ?? copy.recordings.statusPending}
+                      : (row.recordingStatus ?? copy.recordings.statusPending)}
                 </span>
               ),
             },
@@ -460,6 +476,7 @@ export function LiveClassesPage() {
                 <div className="act">
                   {row.recordingUrl ? (
                     <a className="abtn" href={row.recordingUrl} target="_blank" rel="noreferrer">
+                      <ExternalLink aria-hidden strokeWidth={1.8} />
                       {copy.recordings.open}
                     </a>
                   ) : null}
@@ -471,6 +488,7 @@ export function LiveClassesPage() {
                         disabled={publishMutation.isPending}
                         onClick={() => publishMutation.mutate({ id: row.id, published: false })}
                       >
+                        <EyeOff aria-hidden strokeWidth={1.8} />
                         {copy.recordings.unpublish}
                       </button>
                     ) : (
@@ -480,6 +498,7 @@ export function LiveClassesPage() {
                         disabled={publishMutation.isPending}
                         onClick={() => publishMutation.mutate({ id: row.id, published: true })}
                       >
+                        <Upload aria-hidden strokeWidth={1.8} />
                         {copy.recordings.publish}
                       </button>
                     )

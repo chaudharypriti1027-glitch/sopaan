@@ -15,6 +15,7 @@ export const JOB_NAMES = Object.freeze({
   DAILY_LEAGUE_MAINTENANCE: 'daily-league-maintenance',
   ADMIN_NOTIFICATION_SEND: 'admin-notification-send',
   BOOK_GEN: 'book-gen',
+  ATTEMPT_COACHING: 'attempt-coaching',
 });
 
 export const jobConfig = Object.freeze({
@@ -30,7 +31,7 @@ export const jobConfig = Object.freeze({
     [JOB_NAMES.OBSERVABILITY_SPIKE_CHECK]: readCron('JOB_CRON_OBS_SPIKE_CHECK', '*/5 * * * *'),
     [JOB_NAMES.DAILY_LEAGUE_MAINTENANCE]: readCron(
       'JOB_CRON_DAILY_LEAGUE_MAINTENANCE',
-      '5 0 * * *',
+      '5 0 * * *'
     ),
   }),
   caDigestEnabled: env.caDigestEnabled,

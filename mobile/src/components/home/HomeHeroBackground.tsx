@@ -1,34 +1,20 @@
 import { StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { HOME_UI } from './homeTheme';
 
-/** Premium hero backdrop — navy gradient with a soft gold wash (no mesh clutter). */
+/** Navy header atmosphere — gold wash + soft rings to match Home HTML. */
 export function HomeHeroBackground() {
   return (
     <View style={styles.root} pointerEvents="none">
       <LinearGradient
-        colors={['#2E3766', '#272F58', '#232A4D', '#1A1F3B']}
-        locations={[0, 0.4, 0.72, 1]}
-        start={{ x: 0.1, y: 0 }}
+        colors={[...HOME_UI.heroGradient]}
+        locations={[0, 0.52, 1]}
+        start={{ x: 0.15, y: 0 }}
         end={{ x: 0.9, y: 1 }}
         style={StyleSheet.absoluteFill}
       />
-
-      <LinearGradient
-        colors={['rgba(194,154,78,0.1)', 'transparent']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0.7, y: 0.5 }}
-        style={styles.goldSheen}
-      />
-
-      <LinearGradient
-        colors={['transparent', 'rgba(26,31,59,0.45)']}
-        start={{ x: 0.5, y: 0 }}
-        end={{ x: 0.5, y: 1 }}
-        style={styles.bottomVignette}
-      />
-
       <View style={styles.orbGold} />
-      <View style={styles.orbSage} />
+      <View style={styles.orbRing} />
     </View>
   );
 }
@@ -38,36 +24,24 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     overflow: 'hidden',
   },
-  goldSheen: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: '36%',
-  },
-  bottomVignette: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: 56,
-  },
   orbGold: {
     position: 'absolute',
-    top: -40,
-    right: -30,
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    backgroundColor: 'rgba(194,154,78,0.12)',
+    top: -90,
+    right: -70,
+    width: 260,
+    height: 260,
+    borderRadius: 130,
+    backgroundColor: 'rgba(201,162,75,0.28)',
+    opacity: 0.85,
   },
-  orbSage: {
+  orbRing: {
     position: 'absolute',
-    bottom: 20,
-    left: -50,
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: 'rgba(95,138,123,0.1)',
+    bottom: -120,
+    left: -60,
+    width: 240,
+    height: 240,
+    borderRadius: 120,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
   },
 });

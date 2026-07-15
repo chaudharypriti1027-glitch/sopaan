@@ -9,7 +9,7 @@ import { htmlToPlainText } from '../utils/bookContent.js';
 import { sanitizeBookHtml } from '../utils/sanitizeBookHtml.js';
 
 const BOOK_GEN_SYSTEM_PROMPT =
-  'You are an exam-prep author for Indian government exams. Write clear, accurate, exam-focused content for the chapter below. Output valid JSON only: { "summary": string, "pages": [{ "html": string }] }. Each page ≈ 400–600 words, use headings, worked examples with steps, and a short \'Key points\' list. No fluff, no markdown fences.';
+  'You are an exam-prep author helping students crack any exam worldwide. Write clear, accurate, exam-focused content for the chapter below. Adapt to the exam/subject context when provided. Output valid JSON only: { "summary": string, "pages": [{ "html": string }] }. Each page ≈ 400–600 words, use headings, worked examples with steps, and a short \'Key points\' list. No fluff, no markdown fences.';
 
 const chapterOutputSchema = z.object({
   summary: z.string().trim().min(1),
@@ -17,7 +17,7 @@ const chapterOutputSchema = z.object({
     .array(
       z.object({
         html: z.string().trim().min(1),
-      }),
+      })
     )
     .min(1),
 });
@@ -100,7 +100,7 @@ async function updateJobProgress(job, partial) {
   const updated = await BookGenJob.findByIdAndUpdate(
     job._id,
     { $set: partial },
-    { new: true },
+    { new: true }
   ).lean();
 
   if (!updated) {
@@ -145,8 +145,8 @@ export async function runBookGenJob({ jobId }) {
     throw new Error(`BookGenJob not found: ${jobId}`);
   }
 
-  if (job.state === 'done' || job.state === 'running') {
-    return { skipped: true, reason: `already_${job.state}` };
+  if (job.state === 'done') {
+    return { skipped: true, reason: 'already_done' };
   }
 
   const book = await Book.findById(job.bookId);
@@ -171,12 +171,18 @@ export async function runBookGenJob({ jobId }) {
     return { failed: true, reason: 'no_chapters' };
   }
 
+  const existingChapters = await Chapter.find({ bookId: book._id }).select('title').lean();
+  const completedTitles = new Set(existingChapters.map((chapter) => chapter.title));
+  const priorFailures = (job.metrics?.failedChapters ?? []).filter(
+    (failure) => !completedTitles.has(failure.title)
+  );
+
   let metrics = {
     ...(job.metrics ?? {}),
     chaptersTotal: chapters.length,
-    chaptersDone: job.metrics?.chaptersDone ?? 0,
-    chaptersFailed: job.metrics?.chaptersFailed ?? 0,
-    failedChapters: [...(job.metrics?.failedChapters ?? [])],
+    chaptersDone: chapters.filter((title) => completedTitles.has(title)).length,
+    chaptersFailed: priorFailures.length,
+    failedChapters: priorFailures,
     inputTokens: job.metrics?.inputTokens ?? 0,
     outputTokens: job.metrics?.outputTokens ?? 0,
     estimatedCostUsd: job.metrics?.estimatedCostUsd ?? 0,
@@ -193,12 +199,20 @@ export async function runBookGenJob({ jobId }) {
     (await Page.findOne({ bookId: book._id }).sort({ order: -1 }).select('order').lean())?.order ??
     0;
 
-  const existingChapterCount =
-    (await Chapter.countDocuments({ bookId: book._id })) ?? 0;
+  let nextChapterOrder = existingChapters.length;
 
   for (let index = 0; index < chapters.length; index += 1) {
     const chapterTitle = chapters[index];
-    const chapterOrder = existingChapterCount + index + 1;
+    const progress = Math.round(((index + 1) / chapters.length) * 100);
+
+    if (completedTitles.has(chapterTitle)) {
+      await updateJobProgress(job, {
+        state: 'running',
+        progress,
+        metrics,
+      });
+      continue;
+    }
 
     try {
       const { chapter: chapterOutput, usage } = await generateChapterWithFallback({
@@ -212,41 +226,57 @@ export async function runBookGenJob({ jobId }) {
 
       metrics = accumulateUsage(metrics, usage);
 
+      const validPages = chapterOutput.pages
+        .map((page) => sanitizeBookHtml(page.html))
+        .filter(Boolean);
+      if (!validPages.length) {
+        throw new Error('Generated chapter did not contain safe page content');
+      }
+
       const chapter = await Chapter.create({
         bookId: book._id,
-        order: chapterOrder,
+        order: ++nextChapterOrder,
         title: chapterTitle,
         summary: chapterOutput.summary,
       });
 
-      for (const page of chapterOutput.pages) {
-        const html = sanitizeBookHtml(page.html);
-        if (!html) {
-          continue;
-        }
-
+      const pageDocs = validPages.map((html) => {
         globalPageOrder += 1;
-        await Page.create({
+        return {
           bookId: book._id,
           chapterId: chapter._id,
           order: globalPageOrder,
           html,
           plainText: htmlToPlainText(html),
-        });
+        };
+      });
+      try {
+        await Page.insertMany(pageDocs);
+      } catch (pageError) {
+        await Page.deleteMany({ chapterId: chapter._id });
+        await Chapter.findByIdAndDelete(chapter._id);
+        throw pageError;
       }
 
+      completedTitles.add(chapterTitle);
+      const failedChapters = (metrics.failedChapters ?? []).filter(
+        (failure) => failure.title !== chapterTitle
+      );
       metrics = {
         ...metrics,
-        chaptersDone: (metrics.chaptersDone ?? 0) + 1,
+        chaptersDone: chapters.filter((title) => completedTitles.has(title)).length,
+        chaptersFailed: failedChapters.length,
+        failedChapters,
       };
     } catch (err) {
+      const failedChapters = [
+        ...(metrics.failedChapters ?? []).filter((failure) => failure.title !== chapterTitle),
+        { title: chapterTitle, error: err.code ?? 'GENERATION_FAILED' },
+      ];
       metrics = {
         ...metrics,
-        chaptersFailed: (metrics.chaptersFailed ?? 0) + 1,
-        failedChapters: [
-          ...(metrics.failedChapters ?? []),
-          { title: chapterTitle, error: err.message?.slice(0, 500) ?? 'Generation failed' },
-        ],
+        chaptersFailed: failedChapters.length,
+        failedChapters,
       };
 
       logger.error('[bookGen] chapter failed after retry', {
@@ -256,7 +286,6 @@ export async function runBookGenJob({ jobId }) {
       });
     }
 
-    const progress = Math.round(((index + 1) / chapters.length) * 100);
     await updateJobProgress(job, {
       state: 'running',
       progress,
@@ -266,14 +295,11 @@ export async function runBookGenJob({ jobId }) {
 
   await Book.findByIdAndUpdate(book._id, { pages: globalPageOrder });
 
-  const allFailed = (metrics.chaptersDone ?? 0) === 0;
   const partialFailure = (metrics.chaptersFailed ?? 0) > 0;
-  const finalState = allFailed ? 'failed' : 'done';
+  const finalState = partialFailure ? 'failed' : 'done';
   const errorMessage = partialFailure
-    ? `${metrics.chaptersFailed} chapter(s) failed`
-    : allFailed
-      ? 'All chapters failed to generate'
-      : undefined;
+    ? `${metrics.chaptersFailed} chapter(s) failed after model fallback`
+    : undefined;
 
   const finished = await updateJobProgress(job, {
     state: finalState,
@@ -293,6 +319,10 @@ export async function runBookGenJob({ jobId }) {
     estimatedCostUsd: metrics.estimatedCostUsd,
     feature: 'book_generation',
   });
+
+  if (partialFailure) {
+    throw new Error(errorMessage);
+  }
 
   return {
     jobId,

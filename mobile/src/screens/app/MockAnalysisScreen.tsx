@@ -7,6 +7,8 @@ import { useTranslation } from 'react-i18next';
 import {
   AIBadge,
   BarChart,
+  Button,
+  Card,
   ComparisonBars,
   FeatureScreenLayout,
   PremiumFeatureCard,
@@ -15,7 +17,7 @@ import {
   RankRing,
   SectionTitle,
 } from '../../components';
-import { useAttempt, useAttempts } from '../../hooks';
+import { useAttempt, useAttempts, useProGate } from '../../hooks';
 import type { MainStackParamList } from '../../navigation/types';
 import { useTheme } from '../../theme';
 
@@ -35,6 +37,7 @@ export function MockAnalysisScreen() {
   const route = useRoute<MockAnalysisRoute>();
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
+  const { isPro, openPaywall } = useProGate();
 
   const attemptsQuery = useAttempts({ limit: 1 });
   const attemptId = route.params?.attemptId ?? attemptsQuery.data?.items[0]?.id;
@@ -73,6 +76,29 @@ export function MockAnalysisScreen() {
     label: section.subject.slice(0, 8),
     value: Math.max(1, Math.round(section.totalTimeSec / 60)),
   }));
+
+  if (!isPro) {
+    return (
+      <FeatureScreenLayout
+        title={t('mockAnalysis.title')}
+        subtitle={t('mockAnalysis.proFeature')}
+        contentStyle={styles.lockedWrap}
+      >
+        <Card style={styles.lockedCard}>
+          <BarChart2 size={32} color={theme.colors.brand.primary} />
+          <Text style={styles.lockedTitle}>{t('mockAnalysis.lockedTitle')}</Text>
+          <Text style={styles.lockedBody}>{t('mockAnalysis.lockedBody')}</Text>
+          <Button
+            label={t('manageSubscription.upgradeToPro')}
+            variant="gold"
+            fullWidth
+            onPress={() => openPaywall({ feature: 'detailed_analytics' })}
+            accessibilityHint={t('manageSubscription.upgradeA11yHint')}
+          />
+        </Card>
+      </FeatureScreenLayout>
+    );
+  }
 
   if (attemptsQuery.isLoading || attemptQuery.isLoading) {
     return (
@@ -175,6 +201,26 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       alignItems: 'center',
       justifyContent: 'center',
       padding: theme.spacing.xl,
+    },
+    lockedWrap: {
+      gap: theme.spacing.md,
+      paddingTop: theme.spacing.md,
+    },
+    lockedCard: {
+      gap: theme.spacing.md,
+      alignItems: 'center',
+      padding: theme.spacing.xl,
+    },
+    lockedTitle: {
+      ...theme.typography.presets.h3,
+      color: theme.colors.text.primary,
+      textAlign: 'center',
+    },
+    lockedBody: {
+      ...theme.typography.presets.body,
+      color: theme.colors.text.secondary,
+      textAlign: 'center',
+      lineHeight: 22,
     },
     emptyWrap: {
       alignItems: 'center',

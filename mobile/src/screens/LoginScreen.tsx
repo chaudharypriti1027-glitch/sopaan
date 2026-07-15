@@ -7,6 +7,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import {
   AuthAnimatedSection,
+  AuthAltLinks,
   AuthDivider,
   AuthErrorBanner,
   AuthFooterLink,
@@ -15,15 +16,15 @@ import {
   AuthPremiumField,
   AuthPremiumHero,
   AuthScreen,
-  AuthTrustNote,
-  LoginMethodTiles,
-  LoginPerkStrip,
+  AuthSocialButton,
+  GhostButton,
   PrimaryButton,
   useShakeOnError,
 } from '../components/auth';
 import { authApi, parseApiError } from '../api';
 import { completeGoogleLogin } from '../auth/completeGoogleLogin';
 import { completeStudentLogin, isAdminAppAccessError } from '../auth/studentSession';
+import { getUserFacingMessage } from '../errors/getUserFacingMessage';
 import { useGoogleSignIn } from '../auth/useGoogleSignIn';
 import type { AuthStackParamList, RootStackParamList } from '../navigation/types';
 
@@ -106,7 +107,7 @@ export function LoginScreen() {
       setFormError(
         parsed.code === 'INVALID_CREDENTIALS'
           ? t('login.checkEmailPassword')
-          : parsed.message,
+          : getUserFacingMessage(err),
       );
     } finally {
       setLoginLoading(false);
@@ -134,15 +135,12 @@ export function LoginScreen() {
     <AuthScreen scrollProps={{ keyboardShouldPersistTaps: 'handled' }}>
       <AuthPremiumHero variant="login" />
 
-      <Animated.View entering={FadeInDown.duration(440).delay(80)} style={shakeStyle}>
+      <Animated.View entering={FadeInDown.duration(400).delay(80)} style={shakeStyle}>
         <AuthFormCard overlap premium>
           <AuthFormIntro
-            eyebrow={t('login.formEyebrow')}
             title={t('login.emailTitle')}
             subtitle={t('login.emailSubtitle')}
           />
-
-          <LoginPerkStrip />
 
           <AuthAnimatedSection index={0}>
             <AuthPremiumField
@@ -180,6 +178,20 @@ export function LoginScreen() {
             />
           </AuthAnimatedSection>
 
+          <AuthAltLinks
+            links={[
+              {
+                label: t('login.forgotPassword'),
+                onPress: () =>
+                  navigation.navigate('ForgotPassword', {
+                    email: email.trim() || undefined,
+                  }),
+                testID: 'login-forgot-password',
+                accessibilityLabel: t('login.forgotPassword'),
+              },
+            ]}
+          />
+
           {formError ? (
             <AuthErrorBanner message={formError} testID="login-form-error" />
           ) : null}
@@ -196,14 +208,21 @@ export function LoginScreen() {
 
           <AuthDivider label={t('login.dividerOr')} />
 
-          <AuthAnimatedSection index={3}>
-            <LoginMethodTiles
-              onGooglePress={() => void handleGoogleSignIn()}
-              onPhonePress={() => navigation.navigate('OtpLogin')}
-              googleDisabled={busy}
-              phoneDisabled={busy}
+          <View style={styles.altMethods}>
+            <AuthSocialButton
+              label={t('login.continueGoogle')}
+              variant="google"
+              disabled={busy}
+              onPress={() => void handleGoogleSignIn()}
+              testID="login-google"
             />
-          </AuthAnimatedSection>
+            <GhostButton
+              label={t('login.usePhoneInstead')}
+              disabled={busy}
+              onPress={() => navigation.navigate('OtpLogin')}
+              testID="login-use-phone"
+            />
+          </View>
         </AuthFormCard>
 
         <View style={styles.footer}>
@@ -214,7 +233,6 @@ export function LoginScreen() {
             testID="login-signup-link"
             accessibilityLabel={t('login.createAccountA11y')}
           />
-          <AuthTrustNote message={t('brand.secureNote')} testID="login-trust-note" />
         </View>
       </Animated.View>
     </AuthScreen>
@@ -225,6 +243,9 @@ function createStyles() {
   return StyleSheet.create({
     submitBtn: {
       marginTop: 4,
+    },
+    altMethods: {
+      gap: 8,
     },
     footer: {
       gap: 12,

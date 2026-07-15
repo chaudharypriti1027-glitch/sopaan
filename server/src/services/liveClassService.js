@@ -13,9 +13,18 @@ import {
   CONTENT_DOMAINS,
   notifyStudentsContentUpdated,
 } from './contentSyncService.js';
+import { isPremiumActive } from './premiumService.js';
 
 const LIVE_CLASS_NOTIFICATION_TYPE = NOTIFICATION_TYPES.LIVE_CLASS_SCHEDULED;
 const LIVE_CLASS_LIVE_NOTIFICATION_TYPE = NOTIFICATION_TYPES.LIVE_CLASS_LIVE;
+
+function toIsoOrNull(value) {
+  if (value == null || value === '') {
+    return null;
+  }
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
 
 function resolveRoomName(doc) {
   return doc.roomName ?? doc.streamingRoomId;
@@ -42,8 +51,8 @@ function formatLiveClass(doc, { reminderSet = false } = {}) {
     exam: doc.exam ?? doc.examTag,
     examTag: doc.exam ?? doc.examTag,
     topic: doc.topic ?? null,
-    startsAt: resolveStartsAt(doc),
-    scheduledAt: resolveStartsAt(doc),
+    startsAt: toIsoOrNull(resolveStartsAt(doc)),
+    scheduledAt: toIsoOrNull(resolveStartsAt(doc)),
     durationMin: doc.durationMin,
     thumbnailColor: doc.thumbnailColor,
     coverUrl: doc.coverUrl ?? doc.thumbnailUrl ?? null,
@@ -51,8 +60,8 @@ function formatLiveClass(doc, { reminderSet = false } = {}) {
     status: doc.status,
     roomName: resolveRoomName(doc),
     autoRecord: Boolean(doc.autoRecord),
-    startedAt: doc.startedAt ?? null,
-    endedAt: doc.endedAt ?? null,
+    startedAt: toIsoOrNull(doc.startedAt),
+    endedAt: toIsoOrNull(doc.endedAt),
     viewersPeak: doc.viewersPeak ?? 0,
     viewers,
     attendeeCount: doc.attendeeCount ?? viewers,
@@ -553,13 +562,15 @@ export async function createLiveToken(userId, liveClassId) {
     throw new AppError('Live streaming is not configured', 503, 'STREAMING_NOT_CONFIGURED');
   }
 
+  const user = await User.findById(userId).select('name role isPremium premiumExpiresAt').lean();
+  const host = isLiveClassHost(userId, liveClass, user);
   const roomName = resolveRoomName(liveClass);
 
   if (liveClass.status === 'scheduled') {
     return {
       status: 'scheduled',
       liveClassId: liveClass._id.toString(),
-      startsAt: resolveStartsAt(liveClass),
+      startsAt: toIsoOrNull(resolveStartsAt(liveClass)),
       roomName,
       token: null,
       message: 'This class has not started yet',
@@ -581,10 +592,24 @@ export async function createLiveToken(userId, liveClassId) {
     throw new AppError('This class is not available for viewing', 400, 'NOT_LIVE');
   }
 
-  const provider = getStreamingProvider();
-  const user = await User.findById(userId).select('name role').lean();
-  const host = isLiveClassHost(userId, liveClass, user);
+  // Pro is required only when actually joining a live room as a student viewer.
+  if (!host && !isAdminRole(user?.role)) {
+    const hasPro = await isPremiumActive(user ?? { _id: userId });
+    if (!hasPro) {
+      throw new AppError(
+        'Upgrade to Sopaan Pro to join live classes.',
+        403,
+        'PRO_REQUIRED',
+        {
+          paywallTitle: 'Unlock live classes',
+          paywallMessage:
+            'Interactive faculty sessions and recordings are included with Sopaan Pro.',
+        },
+      );
+    }
+  }
 
+  const provider = getStreamingProvider();
   if (typeof provider.createRoom === 'function') {
     await safeCreateStreamingRoom(provider, {
       roomName,

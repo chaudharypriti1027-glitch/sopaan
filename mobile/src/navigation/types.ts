@@ -18,6 +18,8 @@ export type AuthStackParamList = {
   ProfileSetup: undefined;
   Signup: undefined;
   Login: undefined;
+  ForgotPassword: { email?: string } | undefined;
+  ResetPassword: { email: string };
   Otp: {
     phone?: string;
     email?: string;
@@ -64,7 +66,7 @@ export type MainStackParamList = {
   };
   ExamCalendar: undefined;
   ExamDetail: { examId?: string };
-  Books: { examId?: string };
+  Books: { examId?: string; downloadedOnly?: boolean } | undefined;
   BookReader: { bookId: string; startPage?: number; startLine?: number };
   Courses: undefined;
   CourseDetail: { courseId: string };
@@ -100,6 +102,7 @@ export type MainStackParamList = {
   Premium: PremiumPaywallParams | undefined;
   ManageSubscription: undefined;
   Settings: undefined;
+  ChangePassword: undefined;
   PrivacyPolicy: undefined;
   DeleteAccount: undefined;
   SuccessStories: undefined;

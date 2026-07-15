@@ -25,12 +25,14 @@ export type TierFeatureConfig = {
 export type TierUsageSnapshot = {
   dateKey: string;
   aiGenerateTests: number;
+  aiEvaluations?: number;
   mocksSubmitted: number;
   aiDoubtsFast: number;
   aiDoubtsQuality: number;
   limits: TierLimits;
   remaining: {
     aiGenerateTests: number;
+    aiEvaluations?: number;
     mocksSubmitted: number;
     aiDoubtsFast: number;
     aiDoubtsQuality: number;
@@ -41,6 +43,7 @@ export type TierStatusResponse = {
   isPro: boolean;
   showAds: boolean;
   detailedAnalytics: boolean;
+  welcomeMonthEnabled?: boolean;
   limits: TierLimits;
   features: Record<TierFeatureKey, TierFeatureConfig>;
   usage: TierUsageSnapshot | null;

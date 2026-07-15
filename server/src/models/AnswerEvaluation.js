@@ -39,6 +39,14 @@ const answerEvaluationSchema = new mongoose.Schema(
       type: [String],
       default: [],
     },
+    strengths: {
+      type: [String],
+      default: [],
+    },
+    nextSteps: {
+      type: [String],
+      default: [],
+    },
     reviewStatus: {
       type: String,
       enum: ['none', 'pending', 'kept', 'overridden'],

@@ -149,6 +149,9 @@ export function createMockCurrentAffair(
 }
 
 export const MOCK_PREMIUM_PLANS = {
+  provider: 'razorpay',
+  currency: 'INR',
+  configured: true,
   plans: [
     {
       id: 'monthly' as const,
@@ -156,6 +159,7 @@ export const MOCK_PREMIUM_PLANS = {
       displayAmount: '₹299/mo',
       description: 'Billed monthly',
       amountPaise: 29900,
+      interval: 'month',
     },
     {
       id: 'yearly' as const,
@@ -163,6 +167,7 @@ export const MOCK_PREMIUM_PLANS = {
       displayAmount: '₹2,499/yr',
       description: 'Best for serious prep',
       amountPaise: 249900,
+      interval: 'year',
     },
   ],
 };

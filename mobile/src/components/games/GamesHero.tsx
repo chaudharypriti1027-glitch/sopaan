@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { ChevronLeft, ChevronRight, Flame, Gamepad2 } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, Coins, Flame, Gamepad2 } from 'lucide-react-native';
 import { useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -78,7 +78,7 @@ export function GamesHero({
         </View>
 
         <GlassSurface tone="dark" intensity={22} borderRadius={100} style={styles.coinPill}>
-          <Text style={styles.coinEmoji}>🪙</Text>
+          <Coins size={14} color={GAMES_UI.gold} strokeWidth={2.2} />
           <NumText style={styles.coinValue}>{coins}</NumText>
         </GlassSurface>
       </View>
@@ -106,7 +106,10 @@ export function GamesHero({
 
         <View style={styles.stats}>
           <View style={styles.stat}>
-            <Text style={styles.statVal}>🔥 {streak}</Text>
+            <View style={styles.statValRow}>
+              <Flame size={14} color={GAMES_UI.gold} fill={GAMES_UI.gold} strokeWidth={2} />
+              <NumText style={styles.statVal}>{streak}</NumText>
+            </View>
             <Text style={styles.statLbl}>{streakLabel}</Text>
           </View>
           <View style={styles.stat}>
@@ -194,7 +197,6 @@ function createStyles(topInset: number) {
       paddingHorizontal: 12,
       paddingVertical: 7,
     },
-    coinEmoji: { fontSize: 13 },
     coinValue: {
       fontSize: 13,
       fontWeight: '800',
@@ -275,6 +277,11 @@ function createStyles(topInset: number) {
     },
     pressed: {
       opacity: 0.88,
+    },
+    statValRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
     },
     statVal: {
       fontSize: 15,

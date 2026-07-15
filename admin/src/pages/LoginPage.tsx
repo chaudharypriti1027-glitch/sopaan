@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { AlertCircle, BookOpen, Eye, EyeOff, ShieldCheck, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { fetchLoginHint, loginAdmin } from '../api/admin';
 import { BrandMark } from '../components/BrandMark';
@@ -9,32 +10,17 @@ const FEATURES = [
   {
     title: 'Content at scale',
     body: 'Publish courses, tests, current affairs, and media from one console.',
-    icon: (
-      <svg viewBox="0 0 24 24" aria-hidden>
-        <path d="M4 5h13v14H6a2 2 0 0 1-2-2z" />
-        <path d="M16 5h4v14h-4z" />
-      </svg>
-    ),
+    icon: <BookOpen aria-hidden strokeWidth={1.8} />,
   },
   {
     title: 'Live & learners',
     body: 'Run live classes, track students, and manage mentors in real time.',
-    icon: (
-      <svg viewBox="0 0 24 24" aria-hidden>
-        <circle cx="9" cy="8" r="3.5" />
-        <path d="M3 20a6 6 0 0 1 12 0M16 5a3.5 3.5 0 0 1 0 6" />
-      </svg>
-    ),
+    icon: <Users aria-hidden strokeWidth={1.8} />,
   },
   {
     title: 'Exam-ready ops',
     body: 'AI feedback, jobs, revenue, and platform settings — all in one place.',
-    icon: (
-      <svg viewBox="0 0 24 24" aria-hidden>
-        <path d="M12 2 4 5v6c0 5.5 3.8 8.4 8 10 4.2-1.6 8-4.5 8-10V5z" />
-        <path d="m9 12 2 2 4-4" />
-      </svg>
-    ),
+    icon: <ShieldCheck aria-hidden strokeWidth={1.8} />,
   },
 ] as const;
 
@@ -127,10 +113,7 @@ export function LoginPage() {
 
             {error ? (
               <div className="login-error" role="alert">
-                <svg viewBox="0 0 24 24" aria-hidden>
-                  <circle cx="12" cy="12" r="9" />
-                  <path d="M12 8v5M12 16h.01" />
-                </svg>
+                <AlertCircle aria-hidden strokeWidth={1.8} />
                 <span>{error}</span>
               </div>
             ) : null}
@@ -167,19 +150,12 @@ export function LoginPage() {
                   className="login-toggle-pw"
                   onClick={() => setShowPassword((open) => !open)}
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  title={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? (
-                    <svg viewBox="0 0 24 24" aria-hidden>
-                      <path d="M3 3l18 18" />
-                      <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
-                      <path d="M6.7 6.7C4.6 8.1 3 10.2 2 12c1.5 3 5 5 10 5 1.8 0 3.5-.4 5-1.1" />
-                      <path d="M17.3 17.3c2.1-1.4 3.7-3.5 4.7-5.3-1.5-3-5-5-10-5-1.1 0-2.1.1-3 .4" />
-                    </svg>
+                    <EyeOff aria-hidden strokeWidth={1.8} />
                   ) : (
-                    <svg viewBox="0 0 24 24" aria-hidden>
-                      <path d="M2 12s3.5-5 10-5 10 5 10 5-3.5 5-10 5-10-5-10-5z" />
-                      <circle cx="12" cy="12" r="3" />
-                    </svg>
+                    <Eye aria-hidden strokeWidth={1.8} />
                   )}
                 </button>
               </div>

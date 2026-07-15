@@ -30,7 +30,7 @@ export async function createBookGenerationJob(body, user) {
     throw new AppError(
       `Too many book generation jobs in progress (max ${MAX_CONCURRENT_BOOK_GEN_JOBS})`,
       429,
-      'BOOK_GEN_CONCURRENCY_LIMIT',
+      'BOOK_GEN_CONCURRENCY_LIMIT'
     );
   }
 
@@ -82,7 +82,11 @@ export async function createBookGenerationJob(body, user) {
   const queued = await enqueueJob(
     JOB_NAMES.BOOK_GEN,
     { jobId: job._id.toString() },
-    { jobId: `book-gen-${job._id.toString()}` },
+    {
+      jobId: `book-gen-${job._id.toString()}`,
+      attempts: 3,
+      backoff: { type: 'exponential', delay: 5_000 },
+    }
   );
 
   if (!queued) {

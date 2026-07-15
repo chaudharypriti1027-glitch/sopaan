@@ -2,26 +2,30 @@ import type { ViewStyle } from 'react-native';
 import type { Theme } from '../../theme/types';
 import { platformShadow } from '../../utils/platformShadow';
 
-/** Premium v4 — "Classic Premium" navy/gold/sage design tokens (reference UI). */
+/** Premium tokens — aligned with home navy / cream / gold system. */
 export const PREMIUM = {
-  bg: '#F4F1E9',
-  cardRadius: 22,
+  bg: '#F3EEE1',
+  cardRadius: 24,
   bodyLift: -34,
-  headerGradient: ['#2E3766', '#232A4D', '#1A1F3B'] as const,
-  heroGradient: ['#2E3766', '#232A4D', '#1A1F3B'] as const,
-  sectionLabel: '#B3B4C2',
-  hairline: '#F3F0E8',
+  headerGradient: ['#2C3568', '#1C2450', '#131A3C'] as const,
+  heroGradient: ['#2C3568', '#1C2450', '#131A3C'] as const,
+  sectionLabel: '#8B8FA3',
+  hairline: '#F0EBDD',
   tabBottomPadding: 120,
   stackBottomPadding: 32,
-  accent: '#232A4D',
-  accentSoft: '#E9EBF3',
-  gold: '#C29A4E',
-  goldDeep: '#A67C33',
-  goldSoft: '#F4EBD8',
-  sage: '#5F8A7B',
-  sageDeep: '#4C7264',
-  sageSoft: '#E4EDE9',
-  ink: '#1C1E2E',
+  accent: '#1E2A55',
+  accentSoft: '#EAEDF6',
+  gold: '#C9A24B',
+  goldLt: '#E9CF8D',
+  goldDeep: '#A67F2E',
+  goldSoft: '#FAF4E3',
+  goldBorder: '#EFE3C3',
+  sage: '#5E9C7C',
+  sageDeep: '#4C7A63',
+  sageSoft: '#E9F1EA',
+  ink: '#1D2440',
+  tileBg: '#FAF6EA',
+  muted: '#8B8FA3',
 } as const;
 
 /** @deprecated use PREMIUM — kept for Home/Profile imports */
@@ -33,7 +37,7 @@ export function premiumCard(theme: Theme): ViewStyle {
     backgroundColor: theme.colors.surface.default,
     borderRadius: PREMIUM.cardRadius,
     borderWidth: 1,
-    borderColor: 'rgba(236,232,221,0.9)',
+    borderColor: PREMIUM.goldBorder,
     ...platformShadow({
       color: theme.colors.shadow.color,
       offsetY: 8,
