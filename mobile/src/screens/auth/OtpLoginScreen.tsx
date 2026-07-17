@@ -16,7 +16,6 @@ import {
   AuthSocialButton,
   AuthTermsBox,
   PrimaryButton,
-  useShakeOnError,
 } from '../../components/auth';
 import { authApi, parseApiError, privacyApi } from '../../api';
 import type { SignupInput } from '../../api/auth';
@@ -46,7 +45,6 @@ export function OtpLoginScreen() {
     void privacyApi.getPolicy().then((policy) => setPolicyVersion(policy.version)).catch(() => {});
   }, []);
 
-  const shakeStyle = useShakeOnError(error);
   const phoneValid = isValidIndianMobile(digits);
   const busy = loading || googleLoading;
   const canSubmit = phoneValid && acceptedTerms && !busy;
@@ -113,15 +111,16 @@ export function OtpLoginScreen() {
     );
   };
 
-  const enterForm = reducedMotion
-    ? undefined
-    : FadeInDown.duration(420).delay(140).reduceMotion(ReduceMotion.System);
   const enterFooter = reducedMotion
     ? undefined
     : FadeInDown.duration(380).delay(240).reduceMotion(ReduceMotion.System);
 
   return (
-    <AuthScreen scrollProps={{ keyboardShouldPersistTaps: 'handled' }} fill>
+    <AuthScreen
+      scrollProps={{ keyboardShouldPersistTaps: 'always' }}
+      fill
+      ambient={false}
+    >
       <View style={styles.column}>
         <AuthBackButton
           disabled={busy}
@@ -135,7 +134,7 @@ export function OtpLoginScreen() {
           testID="otp-login-header"
         />
 
-        <Animated.View entering={enterForm} style={[styles.form, shakeStyle]}>
+        <View style={styles.form}>
           <AuthPremiumField
             dark
             variant="phone"
@@ -182,7 +181,7 @@ export function OtpLoginScreen() {
             onPress={() => void handleGoogleSignIn()}
             testID="otp-login-google"
           />
-        </Animated.View>
+        </View>
 
         <View style={styles.spacer} />
 

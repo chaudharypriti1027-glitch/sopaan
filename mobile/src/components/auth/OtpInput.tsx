@@ -1,19 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
-import {
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
-import Animated, {
-  Easing,
-  useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withSequence,
-  withTiming,
-} from 'react-native-reanimated';
+import { Platform, StyleSheet, Text, TextInput, View } from 'react-native';
 import { themeFonts } from '../../theme';
 import { AUTH_UI } from './authTheme';
 
@@ -28,7 +14,6 @@ type OtpInputProps = {
   disabled?: boolean;
   autoFocus?: boolean;
   testID?: string;
-  /** Dark glass cells with gold accents on the navy canvas. */
   dark?: boolean;
 };
 
@@ -36,47 +21,9 @@ function sanitizeDigits(raw: string, length: number) {
   return raw.replace(/\D/g, '').slice(0, length);
 }
 
-function CaretPulse({ active, color }: { active: boolean; color: string }) {
-  const opacity = useSharedValue(active ? 1 : 0);
-
-  useEffect(() => {
-    if (!active) {
-      opacity.value = 0;
-      return;
-    }
-
-    opacity.value = withRepeat(
-      withSequence(
-        withTiming(0.25, { duration: 520, easing: Easing.inOut(Easing.quad) }),
-        withTiming(1, { duration: 520, easing: Easing.inOut(Easing.quad) }),
-      ),
-      -1,
-      true,
-    );
-  }, [active, opacity]);
-
-  const style = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-  }));
-
-  return (
-    <Animated.View
-      style={[
-        {
-          width: 2,
-          height: 22,
-          borderRadius: 1,
-          backgroundColor: color,
-        },
-        style,
-      ]}
-    />
-  );
-}
-
 /**
- * Six-box OTP entry backed by a single TextInput.
- * One real input avoids Android/iOS bugs where per-cell inputs block number typing.
+ * OTP entry with one real TextInput on top of visual digit boxes.
+ * The input stays fully interactive (not opacity-hidden) so Android accepts digits.
  */
 export function OtpInput({
   value,
@@ -102,64 +49,57 @@ export function OtpInput({
   }, [disabled, success]);
 
   useEffect(() => {
-    if (autoFocus) {
-      const id = setTimeout(focusInput, 80);
-      return () => clearTimeout(id);
+    if (!autoFocus) {
+      return undefined;
     }
-    return undefined;
+    const id = setTimeout(focusInput, 120);
+    return () => clearTimeout(id);
   }, [autoFocus, focusInput]);
 
   return (
-    <Pressable
-      accessibilityRole="none"
-      accessibilityLabel="One-time password"
-      onPress={focusInput}
-      style={styles.row}
-      testID={testID}
-    >
-      {Array.from({ length }).map((_, index) => {
-        const digit = digits[index] ?? '';
-        const filled = success || digit.length > 0;
-        const isActive = !disabled && !success && index === activeIndex && code.length < length;
+    <View style={styles.wrap} testID={testID} collapsable={false}>
+      <View style={styles.row} pointerEvents="none">
+        {Array.from({ length }).map((_, index) => {
+          const digit = digits[index] ?? '';
+          const filled = success || digit.length > 0;
+          const isActive = !disabled && !success && index === activeIndex && code.length < length;
 
-        return (
-          <View
-            key={`otp-${index}`}
-            style={[
-              styles.cell,
-              filled && styles.cellFilled,
-              isActive && styles.cellActive,
-              error && styles.cellError,
-            ]}
-            pointerEvents="none"
-          >
-            {digit ? (
-              <Text style={styles.digit}>{digit}</Text>
-            ) : isActive ? (
-              <CaretPulse active color={dark ? AUTH_UI.focus : AUTH_UI.accent} />
-            ) : null}
-          </View>
-        );
-      })}
+          return (
+            <View
+              key={`otp-${index}`}
+              style={[
+                styles.cell,
+                filled && styles.cellFilled,
+                isActive && styles.cellActive,
+                error && styles.cellError,
+              ]}
+            >
+              <Text style={styles.digit}>{digit || (isActive ? '|' : '')}</Text>
+            </View>
+          );
+        })}
+      </View>
 
       <TextInput
         ref={inputRef}
         value={code}
         onChangeText={(text) => onChange(sanitizeDigits(text, length))}
         keyboardType="number-pad"
-        inputMode="numeric"
         textContentType="oneTimeCode"
         autoComplete="sms-otp"
         maxLength={length}
         editable={!disabled && !success}
+        showSoftInputOnFocus
         caretHidden
         autoFocus={autoFocus}
         underlineColorAndroid="transparent"
         importantForAutofill="yes"
-        style={styles.hiddenInput}
+        style={styles.realInput}
         testID={`${testID}-field`}
+        selectionColor="transparent"
+        onPressIn={focusInput}
       />
-    </Pressable>
+    </View>
   );
 }
 
@@ -178,8 +118,12 @@ function createStyles(error: boolean, success: boolean, dark: boolean) {
       : 'rgba(35,42,77,0.06)';
 
   return StyleSheet.create({
-    row: {
+    wrap: {
       position: 'relative',
+      width: '100%',
+      minHeight: 56,
+    },
+    row: {
       flexDirection: 'row',
       justifyContent: 'space-between',
       gap: dark ? 10 : 8,
@@ -209,10 +153,6 @@ function createStyles(error: boolean, success: boolean, dark: boolean) {
       borderWidth: 1.5,
       borderColor: dark ? 'rgba(233,200,104,0.9)' : AUTH_UI.focus,
       backgroundColor: dark ? 'rgba(255,255,255,0.04)' : undefined,
-      shadowColor: dark ? AUTH_UI.gold : AUTH_UI.accent,
-      shadowOffset: { width: 0, height: 0 },
-      shadowOpacity: dark ? 0.2 : 0.12,
-      shadowRadius: dark ? 6 : 3,
     },
     cellError: {
       borderColor: dark ? 'rgba(224,122,95,0.75)' : '#F87171',
@@ -224,15 +164,17 @@ function createStyles(error: boolean, success: boolean, dark: boolean) {
       color: dark ? AUTH_UI.onCanvas : AUTH_UI.ink,
       textAlign: 'center',
     },
-    /** Full-row transparent input — receives all number taps/keystrokes. */
-    hiddenInput: {
+    realInput: {
       ...StyleSheet.absoluteFillObject,
-      opacity: 0.015,
-      color: '#000000',
+      zIndex: 2,
+      color: 'transparent',
+      fontSize: Platform.OS === 'ios' ? 1 : 16,
+      letterSpacing: 0,
       backgroundColor: 'transparent',
-      borderWidth: 0,
-      fontSize: 16,
-      zIndex: 5,
+      // Android ignores keypresses on near-invisible inputs — keep slightly visible.
+      opacity: Platform.OS === 'android' ? 0.25 : 0.08,
+      padding: 0,
+      margin: 0,
     },
   });
 }

@@ -16,7 +16,6 @@ import {
   AuthScreen,
   AuthSocialButton,
   PrimaryButton,
-  useShakeOnError,
 } from '../components/auth';
 import { authApi, parseApiError } from '../api';
 import { completeGoogleLogin } from '../auth/completeGoogleLogin';
@@ -47,7 +46,6 @@ export function LoginScreen() {
   const { signInWithGoogle, loading: googleLoading, isConfigured: googleConfigured } =
     useGoogleSignIn();
 
-  const shakeStyle = useShakeOnError(formError);
   const emailValid = EMAIL_PATTERN.test(email.trim());
   const passwordValid = password.length >= 8;
   const busy = loginLoading || googleLoading;
@@ -129,15 +127,16 @@ export function LoginScreen() {
     );
   };
 
-  const enterForm = reducedMotion
-    ? undefined
-    : FadeInDown.duration(420).delay(140).reduceMotion(ReduceMotion.System);
   const enterFooter = reducedMotion
     ? undefined
     : FadeInDown.duration(380).delay(240).reduceMotion(ReduceMotion.System);
 
   return (
-    <AuthScreen scrollProps={{ keyboardShouldPersistTaps: 'handled' }} fill>
+    <AuthScreen
+      scrollProps={{ keyboardShouldPersistTaps: 'always' }}
+      fill
+      ambient={false}
+    >
       <View style={styles.column}>
         <AuthBackButton
           disabled={busy}
@@ -151,7 +150,7 @@ export function LoginScreen() {
           testID="login-header"
         />
 
-        <Animated.View entering={enterForm} style={[styles.form, shakeStyle]}>
+        <View style={styles.form}>
           <AuthPremiumField
             dark
             variant="email"
@@ -207,7 +206,7 @@ export function LoginScreen() {
             onPress={() => void handleGoogleSignIn()}
             testID="login-google"
           />
-        </Animated.View>
+        </View>
 
         <View style={styles.spacer} />
 
