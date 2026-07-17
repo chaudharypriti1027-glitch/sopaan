@@ -67,6 +67,7 @@ function createStyles() {
     root: {
       ...StyleSheet.absoluteFillObject,
       overflow: 'hidden',
+      zIndex: 0,
     },
     cornerHaze: {
       position: 'absolute',

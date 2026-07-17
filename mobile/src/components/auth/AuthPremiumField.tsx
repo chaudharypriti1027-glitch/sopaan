@@ -1,5 +1,6 @@
 import { forwardRef, useMemo, useState } from 'react';
 import {
+  Platform,
   Pressable,
   StyleSheet,
   Text,
@@ -30,8 +31,15 @@ export type AuthPremiumFieldProps = Omit<TextInputProps, 'value' | 'onChangeText
 
 const PHONE_DIGITS = 10;
 
+/** Keep only national 10-digit mobile numbers (strip +91 / spaces / paste junk). */
 function normalizePhone(raw: string) {
-  return raw.replace(/\D/g, '').slice(0, PHONE_DIGITS);
+  let digits = raw.replace(/\D/g, '');
+  if (digits.length >= 12 && digits.startsWith('91')) {
+    digits = digits.slice(-10);
+  } else if (digits.length > 10) {
+    digits = digits.slice(-10);
+  }
+  return digits.slice(0, PHONE_DIGITS);
 }
 
 function resolveIcon(variant: AuthPremiumFieldVariant): LucideIcon {
@@ -89,16 +97,24 @@ export const AuthPremiumField = forwardRef<TextInput, AuthPremiumFieldProps>(
     const Icon = icon ?? resolveIcon(variant);
     const iconTint = resolveIconTint(variant);
     const styles = useMemo(
-      () => createStyles({ focused, hasError: Boolean(error), dense, dark }),
-      [focused, error, dense, dark],
+      () => createStyles({ focused, hasError: Boolean(error), dense, dark, isPhone }),
+      [focused, error, dense, dark, isPhone],
     );
+
+    const setInputRef = (node: TextInput | null) => {
+      if (typeof ref === 'function') {
+        ref(node);
+      } else if (ref) {
+        ref.current = node;
+      }
+    };
 
     const resolvedKeyboard =
       keyboardType ??
-      (variant === 'phone' ? 'phone-pad' : variant === 'email' ? 'email-address' : 'default');
+      (variant === 'phone' ? 'number-pad' : variant === 'email' ? 'email-address' : 'default');
 
     const resolvedCapitalize =
-      autoCapitalize ?? (variant === 'email' || isPassword ? 'none' : 'words');
+      autoCapitalize ?? (variant === 'email' || isPassword || isPhone ? 'none' : 'words');
 
     if (dark) {
       const goldIcon = 'rgba(212,175,55,0.8)';
@@ -106,38 +122,59 @@ export const AuthPremiumField = forwardRef<TextInput, AuthPremiumFieldProps>(
         <View style={styles.field}>
           <Text style={styles.darkLabel}>{label}</Text>
           <View style={styles.darkRow}>
-            <Icon size={17} color={goldIcon} strokeWidth={1.7} />
-            {isPhone ? (
-              <>
-                <Text style={styles.darkPrefix}>+91</Text>
-                <View style={styles.darkPrefixDivider} />
-              </>
-            ) : null}
+            <View pointerEvents="none" style={styles.darkLeading}>
+              <Icon size={17} color={goldIcon} strokeWidth={1.7} />
+              {isPhone ? (
+                <>
+                  <Text style={styles.darkPrefix}>+91</Text>
+                  <View style={styles.darkPrefixDivider} />
+                </>
+              ) : null}
+            </View>
             <TextInput
-              ref={ref}
+              ref={setInputRef}
               testID={testID}
               accessibilityLabel={label}
               value={value}
               onChangeText={(text) => onChangeText(isPhone ? normalizePhone(text) : text)}
-              onFocus={() => setFocused(true)}
-              onBlur={() => setFocused(false)}
+              onFocus={(event) => {
+                setFocused(true);
+                rest.onFocus?.(event);
+              }}
+              onBlur={(event) => {
+                setFocused(false);
+                rest.onBlur?.(event);
+              }}
               editable={editable}
               placeholder={placeholder}
               placeholderTextColor="rgba(228,216,190,0.35)"
               keyboardType={resolvedKeyboard}
+              inputMode={isPhone ? 'numeric' : variant === 'email' ? 'email' : undefined}
               autoCapitalize={resolvedCapitalize}
-              autoCorrect={variant === 'email' || isPassword ? false : rest.autoCorrect}
+              autoCorrect={false}
+              autoComplete={isPhone ? 'tel' : variant === 'email' ? 'email' : rest.autoComplete}
+              textContentType={
+                isPhone
+                  ? 'telephoneNumber'
+                  : variant === 'email'
+                    ? 'emailAddress'
+                    : rest.textContentType
+              }
               secureTextEntry={isPassword ? !passwordVisible : secureTextEntry}
+              underlineColorAndroid="transparent"
+              importantForAutofill="yes"
+              maxLength={isPhone ? PHONE_DIGITS : rest.maxLength}
               style={styles.darkInput}
-              {...scalableTextProps}
-              {...rest}
+              allowFontScaling={scalableTextProps.allowFontScaling}
+              maxFontSizeMultiplier={scalableTextProps.maxFontSizeMultiplier}
+              autoFocus={rest.autoFocus}
             />
             {isPassword ? (
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={passwordVisible ? 'Hide password' : 'Show password'}
                 onPress={() => setPasswordVisible((v) => !v)}
-                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 style={({ pressed }) => [styles.darkEyeBtn, pressed && styles.eyeBtnPressed]}
               >
                 {passwordVisible ? (
@@ -185,10 +222,18 @@ export const AuthPremiumField = forwardRef<TextInput, AuthPremiumFieldProps>(
             ref={ref}
             testID={testID}
             accessibilityLabel={dense ? label : undefined}
+            {...rest}
+            {...scalableTextProps}
             value={value}
             onChangeText={(text) => onChangeText(isPhone ? normalizePhone(text) : text)}
-            onFocus={() => setFocused(true)}
-            onBlur={() => setFocused(false)}
+            onFocus={(event) => {
+              setFocused(true);
+              rest.onFocus?.(event);
+            }}
+            onBlur={(event) => {
+              setFocused(false);
+              rest.onBlur?.(event);
+            }}
             editable={editable}
             placeholder={placeholder}
             placeholderTextColor={AUTH_UI.faint}
@@ -196,15 +241,16 @@ export const AuthPremiumField = forwardRef<TextInput, AuthPremiumFieldProps>(
             autoCapitalize={resolvedCapitalize}
             autoCorrect={variant === 'email' || isPassword ? false : rest.autoCorrect}
             secureTextEntry={isPassword ? !passwordVisible : secureTextEntry}
+            underlineColorAndroid="transparent"
+            importantForAutofill="yes"
             style={[
               styles.input,
               dense && styles.inputDense,
               dense && isPhone && styles.inputDensePhone,
               !dense && isPhone && styles.inputPhone,
               isPassword && styles.inputEye,
+              rest.style,
             ]}
-            {...scalableTextProps}
-            {...rest}
           />
 
           {isPassword ? (
@@ -234,6 +280,7 @@ function createStyles(state: {
   hasError: boolean;
   dense: boolean;
   dark: boolean;
+  isPhone?: boolean;
 }) {
   const borderColor = state.hasError
     ? '#C4634F'
@@ -280,6 +327,12 @@ function createStyles(state: {
           }
         : {}),
     },
+    darkLeading: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      flexShrink: 0,
+    },
     darkPrefix: {
       fontFamily: AUTH_FONTS.semibold,
       fontSize: 16,
@@ -294,13 +347,16 @@ function createStyles(state: {
     },
     darkInput: {
       flex: 1,
-      minWidth: 0,
-      paddingVertical: 14,
-      fontFamily: AUTH_FONTS.regular,
+      minWidth: 40,
+      minHeight: 48,
+      paddingVertical: Platform.OS === 'ios' ? 14 : 12,
+      paddingHorizontal: 0,
+      margin: 0,
+      // Custom fontFamily + fontWeight often breaks digit entry on Android TextInputs.
+      fontFamily: state.isPhone ? undefined : AUTH_FONTS.regular,
       fontSize: 16,
-      fontWeight: '400',
       color: AUTH_UI.onCanvas,
-      letterSpacing: 0.5,
+      ...(Platform.OS === 'android' ? { textAlignVertical: 'center' as const } : null),
     },
     darkEyeBtn: {
       width: 34,

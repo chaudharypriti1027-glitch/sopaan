@@ -1,18 +1,17 @@
-const appJson = require('./app.json');
-
 /** @type {import('expo/config').ExpoConfig} */
-module.exports = () => {
+module.exports = ({ config }) => {
+  // `config` is the static app.json expo object (Expo merges it automatically).
   const projectId =
     process.env.EAS_PROJECT_ID?.trim() ||
     process.env.EXPO_PUBLIC_EAS_PROJECT_ID?.trim() ||
-    appJson.expo.extra?.eas?.projectId?.trim() ||
+    config.extra?.eas?.projectId?.trim() ||
     '';
 
   const updatesEnabled = Boolean(projectId);
-  const appVersion = appJson.expo.version ?? '0.1.0';
+  const appVersion = config.version ?? '0.1.0';
 
   return {
-    ...appJson.expo,
+    ...config,
     // Bare workflow (android/ present) requires a fixed string, not a policy object.
     runtimeVersion: appVersion,
     updates: updatesEnabled
@@ -26,12 +25,12 @@ module.exports = () => {
           enabled: false,
         },
     extra: {
-      ...(appJson.expo.extra ?? {}),
+      ...(config.extra ?? {}),
       eas: {
-        ...(appJson.expo.extra?.eas ?? {}),
+        ...(config.extra?.eas ?? {}),
         projectId: projectId || undefined,
       },
     },
-    plugins: [...(appJson.expo.plugins ?? []), 'expo-updates'],
+    plugins: [...(config.plugins ?? []), 'expo-updates'],
   };
 };

@@ -4,6 +4,20 @@
   "private": true,
   "description": "Sopaan mobile app — React Native (Expo)",
   "main": "index.ts",
+  "expo": {
+    "doctor": {
+      "reactNativeDirectoryCheck": {
+        "listUnknownPackages": false,
+        "exclude": [
+          "react-native-razorpay",
+          "@config-plugins/react-native-webrtc",
+          "@livekit/react-native-expo-plugin",
+          "@sopaan/shared",
+          "socket.io-client"
+        ]
+      }
+    }
+  },
   "scripts": {
     "start": "expo start",
     "android": "bash scripts/with-jdk.sh expo run:android",

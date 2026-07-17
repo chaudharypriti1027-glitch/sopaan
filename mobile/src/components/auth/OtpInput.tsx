@@ -2,10 +2,9 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 import {
   Pressable,
   StyleSheet,
+  Text,
   TextInput,
   View,
-  type NativeSyntheticEvent,
-  type TextInputKeyPressEventData,
 } from 'react-native';
 import Animated, {
   Easing,
@@ -15,7 +14,6 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
-import { scalableTextProps } from '../../a11y/textProps';
 import { themeFonts } from '../../theme';
 import { AUTH_UI } from './authTheme';
 
@@ -76,7 +74,10 @@ function CaretPulse({ active, color }: { active: boolean; color: string }) {
   );
 }
 
-/** Six-box OTP entry — Space Grotesk, auto-advance, paste, caret pulse, accent fill when complete. */
+/**
+ * Six-box OTP entry backed by a single TextInput.
+ * One real input avoids Android/iOS bugs where per-cell inputs block number typing.
+ */
 export function OtpInput({
   value,
   onChange,
@@ -88,129 +89,77 @@ export function OtpInput({
   testID = 'otp-input',
   dark = false,
 }: OtpInputProps) {
-  const refs = useRef<(TextInput | null)[]>([]);
-  const digits = useMemo(() => sanitizeDigits(value, length).split(''), [value, length]);
-  const activeIndex = Math.min(digits.length, length - 1);
-
+  const inputRef = useRef<TextInput>(null);
+  const code = useMemo(() => sanitizeDigits(value, length), [value, length]);
+  const digits = useMemo(() => code.split(''), [code]);
+  const activeIndex = Math.min(code.length, length - 1);
   const styles = useMemo(() => createStyles(error, success, dark), [error, success, dark]);
 
-  const focusCell = useCallback((index: number) => {
-    refs.current[index]?.focus();
-  }, []);
+  const focusInput = useCallback(() => {
+    if (!disabled && !success) {
+      inputRef.current?.focus();
+    }
+  }, [disabled, success]);
 
   useEffect(() => {
     if (autoFocus) {
-      focusCell(0);
+      const id = setTimeout(focusInput, 80);
+      return () => clearTimeout(id);
     }
-  }, [autoFocus, focusCell]);
-
-  const applyDigits = useCallback(
-    (nextRaw: string, startIndex = 0) => {
-      const next = sanitizeDigits(nextRaw, length);
-      onChange(next);
-
-      const focusTarget = Math.min(next.length, length - 1);
-      if (next.length >= length) {
-        refs.current[length - 1]?.blur();
-        return;
-      }
-
-      focusCell(Math.max(startIndex, focusTarget));
-    },
-    [focusCell, length, onChange],
-  );
-
-  const handleChange = useCallback(
-    (text: string, index: number) => {
-      if (text.length > 1) {
-        applyDigits(text, index);
-        return;
-      }
-
-      const nextDigits = [...digits];
-      while (nextDigits.length < length) {
-        nextDigits.push('');
-      }
-
-      nextDigits[index] = text.replace(/\D/g, '').slice(-1);
-      const joined = nextDigits.join('').slice(0, length);
-      onChange(joined);
-
-      if (text && index < length - 1) {
-        focusCell(index + 1);
-      }
-    },
-    [applyDigits, digits, focusCell, length, onChange],
-  );
-
-  const handleKeyPress = useCallback(
-    (event: NativeSyntheticEvent<TextInputKeyPressEventData>, index: number) => {
-      if (event.nativeEvent.key !== 'Backspace') {
-        return;
-      }
-
-      if (digits[index]) {
-        const nextDigits = [...digits];
-        nextDigits[index] = '';
-        onChange(nextDigits.join('').slice(0, length));
-        return;
-      }
-
-      if (index > 0) {
-        focusCell(index - 1);
-        const nextDigits = [...digits];
-        nextDigits[index - 1] = '';
-        onChange(nextDigits.join('').slice(0, length));
-      }
-    },
-    [digits, focusCell, length, onChange],
-  );
+    return undefined;
+  }, [autoFocus, focusInput]);
 
   return (
-    <View style={styles.row} testID={testID}>
+    <Pressable
+      accessibilityRole="none"
+      accessibilityLabel="One-time password"
+      onPress={focusInput}
+      style={styles.row}
+      testID={testID}
+    >
       {Array.from({ length }).map((_, index) => {
         const digit = digits[index] ?? '';
         const filled = success || digit.length > 0;
-        const isActive = !disabled && !success && index === activeIndex && digits.length < length;
+        const isActive = !disabled && !success && index === activeIndex && code.length < length;
 
         return (
-          <Pressable
+          <View
             key={`otp-${index}`}
-            accessibilityRole="none"
-            onPress={() => focusCell(index)}
             style={[
               styles.cell,
               filled && styles.cellFilled,
               isActive && styles.cellActive,
               error && styles.cellError,
             ]}
+            pointerEvents="none"
           >
-            <TextInput
-              ref={(node) => {
-                refs.current[index] = node;
-              }}
-              value={digit}
-              onChangeText={(text) => handleChange(text, index)}
-              onKeyPress={(event) => handleKeyPress(event, index)}
-              keyboardType="number-pad"
-              maxLength={length}
-              caretHidden
-              textContentType="oneTimeCode"
-              autoComplete={index === 0 ? 'sms-otp' : 'off'}
-              editable={!disabled && !success}
-              selectTextOnFocus
-              style={styles.input}
-              {...scalableTextProps}
-            />
-            {!filled && isActive ? (
-              <View style={styles.caretWrap}>
-                <CaretPulse active color={dark ? AUTH_UI.focus : AUTH_UI.accent} />
-              </View>
+            {digit ? (
+              <Text style={styles.digit}>{digit}</Text>
+            ) : isActive ? (
+              <CaretPulse active color={dark ? AUTH_UI.focus : AUTH_UI.accent} />
             ) : null}
-          </Pressable>
+          </View>
         );
       })}
-    </View>
+
+      <TextInput
+        ref={inputRef}
+        value={code}
+        onChangeText={(text) => onChange(sanitizeDigits(text, length))}
+        keyboardType="number-pad"
+        inputMode="numeric"
+        textContentType="oneTimeCode"
+        autoComplete="sms-otp"
+        maxLength={length}
+        editable={!disabled && !success}
+        caretHidden
+        autoFocus={autoFocus}
+        underlineColorAndroid="transparent"
+        importantForAutofill="yes"
+        style={styles.hiddenInput}
+        testID={`${testID}-field`}
+      />
+    </Pressable>
   );
 }
 
@@ -230,6 +179,7 @@ function createStyles(error: boolean, success: boolean, dark: boolean) {
 
   return StyleSheet.create({
     row: {
+      position: 'relative',
       flexDirection: 'row',
       justifyContent: 'space-between',
       gap: dark ? 10 : 8,
@@ -267,19 +217,22 @@ function createStyles(error: boolean, success: boolean, dark: boolean) {
     cellError: {
       borderColor: dark ? 'rgba(224,122,95,0.75)' : '#F87171',
     },
-    input: {
+    digit: {
       fontFamily: themeFonts.stat.bold,
       fontSize: dark ? 22 : 24,
       fontWeight: '700',
       color: dark ? AUTH_UI.onCanvas : AUTH_UI.ink,
       textAlign: 'center',
-      width: '100%',
-      padding: 0,
     },
-    caretWrap: {
-      position: 'absolute',
-      alignItems: 'center',
-      justifyContent: 'center',
+    /** Full-row transparent input — receives all number taps/keystrokes. */
+    hiddenInput: {
+      ...StyleSheet.absoluteFillObject,
+      opacity: 0.015,
+      color: '#000000',
+      backgroundColor: 'transparent',
+      borderWidth: 0,
+      fontSize: 16,
+      zIndex: 5,
     },
   });
 }

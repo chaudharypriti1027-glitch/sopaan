@@ -61,18 +61,19 @@ export function AuthScreen({
       end={{ x: 0.8, y: 1 }}
       style={styles.root}
     >
+      {ambient ? <AuthScreenAmbient /> : null}
+
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
       >
-        {ambient ? <AuthScreenAmbient /> : null}
-
         {scroll ? (
           <ScrollView
             style={styles.scroll}
             contentContainerStyle={[styles.scrollContent, fill && styles.scrollFill]}
             keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
             showsVerticalScrollIndicator={false}
             {...scrollProps}
           >
@@ -100,9 +101,11 @@ function createStyles(
     },
     flex: {
       flex: 1,
+      zIndex: 1,
     },
     scroll: {
       flex: 1,
+      zIndex: 1,
     },
     scrollContent: {
       flexGrow: 1,

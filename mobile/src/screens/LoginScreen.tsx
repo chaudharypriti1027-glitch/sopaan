@@ -164,7 +164,7 @@ export function LoginScreen() {
               if (formError) setFormError(null);
             }}
             error={emailError}
-            editable={!busy}
+            editable={!loginLoading}
             testID="login-email"
           />
 
@@ -180,7 +180,7 @@ export function LoginScreen() {
             }}
             placeholder={t('login.passwordPlaceholder')}
             error={passwordError}
-            editable={!busy}
+            editable={!loginLoading}
             testID="login-password"
           />
 

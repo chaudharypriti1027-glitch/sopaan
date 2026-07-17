@@ -146,7 +146,7 @@ export function OtpLoginScreen() {
               setDigits(value);
               if (error) setError(null);
             }}
-            editable={!busy}
+            editable={!loading}
             testID="otp-login-phone"
             autoFocus
           />
