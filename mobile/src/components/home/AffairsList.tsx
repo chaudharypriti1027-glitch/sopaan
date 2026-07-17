@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { ChevronRight, Clock } from 'lucide-react-native';
-import { useTranslation } from 'react-i18next';
+import { ChevronRight } from 'lucide-react-native';
 import { OptimizedImage } from '../OptimizedImage';
 import { HomeSlotIcon } from './HomePremiumIcon';
 import { Text } from '../Text';
@@ -42,7 +41,6 @@ function AffairThumb({
 }
 
 export function AffairsList({ items, onItemPress }: AffairsListProps) {
-  const { t } = useTranslation('app');
   const styles = useMemo(() => createStyles(), []);
 
   if (!items.length) {
@@ -67,10 +65,6 @@ export function AffairsList({ items, onItemPress }: AffairsListProps) {
               <Text style={styles.headline} numberOfLines={2} ellipsizeMode="tail">
                 {item.headline}
               </Text>
-              <View style={styles.timeRow}>
-                <Clock size={11} color={HOME_UI.muted} strokeWidth={2.2} />
-                <Text style={styles.readTime}>{t('home.readMin', { count: item.readMin })}</Text>
-              </View>
             </View>
             <ChevronRight size={16} color={HOME_UI.muted} strokeWidth={2.2} />
           </Pressable>

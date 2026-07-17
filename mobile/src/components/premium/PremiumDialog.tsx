@@ -14,10 +14,12 @@ import {
   Modal,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   View,
   useWindowDimensions,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '../Text';
 import { PREMIUM } from './premiumStyles';
 import { platformShadow } from '../../utils/platformShadow';
@@ -71,11 +73,16 @@ export function PremiumDialog({
   testID = 'premium-dialog',
 }: PremiumDialogProps) {
   const { theme } = useTheme();
-  const { width } = useWindowDimensions();
-  const styles = useMemo(() => createStyles(theme, width), [theme, width]);
+  const insets = useSafeAreaInsets();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const styles = useMemo(
+    () => createStyles(theme, windowWidth, windowHeight, insets.top, insets.bottom),
+    [theme, windowWidth, windowHeight, insets.top, insets.bottom],
+  );
   const actionVariantStyles = useMemo(() => getActionVariantStyles(theme), [theme]);
   const Icon = ICON_MAP[icon];
   const gradient = TONE_GRADIENT[iconTone];
+  const stacked = true;
 
   const handleBackdropPress = () => {
     if (dismissOnBackdrop) {
@@ -90,6 +97,8 @@ export function PremiumDialog({
       animationType="fade"
       onRequestClose={onClose}
       statusBarTranslucent
+      presentationStyle="overFullScreen"
+      hardwareAccelerated
     >
       <View style={styles.overlay} testID={testID}>
         <Pressable
@@ -98,51 +107,65 @@ export function PremiumDialog({
           style={styles.backdrop}
           onPress={handleBackdropPress}
         />
-        <View style={styles.card} accessibilityViewIsModal>
-          <LinearGradient
-            colors={['#E3C97F', '#C29A4E', '#A67C33']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.goldRail}
-          />
+        <View style={styles.centerWrap} pointerEvents="box-none">
+          <View style={styles.card} accessibilityViewIsModal>
+            <LinearGradient
+              colors={['#E3C97F', '#C29A4E', '#A67C33']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.goldRail}
+            />
 
-          {dismissOnBackdrop ? (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Close"
-              onPress={onClose}
-              style={({ pressed }) => [styles.closeBtn, pressed && styles.closePressed]}
-              hitSlop={12}
+            {dismissOnBackdrop ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Close"
+                onPress={onClose}
+                style={({ pressed }) => [styles.closeBtn, pressed && styles.closePressed]}
+                hitSlop={12}
+              >
+                <X size={18} color={theme.colors.text.tertiary} strokeWidth={2} />
+              </Pressable>
+            ) : null}
+
+            <ScrollView
+              bounces={false}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.scrollContent}
+              keyboardShouldPersistTaps="handled"
             >
-              <X size={18} color={theme.colors.text.tertiary} strokeWidth={2} />
-            </Pressable>
-          ) : null}
+              <View style={styles.iconWrap}>
+                <LinearGradient
+                  colors={[...gradient]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.iconRing}
+                >
+                  {iconNode ?? <Icon size={26} color="#FFFFFF" strokeWidth={1.9} />}
+                </LinearGradient>
+              </View>
 
-          <View style={styles.iconWrap}>
-            <LinearGradient colors={[...gradient]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.iconRing}>
-              {iconNode ?? <Icon size={26} color="#FFFFFF" strokeWidth={1.9} />}
-            </LinearGradient>
-          </View>
+              <Text variant="h3" style={styles.title}>
+                {title}
+              </Text>
+              {message ? (
+                <Text variant="bodyMedium" color="secondary" style={styles.message}>
+                  {message}
+                </Text>
+              ) : null}
 
-          <Text variant="h3" style={styles.title}>
-            {title}
-          </Text>
-          {message ? (
-            <Text variant="bodyMedium" color="secondary" style={styles.message}>
-              {message}
-            </Text>
-          ) : null}
-
-          <View style={styles.actions}>
-            {actions.map((action, index) => (
-              <DialogActionButton
-                key={`${action.label}-${index}`}
-                action={action}
-                stacked={actions.length > 2 || width < 360}
-                styles={styles}
-                variantStyles={actionVariantStyles}
-              />
-            ))}
+              <View style={[styles.actions, stacked && styles.actionsStacked]}>
+                {actions.map((action, index) => (
+                  <DialogActionButton
+                    key={`${action.label}-${index}`}
+                    action={action}
+                    stacked={stacked}
+                    styles={styles}
+                    variantStyles={actionVariantStyles}
+                  />
+                ))}
+              </View>
+            </ScrollView>
           </View>
         </View>
       </View>
@@ -163,14 +186,14 @@ function getActionVariantStyles(theme: ReturnType<typeof useTheme>['theme']): Ac
         backgroundColor: PREMIUM.accent,
         borderColor: PREMIUM.accent,
       },
-      label: {},
+      label: { color: '#FFFFFF' },
     },
     gold: {
       container: {
         backgroundColor: 'transparent',
-        borderColor: PREMIUM.gold,
+        borderColor: PREMIUM.goldDeep,
       },
-      label: { color: PREMIUM.goldDeep },
+      label: { color: '#251C08' },
     },
     ghost: {
       container: {
@@ -184,7 +207,7 @@ function getActionVariantStyles(theme: ReturnType<typeof useTheme>['theme']): Ac
         backgroundColor: theme.colors.semantic.error,
         borderColor: theme.colors.semantic.error,
       },
-      label: {},
+      label: { color: '#FFFFFF' },
     },
   };
 }
@@ -199,14 +222,6 @@ type DialogActionButtonProps = {
 function DialogActionButton({ action, stacked, styles, variantStyles }: DialogActionButtonProps) {
   const variant = action.variant ?? 'primary';
   const variantStyle = variantStyles[variant];
-  const labelColor =
-    variant === 'ghost'
-      ? undefined
-      : variant === 'danger'
-        ? '#FFFFFF'
-        : variant === 'gold'
-          ? PREMIUM.goldDeep
-          : '#FFFFFF';
 
   return (
     <Pressable
@@ -223,40 +238,51 @@ function DialogActionButton({ action, stacked, styles, variantStyles }: DialogAc
     >
       {variant === 'gold' ? (
         <LinearGradient
-          colors={['#D8B368', PREMIUM.gold]}
+          colors={['#E9CF8D', '#C9A24B']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.actionGoldFill}
         />
       ) : null}
-      <Text style={[styles.actionLabel, labelColor ? { color: labelColor } : null, variantStyle.label]}>
+      <Text style={[styles.actionLabel, variantStyle.label]} numberOfLines={1}>
         {action.label}
       </Text>
     </Pressable>
   );
 }
 
-function createStyles(theme: ReturnType<typeof useTheme>['theme'], windowWidth: number) {
-  const cardWidth = Math.min(windowWidth - 40, Platform.OS === 'web' ? 420 : 360);
+function createStyles(
+  theme: ReturnType<typeof useTheme>['theme'],
+  windowWidth: number,
+  windowHeight: number,
+  insetTop: number,
+  insetBottom: number,
+) {
+  const horizontalPad = 28;
+  const maxCard = Platform.OS === 'web' ? 400 : 320;
+  const available = Math.max(260, windowWidth - horizontalPad * 2);
+  const cardWidth = Math.min(available, maxCard);
 
   return StyleSheet.create({
     overlay: {
       flex: 1,
-      alignItems: 'center',
       justifyContent: 'center',
-      paddingHorizontal: 20,
+      alignItems: 'center',
     },
     backdrop: {
       ...StyleSheet.absoluteFillObject,
-      backgroundColor: 'rgba(26,31,59,0.58)',
+      backgroundColor: 'rgba(26,31,59,0.62)',
+    },
+    centerWrap: {
+      width: cardWidth,
+      maxWidth: available,
+      maxHeight: Math.max(280, windowHeight - insetTop - insetBottom - 48),
+      zIndex: 2,
     },
     card: {
-      width: cardWidth,
+      width: '100%',
       backgroundColor: '#FFFCF7',
       borderRadius: 24,
-      paddingTop: 28,
-      paddingHorizontal: 22,
-      paddingBottom: 22,
       borderWidth: 1,
       borderColor: 'rgba(234,223,196,0.85)',
       overflow: 'hidden',
@@ -268,34 +294,40 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme'], windowWidth: 
         elevation: 12,
       }),
     },
+    scrollContent: {
+      paddingTop: 28,
+      paddingHorizontal: 20,
+      paddingBottom: 20,
+    },
     goldRail: {
       position: 'absolute',
       top: 0,
       left: 0,
       right: 0,
       height: 4,
+      zIndex: 1,
     },
     closeBtn: {
       position: 'absolute',
-      top: 14,
-      right: 14,
+      top: 12,
+      right: 12,
       width: 32,
       height: 32,
       borderRadius: 16,
       alignItems: 'center',
       justifyContent: 'center',
       backgroundColor: 'rgba(233,235,243,0.7)',
-      zIndex: 2,
+      zIndex: 3,
     },
     closePressed: { opacity: 0.85 },
     iconWrap: {
       alignSelf: 'center',
-      marginBottom: 16,
+      marginBottom: 14,
     },
     iconRing: {
-      width: 64,
-      height: 64,
-      borderRadius: 20,
+      width: 56,
+      height: 56,
+      borderRadius: 18,
       alignItems: 'center',
       justifyContent: 'center',
       ...platformShadow({
@@ -310,42 +342,51 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme'], windowWidth: 
       textAlign: 'center',
       color: PREMIUM.ink,
       marginBottom: 8,
+      paddingHorizontal: 12,
+      flexShrink: 1,
     },
     message: {
       textAlign: 'center',
       lineHeight: 22,
-      marginBottom: 22,
+      marginBottom: 20,
       paddingHorizontal: 4,
+      flexShrink: 1,
     },
     actions: {
       flexDirection: 'row',
       flexWrap: 'wrap',
       gap: 10,
       justifyContent: 'center',
+      width: '100%',
+    },
+    actionsStacked: {
+      flexDirection: 'column',
     },
     actionBtn: {
-      minHeight: 46,
-      minWidth: 120,
+      minHeight: 48,
+      minWidth: 0,
       flexGrow: 1,
-      flexBasis: '40%',
       borderRadius: 14,
       alignItems: 'center',
       justifyContent: 'center',
       paddingHorizontal: 16,
+      paddingVertical: 12,
       overflow: 'hidden',
       borderWidth: 1,
     },
     actionBtnStacked: {
-      flexBasis: '100%',
+      width: '100%',
+      alignSelf: 'stretch',
     },
     actionGoldFill: {
       ...StyleSheet.absoluteFillObject,
     },
     actionLabel: {
-      fontSize: 14,
+      fontSize: 15,
       fontFamily: theme.typography.fonts.ui.bold,
       fontWeight: '700',
       zIndex: 1,
+      textAlign: 'center',
     },
     actionPressed: { opacity: 0.9 },
   });

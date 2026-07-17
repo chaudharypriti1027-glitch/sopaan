@@ -45,6 +45,7 @@ import {
   platformSettingsUpdateSchema,
   adminStudentQuerySchema,
   studentStatusSchema,
+  studentGrantPremiumSchema,
   mediaPostSchema,
   mediaQuerySchema,
   adminResourceParamsSchema,
@@ -239,6 +240,20 @@ router.patch(
   validateId,
   validate(studentStatusSchema),
   asyncHandler(adminController.setStudentStatus),
+);
+router.post(
+  '/students/:id/premium',
+  adminOnly,
+  validateId,
+  validate(studentGrantPremiumSchema),
+  asyncHandler(adminController.grantStudentPremium),
+);
+router.delete(
+  '/students/:id/premium',
+  adminOnly,
+  validateId,
+  validateEmptyBody,
+  asyncHandler(adminController.revokeStudentPremium),
 );
 
 router.get('/reports', adminOnly, asyncHandler(adminController.getReports));

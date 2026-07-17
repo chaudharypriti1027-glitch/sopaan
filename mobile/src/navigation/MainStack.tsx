@@ -15,6 +15,7 @@ export function MainStack() {
     <Stack.Navigator
       screenOptions={premiumStackScreenOptions()}
     >
+
       <Stack.Screen name="AppTabs" component={AppTabs} options={{ headerShown: false }} />
       <Stack.Screen
         name="AskAI"
@@ -98,6 +99,11 @@ export function MainStack() {
       <Stack.Screen
         name="CreateTest"
         getComponent={lazyScreen(() => require('../screens/app/CreateTestScreen'), 'CreateTestScreen')}
+        options={HIDDEN_STACK_HEADER}
+      />
+      <Stack.Screen
+        name="GenerateTest"
+        getComponent={lazyScreen(() => require('../screens/app/GenerateTestScreen'), 'GenerateTestScreen')}
         options={HIDDEN_STACK_HEADER}
       />
       <Stack.Screen

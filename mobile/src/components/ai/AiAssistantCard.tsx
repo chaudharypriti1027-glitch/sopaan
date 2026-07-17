@@ -1,30 +1,23 @@
 import { useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
-import { LinearGradient } from 'expo-linear-gradient';
 import {
   Bookmark,
   Check,
   Copy,
   RotateCcw,
-  Sparkles,
   ThumbsDown,
   ThumbsUp,
-  Zap,
 } from 'lucide-react-native';
 import { Text } from '../Text';
 import { useTheme } from '../../theme';
 import { AiAvatar } from './AiAvatar';
 import { AiAnswerBody } from './AiAnswerBody';
-import { ASK_AI_INSTANT_MS } from '../../content/askAiContent';
 import { AI_UI } from './aiTheme';
 
 type AiAssistantCardProps = {
   text: string;
   coachName: string;
-  fromCache?: boolean;
-  cacheLabel?: string;
-  instantLabel?: string;
   formulaLabel: string;
   copyLabel: string;
   copiedLabel: string;
@@ -35,7 +28,6 @@ type AiAssistantCardProps = {
   savedLabel: string;
   saving?: boolean;
   saved?: boolean;
-  responseMs?: number;
   onRetry?: () => void;
   onNotHelpful?: () => void;
   onHelpful?: () => void;
@@ -43,15 +35,17 @@ type AiAssistantCardProps = {
   answerLabel?: string;
   explanationLabel?: string;
   tipLabel?: string;
+  /** @deprecated kept for call-site compatibility */
+  fromCache?: boolean;
+  cacheLabel?: string;
+  instantLabel?: string;
+  responseMs?: number;
   cacheSourceLabel?: string;
 };
 
 export function AiAssistantCard({
   text,
   coachName,
-  fromCache,
-  cacheLabel,
-  instantLabel,
   formulaLabel,
   copyLabel,
   copiedLabel,
@@ -62,7 +56,6 @@ export function AiAssistantCard({
   savedLabel,
   saving,
   saved,
-  responseMs,
   onRetry,
   onNotHelpful,
   onHelpful,
@@ -70,7 +63,6 @@ export function AiAssistantCard({
   answerLabel,
   explanationLabel,
   tipLabel,
-  cacheSourceLabel,
 }: AiAssistantCardProps) {
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -85,30 +77,11 @@ export function AiAssistantCard({
 
   return (
     <View style={styles.row}>
-      <AiAvatar size={36} />
+      <AiAvatar size={32} />
       <View style={styles.card}>
-        <LinearGradient
-          colors={[AI_UI.primary, AI_UI.gradientEnd]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.cardHeader}
-        >
-          <View style={styles.headerLeft}>
-            <Sparkles size={12} color={AI_UI.gold} strokeWidth={2.4} />
-            <Text style={styles.headerTitle}>{coachName}</Text>
-          </View>
-          <View style={styles.headerBadges}>
-            {fromCache && (cacheSourceLabel || cacheLabel) ? (
-              <View style={styles.badge}>
-                <Zap size={10} color={AI_UI.gold} />
-                <Text style={styles.badgeText}>{cacheSourceLabel ?? cacheLabel}</Text>
-              </View>
-            ) : null}
-            {typeof responseMs === 'number' && responseMs < ASK_AI_INSTANT_MS && !fromCache ? (
-              <Text style={styles.speedText}>{instantLabel}</Text>
-            ) : null}
-          </View>
-        </LinearGradient>
+        <View style={styles.cardHeader}>
+          <Text style={styles.headerTitle}>{coachName}</Text>
+        </View>
 
         <View style={styles.body}>
           <AiAnswerBody
@@ -121,25 +94,23 @@ export function AiAssistantCard({
         </View>
 
         <View style={styles.actions}>
-          <ActionBtn
+          <IconAction
             icon={copied ? Check : Copy}
             label={copied ? copiedLabel : copyLabel}
             active={copied}
             onPress={() => void handleCopy()}
           />
-          <ActionBtn
+          <IconAction
             icon={ThumbsUp}
             label={helpfulLabel}
             active={liked === 'up'}
             onPress={() => {
               const next = liked === 'up' ? null : 'up';
               setLiked(next);
-              if (next === 'up') {
-                onHelpful?.();
-              }
+              if (next === 'up') onHelpful?.();
             }}
           />
-          <ActionBtn
+          <IconAction
             icon={ThumbsDown}
             label={notHelpfulLabel}
             active={liked === 'down'}
@@ -149,17 +120,18 @@ export function AiAssistantCard({
             }}
           />
           {onSave ? (
-            <ActionBtn
+            <IconAction
               icon={saved ? Check : Bookmark}
-              label={saving ? '...' : saved ? savedLabel : saveLabel}
+              label={saving ? savedLabel : saved ? savedLabel : saveLabel}
               active={saved}
               onPress={onSave}
               disabled={saving || saved}
+              loading={saving}
             />
           ) : null}
           <View style={styles.spacer} />
           {onRetry ? (
-            <ActionBtn icon={RotateCcw} label={retryLabel} onPress={onRetry} />
+            <IconAction icon={RotateCcw} label={retryLabel} onPress={onRetry} />
           ) : null}
         </View>
       </View>
@@ -167,58 +139,52 @@ export function AiAssistantCard({
   );
 }
 
-function ActionBtn({
+function IconAction({
   icon: Icon,
   label,
   active,
   disabled,
+  loading,
   onPress,
 }: {
   icon: React.ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
   label: string;
   active?: boolean;
   disabled?: boolean;
+  loading?: boolean;
   onPress?: () => void;
 }) {
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={label}
       disabled={disabled}
       onPress={onPress}
+      hitSlop={6}
       style={[actionStyles.btn, active && actionStyles.btnActive, disabled && actionStyles.disabled]}
     >
-      {label === '...' ? (
+      {loading ? (
         <ActivityIndicator size="small" color={AI_UI.primary} />
       ) : (
-        <Icon size={12} color={active ? AI_UI.primary : AI_UI.sub} strokeWidth={2.2} />
+        <Icon size={15} color={active ? AI_UI.primary : AI_UI.sub} strokeWidth={2.2} />
       )}
-      <Text style={[actionStyles.label, active && actionStyles.labelActive]}>{label}</Text>
     </Pressable>
   );
 }
 
 const actionStyles = StyleSheet.create({
   btn: {
-    flexDirection: 'row',
+    width: 36,
+    height: 36,
+    borderRadius: 10,
     alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
+    justifyContent: 'center',
   },
   btnActive: {
     backgroundColor: AI_UI.primaryLight,
   },
   disabled: {
-    opacity: 0.55,
-  },
-  label: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: AI_UI.sub,
-  },
-  labelActive: {
-    color: AI_UI.primary,
+    opacity: 0.5,
   },
 });
 
@@ -227,7 +193,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     row: {
       flexDirection: 'row',
       alignItems: 'flex-start',
-      gap: 12,
+      gap: 10,
     },
     card: {
       flex: 1,
@@ -239,73 +205,36 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       borderWidth: 1,
       borderColor: AI_UI.goldBorder,
       shadowColor: AI_UI.primary,
-      shadowOffset: { width: 0, height: 12 },
-      shadowOpacity: 0.14,
-      shadowRadius: 28,
-      elevation: 6,
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.1,
+      shadowRadius: 20,
+      elevation: 4,
     },
     cardHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
       paddingHorizontal: theme.spacing.md,
-      paddingVertical: 10,
-      borderBottomWidth: 1,
-      borderBottomColor: AI_UI.primaryLight,
-    },
-    headerLeft: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
+      paddingTop: 12,
+      paddingBottom: 4,
     },
     headerTitle: {
       fontSize: 12,
       fontFamily: theme.typography.fonts.ui.bold,
-      fontWeight: '800',
-      color: '#FFFFFF',
-    },
-    headerBadges: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-    },
-    badge: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 4,
-      backgroundColor: 'rgba(255,255,255,0.14)',
-      borderRadius: 99,
-      paddingHorizontal: 8,
-      paddingVertical: 3,
-    },
-    badgeText: {
-      fontSize: 10,
-      fontFamily: theme.typography.fonts.ui.bold,
       fontWeight: '700',
-      color: AI_UI.goldSoft,
-    },
-    speedText: {
-      fontSize: 10,
-      fontFamily: theme.typography.fonts.ui.semibold,
-      fontWeight: '600',
-      color: 'rgba(255,255,255,0.75)',
+      color: AI_UI.primaryMuted,
     },
     body: {
-      paddingHorizontal: theme.spacing.lg,
-      paddingTop: theme.spacing.lg,
+      paddingHorizontal: theme.spacing.md,
+      paddingTop: 4,
       paddingBottom: theme.spacing.md,
-      backgroundColor: '#FDFCF8',
     },
     actions: {
       flexDirection: 'row',
       alignItems: 'center',
-      flexWrap: 'wrap',
       gap: 2,
-      paddingHorizontal: 12,
-      paddingVertical: 10,
-      borderTopWidth: 1,
+      paddingHorizontal: 8,
+      paddingVertical: 6,
+      borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: AI_UI.goldBorder,
-      backgroundColor: AI_UI.goldSoft,
+      backgroundColor: '#FBF8F0',
     },
     spacer: {
       flex: 1,

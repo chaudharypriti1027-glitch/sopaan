@@ -59,12 +59,12 @@ export function PracticeTestRow({
 
       <View style={styles.startWrap}>
         <LinearGradient
-          colors={[PRACTICE_UI.startStart, PRACTICE_UI.startEnd]}
+          colors={[PRACTICE_UI.goldCtaStart, PRACTICE_UI.goldCtaEnd]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.startBtn}
         >
-          <Play size={11} color="#FFFFFF" fill="#FFFFFF" strokeWidth={0} />
+          <Play size={11} color={PRACTICE_UI.goldCtaText} fill={PRACTICE_UI.goldCtaText} strokeWidth={0} />
           <Text style={styles.startText}>{startLabel}</Text>
         </LinearGradient>
       </View>
@@ -152,14 +152,14 @@ export function PracticeEmptyState({
 
   return (
     <Animated.View entering={practiceFadeInDown(0, 50, 420)} style={styles.empty}>
-      <LinearGradient colors={['#EEF1FA', '#D8DDF0']} style={styles.emptyIcon}>
-        <FilePlus size={28} color={PRACTICE_UI.startEnd} strokeWidth={2} />
+      <LinearGradient colors={['#F6EDDA', '#EFE0BC']} style={styles.emptyIcon}>
+        <FilePlus size={28} color={PRACTICE_UI.goldDeep} strokeWidth={2} />
       </LinearGradient>
       <Text style={styles.emptyTitle}>{title}</Text>
       <Text style={styles.emptyDesc}>{description}</Text>
       <Pressable onPress={onAction} style={({ pressed }) => [pressed && styles.pressed]}>
         <LinearGradient
-          colors={[PRACTICE_UI.startStart, PRACTICE_UI.startEnd]}
+          colors={[PRACTICE_UI.goldCtaStart, PRACTICE_UI.goldCtaEnd]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.genBtn}
@@ -190,7 +190,7 @@ function createStyles() {
       backgroundColor: PRACTICE_UI.card,
       borderRadius: 18,
       borderWidth: 1,
-      borderColor: 'rgba(35,42,77,0.06)',
+      borderColor: 'rgba(201,162,75,0.18)',
       ...platformShadow({
         color: PRACTICE_UI.startEnd,
         offsetY: 4,
@@ -250,17 +250,17 @@ function createStyles() {
       paddingHorizontal: 12,
       paddingVertical: 8,
       ...platformShadow({
-        color: PRACTICE_UI.startEnd,
+        color: PRACTICE_UI.goldCtaEnd,
         offsetY: 3,
-        opacity: 0.3,
+        opacity: 0.32,
         radius: 8,
         elevation: 2,
       }),
     },
     startText: {
       fontSize: 11,
-      fontWeight: '700',
-      color: '#FFFFFF',
+      fontWeight: '800',
+      color: PRACTICE_UI.goldCtaText,
       letterSpacing: 0.3,
     },
     sectionHeader: {
@@ -339,17 +339,17 @@ function createStyles() {
       paddingHorizontal: 22,
       paddingVertical: 10,
       ...platformShadow({
-        color: PRACTICE_UI.startEnd,
+        color: PRACTICE_UI.goldCtaEnd,
         offsetY: 3,
-        opacity: 0.3,
+        opacity: 0.32,
         radius: 8,
         elevation: 2,
       }),
     },
     genBtnText: {
       fontSize: 13,
-      fontWeight: '700',
-      color: '#FFFFFF',
+      fontWeight: '800',
+      color: PRACTICE_UI.goldCtaText,
     },
     secondaryBtn: {
       marginTop: 4,

@@ -12,7 +12,7 @@ type AuthFormCardProps = {
   borderless?: boolean;
 };
 
-/** Elevated white form panel — matches the Classic Premium login mockup. */
+/** Elevated cream form panel resting on the dark navy auth canvas. */
 export function AuthFormCard({ children, overlap, premium, borderless }: AuthFormCardProps) {
   const styles = useMemo(
     () => createStyles(overlap, premium, borderless),
@@ -34,19 +34,19 @@ function createStyles(overlap?: boolean, premium?: boolean, borderless?: boolean
       backgroundColor: AUTH_UI.card,
       borderRadius: AUTH_UI.cardRadius,
       borderWidth: borderless ? 0 : 1,
-      borderColor: premium ? 'rgba(201,162,75,0.22)' : AUTH_UI.border,
+      borderColor: premium ? 'rgba(201,162,75,0.28)' : 'rgba(255,255,255,0.08)',
       paddingHorizontal: 20,
       paddingTop: 22,
       paddingBottom: 18,
       overflow: 'hidden',
       zIndex: 3,
-      ...(overlap ? { marginTop: 0 } : null),
+      ...(overlap ? { marginTop: 8 } : null),
       ...platformShadow({
-        color: AUTH_UI.accent,
-        offsetY: premium ? 18 : 14,
-        opacity: premium ? 0.18 : 0.14,
-        radius: premium ? 36 : 32,
-        elevation: premium ? 8 : 6,
+        color: '#000000',
+        offsetY: premium ? 20 : 16,
+        opacity: premium ? 0.42 : 0.34,
+        radius: premium ? 36 : 28,
+        elevation: premium ? 10 : 8,
       }),
     },
     sheen: {
@@ -55,7 +55,7 @@ function createStyles(overlap?: boolean, premium?: boolean, borderless?: boolean
       left: 0,
       right: 0,
       height: 72,
-      backgroundColor: 'rgba(201,162,75,0.04)',
+      backgroundColor: 'rgba(201,162,75,0.05)',
     },
     accentLine: {
       position: 'absolute',
@@ -65,7 +65,7 @@ function createStyles(overlap?: boolean, premium?: boolean, borderless?: boolean
       height: 2,
       borderRadius: 1,
       backgroundColor: AUTH_UI.gold,
-      opacity: 0.7,
+      opacity: 0.75,
     },
   });
 }

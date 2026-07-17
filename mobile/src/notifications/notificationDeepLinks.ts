@@ -22,6 +22,7 @@ function getNavigationRef() {
   const { navigationRef } = require('../navigation/navigationRef') as {
     navigationRef: {
       isReady: () => boolean;
+      getCurrentRoute: () => { name?: string } | undefined;
       dispatch: (action: ReturnType<typeof CommonActions.navigate>) => void;
     };
   };
@@ -67,7 +68,7 @@ function openTab(
   return true;
 }
 
-export function navigateFromNotificationPayload(payload: NotificationPayload) {
+function runNotificationNavigation(payload: NotificationPayload) {
   if (payload.type === 'rank_up' && payload.attemptId) {
     openMainScreen('MockAnalysis', { attemptId: String(payload.attemptId) });
     return;
@@ -177,6 +178,32 @@ export function navigateFromNotificationPayload(payload: NotificationPayload) {
   }
 
   openMainScreen('Notifications');
+}
+
+/**
+ * Navigate from a push payload after splash/bootstrap. Retries until the
+ * navigator leaves Splash so Android cold starts do not open half-ready routes.
+ */
+export function navigateFromNotificationPayload(payload: NotificationPayload) {
+  const attempt = (remaining: number) => {
+    const navigationRef = getNavigationRef();
+    if (!navigationRef.isReady()) {
+      if (remaining > 0) {
+        setTimeout(() => attempt(remaining - 1), 250);
+      }
+      return;
+    }
+
+    const routeName = navigationRef.getCurrentRoute()?.name;
+    if (routeName === 'Splash' && remaining > 0) {
+      setTimeout(() => attempt(remaining - 1), 300);
+      return;
+    }
+
+    runNotificationNavigation(payload);
+  };
+
+  attempt(40);
 }
 
 /** @deprecated use navigateFromNotificationPayload — kept for typed screen navigation contexts. */

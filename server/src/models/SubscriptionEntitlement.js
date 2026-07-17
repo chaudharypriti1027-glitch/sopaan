@@ -50,7 +50,7 @@ const subscriptionEntitlementSchema = new mongoose.Schema(
     },
     provider: {
       type: String,
-      enum: ['razorpay'],
+      enum: ['razorpay', 'admin'],
       default: 'razorpay',
     },
     providerSubscriptionId: {

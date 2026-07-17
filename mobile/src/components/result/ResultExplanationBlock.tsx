@@ -16,6 +16,9 @@ type ResultExplanationBlockProps = {
   wrongLabel: string;
   correctAnswerLabel?: string;
   formulaLabel: string;
+  answerLabel?: string;
+  explanationLabel?: string;
+  tipLabel?: string;
 };
 
 export function ResultExplanationBlock({
@@ -29,6 +32,9 @@ export function ResultExplanationBlock({
   wrongLabel,
   correctAnswerLabel,
   formulaLabel,
+  answerLabel,
+  explanationLabel,
+  tipLabel,
 }: ResultExplanationBlockProps) {
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -44,16 +50,22 @@ export function ResultExplanationBlock({
           {wasCorrect ? correctLabel : wrongLabel}
         </Text>
         {selectedKey ? (
-          <Text style={styles.pick}>
-            {yourAnswerLabel}: {selectedKey}
-            {correctKey
-              ? ` · ${correctAnswerLabel ?? correctLabel}: ${correctKey}`
+          <Text style={styles.pick} numberOfLines={1}>
+            {yourAnswerLabel} {selectedKey}
+            {correctKey && !wasCorrect
+              ? ` · ${correctAnswerLabel ?? correctLabel} ${correctKey}`
               : ''}
           </Text>
         ) : null}
       </View>
       <Text style={styles.label}>{solutionLabel}</Text>
-      <AiAnswerBody text={explanation} formulaLabel={formulaLabel} />
+      <AiAnswerBody
+        text={explanation}
+        formulaLabel={formulaLabel}
+        answerLabel={answerLabel}
+        explanationLabel={explanationLabel}
+        tipLabel={tipLabel}
+      />
     </View>
   );
 }
@@ -62,20 +74,28 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
     wrap: {
       marginTop: theme.spacing.sm,
-      gap: theme.spacing.xs,
+      gap: theme.spacing.sm,
+      padding: theme.spacing.md,
+      borderRadius: 16,
+      backgroundColor: '#FFFCF7',
+      borderWidth: 1,
+      borderColor: RESULT_UI.line,
     },
     statusRow: {
-      gap: 4,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      flexWrap: 'wrap',
     },
     statusPill: {
       alignSelf: 'flex-start',
-      fontSize: 11,
+      fontSize: 10,
       fontWeight: '800',
       letterSpacing: 0.4,
       textTransform: 'uppercase',
       paddingHorizontal: 8,
-      paddingVertical: 3,
-      borderRadius: 999,
+      paddingVertical: 4,
+      borderRadius: 8,
       overflow: 'hidden',
     },
     statusOk: {
@@ -87,12 +107,13 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       backgroundColor: RESULT_UI.redSoft,
     },
     pick: {
+      flex: 1,
       fontSize: 12,
       color: RESULT_UI.ink2,
       fontWeight: '600',
     },
     label: {
-      fontSize: 11,
+      fontSize: 10,
       fontWeight: '800',
       letterSpacing: 0.6,
       textTransform: 'uppercase',

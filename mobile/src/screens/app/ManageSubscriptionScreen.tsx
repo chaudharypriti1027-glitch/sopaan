@@ -2,7 +2,6 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
   AlertCircle,
-  Calendar,
   Crown,
   RefreshCw,
   ShieldCheck,
@@ -254,28 +253,6 @@ export function ManageSubscriptionScreen() {
 
         {entitlement ? (
           <Card style={styles.details} padded>
-            <View style={styles.detailRow}>
-              <Calendar size={18} color={PREMIUM.accent} strokeWidth={2.2} />
-              <View style={styles.detailText}>
-                <Text style={styles.detailLabel}>{t('manageSubscription.periodEnds')}</Text>
-                <Text style={styles.detailValue}>
-                  {formatEntitlementDate(entitlement.currentPeriodEnd)}
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.detailRow}>
-              <ShieldCheck size={18} color={PREMIUM.accent} strokeWidth={2.2} />
-              <View style={styles.detailText}>
-                <Text style={styles.detailLabel}>{t('manageSubscription.access')}</Text>
-                <Text style={styles.detailValue}>
-                  {hasAccess
-                    ? t('manageSubscription.unlocked')
-                    : t('manageSubscription.expired')}
-                </Text>
-              </View>
-            </View>
-
             {entitlement.cancelAtPeriodEnd || entitlement.status === 'cancelled' ? (
               <View style={styles.detailRow}>
                 <XCircle size={18} color={PREMIUM.accent} strokeWidth={2.2} />
@@ -288,7 +265,19 @@ export function ManageSubscriptionScreen() {
                   </Text>
                 </View>
               </View>
-            ) : null}
+            ) : (
+              <View style={styles.detailRow}>
+                <ShieldCheck size={18} color={PREMIUM.accent} strokeWidth={2.2} />
+                <View style={styles.detailText}>
+                  <Text style={styles.detailLabel}>{t('manageSubscription.renewal')}</Text>
+                  <Text style={styles.detailValue}>
+                    {entitlement.autoRenews
+                      ? t('manageSubscription.autoRenewOn')
+                      : t('manageSubscription.autoRenewOff')}
+                  </Text>
+                </View>
+              </View>
+            )}
 
             {entitlement.status === 'past_due' ? (
               <View style={styles.alertBox} accessibilityRole="alert">

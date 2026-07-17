@@ -247,6 +247,8 @@ const userSchema = new mongoose.Schema(
 
 userSchema.index({ role: 1 });
 userSchema.index({ activeGoalId: 1 }, { sparse: true });
+// Admin student/team listings sort newest-first.
+userSchema.index({ createdAt: -1 });
 
 userSchema.pre('save', function normalizeRoleField() {
   if (this.isModified('role') && this.role) {

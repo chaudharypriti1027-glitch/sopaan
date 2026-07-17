@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { BarChart2, Bookmark, ChevronRight, Clock, Eye, Flame } from 'lucide-react-native';
+import { BarChart2, Bookmark, ChevronRight, Flame } from 'lucide-react-native';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
@@ -10,8 +10,6 @@ import { CA_UI, caFeedCard, caPressFeedback } from './caTheme';
 import {
   affairTags,
   categoryStyle,
-  estimateReadTime,
-  formatViewCount,
   getExamWeight,
   isTrendingAffair,
 } from './caUtils';
@@ -75,8 +73,6 @@ export function CurrentAffairCard({
   const examWeight = getExamWeight(item);
   const catStyle = categoryStyle(item.category);
   const tags = affairTags(item);
-  const readTime = estimateReadTime(item);
-  const views = formatViewCount(item.id);
 
   return (
     <Pressable
@@ -153,16 +149,6 @@ export function CurrentAffairCard({
       <View style={styles.footer}>
         <View style={styles.meta}>
           {item.source ? <Text style={styles.metaText}>{item.source}</Text> : null}
-          {item.source ? <Text style={styles.dot}>·</Text> : null}
-          <View style={styles.metaItem}>
-            <Clock size={9} color={CA_UI.faint} strokeWidth={2.5} />
-            <Text style={styles.metaText}>{readTime}</Text>
-          </View>
-          <Text style={styles.dot}>·</Text>
-          <View style={styles.metaItem}>
-            <Eye size={9} color={CA_UI.faint} strokeWidth={2.5} />
-            <Text style={styles.metaText}>{views}</Text>
-          </View>
         </View>
         <View style={styles.right}>
           {formattedDate ? <Text style={styles.date}>{formattedDate}</Text> : null}

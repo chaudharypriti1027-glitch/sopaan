@@ -13,7 +13,7 @@ import {
   PROFILE_CATEGORIES,
   type ProfileCategory,
 } from '../../auth/onboardingData';
-import { parseApiError } from '../../api';
+import { getUserFacingMessage } from '../../errors/getUserFacingMessage';
 import type { AuthStackParamList } from '../../navigation/types';
 import { useTheme } from '../../theme';
 import { AuthScreenLayout } from './AuthScreenLayout';
@@ -61,7 +61,7 @@ export function ProfileSetupScreen() {
       }
       navigation.navigate('Signup');
     } catch (error) {
-      Alert.alert(t('auth:profileSetup.saveFailed'), parseApiError(error).message);
+      Alert.alert(t('auth:profileSetup.saveFailed'), getUserFacingMessage(error));
     } finally {
       setLoading(false);
     }

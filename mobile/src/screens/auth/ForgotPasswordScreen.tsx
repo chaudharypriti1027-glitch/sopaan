@@ -1,19 +1,18 @@
 import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated, { FadeInDown, ReduceMotion, useReducedMotion } from 'react-native-reanimated';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
+import { ArrowRight } from 'lucide-react-native';
 import {
-  AuthAnimatedSection,
+  AuthAltLinks,
+  AuthBackButton,
   AuthErrorBanner,
-  AuthFormCard,
-  AuthFormIntro,
+  AuthFlowHeader,
   AuthPremiumField,
-  AuthPremiumHero,
   AuthScreen,
-  GhostButton,
   PrimaryButton,
   useShakeOnError,
 } from '../../components/auth';
@@ -30,6 +29,7 @@ export function ForgotPasswordScreen() {
   const { t } = useTranslation('auth');
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
+  const reducedMotion = useReducedMotion();
   const styles = useMemo(() => createStyles(), []);
 
   const [email, setEmail] = useState(route.params?.email ?? '');
@@ -65,71 +65,93 @@ export function ForgotPasswordScreen() {
     }
   };
 
+  const enterForm = reducedMotion
+    ? undefined
+    : FadeInDown.duration(420).delay(140).reduceMotion(ReduceMotion.System);
+  const enterFooter = reducedMotion
+    ? undefined
+    : FadeInDown.duration(380).delay(240).reduceMotion(ReduceMotion.System);
+
   return (
-    <AuthScreen scrollProps={{ keyboardShouldPersistTaps: 'handled' }}>
-      <AuthPremiumHero variant="login" subtitle={t('forgot.heroSubtitle')} />
+    <AuthScreen scrollProps={{ keyboardShouldPersistTaps: 'handled' }} fill>
+      <View style={styles.column}>
+        <AuthBackButton disabled={loading} testID="forgot-back" />
 
-      <Animated.View entering={FadeInDown.duration(400).delay(80)} style={shakeStyle}>
-        <AuthFormCard overlap premium>
-          <AuthFormIntro title={t('forgot.title')} subtitle={t('forgot.subtitle')} />
+        <AuthFlowHeader
+          title={t('forgot.title')}
+          subtitle={t('forgot.subtitle')}
+          testID="forgot-header"
+        />
 
-          <AuthAnimatedSection index={0}>
-            <AuthPremiumField
-              dense
-              variant="email"
-              label={t('login.emailAddress')}
-              value={email}
-              placeholder={t('login.emailPlaceholder')}
-              onChangeText={(value) => {
-                setEmail(value);
-                if (emailError) setEmailError(undefined);
-                if (formError) setFormError(null);
-              }}
-              error={emailError}
-              editable={!loading}
-              testID="forgot-email"
-              autoFocus
-            />
-          </AuthAnimatedSection>
+        <Animated.View entering={enterForm} style={[styles.form, shakeStyle]}>
+          <AuthPremiumField
+            dark
+            variant="email"
+            label={t('login.emailAddress')}
+            value={email}
+            placeholder={t('login.emailPlaceholder')}
+            onChangeText={(value) => {
+              setEmail(value);
+              if (emailError) setEmailError(undefined);
+              if (formError) setFormError(null);
+            }}
+            error={emailError}
+            editable={!loading}
+            testID="forgot-email"
+            autoFocus
+          />
 
           {formError ? (
-            <AuthErrorBanner message={formError} testID="forgot-form-error" />
+            <AuthErrorBanner dark message={formError} testID="forgot-form-error" />
           ) : null}
 
-          <AuthAnimatedSection index={1}>
-            <PrimaryButton
-              label={t('forgot.sendCode')}
-              loading={loading}
-              disabled={!canSubmit}
-              onPress={() => void handleSubmit()}
-              style={styles.submitBtn}
-              testID="forgot-submit"
-            />
-          </AuthAnimatedSection>
+          <PrimaryButton
+            label={t('forgot.sendCode')}
+            loading={loading}
+            disabled={!canSubmit}
+            onPress={() => void handleSubmit()}
+            testID="forgot-submit"
+            trailingIcon={ArrowRight}
+          />
+        </Animated.View>
 
-          <View style={styles.alt}>
-            <GhostButton
-              label={t('forgot.backToLogin')}
-              disabled={loading}
-              onPress={() => navigation.navigate('Login')}
-              testID="forgot-back-login"
-            />
-            <GhostButton
-              label={t('forgot.usePhoneInstead')}
-              disabled={loading}
-              onPress={() => navigation.navigate('OtpLogin')}
-              testID="forgot-use-phone"
-            />
-          </View>
-        </AuthFormCard>
-      </Animated.View>
+        <View style={styles.spacer} />
+
+        <Animated.View entering={enterFooter}>
+          <AuthAltLinks
+            dark
+            links={[
+              {
+                label: t('forgot.backToLogin'),
+                onPress: loading ? undefined : () => navigation.navigate('Login'),
+                testID: 'forgot-back-login',
+              },
+              {
+                label: t('forgot.usePhoneInstead'),
+                onPress: loading ? undefined : () => navigation.navigate('OtpLogin'),
+                testID: 'forgot-use-phone',
+              },
+            ]}
+          />
+        </Animated.View>
+      </View>
     </AuthScreen>
   );
 }
 
 function createStyles() {
   return StyleSheet.create({
-    submitBtn: { marginTop: 4 },
-    alt: { gap: 8, marginTop: 4 },
+    column: {
+      flex: 1,
+      minHeight: 520,
+    },
+    form: {
+      marginTop: 34,
+      gap: 16,
+    },
+    spacer: {
+      flex: 1,
+      minHeight: 20,
+    },
   });
 }

@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Shield } from 'lucide-react-native';
+import { ShieldCheck } from 'lucide-react-native';
 import { Text } from '../Text';
-import { AUTH_UI } from './authTheme';
+import { AUTH_FONTS, AUTH_UI } from './authTheme';
 
 type AuthTrustNoteProps = {
   message: string;
@@ -14,7 +14,7 @@ export function AuthTrustNote({ message, testID }: AuthTrustNoteProps) {
 
   return (
     <View style={styles.row} testID={testID}>
-      <Shield size={13} color={AUTH_UI.sageDeep} strokeWidth={2.2} />
+      <ShieldCheck size={13} color="rgba(212,175,55,0.75)" strokeWidth={2.1} />
       <Text style={styles.text}>{message}</Text>
     </View>
   );
@@ -26,15 +26,17 @@ function createStyles() {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: 6,
-      marginTop: 14,
+      gap: 7,
+      marginTop: 20,
       paddingHorizontal: 8,
     },
     text: {
-      fontSize: 11,
-      fontWeight: '600',
-      color: AUTH_UI.muted,
+      fontFamily: AUTH_FONTS.regular,
+      fontSize: 12.5,
+      fontWeight: '400',
+      color: AUTH_UI.onCanvasFaint,
       textAlign: 'center',
+      letterSpacing: 0.3,
     },
   });
 }

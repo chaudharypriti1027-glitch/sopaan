@@ -66,9 +66,10 @@ describe('OtpScreen', () => {
     jest.useRealTimers();
   });
 
-  it('shows masked phone in subtitle', () => {
+  it('shows masked phone in the header', () => {
     const { getByText } = renderWithProviders(<OtpScreen />);
-    expect(getByText('Code sent to +91 •••• ••10')).toBeTruthy();
+    expect(getByText('Enter the 6-digit code sent to')).toBeTruthy();
+    expect(getByText('+91 •••• ••10')).toBeTruthy();
   });
 
   it('auto-submits when 6 digits entered', async () => {

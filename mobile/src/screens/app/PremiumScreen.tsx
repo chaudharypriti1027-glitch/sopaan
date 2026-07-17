@@ -28,10 +28,12 @@ import { parseApiError } from '../../api';
 import type { PremiumPlanId } from '../../api/payments';
 import {
   checkoutPremiumPlan,
+  CheckoutUnavailableError,
+  PaymentCancelledError,
   startFreeTrial,
   type SubscriptionPlan,
 } from '../../payments/subscriptionFlow';
-import { Check, Crown, Gift, Zap } from 'lucide-react-native';
+import { Check, Clock, Crown, Gift, Zap } from 'lucide-react-native';
 import type { MainStackParamList } from '../../navigation/types';
 import { useTheme } from '../../theme';
 import { INVALID_DATE_FALLBACK, parseDate } from '../../i18n/format';
@@ -71,19 +73,31 @@ export function PremiumScreen() {
   const plansQuery = usePremiumPlans();
   const entitlementQuery = useSubscriptionEntitlement(Boolean(isPremium));
   const welcomeOfferEnabled = tier?.welcomeMonthEnabled !== false;
-  const canClaimWelcome =
-    welcomeOfferEnabled && !isPremium && user?.premiumTrialUsed !== true;
 
   const [plan, setPlan] = useState<SubscriptionPlan>(
     paywall?.plan === 'monthly' || paywall?.plan === 'yearly' ? paywall.plan : 'yearly',
   );
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState<SuccessState | null>(null);
+  const [trialBlockedReason, setTrialBlockedReason] = useState<'used' | 'disabled' | null>(null);
 
   const plans = plansQuery.data?.plans ?? [];
   const selectedPlan = plans.find((item) => item.id === plan);
   /** Explicit false from API — undefined means older/working servers still allow checkout. */
   const paymentsConfigured = plansQuery.data?.configured !== false;
+
+  const canClaimWelcome =
+    welcomeOfferEnabled &&
+    !isPremium &&
+    user?.premiumTrialUsed !== true &&
+    trialBlockedReason === null;
+
+  const visibleBenefits = useMemo(() => {
+    const trialPattern = /free\s*(month|trial)|welcome\s*offer|1\s*month\s*free/i;
+    return copy.benefits
+      .filter((benefit) => canClaimWelcome || !trialPattern.test(benefit))
+      .slice(0, 4);
+  }, [canClaimWelcome, copy.benefits]);
 
   useEffect(() => {
     if (paywall?.plan === 'monthly' || paywall?.plan === 'yearly') {
@@ -146,12 +160,6 @@ export function PremiumScreen() {
 
   const handleSubscribe = async () => {
     if (!paymentsConfigured) {
-      alert({
-        title: t('premium.paymentsComingSoon'),
-        message: t('premium.paymentsComingSoonBody'),
-        icon: 'bell',
-        iconTone: 'navy',
-      });
       return;
     }
 
@@ -174,17 +182,23 @@ export function PremiumScreen() {
       });
       void trackEvent('paywall_purchase_success', { plan: result.plan });
     } catch (error) {
+      if (error instanceof PaymentCancelledError) {
+        return;
+      }
+      if (error instanceof CheckoutUnavailableError) {
+        alert({
+          title: t('premium.checkoutUnavailableTitle'),
+          message: t('premium.checkoutUnavailableBody'),
+          icon: 'bell',
+          iconTone: 'navy',
+        });
+        return;
+      }
       const parsed = parseApiError(error);
       if (parsed.message?.toLowerCase().includes('cancelled')) {
         return;
       }
       if (parsed.code === 'PAYMENTS_NOT_CONFIGURED') {
-        alert({
-          title: t('premium.paymentsComingSoon'),
-          message: t('premium.paymentsComingSoonBody'),
-          icon: 'bell',
-          iconTone: 'navy',
-        });
         return;
       }
       alert({
@@ -213,6 +227,15 @@ export function PremiumScreen() {
       });
       void trackEvent('paywall_trial_success', {});
     } catch (error) {
+      const parsed = parseApiError(error);
+      if (parsed.code === 'TRIAL_ALREADY_USED') {
+        setTrialBlockedReason('used');
+        return;
+      }
+      if (parsed.code === 'WELCOME_OFFER_DISABLED') {
+        setTrialBlockedReason('disabled');
+        return;
+      }
       alert({
         title: t('premium.trialFailedTitle'),
         message: getUserFacingMessage(error),
@@ -322,8 +345,21 @@ export function PremiumScreen() {
       >
         <PremiumHeroCard
           icon={heroIcon}
-          eyebrow={t('premium.proActive')}
-          title={planLabel}
+          eyebrow={
+            entitlement?.isGift || entitlement?.provider === 'admin'
+              ? t('premium.giftBadge')
+              : t('premium.proActive')
+          }
+          title={
+            entitlement?.isGift || entitlement?.provider === 'admin'
+              ? t('premium.giftTitle')
+              : planLabel
+          }
+          hint={
+            entitlement?.isGift || entitlement?.provider === 'admin'
+              ? t('premium.giftBody', { name: user?.name?.trim() || t('premium.giftStudentFallback') })
+              : undefined
+          }
           trailing={
             entitlement ? (
               <Pill
@@ -412,7 +448,7 @@ export function PremiumScreen() {
       <Animated.View entering={enter(80)}>
         <PremiumSectionLabel title={copy.benefitsTitle} />
         <Card style={styles.benefits} padded>
-          {copy.benefits.map((benefit) => (
+          {visibleBenefits.map((benefit) => (
             <View key={benefit} style={styles.benefitRow}>
               <Check size={16} color={PREMIUM.goldDeep} strokeWidth={2.4} />
               <Text style={styles.benefitText}>{benefit}</Text>
@@ -421,61 +457,87 @@ export function PremiumScreen() {
         </Card>
       </Animated.View>
 
-      <Animated.View entering={enter(140)}>
-        <PremiumSectionLabel title={t('premium.choosePlan')} />
-        <View style={styles.plans}>
-          {plans.map((item) => {
-            const selected = plan === item.id;
-            const isYearly = item.id === 'yearly';
-            return (
-              <Pressable
-                key={item.id}
-                accessibilityRole="button"
-                accessibilityState={{ selected }}
-                onPress={() => setPlan(item.id as PremiumPlanId)}
-                style={({ pressed }) => [
-                  styles.planCard,
-                  selected && styles.planCardSelected,
-                  pressed && styles.planCardPressed,
-                ]}
-              >
-                {isYearly ? (
-                  <LinearGradient
-                    colors={[PREMIUM.goldLt, PREMIUM.gold]}
-                    start={{ x: 0, y: 0.5 }}
-                    end={{ x: 1, y: 0.5 }}
-                    style={styles.planAccent}
-                  />
-                ) : null}
-                {selected ? <View style={styles.planGlow} pointerEvents="none" /> : null}
-                <View style={styles.planHeader}>
-                  <Text style={[styles.planLabel, selected && styles.planLabelSelected]}>
-                    {item.label}
+      {paymentsConfigured ? (
+        <Animated.View entering={enter(140)}>
+          <PremiumSectionLabel title={t('premium.choosePlan')} />
+          <View style={styles.plans}>
+            {plans.map((item) => {
+              const selected = plan === item.id;
+              const isYearly = item.id === 'yearly';
+              return (
+                <Pressable
+                  key={item.id}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected }}
+                  onPress={() => setPlan(item.id as PremiumPlanId)}
+                  style={({ pressed }) => [
+                    styles.planCard,
+                    selected && styles.planCardSelected,
+                    pressed && styles.planCardPressed,
+                  ]}
+                >
+                  {isYearly ? (
+                    <LinearGradient
+                      colors={[PREMIUM.goldLt, PREMIUM.gold]}
+                      start={{ x: 0, y: 0.5 }}
+                      end={{ x: 1, y: 0.5 }}
+                      style={styles.planAccent}
+                    />
+                  ) : null}
+                  {selected ? <View style={styles.planGlow} pointerEvents="none" /> : null}
+                  <View style={styles.planHeader}>
+                    <Text style={[styles.planLabel, selected && styles.planLabelSelected]}>
+                      {item.label}
+                    </Text>
+                    {isYearly ? <Pill label={t('premium.bestValue')} variant="gold" /> : null}
+                  </View>
+                  <Text style={[styles.planPrice, selected && styles.planPriceSelected]}>
+                    {item.displayAmount}
                   </Text>
-                  {isYearly ? <Pill label={t('premium.bestValue')} variant="gold" /> : null}
-                </View>
-                <Text style={[styles.planPrice, selected && styles.planPriceSelected]}>
-                  {item.displayAmount}
-                </Text>
-                <Text style={styles.planSub}>{item.description}</Text>
-                <View style={[styles.planCta, selected && styles.planCtaSelected]}>
-                  <Text style={[styles.planCtaText, selected && styles.planCtaTextSelected]}>
-                    {selected ? t('premium.selected') : t('premium.select')}
-                  </Text>
-                </View>
-              </Pressable>
-            );
-          })}
-        </View>
-      </Animated.View>
-
-      {!paymentsConfigured ? (
-        <Animated.View entering={enter(180)} testID="premium-coming-soon">
-          <Card style={styles.comingSoonNotice} padded>
-            <Text style={styles.comingSoonTitle}>{t('premium.paymentsComingSoon')}</Text>
-            <Text style={styles.comingSoonBody}>{t('premium.paymentsComingSoonBody')}</Text>
-          </Card>
+                  <Text style={styles.planSub}>{item.description}</Text>
+                  <View style={[styles.planCta, selected && styles.planCtaSelected]}>
+                    <Text style={[styles.planCtaText, selected && styles.planCtaTextSelected]}>
+                      {selected ? t('premium.selected') : t('premium.select')}
+                    </Text>
+                  </View>
+                </Pressable>
+              );
+            })}
+          </View>
         </Animated.View>
+      ) : (
+        <Animated.View entering={enter(140)} testID="premium-coming-soon">
+          <View style={styles.comingSoonBanner}>
+            <LinearGradient
+              colors={['#2C3568', '#1C2450']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.comingSoonGradient}
+            >
+              <View style={styles.comingSoonIcon}>
+                <Clock size={18} color={PREMIUM.goldLt} strokeWidth={2.2} />
+              </View>
+              <View style={styles.comingSoonCopy}>
+                <Text style={styles.comingSoonTitle}>{t('premium.paymentsComingSoon')}</Text>
+                <Text style={styles.comingSoonBody}>
+                  {canClaimWelcome
+                    ? t('premium.paymentsComingSoonWithTrialBody')
+                    : t('premium.paymentsComingSoonBody')}
+                </Text>
+              </View>
+            </LinearGradient>
+          </View>
+        </Animated.View>
+      )}
+
+      {trialBlockedReason ? (
+        <View style={styles.inlineNotice} testID="premium-trial-unavailable">
+          <Text style={styles.inlineNoticeText}>
+            {trialBlockedReason === 'used'
+              ? t('premium.trialAlreadyUsedBody')
+              : t('premium.trialOfferDisabledBody')}
+          </Text>
+        </View>
       ) : null}
 
       <Animated.View entering={enter(200)} style={styles.ctaStack}>
@@ -499,16 +561,13 @@ export function PremiumScreen() {
             onPress={() => void handleSubscribe()}
             fullWidth
           />
-        ) : (
-          <Button
-            label={t('premium.paymentsComingSoon')}
-            testID="premium-subscribe-unavailable"
-            disabled
-            fullWidth
-          />
-        )}
+        ) : null}
       </Animated.View>
-      <Text style={styles.disclaimer}>{t('premium.disclaimerFull')}</Text>
+      {paymentsConfigured ? (
+        <Text style={styles.disclaimer}>{t('premium.disclaimerFull')}</Text>
+      ) : (
+        <Text style={styles.disclaimer}>{t('premium.disclaimerComingSoon')}</Text>
+      )}
       {successDialog}
     </FeatureScreenLayout>
   );
@@ -520,20 +579,53 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     centered: { alignItems: 'center', justifyContent: 'center' },
     benefits: { gap: theme.spacing.md },
     activePerks: { gap: theme.spacing.md },
-    comingSoonNotice: {
-      gap: theme.spacing.xs,
-      borderColor: PREMIUM.gold,
-      backgroundColor: PREMIUM.goldSoft,
+    comingSoonBanner: {
+      borderRadius: PREMIUM.cardRadius,
+      overflow: 'hidden',
+      borderWidth: 1,
+      borderColor: 'rgba(201,162,75,0.35)',
     },
+    comingSoonGradient: {
+      flexDirection: 'row',
+      gap: theme.spacing.md,
+      alignItems: 'flex-start',
+      padding: theme.spacing.lg,
+    },
+    comingSoonIcon: {
+      width: 36,
+      height: 36,
+      borderRadius: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: 'rgba(233,207,141,0.16)',
+      borderWidth: 1,
+      borderColor: 'rgba(233,207,141,0.28)',
+    },
+    comingSoonCopy: { flex: 1, gap: 4 },
     comingSoonTitle: {
       ...theme.typography.presets.body,
-      color: PREMIUM.ink,
+      color: '#F7F1E4',
       fontWeight: '700',
     },
     comingSoonBody: {
       ...theme.typography.presets.caption,
-      color: PREMIUM.muted,
+      color: 'rgba(247,241,228,0.78)',
       lineHeight: 18,
+    },
+    inlineNotice: {
+      borderRadius: 14,
+      paddingHorizontal: theme.spacing.md,
+      paddingVertical: theme.spacing.sm,
+      backgroundColor: PREMIUM.goldSoft,
+      borderWidth: 1,
+      borderColor: PREMIUM.goldBorder,
+    },
+    inlineNoticeText: {
+      ...theme.typography.presets.caption,
+      color: PREMIUM.ink,
+      lineHeight: 18,
+      textAlign: 'center',
+      fontWeight: '600',
     },
     benefitRow: { flexDirection: 'row', gap: theme.spacing.sm, alignItems: 'flex-start' },
     benefitText: {
@@ -549,16 +641,16 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       gap: theme.spacing.sm,
       padding: theme.spacing.lg,
       borderRadius: PREMIUM.cardRadius,
-      borderWidth: 1,
+      borderWidth: 1.5,
       borderColor: PREMIUM.hairline,
-      backgroundColor: '#FFFFFF',
+      backgroundColor: '#FFFCF7',
       overflow: 'hidden',
+      minHeight: 148,
     },
     planCardSelected: {
       borderWidth: 2,
       borderColor: PREMIUM.gold,
       backgroundColor: PREMIUM.goldSoft,
-      transform: [{ scale: 1.01 }],
     },
     planCardPressed: { opacity: 0.94, transform: [{ scale: 0.985 }] },
     planAccent: {
@@ -595,10 +687,10 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       color: PREMIUM.ink,
     },
     planPriceSelected: { color: PREMIUM.goldDeep },
-    planSub: { ...theme.typography.presets.caption, color: PREMIUM.sectionLabel },
+    planSub: { ...theme.typography.presets.caption, color: PREMIUM.sectionLabel, lineHeight: 17 },
     planCta: {
-      marginTop: 4,
-      borderRadius: 99,
+      marginTop: 8,
+      borderRadius: 12,
       paddingVertical: 10,
       alignItems: 'center',
       borderWidth: 1,

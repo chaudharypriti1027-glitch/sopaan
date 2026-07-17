@@ -28,9 +28,13 @@ export function CaHeader({ onAskAi, onNotifications, hasUnread }: CaHeaderProps)
     >
       <View style={styles.decorGold} />
       <View style={styles.top}>
-        <View>
+        <View style={styles.titleCol}>
           <Text style={styles.eyebrow}>{t('currentAffairs.subtitle')}</Text>
-          <Text style={styles.title}>{t('currentAffairs.title')}</Text>
+          <View style={styles.titleRow}>
+            <Text style={styles.title}>{t('currentAffairs.title')}</Text>
+            <View style={styles.dividerLine} />
+            <View style={styles.dividerDiamond} />
+          </View>
         </View>
         <View style={styles.actions}>
           <Pressable
@@ -93,18 +97,44 @@ function createStyles(topInset: number) {
       justifyContent: 'space-between',
       zIndex: 1,
     },
+    titleCol: {
+      flex: 1,
+      minWidth: 0,
+      marginRight: 8,
+    },
     eyebrow: {
       fontSize: 11,
-      color: 'rgba(255,255,255,0.62)',
+      color: 'rgba(233,222,196,0.65)',
       fontWeight: '600',
       letterSpacing: 0.3,
       marginBottom: 2,
+    },
+    titleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
     },
     title: {
       fontSize: 22,
       fontWeight: '800',
       color: '#FFFFFF',
       letterSpacing: -0.5,
+    },
+    dividerLine: {
+      width: 22,
+      height: StyleSheet.hairlineWidth + 0.5,
+      backgroundColor: CA_UI.goldLt,
+      opacity: 0.7,
+    },
+    dividerDiamond: {
+      width: 4,
+      height: 4,
+      backgroundColor: CA_UI.goldLt,
+      transform: [{ rotate: '45deg' }],
+      shadowColor: CA_UI.goldLt,
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 0.8,
+      shadowRadius: 5,
     },
     actions: {
       flexDirection: 'row',

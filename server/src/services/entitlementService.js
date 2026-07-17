@@ -81,8 +81,17 @@ export function formatEntitlementDto(entitlement) {
     return null;
   }
 
+  const metadata =
+    entitlement.metadata && typeof entitlement.metadata === 'object'
+      ? entitlement.metadata.toObject?.() ?? entitlement.metadata
+      : {};
+  const isGift = entitlement.provider === 'admin';
+  const giftGrantedAt = isGift
+    ? toIsoOrNull(metadata.grantedAt) || toIsoOrNull(entitlement.updatedAt)
+    : null;
+
   return {
-    id: entitlement._id,
+    id: entitlement._id?.toString?.() ?? String(entitlement._id),
     plan: entitlement.plan,
     status: entitlement.status,
     currentPeriodStart: toIsoOrNull(entitlement.currentPeriodStart),
@@ -93,6 +102,9 @@ export function formatEntitlementDto(entitlement) {
     providerSubscriptionId: entitlement.providerSubscriptionId,
     autoRenews: Boolean(entitlement.providerSubscriptionId) && !entitlement.cancelAtPeriodEnd,
     hasAccess: entitlementGrantsAccess(entitlement),
+    /** True when Sopaan staff gifted Pro (no payment). */
+    isGift,
+    giftGrantedAt,
     updatedAt: toIsoOrNull(entitlement.updatedAt),
   };
 }
@@ -102,6 +114,10 @@ async function upsertEntitlement(userId, patch) {
 
   if (existing) {
     Object.assign(existing, patch);
+    // Mixed fields are not always detected as changed by Mongoose.
+    if (Object.prototype.hasOwnProperty.call(patch, 'metadata')) {
+      existing.markModified('metadata');
+    }
     await existing.save();
     await syncUserPremiumFields(userId);
     return existing;
@@ -348,6 +364,92 @@ export async function listPaymentHistory(userId, query = {}) {
   }));
 
   return buildPaginatedResult({ items, total, limit, offset });
+}
+
+/**
+ * Admin complimentary Pro — no payment. Optional custom day length.
+ */
+export async function grantAdminPremium(userId, { plan, days, adminId } = {}) {
+  if (!ENTITLEMENT_PLANS.includes(plan)) {
+    throw new Error(`Invalid plan: ${plan}`);
+  }
+
+  const now = nowDate();
+  const existing = await getEntitlementByUserId(userId);
+  const baseDate =
+    existing?.currentPeriodEnd && new Date(existing.currentPeriodEnd) > now
+      ? new Date(existing.currentPeriodEnd)
+      : now;
+
+  let periodEnd;
+  if (typeof days === 'number' && days > 0) {
+    periodEnd = new Date(baseDate);
+    periodEnd.setDate(periodEnd.getDate() + days);
+  } else {
+    periodEnd = computePremiumExpiry(plan, baseDate);
+  }
+
+  const status = plan === 'trial' ? 'trialing' : 'active';
+
+  const entitlement = await upsertEntitlement(userId, {
+    plan,
+    status,
+    currentPeriodStart: existing?.currentPeriodStart && new Date(existing.currentPeriodEnd) > now
+      ? existing.currentPeriodStart
+      : now,
+    currentPeriodEnd: periodEnd,
+    cancelAtPeriodEnd: false,
+    cancelledAt: null,
+    provider: 'admin',
+    providerSubscriptionId: null,
+    lastPaymentOrderId: null,
+    lastPaymentId: null,
+    metadata: {
+      ...(existing?.metadata && typeof existing.metadata === 'object'
+        ? existing.metadata.toObject?.() ?? existing.metadata
+        : {}),
+      lastEvent: 'admin_grant',
+      grantedBy: adminId ? String(adminId) : null,
+      grantedAt: now.toISOString(),
+      grantDays: typeof days === 'number' && days > 0 ? days : null,
+    },
+  });
+
+  if (plan === 'trial') {
+    await User.findByIdAndUpdate(userId, { premiumTrialUsed: true });
+  }
+
+  await syncUserPremiumFields(userId);
+  return entitlement;
+}
+
+/**
+ * Admin: end Pro access immediately (complimentary or otherwise).
+ */
+export async function revokeStudentPremium(userId, { adminId } = {}) {
+  const entitlement = await getEntitlementByUserId(userId);
+  if (!entitlement) {
+    await User.findByIdAndUpdate(userId, {
+      isPremium: false,
+      premiumPlan: null,
+      premiumExpiresAt: null,
+    });
+    return null;
+  }
+
+  entitlement.status = 'expired';
+  entitlement.currentPeriodEnd = nowDate();
+  entitlement.cancelAtPeriodEnd = false;
+  entitlement.cancelledAt = nowDate();
+  entitlement.metadata = {
+    ...(entitlement.metadata ?? {}),
+    lastEvent: 'admin_revoke',
+    revokedBy: adminId ? String(adminId) : null,
+    revokedAt: nowDate().toISOString(),
+  };
+  await entitlement.save();
+  await syncUserPremiumFields(userId);
+  return entitlement;
 }
 
 export { ENTITLEMENT_STATUSES, ENTITLEMENT_PLANS };

@@ -37,7 +37,7 @@ export function PracticeTabBar({ tabs, active, onChange }: PracticeTabBarProps) 
           >
             <Icon
               size={14}
-              color={isActive ? PRACTICE_UI.tabActive : PRACTICE_UI.tabMuted}
+              color={isActive ? PRACTICE_UI.gold : PRACTICE_UI.tabMuted}
               strokeWidth={2.3}
             />
             <Text style={[styles.tabLabel, isActive && styles.tabLabelActive]}>{tab.label}</Text>
@@ -57,7 +57,7 @@ function createStyles() {
       borderRadius: 20,
       padding: 5,
       borderWidth: 1,
-      borderColor: 'rgba(35,42,77,0.06)',
+      borderColor: 'rgba(201,162,75,0.16)',
     },
     tab: {
       flex: 1,
@@ -69,13 +69,13 @@ function createStyles() {
       borderRadius: 15,
     },
     tabActive: {
-      backgroundColor: '#FFFFFF',
+      backgroundColor: PRACTICE_UI.tabActive,
       ...platformShadow({
         color: PRACTICE_UI.startEnd,
-        offsetY: 3,
-        opacity: 0.14,
+        offsetY: 4,
+        opacity: 0.28,
         radius: 10,
-        elevation: 2,
+        elevation: 3,
       }),
     },
     tabLabel: {
@@ -85,7 +85,7 @@ function createStyles() {
       textAlign: 'center',
     },
     tabLabelActive: {
-      color: PRACTICE_UI.tabActive,
+      color: '#FFFFFF',
     },
   });
 }

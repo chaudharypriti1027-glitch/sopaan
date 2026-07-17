@@ -78,6 +78,8 @@ const paymentOrderSchema = new mongoose.Schema(
 );
 
 paymentOrderSchema.index({ userId: 1, createdAt: -1 });
+// Revenue reports scan paid orders by recency.
+paymentOrderSchema.index({ status: 1, createdAt: -1 });
 paymentOrderSchema.index(
   { razorpayPaymentId: 1 },
   { unique: true, sparse: true },

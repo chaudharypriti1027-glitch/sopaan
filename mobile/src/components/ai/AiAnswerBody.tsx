@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { BookOpen, Lightbulb, Sparkles } from 'lucide-react-native';
+import { Lightbulb } from 'lucide-react-native';
 import { Text } from '../Text';
 import { useTheme } from '../../theme';
 import { AI_UI } from './aiTheme';
@@ -20,7 +19,7 @@ export function AiAnswerBody({
   formulaLabel,
   answerLabel = 'Answer',
   explanationLabel = 'Why',
-  tipLabel = 'Exam tip',
+  tipLabel = 'Tip',
 }: AiAnswerBodyProps) {
   const { theme } = useTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
@@ -31,42 +30,31 @@ export function AiAnswerBody({
       {blocks.map((block, index) => {
         if (block.type === 'answer') {
           return (
-            <View key={`a-${index}`} style={styles.answerShell}>
-              <View style={styles.answerAccent} />
-              <LinearGradient
-                colors={['#FFFCF6', '#FFFFFF']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.answerCard}
-              >
-                <View style={styles.answerHeader}>
-                  <Sparkles size={12} color={AI_UI.goldDeep} strokeWidth={2.4} />
-                  <Text style={styles.answerLabel}>{answerLabel}</Text>
-                </View>
+            <View key={`a-${index}`} style={styles.answerCard}>
+              <View style={styles.answerRail} />
+              <View style={styles.answerInner}>
+                <Text style={styles.answerLabel}>{answerLabel}</Text>
                 <Text style={styles.answerText}>{block.text}</Text>
-              </LinearGradient>
+              </View>
             </View>
           );
         }
 
         if (block.type === 'explanation') {
           return (
-            <View key={`e-${index}`} style={styles.explanationCard}>
-              <View style={styles.explanationHeader}>
-                <BookOpen size={13} color={AI_UI.primary} strokeWidth={2.2} />
-                <Text style={styles.explanationLabel}>{explanationLabel}</Text>
-              </View>
+            <View key={`e-${index}`} style={styles.section}>
+              <Text style={styles.sectionLabel}>{explanationLabel}</Text>
               {block.bullets?.length ? (
                 <View style={styles.bulletList}>
                   {block.bullets.map((item, itemIndex) => (
                     <View key={`${index}-${itemIndex}`} style={styles.bulletRow}>
                       <View style={styles.bulletDot} />
-                      <Text style={styles.bulletText}>{item}</Text>
+                      <Text style={styles.bodyText}>{item}</Text>
                     </View>
                   ))}
                 </View>
               ) : (
-                <Text style={styles.explanationText}>{block.text}</Text>
+                <Text style={styles.bodyText}>{block.text}</Text>
               )}
             </View>
           );
@@ -75,9 +63,7 @@ export function AiAnswerBody({
         if (block.type === 'tip') {
           return (
             <View key={`t-${index}`} style={styles.tipCard}>
-              <View style={styles.tipIconWrap}>
-                <Lightbulb size={14} color={AI_UI.goldDeep} />
-              </View>
+              <Lightbulb size={14} color={AI_UI.goldDeep} strokeWidth={2.2} />
               <View style={styles.tipCopy}>
                 <Text style={styles.tipLabel}>{tipLabel}</Text>
                 <Text style={styles.tipText}>{block.text}</Text>
@@ -88,16 +74,15 @@ export function AiAnswerBody({
 
         if (block.type === 'heading') {
           return (
-            <View key={`h-${index}`} style={styles.headingRow}>
-              <Sparkles size={11} color={AI_UI.primary} />
-              <Text style={styles.heading}>{block.text}</Text>
-            </View>
+            <Text key={`h-${index}`} style={styles.sectionLabel}>
+              {block.text}
+            </Text>
           );
         }
 
         if (block.type === 'formula') {
           return (
-            <View key={`f-${index}`} style={styles.formulaPill}>
+            <View key={`f-${index}`} style={styles.formula}>
               <Text style={styles.formulaLabel}>{formulaLabel}</Text>
               <Text style={styles.formulaText}>{block.text}</Text>
             </View>
@@ -110,7 +95,7 @@ export function AiAnswerBody({
               {block.items.map((item, itemIndex) => (
                 <View key={`${index}-${itemIndex}`} style={styles.bulletRow}>
                   <View style={styles.bulletDot} />
-                  <Text style={styles.bulletText}>{item}</Text>
+                  <Text style={styles.bodyText}>{item}</Text>
                 </View>
               ))}
             </View>
@@ -118,7 +103,7 @@ export function AiAnswerBody({
         }
 
         return (
-          <Text key={`p-${index}`} style={styles.paragraph}>
+          <Text key={`p-${index}`} style={styles.bodyText}>
             {block.text}
           </Text>
         );
@@ -130,70 +115,45 @@ export function AiAnswerBody({
 function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
   return StyleSheet.create({
     wrap: {
-      gap: theme.spacing.md,
-    },
-    answerShell: {
-      position: 'relative',
-      borderRadius: 16,
-      overflow: 'hidden',
-      shadowColor: AI_UI.goldDeep,
-      shadowOffset: { width: 0, height: 6 },
-      shadowOpacity: 0.12,
-      shadowRadius: 14,
-      elevation: 3,
-    },
-    answerAccent: {
-      position: 'absolute',
-      left: 0,
-      top: 0,
-      bottom: 0,
-      width: 4,
-      backgroundColor: AI_UI.gold,
-      zIndex: 1,
+      gap: 14,
     },
     answerCard: {
-      borderRadius: 16,
-      borderWidth: 1,
-      borderColor: 'rgba(194,154,78,0.32)',
-      paddingHorizontal: 16,
-      paddingVertical: 14,
-      gap: 8,
-    },
-    answerHeader: {
       flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
+      borderRadius: 16,
+      overflow: 'hidden',
+      backgroundColor: AI_UI.goldSoft,
+      borderWidth: 1,
+      borderColor: 'rgba(201,162,75,0.28)',
+    },
+    answerRail: {
+      width: 4,
+      backgroundColor: AI_UI.gold,
+    },
+    answerInner: {
+      flex: 1,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      gap: 4,
     },
     answerLabel: {
       fontSize: 10,
       fontFamily: theme.typography.fonts.ui.bold,
       fontWeight: '800',
-      letterSpacing: 0.9,
+      letterSpacing: 0.8,
       textTransform: 'uppercase',
       color: AI_UI.goldDeep,
     },
     answerText: {
-      fontSize: 16,
+      fontSize: 17,
       lineHeight: 24,
       fontFamily: theme.typography.fonts.ui.bold,
       fontWeight: '700',
       color: AI_UI.ink,
     },
-    explanationCard: {
-      borderRadius: 14,
-      borderWidth: 1,
-      borderColor: AI_UI.border,
-      backgroundColor: '#FAFBFD',
-      paddingHorizontal: 14,
-      paddingVertical: 12,
+    section: {
       gap: 8,
     },
-    explanationHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-    },
-    explanationLabel: {
+    sectionLabel: {
       fontSize: 10,
       fontFamily: theme.typography.fonts.ui.bold,
       fontWeight: '800',
@@ -201,10 +161,12 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       textTransform: 'uppercase',
       color: AI_UI.primaryMuted,
     },
-    explanationText: {
-      fontSize: 14,
+    bodyText: {
+      flex: 1,
+      fontSize: 14.5,
       lineHeight: 22,
       fontFamily: theme.typography.fonts.ui.medium,
+      fontWeight: '500',
       color: AI_UI.body,
     },
     tipCard: {
@@ -212,19 +174,9 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       alignItems: 'flex-start',
       gap: 10,
       borderRadius: 14,
-      backgroundColor: AI_UI.goldSoft,
-      borderWidth: 1,
-      borderColor: 'rgba(194,154,78,0.22)',
+      backgroundColor: 'rgba(201,162,75,0.1)',
       paddingHorizontal: 12,
-      paddingVertical: 11,
-    },
-    tipIconWrap: {
-      width: 28,
-      height: 28,
-      borderRadius: 14,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: 'rgba(255,255,255,0.72)',
+      paddingVertical: 10,
     },
     tipCopy: {
       flex: 1,
@@ -244,42 +196,21 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       fontFamily: theme.typography.fonts.ui.medium,
       color: AI_UI.body,
     },
-    headingRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-      marginTop: 2,
-    },
-    heading: {
-      fontSize: 11,
-      fontFamily: theme.typography.fonts.ui.bold,
-      fontWeight: '800',
-      letterSpacing: 0.8,
-      textTransform: 'uppercase',
-      color: AI_UI.primaryMuted,
-    },
-    paragraph: {
-      fontSize: 14.5,
-      lineHeight: 23,
-      fontFamily: theme.typography.fonts.ui.medium,
-      fontWeight: '500',
-      color: AI_UI.ink,
-    },
-    formulaPill: {
+    formula: {
       alignSelf: 'flex-start',
       flexDirection: 'row',
       alignItems: 'center',
       gap: 8,
       backgroundColor: AI_UI.primaryLight,
       borderRadius: 12,
-      paddingHorizontal: 14,
-      paddingVertical: 10,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
     },
     formulaLabel: {
       fontSize: 10,
       fontFamily: theme.typography.fonts.ui.bold,
       fontWeight: '800',
-      letterSpacing: 0.6,
+      letterSpacing: 0.5,
       color: AI_UI.sub,
     },
     formulaText: {
@@ -297,18 +228,11 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       gap: 10,
     },
     bulletDot: {
-      width: 6,
-      height: 6,
-      borderRadius: 3,
-      backgroundColor: AI_UI.primary,
+      width: 5,
+      height: 5,
+      borderRadius: 2.5,
+      backgroundColor: AI_UI.gold,
       marginTop: 8,
-    },
-    bulletText: {
-      flex: 1,
-      fontSize: 14,
-      lineHeight: 21,
-      fontFamily: theme.typography.fonts.ui.medium,
-      color: AI_UI.body,
     },
   });
 }

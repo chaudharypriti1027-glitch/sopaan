@@ -25,7 +25,9 @@ if (!processConfig.runsHttp) {
 }
 
 function listen(httpServer, port) {
-  const host = env.isDevelopment ? '0.0.0.0' : '127.0.0.1';
+  // Containers (Render/Docker) must bind all interfaces or the platform proxy
+  // cannot route traffic. Set HOST to override (e.g. 127.0.0.1 behind nginx).
+  const host = process.env.HOST?.trim() || '0.0.0.0';
 
   return new Promise((resolve, reject) => {
     const onError = (err) => {

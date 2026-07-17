@@ -23,14 +23,18 @@ export async function sendStreakReminders() {
   let sent = 0;
   let skipped = 0;
 
-  for (const user of users) {
-    const alreadySent = await Notification.findOne({
-      userId: user._id,
-      type: NOTIFICATION_TYPES.STREAK_REMINDER,
-      createdAt: { $gte: today },
-    }).lean();
+  // One query for everyone already reminded today instead of one per user.
+  const remindedDocs = await Notification.find({
+    userId: { $in: users.map((user) => user._id) },
+    type: NOTIFICATION_TYPES.STREAK_REMINDER,
+    createdAt: { $gte: today },
+  })
+    .select('userId')
+    .lean();
+  const remindedIds = new Set(remindedDocs.map((doc) => doc.userId.toString()));
 
-    if (alreadySent) {
+  for (const user of users) {
+    if (remindedIds.has(user._id.toString())) {
       skipped += 1;
       continue;
     }

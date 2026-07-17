@@ -1,23 +1,20 @@
 import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated, { FadeInDown, ReduceMotion, useReducedMotion } from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
 import type { CompositeNavigationProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
+import { ArrowRight } from 'lucide-react-native';
 import {
-  AuthAnimatedSection,
   AuthAltLinks,
+  AuthBackButton,
   AuthDivider,
   AuthErrorBanner,
-  AuthFooterLink,
-  AuthFormCard,
-  AuthFormIntro,
+  AuthFlowHeader,
   AuthPremiumField,
-  AuthPremiumHero,
   AuthScreen,
   AuthSocialButton,
-  GhostButton,
   PrimaryButton,
   useShakeOnError,
 } from '../components/auth';
@@ -38,6 +35,7 @@ const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export function LoginScreen() {
   const { t } = useTranslation('auth');
   const navigation = useNavigation<LoginNav>();
+  const reducedMotion = useReducedMotion();
   const styles = useMemo(() => createStyles(), []);
 
   const [email, setEmail] = useState('');
@@ -131,126 +129,129 @@ export function LoginScreen() {
     );
   };
 
-  return (
-    <AuthScreen scrollProps={{ keyboardShouldPersistTaps: 'handled' }}>
-      <AuthPremiumHero variant="login" />
+  const enterForm = reducedMotion
+    ? undefined
+    : FadeInDown.duration(420).delay(140).reduceMotion(ReduceMotion.System);
+  const enterFooter = reducedMotion
+    ? undefined
+    : FadeInDown.duration(380).delay(240).reduceMotion(ReduceMotion.System);
 
-      <Animated.View entering={FadeInDown.duration(400).delay(80)} style={shakeStyle}>
-        <AuthFormCard overlap premium>
-          <AuthFormIntro
-            title={t('login.emailTitle')}
-            subtitle={t('login.emailSubtitle')}
+  return (
+    <AuthScreen scrollProps={{ keyboardShouldPersistTaps: 'handled' }} fill>
+      <View style={styles.column}>
+        <AuthBackButton
+          disabled={busy}
+          onPress={() => navigation.navigate('Welcome')}
+          testID="login-back"
+        />
+
+        <AuthFlowHeader
+          title={t('login.emailTitle')}
+          subtitle={t('login.emailSubtitle')}
+          testID="login-header"
+        />
+
+        <Animated.View entering={enterForm} style={[styles.form, shakeStyle]}>
+          <AuthPremiumField
+            dark
+            variant="email"
+            label={t('login.emailAddress')}
+            value={email}
+            placeholder={t('login.emailPlaceholder')}
+            onChangeText={(value) => {
+              setEmail(value);
+              if (emailError) setEmailError(undefined);
+              if (formError) setFormError(null);
+            }}
+            error={emailError}
+            editable={!busy}
+            testID="login-email"
           />
 
-          <AuthAnimatedSection index={0}>
-            <AuthPremiumField
-              dense
-              variant="email"
-              label={t('login.emailAddress')}
-              value={email}
-              placeholder={t('login.emailPlaceholder')}
-              onChangeText={(value) => {
-                setEmail(value);
-                if (emailError) setEmailError(undefined);
-                if (formError) setFormError(null);
-              }}
-              error={emailError}
-              editable={!busy}
-              testID="login-email"
-            />
-          </AuthAnimatedSection>
+          <AuthPremiumField
+            dark
+            variant="password"
+            label={t('login.password')}
+            value={password}
+            onChangeText={(value) => {
+              setPassword(value);
+              if (passwordError) setPasswordError(undefined);
+              if (formError) setFormError(null);
+            }}
+            placeholder={t('login.passwordPlaceholder')}
+            error={passwordError}
+            editable={!busy}
+            testID="login-password"
+          />
 
-          <AuthAnimatedSection index={1}>
-            <AuthPremiumField
-              dense
-              variant="password"
-              label={t('login.password')}
-              value={password}
-              onChangeText={(value) => {
-                setPassword(value);
-                if (passwordError) setPasswordError(undefined);
-                if (formError) setFormError(null);
-              }}
-              placeholder={t('login.passwordPlaceholder')}
-              error={passwordError}
-              editable={!busy}
-              testID="login-password"
-            />
-          </AuthAnimatedSection>
+          {formError ? (
+            <AuthErrorBanner dark message={formError} testID="login-form-error" />
+          ) : null}
 
+          <PrimaryButton
+            label={t('login.submit')}
+            loading={loginLoading}
+            disabled={!canEmailLogin}
+            onPress={handlePasswordLogin}
+            testID="login-submit"
+            trailingIcon={ArrowRight}
+          />
+
+          <AuthDivider dark label={t('login.dividerOr')} />
+
+          <AuthSocialButton
+            dark
+            label={t('login.continueGoogle')}
+            variant="google"
+            disabled={busy}
+            onPress={() => void handleGoogleSignIn()}
+            testID="login-google"
+          />
+        </Animated.View>
+
+        <View style={styles.spacer} />
+
+        <Animated.View entering={enterFooter}>
           <AuthAltLinks
+            dark
             links={[
               {
+                label: t('login.usePhoneInstead'),
+                onPress: busy ? undefined : () => navigation.navigate('OtpLogin'),
+                testID: 'login-use-phone',
+              },
+              {
                 label: t('login.forgotPassword'),
-                onPress: () =>
-                  navigation.navigate('ForgotPassword', {
-                    email: email.trim() || undefined,
-                  }),
+                onPress: busy
+                  ? undefined
+                  : () =>
+                      navigation.navigate('ForgotPassword', {
+                        email: email.trim() || undefined,
+                      }),
                 testID: 'login-forgot-password',
                 accessibilityLabel: t('login.forgotPassword'),
               },
             ]}
           />
-
-          {formError ? (
-            <AuthErrorBanner message={formError} testID="login-form-error" />
-          ) : null}
-
-          <AuthAnimatedSection index={2}>
-            <PrimaryButton
-              label={t('login.submit')}
-              loading={loginLoading}
-              disabled={!canEmailLogin}
-              onPress={handlePasswordLogin}
-              style={styles.submitBtn}
-            />
-          </AuthAnimatedSection>
-
-          <AuthDivider label={t('login.dividerOr')} />
-
-          <View style={styles.altMethods}>
-            <AuthSocialButton
-              label={t('login.continueGoogle')}
-              variant="google"
-              disabled={busy}
-              onPress={() => void handleGoogleSignIn()}
-              testID="login-google"
-            />
-            <GhostButton
-              label={t('login.usePhoneInstead')}
-              disabled={busy}
-              onPress={() => navigation.navigate('OtpLogin')}
-              testID="login-use-phone"
-            />
-          </View>
-        </AuthFormCard>
-
-        <View style={styles.footer}>
-          <AuthFooterLink
-            muted={t('login.newHere')}
-            strong={t('login.signupLink')}
-            onPress={() => navigation.navigate('Signup')}
-            testID="login-signup-link"
-            accessibilityLabel={t('login.createAccountA11y')}
-          />
-        </View>
-      </Animated.View>
+        </Animated.View>
+      </View>
     </AuthScreen>
   );
 }
 
 function createStyles() {
   return StyleSheet.create({
-    submitBtn: {
-      marginTop: 4,
+    column: {
+      flex: 1,
+      minHeight: 560,
     },
-    altMethods: {
-      gap: 8,
+    form: {
+      marginTop: 34,
+      gap: 16,
     },
-    footer: {
-      gap: 12,
-      alignItems: 'center',
-      marginTop: 4,
+    spacer: {
+      flex: 1,
+      minHeight: 20,
     },
   });
 }

@@ -6,9 +6,9 @@ import { ingestQuestion } from './questions/questionIngestService.js';
 
 async function resolveQuestionIds(userId, data) {
   if (data.questionIds?.length) {
-    const questions = await Question.find({ _id: { $in: data.questionIds } });
+    const existingCount = await Question.countDocuments({ _id: { $in: data.questionIds } });
 
-    if (questions.length !== data.questionIds.length) {
+    if (existingCount !== data.questionIds.length) {
       throw new AppError('One or more questionIds are invalid', 400, 'VALIDATION_ERROR');
     }
 

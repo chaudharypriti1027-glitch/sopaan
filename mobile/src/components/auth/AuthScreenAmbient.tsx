@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { StyleSheet } from 'react-native';
+import { useEffect, useMemo } from 'react';
+import { StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -9,106 +9,88 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
-import { AUTH_UI } from './authTheme';
 
-/** Slow-drifting ambient blobs on auth cream canvas. */
+const STAIR_HEIGHTS = [34, 66, 98, 130] as const;
+
+/** Soft gold glow + stair motif on the dark navy auth canvas. */
 export function AuthScreenAmbient() {
   const reducedMotion = useReducedMotion();
-  const gold = useSharedValue(0);
-  const sage = useSharedValue(0);
-  const navy = useSharedValue(0);
+  const pulse = useSharedValue(0);
+  const styles = useMemo(() => createStyles(), []);
 
   useEffect(() => {
     if (reducedMotion) {
       return;
     }
 
-    gold.value = withRepeat(
+    pulse.value = withRepeat(
       withSequence(
-        withTiming(1, { duration: 5000, easing: Easing.inOut(Easing.sin) }),
-        withTiming(0, { duration: 5000, easing: Easing.inOut(Easing.sin) }),
+        withTiming(1, { duration: 5200, easing: Easing.inOut(Easing.sin) }),
+        withTiming(0, { duration: 5200, easing: Easing.inOut(Easing.sin) }),
       ),
       -1,
       false,
     );
-    sage.value = withRepeat(
-      withSequence(
-        withTiming(1, { duration: 6200, easing: Easing.inOut(Easing.sin) }),
-        withTiming(0, { duration: 6200, easing: Easing.inOut(Easing.sin) }),
-      ),
-      -1,
-      false,
-    );
-    navy.value = withRepeat(
-      withSequence(
-        withTiming(1, { duration: 7400, easing: Easing.inOut(Easing.sin) }),
-        withTiming(0, { duration: 7400, easing: Easing.inOut(Easing.sin) }),
-      ),
-      -1,
-      false,
-    );
-  }, [gold, navy, reducedMotion, sage]);
+  }, [pulse, reducedMotion]);
 
-  const goldStyle = useAnimatedStyle(() => ({
+  const hazeStyle = useAnimatedStyle(() => ({
+    opacity: 0.45 + pulse.value * 0.2,
     transform: [
-      { translateX: gold.value * 14 },
-      { translateY: gold.value * -10 },
-      { scale: 1 + gold.value * 0.06 },
+      { translateX: pulse.value * -8 },
+      { translateY: pulse.value * 6 },
     ],
-  }));
-
-  const sageStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: sage.value * -12 },
-      { translateY: sage.value * 8 },
-      { scale: 1 + sage.value * 0.05 },
-    ],
-  }));
-
-  const navyStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: navy.value * 10 },
-      { translateY: navy.value * 6 },
-      { scale: 1 + navy.value * 0.04 },
-    ],
-    opacity: 0.28 + navy.value * 0.12,
   }));
 
   return (
-    <>
-      <Animated.View style={[styles.gold, goldStyle]} pointerEvents="none" />
-      <Animated.View style={[styles.sage, sageStyle]} pointerEvents="none" />
-      <Animated.View style={[styles.navy, navyStyle]} pointerEvents="none" />
-    </>
+    <View style={styles.root} pointerEvents="none">
+      <Animated.View style={[styles.cornerHaze, hazeStyle]} />
+      <View style={styles.stairs}>
+        {STAIR_HEIGHTS.map((height, index) => (
+          <View
+            key={height}
+            style={[
+              styles.stair,
+              {
+                height,
+                left: index * 64 - 10,
+              },
+            ]}
+          />
+        ))}
+      </View>
+    </View>
   );
 }
 
-const styles = StyleSheet.create({
-  gold: {
-    position: 'absolute',
-    top: -90,
-    right: -70,
-    width: 240,
-    height: 240,
-    borderRadius: 120,
-    backgroundColor: AUTH_UI.goldSoft,
-  },
-  sage: {
-    position: 'absolute',
-    bottom: 100,
-    left: -80,
-    width: 210,
-    height: 210,
-    borderRadius: 105,
-    backgroundColor: AUTH_UI.sageSoft,
-  },
-  navy: {
-    position: 'absolute',
-    top: '38%',
-    left: -120,
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    backgroundColor: AUTH_UI.accentSoft,
-  },
-});
+function createStyles() {
+  return StyleSheet.create({
+    root: {
+      ...StyleSheet.absoluteFillObject,
+      overflow: 'hidden',
+    },
+    cornerHaze: {
+      position: 'absolute',
+      top: -120,
+      right: -140,
+      width: 340,
+      height: 340,
+      borderRadius: 170,
+      backgroundColor: 'rgba(255,255,255,0.05)',
+    },
+    stairs: {
+      position: 'absolute',
+      left: 0,
+      right: 0,
+      bottom: 0,
+      height: 140,
+    },
+    stair: {
+      position: 'absolute',
+      bottom: 0,
+      width: 64,
+      backgroundColor: 'rgba(240,212,136,0.035)',
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: 'rgba(240,212,136,0.09)',
+    },
+  });
+}

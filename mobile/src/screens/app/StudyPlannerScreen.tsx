@@ -22,6 +22,7 @@ import {
   TextField,
   TimelineItem,
 } from '../../components';
+import { getUserFacingMessage } from '../../errors/getUserFacingMessage';
 import {
   DEFAULT_STUDY_SESSION_MINUTES,
   DEFAULT_STUDY_SESSION_TYPE,
@@ -119,7 +120,7 @@ export function StudyPlannerScreen() {
           setShowAdd(false);
           setSubject('');
         },
-        onError: (err) => Alert.alert(t('studyPlanner.addFailed'), String(err)),
+        onError: (err) => Alert.alert(t('studyPlanner.addFailed'), getUserFacingMessage(err)),
       },
     );
   };
@@ -128,7 +129,7 @@ export function StudyPlannerScreen() {
     generatePlan.mutate(
       { date: selectedDate },
       {
-        onError: (err) => Alert.alert(t('studyPlanner.aiPlanFailed'), String(err)),
+        onError: (err) => Alert.alert(t('studyPlanner.aiPlanFailed'), getUserFacingMessage(err)),
       },
     );
   };

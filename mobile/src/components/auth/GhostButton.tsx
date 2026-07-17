@@ -8,7 +8,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 import { scalableTextProps } from '../../a11y/textProps';
-import { AUTH_UI } from './authTheme';
+import { AUTH_FONTS, AUTH_UI } from './authTheme';
 
 type GhostButtonProps = {
   label: string;
@@ -19,6 +19,8 @@ type GhostButtonProps = {
   style?: ViewStyle;
   testID?: string;
   accessibilityHint?: string;
+  /** Outlined gold treatment for secondary CTAs on the navy canvas. */
+  tone?: 'form' | 'canvas';
 };
 
 export function GhostButton({
@@ -30,8 +32,9 @@ export function GhostButton({
   style,
   testID,
   accessibilityHint,
+  tone = 'form',
 }: GhostButtonProps) {
-  const styles = useMemo(() => createStyles(), []);
+  const styles = useMemo(() => createStyles(tone), [tone]);
   const isDisabled = disabled || loading;
 
   const resolvedTestId =
@@ -55,7 +58,10 @@ export function GhostButton({
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={AUTH_UI.accent} size="small" />
+        <ActivityIndicator
+          color={tone === 'canvas' ? AUTH_UI.goldLt : AUTH_UI.accent}
+          size="small"
+        />
       ) : (
         <Text {...scalableTextProps} style={styles.label}>
           {label}
@@ -65,19 +71,21 @@ export function GhostButton({
   );
 }
 
-function createStyles() {
+function createStyles(tone: 'form' | 'canvas') {
+  const isCanvas = tone === 'canvas';
+
   return StyleSheet.create({
     button: {
-      minHeight: 48,
+      minHeight: isCanvas ? 54 : 48,
       borderRadius: AUTH_UI.btnRadius,
       borderWidth: 1,
-      borderColor: AUTH_UI.border,
-      backgroundColor: AUTH_UI.card,
+      borderColor: isCanvas ? AUTH_UI.borderHover : 'rgba(28,36,80,0.12)',
+      backgroundColor: isCanvas ? 'rgba(240,212,136,0.05)' : AUTH_UI.cardElevated,
       alignItems: 'center',
       justifyContent: 'center',
       paddingVertical: 13,
       paddingHorizontal: 16,
-      marginTop: 6,
+      marginTop: isCanvas ? 0 : 6,
     },
     fullWidth: {
       alignSelf: 'stretch',
@@ -86,13 +94,16 @@ function createStyles() {
       opacity: 0.5,
     },
     pressed: {
-      backgroundColor: AUTH_UI.bg,
-      borderColor: AUTH_UI.borderHover,
+      backgroundColor: isCanvas ? 'rgba(240,212,136,0.1)' : AUTH_UI.card,
+      borderColor: isCanvas ? 'rgba(240,212,136,0.5)' : AUTH_UI.borderHover,
+      transform: [{ scale: 0.98 }],
     },
     label: {
-      fontSize: 14,
-      fontWeight: '700',
-      color: AUTH_UI.accent,
+      fontFamily: AUTH_FONTS.medium,
+      fontSize: isCanvas ? 16 : 14,
+      fontWeight: '600',
+      letterSpacing: 0.2,
+      color: isCanvas ? AUTH_UI.onCanvas : AUTH_UI.accent,
     },
   });
 }

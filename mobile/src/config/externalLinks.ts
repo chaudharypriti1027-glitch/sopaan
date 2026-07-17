@@ -4,6 +4,8 @@ export const HELP_CENTER_URL = 'https://sopaan.app/help';
 export const PRIVACY_POLICY_URL = 'https://sopaan.app/privacy';
 export const TERMS_OF_SERVICE_URL = 'https://sopaan.app/terms';
 export const SUPPORT_EMAIL = 'mailto:support@sopaan.app';
+/** Public site used in share messages. */
+export const SOPAAN_WEBSITE_URL = 'https://sopaan.app';
 
 /** Official Sopaan student WhatsApp community for updates and announcements. */
 export const WHATSAPP_COMMUNITY_URL =

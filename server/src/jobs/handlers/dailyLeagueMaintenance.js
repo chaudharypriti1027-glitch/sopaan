@@ -35,6 +35,9 @@ export async function runDailyLeagueMaintenance() {
   let weeklyReset = 0;
   let tierUpdated = 0;
 
+  const bulkOps = [];
+  const affectedUserIds = [];
+
   for (const user of users) {
     const lastActive = user.streak?.lastActiveOn ?? user.streak?.lastActiveDate ?? null;
 
@@ -54,11 +57,16 @@ export async function runDailyLeagueMaintenance() {
       weeklyReset += 1;
     }
 
-    await User.updateOne({ _id: user._id }, { $set: update });
-    await bustHomeFeedCache(user._id);
+    bulkOps.push({ updateOne: { filter: { _id: user._id }, update: { $set: update } } });
+    affectedUserIds.push(user._id);
 
     streakBroken += 1;
     tierUpdated += 1;
+  }
+
+  if (bulkOps.length > 0) {
+    await User.bulkWrite(bulkOps, { ordered: false });
+    await Promise.allSettled(affectedUserIds.map((id) => bustHomeFeedCache(id)));
   }
 
   return {

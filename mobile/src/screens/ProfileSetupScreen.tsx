@@ -16,6 +16,7 @@ import {
   AUTH_UI,
   AuthAnimatedSection,
   AuthBrandHeader,
+  AuthFormCard,
   AuthPremiumField,
   AuthProgressDots,
   AuthScreen,
@@ -252,7 +253,13 @@ export function ProfileSetupScreen() {
         footer={
           <View style={styles.footer}>
             {step > 0 ? (
-              <GhostButton label={t('common:back')} onPress={handleBack} disabled={loading} testID="profile-setup-back" />
+              <GhostButton
+                tone="canvas"
+                label={t('common:back')}
+                onPress={handleBack}
+                disabled={loading}
+                testID="profile-setup-back"
+              />
             ) : null}
             <PrimaryButton
               label={step === STEP_COUNT - 1 ? t('auth:profileSetup.finish') : t('common:next')}
@@ -265,59 +272,61 @@ export function ProfileSetupScreen() {
         }
       >
         <Animated.View style={shakeStyle} key={`step-${step}`} entering={FadeIn.duration(220)} exiting={FadeOut.duration(160)}>
-          {step === 0 ? (
-            <GoalStep
-              examDate={examDate}
-              customExamName={customExamName}
-              examSelection={examSelection}
-              formError={formError}
-              onCustomExamNameChange={setCustomExamName}
-              onExamDateChange={(date) => {
-                setExamDate(date);
-                setFormError(null);
-              }}
-              onExamSelectionChange={setExamSelection}
-              styles={styles}
-            />
-          ) : null}
+          <AuthFormCard overlap premium>
+            {step === 0 ? (
+              <GoalStep
+                examDate={examDate}
+                customExamName={customExamName}
+                examSelection={examSelection}
+                formError={formError}
+                onCustomExamNameChange={setCustomExamName}
+                onExamDateChange={(date) => {
+                  setExamDate(date);
+                  setFormError(null);
+                }}
+                onExamSelectionChange={setExamSelection}
+                styles={styles}
+              />
+            ) : null}
 
-          {step === 1 ? (
-            <YouStep
-              avatarLoading={avatarLoading}
-              avatarUri={avatarUri}
-              category={category}
-              educationLevel={educationLevel}
-              filteredStates={filteredStates}
-              formError={formError}
-              name={profile?.name}
-              onCategorySelect={setCategory}
-              onEducationSelect={setEducationLevel}
-              onPickAvatar={handlePickAvatar}
-              onStateQueryChange={setStateQuery}
-              onStateSelect={(value) => {
-                setState(value);
-                setStateQuery('');
-                setStatePickerOpen(false);
-                setFormError(null);
-              }}
-              setStatePickerOpen={setStatePickerOpen}
-              state={state}
-              statePickerOpen={statePickerOpen}
-              stateQuery={stateQuery}
-              styles={styles}
-              theme={theme}
-            />
-          ) : null}
+            {step === 1 ? (
+              <YouStep
+                avatarLoading={avatarLoading}
+                avatarUri={avatarUri}
+                category={category}
+                educationLevel={educationLevel}
+                filteredStates={filteredStates}
+                formError={formError}
+                name={profile?.name}
+                onCategorySelect={setCategory}
+                onEducationSelect={setEducationLevel}
+                onPickAvatar={handlePickAvatar}
+                onStateQueryChange={setStateQuery}
+                onStateSelect={(value) => {
+                  setState(value);
+                  setStateQuery('');
+                  setStatePickerOpen(false);
+                  setFormError(null);
+                }}
+                setStatePickerOpen={setStatePickerOpen}
+                state={state}
+                statePickerOpen={statePickerOpen}
+                stateQuery={stateQuery}
+                styles={styles}
+                theme={theme}
+              />
+            ) : null}
 
-          {step === 2 ? (
-            <LanguageStep
-              formError={formError}
-              language={language}
-              onLanguageSelect={setLanguage}
-              styles={styles}
-              theme={theme}
-            />
-          ) : null}
+            {step === 2 ? (
+              <LanguageStep
+                formError={formError}
+                language={language}
+                onLanguageSelect={setLanguage}
+                styles={styles}
+                theme={theme}
+              />
+            ) : null}
+          </AuthFormCard>
         </Animated.View>
       </AuthScreen>
     </View>
@@ -613,8 +622,8 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       minHeight: theme.a11y.minTouchTarget,
       borderRadius: AUTH_UI.inputRadius,
       borderWidth: 1.5,
-      borderColor: AUTH_UI.border,
-      backgroundColor: AUTH_UI.card,
+      borderColor: 'rgba(28,36,80,0.12)',
+      backgroundColor: AUTH_UI.cardElevated,
       paddingHorizontal: 16,
       paddingVertical: 16,
     },
@@ -647,16 +656,16 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     languageCard: {
       borderRadius: AUTH_UI.inputRadius,
       borderWidth: 1.5,
-      borderColor: AUTH_UI.border,
-      backgroundColor: AUTH_UI.card,
+      borderColor: 'rgba(28,36,80,0.12)',
+      backgroundColor: AUTH_UI.cardElevated,
       padding: 20,
       gap: 4,
       minHeight: 96,
       justifyContent: 'center',
     },
     languageCardSelected: {
-      borderColor: AUTH_UI.accent,
-      backgroundColor: 'rgba(35,42,77,0.06)',
+      borderColor: AUTH_UI.goldMid,
+      backgroundColor: 'rgba(201,162,75,0.1)',
     },
     formError: {
       fontSize: 12,
@@ -665,7 +674,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     },
     modalRoot: {
       flex: 1,
-      backgroundColor: AUTH_UI.bg,
+      backgroundColor: AUTH_UI.card,
       paddingTop: theme.spacing.xl,
       paddingHorizontal: theme.spacing.xl,
       gap: theme.spacing.lg,
@@ -684,13 +693,13 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       borderRadius: AUTH_UI.inputRadius,
       paddingHorizontal: 16,
       paddingVertical: 12,
-      backgroundColor: AUTH_UI.card,
+      backgroundColor: AUTH_UI.cardElevated,
       borderWidth: 1,
-      borderColor: AUTH_UI.border,
+      borderColor: 'rgba(28,36,80,0.12)',
     },
     stateRowSelected: {
-      borderColor: AUTH_UI.accent,
-      backgroundColor: 'rgba(35,42,77,0.06)',
+      borderColor: AUTH_UI.goldMid,
+      backgroundColor: 'rgba(201,162,75,0.1)',
     },
   });
 }

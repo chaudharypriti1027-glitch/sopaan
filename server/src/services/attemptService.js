@@ -213,7 +213,7 @@ async function runPostSubmitSideEffects({
 
 export async function submitTest(userId, testId, submittedAnswers) {
   const test = await getTestForSubmit(testId, userId);
-  const questions = await Question.find({ _id: { $in: test.questions } });
+  const questions = await Question.find({ _id: { $in: test.questions } }).lean();
 
   if (questions.length !== test.questions.length) {
     throw new AppError('Test has invalid question references', 500, 'INTERNAL_ERROR');

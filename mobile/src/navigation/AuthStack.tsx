@@ -21,7 +21,7 @@ export function AuthStack() {
   return (
     <OnboardingProvider>
       <Stack.Navigator
-        initialRouteName="OtpLogin"
+        initialRouteName="Welcome"
         screenOptions={{
           headerShown: false,
           animation: 'slide_from_right',

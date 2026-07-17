@@ -30,5 +30,7 @@ const groupChatMessageSchema = new mongoose.Schema(
 );
 
 groupChatMessageSchema.index({ groupId: 1, createdAt: -1 });
+// Privacy export / account erasure look up messages by author.
+groupChatMessageSchema.index({ userId: 1 });
 
 export const GroupChatMessage = mongoose.model('GroupChatMessage', groupChatMessageSchema);

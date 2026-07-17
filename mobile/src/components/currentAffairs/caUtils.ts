@@ -13,12 +13,6 @@ export function hasAffairQuiz(item: CurrentAffair): boolean {
   return getQuizQuestionCount(item) > 0;
 }
 
-export function estimateReadTime(item: CurrentAffair): string {
-  const words = (item.body ?? item.summary ?? item.title ?? '').split(/\s+/).length;
-  const minutes = Math.max(2, Math.min(8, Math.ceil(words / 45)));
-  return `${minutes} min`;
-}
-
 export function isTrendingAffair(item: CurrentAffair): boolean {
   if (hasAffairQuiz(item)) {
     return true;
@@ -79,15 +73,6 @@ export function sortAffairs(items: CurrentAffair[], mode: CaSortMode): CurrentAf
     });
   }
   return copy.sort((a, b) => (b.publishedAt ?? '').localeCompare(a.publishedAt ?? ''));
-}
-
-export function formatViewCount(id: string): string {
-  let hash = 0;
-  for (let i = 0; i < id.length; i += 1) {
-    hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
-  }
-  const value = ((hash % 200) + 30) / 10;
-  return `${value.toFixed(1)}k`;
 }
 
 export function categoryStyle(category?: string) {

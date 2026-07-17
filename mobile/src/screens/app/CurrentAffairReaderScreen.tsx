@@ -2,14 +2,13 @@ import { useMemo, useState, useEffect, useCallback } from 'react';
 import { Alert, Linking, StyleSheet, View } from 'react-native';
 import { useRoute, useNavigation, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Check, Clock, Download, ExternalLink, Flame } from 'lucide-react-native';
+import { Check, Download, ExternalLink, Flame } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
 import { Button, OptimizedImage, QueryStateView, Text } from '../../components';
 import { CA_UI, CaAiSummaryCard, caFeedCard } from '../../components/currentAffairs';
 import {
   categoryStyle,
-  estimateReadTime,
   isTrendingAffair,
 } from '../../components/currentAffairs/caUtils';
 import { PremiumScreen } from '../../components/premium';
@@ -76,7 +75,6 @@ export function CurrentAffairReaderScreen() {
 
   const bodyText = formatArticleBody(affair?.body || affair?.summary);
   const trending = affair ? isTrendingAffair(affair) : false;
-  const readTime = affair ? estimateReadTime(affair) : '';
   const catStyle = affair ? categoryStyle(affair.category) : null;
 
   const formattedDate = affair?.publishedAt
@@ -129,17 +127,13 @@ export function CurrentAffairReaderScreen() {
 
             <Text style={styles.title}>{affair.title}</Text>
 
-            <View style={styles.metaChips}>
-              <View style={styles.readChip}>
-                <Clock size={12} color={CA_UI.muted} />
-                <Text style={styles.readChipText}>{readTime}</Text>
-              </View>
-              {typeof affair.state === 'string' && affair.state !== 'National' ? (
+            {typeof affair.state === 'string' && affair.state !== 'National' ? (
+              <View style={styles.metaChips}>
                 <View style={styles.stateChip}>
                   <Text style={styles.stateChipText}>{affair.state}</Text>
                 </View>
-              ) : null}
-            </View>
+              </View>
+            ) : null}
 
             {affair.source ? (
               <Text style={styles.source}>

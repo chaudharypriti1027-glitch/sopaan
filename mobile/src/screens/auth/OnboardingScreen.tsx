@@ -7,6 +7,7 @@ import {
   AUTH_UI,
   AuthAnimatedSection,
   AuthBrandHeader,
+  AuthFormCard,
   AuthProgressDots,
   AuthScreen,
   PrimaryButton,
@@ -52,23 +53,25 @@ export function OnboardingScreen() {
         />
       }
     >
-      <View style={styles.body}>
-        <AuthAnimatedSection index={0}>
-          <View style={styles.chipGrid}>
-            {EXAM_CATEGORIES.map((exam) => (
-              <ChipSelect
-                key={exam.id}
-                label={exam.label}
-                Icon={exam.Icon}
-                selected={selected === exam.id}
-                onPress={() => setSelected(exam.id)}
-                style={styles.chip}
-              />
-            ))}
-          </View>
-        </AuthAnimatedSection>
-        <Text style={styles.hint}>{copy.hint || t('onboarding.hint')}</Text>
-      </View>
+      <AuthFormCard overlap premium>
+        <View style={styles.body}>
+          <AuthAnimatedSection index={0}>
+            <View style={styles.chipGrid}>
+              {EXAM_CATEGORIES.map((exam) => (
+                <ChipSelect
+                  key={exam.id}
+                  label={exam.label}
+                  Icon={exam.Icon}
+                  selected={selected === exam.id}
+                  onPress={() => setSelected(exam.id)}
+                  style={styles.chip}
+                />
+              ))}
+            </View>
+          </AuthAnimatedSection>
+          <Text style={styles.hint}>{copy.hint || t('onboarding.hint')}</Text>
+        </View>
+      </AuthFormCard>
     </AuthScreen>
   );
 }
@@ -88,7 +91,7 @@ function createStyles() {
     },
     hint: {
       fontSize: 12,
-      color: AUTH_UI.faint,
+      color: AUTH_UI.muted,
       lineHeight: 18,
     },
   });

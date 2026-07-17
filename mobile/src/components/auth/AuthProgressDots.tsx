@@ -41,11 +41,11 @@ function createStyles() {
     },
     dotActive: {
       width: 28,
-      backgroundColor: AUTH_UI.accent,
+      backgroundColor: AUTH_UI.gold,
     },
     dotInactive: {
       width: 8,
-      backgroundColor: AUTH_UI.border,
+      backgroundColor: 'rgba(240,212,136,0.22)',
     },
   });
 }

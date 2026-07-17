@@ -50,7 +50,7 @@ export function PracticeGoalHub({
       <Animated.View entering={practiceFadeInDown(0)} style={styles.cardShell}>
         <View style={styles.accent} />
         <LinearGradient
-          colors={['#FFFCF6', '#FFFFFF']}
+          colors={['#FFFDF7', '#FFFFFF']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.goalCard}
@@ -76,7 +76,7 @@ export function PracticeGoalHub({
     <Animated.View entering={practiceFadeInDown(0)} style={styles.cardShell}>
       <View style={styles.accent} />
       <LinearGradient
-        colors={['#F8FAFF', '#FFFFFF']}
+        colors={['#FFFDF7', '#FFFFFF']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.goalCard}
@@ -153,8 +153,8 @@ const quickStyles = StyleSheet.create({
     borderColor: 'rgba(35,42,77,0.08)',
   },
   btnAccent: {
-    backgroundColor: 'rgba(245,158,11,0.12)',
-    borderColor: 'rgba(245,158,11,0.28)',
+    backgroundColor: 'rgba(201,162,75,0.14)',
+    borderColor: 'rgba(201,162,75,0.32)',
   },
   label: {
     fontSize: 11,
@@ -196,7 +196,7 @@ function createStyles() {
     goalCard: {
       borderRadius: 20,
       borderWidth: 1,
-      borderColor: 'rgba(35,42,77,0.1)',
+      borderColor: 'rgba(201,162,75,0.22)',
       padding: 14,
       gap: 10,
     },
@@ -211,7 +211,7 @@ function createStyles() {
       borderRadius: 10,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: 'rgba(245,158,11,0.14)',
+      backgroundColor: 'rgba(201,162,75,0.16)',
     },
     goalTitle: {
       flex: 1,

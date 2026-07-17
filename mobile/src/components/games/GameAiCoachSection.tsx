@@ -48,6 +48,9 @@ export function GameAiCoachSection({ coaching, review, onPracticePress }: GameAi
                   wrongLabel={t('result.wrongStatus')}
                   correctAnswerLabel={t('result.correctAnswer')}
                   formulaLabel={t('askAi.formula')}
+                  answerLabel={t('askAi.answerLabel')}
+                  explanationLabel={t('askAi.explanationLabel')}
+                  tipLabel={t('askAi.tipLabel')}
                 />
               ) : item.correctAnswer ? (
                 <Text style={styles.fallback}>

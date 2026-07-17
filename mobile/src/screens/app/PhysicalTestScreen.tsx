@@ -12,6 +12,7 @@ import {
   TextField,
   type ComparisonMetric,
 } from '../../components';
+import { getUserFacingMessage } from '../../errors/getUserFacingMessage';
 import {
   useCreatePhysicalLog,
   usePhysicalFitnessPlan,
@@ -65,7 +66,7 @@ export function PhysicalTestScreen() {
           setValue('');
           Alert.alert(t('physicalTest.logged'), t('physicalTest.loggedBody'));
         },
-        onError: (err) => Alert.alert(t('physicalTest.logFailed'), String(err)),
+        onError: (err) => Alert.alert(t('physicalTest.logFailed'), getUserFacingMessage(err)),
       },
     );
   };

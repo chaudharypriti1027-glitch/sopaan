@@ -1,8 +1,8 @@
 export { PRACTICE_UI, avatarToneForIndex } from './practiceTheme';
 export type { PracticeAvatarTone } from './practiceTheme';
 export { PracticeHeader } from './PracticeHeader';
-export { PracticeAiCard } from './PracticeAiCard';
-export type { PracticeTestMode } from './PracticeAiCard';
+export { PracticeGenerateCta } from './PracticeGenerateCta';
+export type PracticeTestMode = 'standard' | 'adaptive';
 export { PracticeChip } from './PracticeChip';
 export { PracticeTabBar } from './PracticeTabBar';
 export type { PracticeTab } from './PracticeTabBar';

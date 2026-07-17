@@ -28,40 +28,31 @@ import {
 } from '../../components/ai';
 import { historyToChatMessages, type AiChatMessage } from '../../components/ai/historyToChatMessages';
 import { QueryStateSkeleton } from '../../components/premium';
-import { ASK_AI_PROMPTS } from '../../content/askAiContent';
+import { getAskAiPromptsForExam } from '../../content/askAiContent';
 import { useAiDoubtHistory, useAskDoubt, useReportAiFeedback, useSaveNote } from '../../hooks';
 import { useProGate } from '../../hooks/useProGate';
 import { getUserFacingMessage } from '../../errors/getUserFacingMessage';
 import type { MainStackParamList } from '../../navigation/types';
 import { useTheme } from '../../theme';
 import { pickImageBase64 } from '../../utils/imagePicker';
+import { displayExamName } from '../../utils/examTarget';
 import { Text } from '../../components/Text';
-
-function cacheSourceLabel(
-  source: string | null | undefined,
-  t: (key: string) => string,
-): string | undefined {
-  switch (source) {
-    case 'user_history':
-      return t('app:askAi.fromHistory');
-    case 'forum_doubt':
-      return t('app:askAi.fromForum');
-    case 'ai_cache':
-    case 'exact_cache':
-      return t('app:askAi.similarFound');
-    default:
-      return undefined;
-  }
-}
+import { useAuth } from '../../auth';
 
 export function AskAIScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<MainStackParamList>>();
   const route = useRoute<RouteProp<MainStackParamList, 'AskAI'>>();
   const { theme } = useTheme();
   const { t } = useTranslation(['app', 'common']);
+  const { profile } = useAuth();
   const { canUseFeature, openPaywall, handleProError } = useProGate();
   const styles = useMemo(() => createStyles(theme), [theme]);
   const scrollRef = useRef<ScrollView>(null);
+  const targetExam = displayExamName(profile?.targetExam);
+  const promptConfigs = useMemo(
+    () => getAskAiPromptsForExam(profile?.targetExam),
+    [profile?.targetExam],
+  );
 
   const [tab, setTab] = useState<AiTab>('ask');
   const [input, setInput] = useState('');
@@ -87,13 +78,13 @@ export function AskAIScreen() {
 
   const prompts = useMemo(
     () =>
-      ASK_AI_PROMPTS.map(({ key, tagKey, Icon, tone }) => ({
+      promptConfigs.map(({ key, Icon, tone }) => ({
+        key,
         Icon,
         tone,
         text: t(`app:askAi.${key}`),
-        tag: t(`app:askAi.${tagKey}`),
       })),
-    [t],
+    [promptConfigs, t],
   );
 
   useEffect(() => {
@@ -291,7 +282,6 @@ export function AskAIScreen() {
       <AiHeader
         title={t('app:askAi.title')}
         subtitle={t('app:askAi.subtitle')}
-        eyebrow={t('app:askAi.heroEyebrow')}
         backA11y={t('app:askAi.backA11y')}
         evaluateLabel={t('app:askAi.tabEvaluate')}
         onBack={() => navigation.goBack()}
@@ -329,27 +319,27 @@ export function AskAIScreen() {
             {showHome ? (
               <View>
                 <AiHomeHero
-                  eyebrow={t('app:askAi.heroEyebrow')}
                   title={t('app:askAi.emptyTitle')}
-                  subtitle={t('app:askAi.emptySubtitle')}
+                  subtitle={
+                    targetExam
+                      ? t('app:askAi.emptySubtitle')
+                      : t('app:askAi.setExamHint')
+                  }
                 />
+                {targetExam ? (
+                  <Text style={styles.examChip}>{t('app:askAi.forYourExam', { exam: targetExam })}</Text>
+                ) : null}
                 <Text style={styles.suggestedTitle}>{t('app:askAi.suggestedTitle')}</Text>
                 <View style={styles.promptList}>
-                  {prompts.map((prompt, index) => (
+                  {prompts.map((prompt) => (
                     <AiPromptCard
-                      key={ASK_AI_PROMPTS[index].key}
+                      key={prompt.key}
                       Icon={prompt.Icon}
                       tone={prompt.tone}
                       text={prompt.text}
-                      tag={prompt.tag}
                       onPress={() => void sendMessage(prompt.text)}
                     />
                   ))}
-                </View>
-                <View style={styles.dividerRow}>
-                  <View style={styles.dividerLine} />
-                  <Text style={styles.dividerText}>{t('app:askAi.orTypeBelow')}</Text>
-                  <View style={styles.dividerLine} />
                 </View>
               </View>
             ) : null}
@@ -377,10 +367,6 @@ export function AskAIScreen() {
                       key={msg.id}
                       coachName={t('app:askAi.coachName')}
                       text={msg.text}
-                      fromCache={msg.fromCache}
-                      cacheLabel={t('app:askAi.similarFound')}
-                      cacheSourceLabel={cacheSourceLabel(msg.cacheSource, t)}
-                      instantLabel={t('app:askAi.instantAnswer')}
                       formulaLabel={t('app:askAi.formula')}
                       answerLabel={t('app:askAi.answerLabel')}
                       explanationLabel={t('app:askAi.explanationLabel')}
@@ -394,7 +380,6 @@ export function AskAIScreen() {
                       savedLabel={t('app:askAi.savedShort')}
                       saving={saveNoteMutation.isPending}
                       saved={msg.answerId ? savedAnswerIds.has(msg.answerId) : false}
-                      responseMs={msg.responseMs}
                       onRetry={handleRetry}
                       onHelpful={() => handleHelpful(msg)}
                       onNotHelpful={() => handleReportAnswer(msg)}
@@ -464,41 +449,34 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
     skeletonWrap: {
       paddingTop: theme.spacing.xl,
     },
-    suggestedTitle: {
+    examChip: {
+      alignSelf: 'center',
+      marginBottom: theme.spacing.md,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 999,
+      overflow: 'hidden',
       fontSize: 12,
       fontFamily: theme.typography.fonts.ui.bold,
+      fontWeight: '700',
+      color: AI_UI.primary,
+      backgroundColor: AI_UI.primaryLight,
+    },
+    suggestedTitle: {
+      fontSize: 11,
+      fontFamily: theme.typography.fonts.ui.bold,
       fontWeight: '800',
-      letterSpacing: 0.4,
+      letterSpacing: 0.5,
       textTransform: 'uppercase',
       color: AI_UI.goldDeep,
       marginBottom: theme.spacing.sm,
     },
     promptList: {
-      gap: theme.spacing.md,
-    },
-    dividerRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: theme.spacing.md,
-      marginTop: theme.spacing.lg,
-      marginBottom: theme.spacing.sm,
-    },
-    dividerLine: {
-      flex: 1,
-      height: StyleSheet.hairlineWidth,
-      backgroundColor: AI_UI.goldBorder,
-    },
-    dividerText: {
-      fontSize: 11,
-      fontFamily: theme.typography.fonts.ui.bold,
-      fontWeight: '700',
-      letterSpacing: 1,
-      textTransform: 'uppercase',
-      color: AI_UI.primaryMuted,
+      gap: theme.spacing.sm,
     },
     chat: {
       gap: theme.spacing.lg,
-      paddingTop: theme.spacing.md,
+      paddingTop: theme.spacing.sm,
     },
   });
 }

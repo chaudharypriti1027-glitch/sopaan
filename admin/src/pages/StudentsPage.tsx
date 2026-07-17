@@ -5,6 +5,7 @@ import {
   Ban,
   Download,
   Eye,
+  Gift,
   GraduationCap,
   History,
   ReceiptIndianRupee,
@@ -16,9 +17,12 @@ import {
   downloadStudentsCsv,
   fetchStudent,
   fetchStudents,
+  grantStudentPremium,
+  revokeStudentPremium,
   setStudentStatus,
   type AdminStudent,
   type AdminStudentDetail,
+  type GrantPremiumPlan,
   type StudentAccountStatus,
   type StudentPremiumFilter,
 } from '../api/students';
@@ -344,6 +348,7 @@ export function StudentsPage() {
 
       <StudentProfileDrawer
         open={Boolean(selectedId)}
+        studentId={selectedId}
         student={detailQuery.data ?? null}
         loading={detailQuery.isLoading}
         error={detailQuery.isError ? detailQuery.error : undefined}
@@ -351,6 +356,12 @@ export function StudentsPage() {
         onClose={() => setSelectedId(null)}
         onSuspend={(student) => handleSuspend(student)}
         busy={busyId === selectedId}
+        onPremiumChanged={() => {
+          queryClient.invalidateQueries({ queryKey: ['admin', 'students'] });
+          if (selectedId) {
+            queryClient.invalidateQueries({ queryKey: ['admin', 'students', 'detail', selectedId] });
+          }
+        }}
       />
     </div>
   );
@@ -358,6 +369,7 @@ export function StudentsPage() {
 
 function StudentProfileDrawer({
   open,
+  studentId,
   student,
   loading,
   error,
@@ -365,8 +377,10 @@ function StudentProfileDrawer({
   onClose,
   onSuspend,
   busy,
+  onPremiumChanged,
 }: {
   open: boolean;
+  studentId: string | null;
   student: AdminStudentDetail | null;
   loading: boolean;
   error?: unknown;
@@ -374,7 +388,41 @@ function StudentProfileDrawer({
   onClose: () => void;
   onSuspend: (student: AdminStudent) => void;
   busy: boolean;
+  onPremiumChanged: () => void;
 }) {
+  const { showToast } = useToast();
+  const [grantPlan, setGrantPlan] = useState<GrantPremiumPlan>('monthly');
+  const [grantDays, setGrantDays] = useState('');
+
+  const grantMutation = useMutation({
+    mutationFn: ({
+      id,
+      plan,
+      days,
+    }: {
+      id: string;
+      plan: GrantPremiumPlan;
+      days?: number;
+    }) => grantStudentPremium(id, { plan, days }),
+    onSuccess: (data) => {
+      showToast(
+        `Gift sent · Free ${formatPlanLabel(data.premium?.plan)} Pro — student will see a Sopaan celebration popup to share`,
+      );
+      setGrantDays('');
+      onPremiumChanged();
+    },
+    onError: (err: Error) => showToast(err.message || 'Could not grant Pro'),
+  });
+
+  const revokeMutation = useMutation({
+    mutationFn: (id: string) => revokeStudentPremium(id),
+    onSuccess: () => {
+      showToast('Pro access ended');
+      onPremiumChanged();
+    },
+    onError: (err: Error) => showToast(err.message || 'Could not revoke Pro'),
+  });
+
   if (!open) return null;
 
   return (
@@ -463,7 +511,9 @@ function StudentProfileDrawer({
                   student.premium?.isPremium
                     ? student.premium.source === 'trial'
                       ? 'Trial Pro'
-                      : 'Pro'
+                      : student.premium.source === 'admin'
+                        ? 'Admin Pro (free)'
+                        : 'Pro'
                     : 'Free'
                 }
               />
@@ -492,10 +542,90 @@ function StudentProfileDrawer({
                     value={formatDate(student.entitlement.currentPeriodEnd)}
                   />
                   <DetailItem
-                    label="Auto-renews"
-                    value={student.entitlement.autoRenews ? 'Yes' : 'No'}
+                    label="Provider"
+                    value={
+                      student.entitlement.provider === 'admin'
+                        ? 'Admin (free)'
+                        : student.entitlement.provider ?? '—'
+                    }
                   />
                 </>
+              ) : null}
+            </div>
+
+            <div className="student-premium-actions">
+              <p className="empty-note" style={{ marginBottom: 10 }}>
+                Grant complimentary Sopaan Pro — no payment required.
+              </p>
+              <div className="toolbar" style={{ flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
+                <select
+                  className="filter-select"
+                  value={grantPlan}
+                  onChange={(e) => setGrantPlan(e.target.value as GrantPremiumPlan)}
+                  aria-label="Grant plan"
+                >
+                  <option value="monthly">Monthly (1 month)</option>
+                  <option value="yearly">Yearly (1 year)</option>
+                  <option value="trial">Trial (1 month)</option>
+                </select>
+                <input
+                  className="filter-select"
+                  style={{ minWidth: 110, maxWidth: 140 }}
+                  type="number"
+                  min={1}
+                  max={3650}
+                  placeholder="Custom days"
+                  value={grantDays}
+                  onChange={(e) => setGrantDays(e.target.value)}
+                  aria-label="Custom days (optional)"
+                />
+                <ActionButton
+                  variant="gold"
+                  disabled={grantMutation.isPending || !studentId}
+                  onClick={() => {
+                    if (!studentId) return;
+                    const days = grantDays.trim() ? Number(grantDays) : undefined;
+                    if (days != null && (!Number.isFinite(days) || days < 1)) {
+                      showToast('Enter a valid number of days');
+                      return;
+                    }
+                    const label =
+                      days != null
+                        ? `${days} day(s) of ${formatPlanLabel(grantPlan)}`
+                        : formatPlanLabel(grantPlan);
+                    if (
+                      !window.confirm(
+                        `Send a Sopaan Pro gift (${label}) to ${student.name || 'this student'}?\n\nThey’ll get a celebration popup to share on Instagram and more.`,
+                      )
+                    ) {
+                      return;
+                    }
+                    grantMutation.mutate({ id: studentId, plan: grantPlan, days });
+                  }}
+                >
+                  <Gift aria-hidden strokeWidth={1.8} size={16} />
+                  {grantMutation.isPending ? 'Granting…' : 'Grant free Pro'}
+                </ActionButton>
+              </div>
+              {student.premium?.isPremium ? (
+                <ActionButton
+                  variant="red"
+                  disabled={revokeMutation.isPending || !studentId}
+                  onClick={() => {
+                    if (!studentId) return;
+                    if (
+                      !window.confirm(
+                        `End Pro access for ${student.name || 'this student'} now?`,
+                      )
+                    ) {
+                      return;
+                    }
+                    revokeMutation.mutate(studentId);
+                  }}
+                >
+                  <Ban aria-hidden strokeWidth={1.8} size={16} />
+                  {revokeMutation.isPending ? 'Ending…' : 'End Pro access'}
+                </ActionButton>
               ) : null}
             </div>
           </section>

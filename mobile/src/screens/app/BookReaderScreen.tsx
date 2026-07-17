@@ -2,8 +2,10 @@ import { useNavigation, useRoute, type RouteProp } from '@react-navigation/nativ
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View, useWindowDimensions } from 'react-native';
-import PagerView from 'react-native-pager-view';
 import { useTranslation } from 'react-i18next';
+import PagerView, {
+  type PagerViewCompatHandle,
+} from '../../components/reader/PagerViewCompat';
 import { QueryStateView, Text, Button } from '../../components';
 import {
   READER_THEMES,
@@ -32,7 +34,7 @@ export function BookReaderScreen() {
   const { width } = useWindowDimensions();
   const { t } = useTranslation('app');
   const { isOffline } = useNetworkStatus();
-  const pagerRef = useRef<PagerView>(null);
+  const pagerRef = useRef<PagerViewCompatHandle>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [explainOpen, setExplainOpen] = useState(false);
   const [explainPassage, setExplainPassage] = useState<{ page: number; text: string } | null>(null);

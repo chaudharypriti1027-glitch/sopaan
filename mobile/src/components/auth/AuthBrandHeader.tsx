@@ -1,8 +1,9 @@
 import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Text } from '../Text';
+import { AuthGoldDivider } from './AuthGoldDivider';
 import { AuthLogo } from './AuthLogo';
-import { AUTH_SPACING, AUTH_UI } from './authTheme';
+import { AUTH_FONTS, AUTH_SPACING, AUTH_UI } from './authTheme';
 
 type AuthBrandHeaderProps = {
   title: string;
@@ -16,7 +17,7 @@ export function AuthBrandHeader({ title, subtitle, badge }: AuthBrandHeaderProps
   return (
     <View style={styles.root}>
       <AuthLogo />
-      <View style={styles.hairline} />
+      <AuthGoldDivider compact />
       {badge ? (
         <View style={styles.badgeWrap}>
           <Text variant="eyebrow" style={styles.badge}>
@@ -27,11 +28,7 @@ export function AuthBrandHeader({ title, subtitle, badge }: AuthBrandHeaderProps
       <Text variant="h1" style={styles.title}>
         {title}
       </Text>
-      {subtitle ? (
-        <Text variant="body" color="secondary" style={styles.subtitle}>
-          {subtitle}
-        </Text>
-      ) : null}
+      {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
     </View>
   );
 }
@@ -42,30 +39,32 @@ function createStyles() {
       alignItems: 'center',
       gap: AUTH_SPACING.stack,
     },
-    hairline: {
-      width: 40,
-      height: 2,
-      borderRadius: 99,
-      backgroundColor: AUTH_UI.gold,
-    },
     badgeWrap: {
-      paddingHorizontal: 10,
-      paddingVertical: 4,
+      paddingHorizontal: 12,
+      paddingVertical: 5,
       borderRadius: 99,
-      backgroundColor: AUTH_UI.goldSoft,
+      backgroundColor: 'rgba(240,212,136,0.12)',
+      borderWidth: 1,
+      borderColor: 'rgba(240,212,136,0.28)',
     },
     badge: {
-      color: AUTH_UI.goldDeep,
+      color: AUTH_UI.goldLt,
       textAlign: 'center',
+      fontFamily: AUTH_FONTS.bold,
     },
     title: {
-      color: AUTH_UI.ink,
+      color: AUTH_UI.onCanvas,
       textAlign: 'center',
+      fontFamily: AUTH_FONTS.bold,
     },
     subtitle: {
       textAlign: 'center',
       maxWidth: 300,
       paddingHorizontal: 12,
+      color: AUTH_UI.onCanvasMuted,
+      fontFamily: AUTH_FONTS.medium,
+      fontSize: 14,
+      lineHeight: 20,
     },
   });
 }

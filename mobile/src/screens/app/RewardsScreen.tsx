@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Button, Card, FeatureScreenLayout, Pill, PremiumHeroCard, PremiumSectionLabel } from '../../components';
+import { getUserFacingMessage } from '../../errors/getUserFacingMessage';
 import { useBadges, useProfile, useRedeemReward, useRewardsList } from '../../hooks';
 import { useFormat } from '../../i18n/useFormat';
 import { toneColors, toneForIndex } from '../../utils/iconTone';
@@ -35,7 +36,7 @@ export function RewardsScreen() {
           t('rewards.redeemedBody', { title, remaining: data.coinsRemaining }),
         );
       },
-      onError: (err) => Alert.alert(t('rewards.redeemFailed'), String(err)),
+      onError: (err) => Alert.alert(t('rewards.redeemFailed'), getUserFacingMessage(err)),
     });
   };
 

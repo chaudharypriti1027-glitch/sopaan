@@ -21,9 +21,13 @@ type AuthScreenProps = {
   scroll?: boolean;
   contentStyle?: ViewStyle;
   scrollProps?: Omit<ScrollViewProps, 'contentContainerStyle' | 'style' | 'children'>;
+  /** Stretch content to fill the viewport (welcome / brand landing). */
+  fill?: boolean;
+  /** Hide the stair / glow ambient (rarely needed). */
+  ambient?: boolean;
 };
 
-/** Auth flow shell — "Classic Premium" cream canvas with soft brand decor. */
+/** Auth flow shell — full-screen navy canvas with gold ambient decor. */
 export function AuthScreen({
   children,
   footer,
@@ -31,27 +35,30 @@ export function AuthScreen({
   scroll = true,
   contentStyle,
   scrollProps,
+  fill = false,
+  ambient = true,
 }: AuthScreenProps) {
   const insets = useSafeAreaInsets();
   const { isWeb, contentPadding, isWideWeb } = useResponsiveLayout();
   const styles = useMemo(
-    () => createStyles(insets, isWeb ? (contentPadding ?? 24) : 24, isWideWeb),
-    [insets, isWeb, contentPadding, isWideWeb],
+    () => createStyles(insets, isWeb ? (contentPadding ?? 24) : 24, isWideWeb, fill),
+    [insets, isWeb, contentPadding, isWideWeb, fill],
   );
 
   const card = (
-    <View style={styles.card}>
+    <View style={[styles.card, fill && styles.cardFill]}>
       {header}
-      <View style={[styles.body, contentStyle]}>{children}</View>
+      <View style={[styles.body, fill && styles.bodyFill, contentStyle]}>{children}</View>
       {footer ? <View style={styles.footer}>{footer}</View> : null}
     </View>
   );
 
   return (
     <LinearGradient
-      colors={[AUTH_UI.bgTop, AUTH_UI.bg, AUTH_UI.bgBottom]}
-      start={{ x: 0.5, y: 0 }}
-      end={{ x: 0.5, y: 1 }}
+      colors={[...AUTH_UI.canvasGradient]}
+      locations={[0, 0.52, 1]}
+      start={{ x: 0.2, y: 0 }}
+      end={{ x: 0.8, y: 1 }}
       style={styles.root}
     >
       <KeyboardAvoidingView
@@ -59,12 +66,12 @@ export function AuthScreen({
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 8 : 0}
       >
-        <AuthScreenAmbient />
+        {ambient ? <AuthScreenAmbient /> : null}
 
         {scroll ? (
           <ScrollView
             style={styles.scroll}
-            contentContainerStyle={styles.scrollContent}
+            contentContainerStyle={[styles.scrollContent, fill && styles.scrollFill]}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
             {...scrollProps}
@@ -72,7 +79,9 @@ export function AuthScreen({
             {card}
           </ScrollView>
         ) : (
-          <View style={[styles.scrollContent, styles.staticContent]}>{card}</View>
+          <View style={[styles.scrollContent, styles.staticContent, fill && styles.scrollFill]}>
+            {card}
+          </View>
         )}
       </KeyboardAvoidingView>
     </LinearGradient>
@@ -83,6 +92,7 @@ function createStyles(
   insets: { top: number; bottom: number; left: number; right: number },
   horizontalPad: number,
   wideWeb: boolean,
+  fill: boolean,
 ) {
   return StyleSheet.create({
     root: {
@@ -96,18 +106,21 @@ function createStyles(
     },
     scrollContent: {
       flexGrow: 1,
-      justifyContent: 'center',
-      paddingTop: insets.top + 20,
-      paddingBottom: insets.bottom + 24,
+      justifyContent: fill ? 'flex-start' : 'center',
+      paddingTop: insets.top + (fill ? 12 : 20),
+      paddingBottom: insets.bottom + (fill ? 20 : 24),
       paddingLeft: horizontalPad + insets.left,
       paddingRight: horizontalPad + insets.right,
       width: '100%',
       maxWidth: wideWeb ? 480 : '100%',
       alignSelf: 'center',
     },
+    scrollFill: {
+      minHeight: '100%',
+    },
     staticContent: {
       flex: 1,
-      justifyContent: 'center',
+      justifyContent: fill ? 'flex-start' : 'center',
     },
     card: {
       zIndex: 2,
@@ -116,14 +129,19 @@ function createStyles(
       alignSelf: 'center',
       gap: AUTH_SPACING.section,
     },
+    cardFill: {
+      flex: 1,
+      gap: 0,
+      maxWidth: wideWeb ? 440 : undefined,
+    },
     body: {
       gap: 0,
     },
+    bodyFill: {
+      flex: 1,
+    },
     footer: {
       gap: AUTH_SPACING.footer,
-    },
-    pointerNone: {
-      pointerEvents: 'none',
     },
   });
 }

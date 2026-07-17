@@ -65,10 +65,14 @@ export type SubscriptionEntitlement = {
   currentPeriodEnd: string;
   cancelAtPeriodEnd: boolean;
   cancelledAt?: string | null;
-  provider: 'razorpay';
+  provider: 'razorpay' | 'admin';
   providerSubscriptionId?: string | null;
   autoRenews: boolean;
   hasAccess: boolean;
+  /** Complimentary Pro granted by Sopaan admin. */
+  isGift?: boolean;
+  /** ISO timestamp when the gift was granted (for one-time celebration). */
+  giftGrantedAt?: string | null;
   updatedAt: string;
 };
 

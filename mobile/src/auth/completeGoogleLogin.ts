@@ -1,5 +1,5 @@
 import type { SignupInput } from '../api/auth';
-import { parseApiError } from '../api';
+import { getUserFacingMessage } from '../errors/getUserFacingMessage';
 import type { AuthResult } from '../types/auth';
 import { routeAfterAuthResult } from './routeAfterSession';
 import { completeStudentLogin, isAdminAppAccessError } from './studentSession';
@@ -39,8 +39,7 @@ export async function completeGoogleLogin(
       return false;
     }
 
-    const message =
-      error instanceof Error ? error.message : parseApiError(error).message;
+    const message = getUserFacingMessage(error);
 
     if (isUserCancelled(message)) {
       return false;

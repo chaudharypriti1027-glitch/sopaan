@@ -7,13 +7,15 @@ import { PracticeHeaderAmbient } from './PracticeHeaderAmbient';
 import { PRACTICE_UI } from './practiceTheme';
 
 type PracticeHeaderProps = {
-  eyebrow: string;
+  /** Kept optional for API compatibility — the compact header omits it. */
+  eyebrow?: string;
   title: string;
   subtitle: string;
   aiCard: ReactNode;
 };
 
-export function PracticeHeader({ eyebrow, title, subtitle, aiCard }: PracticeHeaderProps) {
+/** Compact navy hero — title, one-line subtitle, gold signature, AI action. */
+export function PracticeHeader({ title, subtitle, aiCard }: PracticeHeaderProps) {
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => createStyles(insets.top), [insets.top]);
 
@@ -26,10 +28,17 @@ export function PracticeHeader({ eyebrow, title, subtitle, aiCard }: PracticeHea
     >
       <PracticeHeaderAmbient />
 
-      <Text style={styles.eyebrow}>{eyebrow}</Text>
-      <Text style={styles.title}>{title}</Text>
-      <Text style={styles.subtitle}>{subtitle}</Text>
-      <View style={styles.hairline} />
+      <View style={styles.titleRow}>
+        <Text style={styles.title}>{title}</Text>
+        <View style={styles.dividerRow}>
+          <View style={styles.dividerLine} />
+          <View style={styles.dividerDiamond} />
+          <View style={styles.dividerLine} />
+        </View>
+      </View>
+      <Text style={styles.subtitle} numberOfLines={1}>
+        {subtitle}
+      </Text>
 
       <View style={styles.aiWrap}>{aiCard}</View>
     </LinearGradient>
@@ -39,45 +48,56 @@ export function PracticeHeader({ eyebrow, title, subtitle, aiCard }: PracticeHea
 function createStyles(topInset: number) {
   return StyleSheet.create({
     gradient: {
-      paddingTop: topInset + 10,
+      paddingTop: topInset + 12,
       paddingHorizontal: 20,
-      paddingBottom: 28,
+      paddingBottom: 22,
       borderBottomLeftRadius: 32,
       borderBottomRightRadius: 32,
       overflow: 'hidden',
     },
-    eyebrow: {
-      fontSize: 11,
-      fontWeight: '700',
-      letterSpacing: 1.6,
-      textTransform: 'uppercase',
-      color: PRACTICE_UI.eyebrow,
-      marginBottom: 4,
+    titleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
     },
     title: {
-      fontSize: 30,
+      fontSize: 26,
       fontWeight: '800',
       color: '#FFFFFF',
-      lineHeight: 33,
-      marginBottom: 2,
+      lineHeight: 31,
       letterSpacing: -0.4,
     },
-    subtitle: {
-      fontSize: 14,
-      lineHeight: 20,
-      color: 'rgba(255,255,255,0.9)',
-      marginBottom: 10,
+    dividerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      flexShrink: 1,
     },
-    hairline: {
-      width: 44,
-      height: 2,
-      borderRadius: 99,
+    dividerLine: {
+      width: 22,
+      height: StyleSheet.hairlineWidth + 0.5,
       backgroundColor: PRACTICE_UI.gold,
+      opacity: 0.7,
+    },
+    dividerDiamond: {
+      width: 4,
+      height: 4,
+      backgroundColor: PRACTICE_UI.gold,
+      transform: [{ rotate: '45deg' }],
+      shadowColor: PRACTICE_UI.gold,
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 0.8,
+      shadowRadius: 5,
+    },
+    subtitle: {
+      fontSize: 13,
+      lineHeight: 18,
+      color: 'rgba(233,222,196,0.75)',
+      marginTop: 4,
       marginBottom: 16,
-      opacity: 0.85,
     },
     aiWrap: {
-      marginTop: 2,
+      marginTop: 0,
     },
   });
 }

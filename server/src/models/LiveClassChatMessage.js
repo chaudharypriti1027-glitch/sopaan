@@ -30,6 +30,8 @@ const liveClassChatMessageSchema = new mongoose.Schema(
 );
 
 liveClassChatMessageSchema.index({ liveClassId: 1, createdAt: -1 });
+// Privacy export / account erasure look up messages by author.
+liveClassChatMessageSchema.index({ userId: 1 });
 
 export const LiveClassChatMessage = mongoose.model(
   'LiveClassChatMessage',

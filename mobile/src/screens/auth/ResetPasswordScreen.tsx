@@ -1,26 +1,25 @@
 import { useCallback, useMemo, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import { Pressable, StyleSheet, View } from 'react-native';
+import Animated, { FadeInDown, ReduceMotion, useReducedMotion } from 'react-native-reanimated';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { CompositeNavigationProp, RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
+import { ArrowRight } from 'lucide-react-native';
 import {
-  AuthAnimatedSection,
+  AUTH_UI,
+  AuthBackButton,
   AuthErrorBanner,
-  AuthFormCard,
-  AuthFormIntro,
+  AuthFlowHeader,
   AuthPremiumField,
-  AuthPremiumHero,
   AuthScreen,
-  GhostButton,
   OtpInput,
   PasswordRequirements,
   PrimaryButton,
   useShakeOnError,
 } from '../../components/auth';
+import { AUTH_FONTS } from '../../components/auth/authTheme';
 import { Text } from '../../components/Text';
-import { AUTH_UI } from '../../components/auth/authTheme';
 import { authApi, parseApiError } from '../../api';
 import { formatOtpError } from '../../auth/otpErrors';
 import { completeStudentLogin, isAdminAppAccessError } from '../../auth/studentSession';
@@ -40,6 +39,7 @@ export function ResetPasswordScreen() {
   const navigation = useNavigation<Nav>();
   const route = useRoute<Route>();
   const { email } = route.params;
+  const reducedMotion = useReducedMotion();
   const styles = useMemo(() => createStyles(), []);
 
   const [code, setCode] = useState('');
@@ -111,53 +111,60 @@ export function ResetPasswordScreen() {
     }
   };
 
+  const enterForm = reducedMotion
+    ? undefined
+    : FadeInDown.duration(420).delay(140).reduceMotion(ReduceMotion.System);
+
   return (
-    <AuthScreen
-      scrollProps={{ keyboardShouldPersistTaps: 'handled' }}
-      footer={
-        <View style={styles.footer}>
-          {canResend ? (
-            <GhostButton
-              label={t('otp.resendCode')}
-              loading={resendLoading}
-              disabled={loading}
-              onPress={() => void handleResend()}
-              testID="reset-resend"
-            />
-          ) : (
-            <Text style={styles.countdown}>{t('otp.resendIn', { seconds: remaining })}</Text>
-          )}
-          <GhostButton
-            label={t('otp.changeEmail')}
-            disabled={loading}
-            onPress={() => navigation.navigate('ForgotPassword', { email })}
-            testID="reset-change-email"
-          />
-        </View>
-      }
-    >
-      <AuthPremiumHero
-        variant="verify"
-        subtitle={t('forgot.codeSentSubtitle', { email })}
-      />
+    <AuthScreen scrollProps={{ keyboardShouldPersistTaps: 'handled' }} fill>
+      <View style={styles.column}>
+        <AuthBackButton
+          disabled={loading}
+          onPress={() => navigation.navigate('ForgotPassword', { email })}
+          testID="reset-change-email"
+        />
 
-      <Animated.View entering={FadeInDown.duration(400).delay(80)} style={shakeStyle}>
-        <AuthFormCard overlap premium>
-          <AuthFormIntro title={t('forgot.resetTitle')} subtitle={t('forgot.resetSubtitle')} />
+        <AuthFlowHeader
+          title={t('forgot.resetTitle')}
+          subtitle={t('forgot.codeSentSubtitle', { email })}
+          testID="reset-header"
+        />
 
-          <AuthAnimatedSection index={0}>
+        <Animated.View entering={enterForm} style={[styles.form, shakeStyle]}>
+          <View>
+            <Text style={styles.codeLabel}>{t('otp.oneTimeCode')}</Text>
             <OtpInput
+              dark
               value={code}
               onChange={setCode}
               disabled={loading}
               error={Boolean(formError)}
               testID="reset-otp"
             />
-          </AuthAnimatedSection>
+          </View>
 
-          <AuthAnimatedSection index={1}>
+          <View style={styles.resendRow}>
+            <Text style={styles.resendHint}>{t('otp.didntGet')}</Text>
+            {canResend ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t('otp.resendCode')}
+                disabled={resendLoading || loading}
+                onPress={() => void handleResend()}
+                hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+                style={({ pressed }) => pressed && styles.linkPressed}
+                testID="reset-resend"
+              >
+                <Text style={styles.resendLink}>{t('otp.resendCode')}</Text>
+              </Pressable>
+            ) : (
+              <Text style={styles.countdown}>{t('otp.resendIn', { seconds: remaining })}</Text>
+            )}
+          </View>
+
+          <View>
             <AuthPremiumField
-              dense
+              dark
               variant="password"
               label={t('forgot.newPassword')}
               value={password}
@@ -171,59 +178,99 @@ export function ResetPasswordScreen() {
               editable={!loading}
               testID="reset-password"
             />
-            <PasswordRequirements password={password} />
-          </AuthAnimatedSection>
+            <PasswordRequirements dark password={password} />
+          </View>
 
-          <AuthAnimatedSection index={2}>
-            <AuthPremiumField
-              dense
-              variant="password"
-              label={t('forgot.confirmPassword')}
-              value={confirm}
-              placeholder={t('forgot.confirmPasswordPlaceholder')}
-              onChangeText={(value) => {
-                setConfirm(value);
-                if (passwordError) setPasswordError(undefined);
-                if (formError) setFormError(null);
-              }}
-              editable={!loading}
-              testID="reset-confirm"
-            />
-          </AuthAnimatedSection>
+          <AuthPremiumField
+            dark
+            variant="password"
+            label={t('forgot.confirmPassword')}
+            value={confirm}
+            placeholder={t('forgot.confirmPasswordPlaceholder')}
+            onChangeText={(value) => {
+              setConfirm(value);
+              if (passwordError) setPasswordError(undefined);
+              if (formError) setFormError(null);
+            }}
+            editable={!loading}
+            testID="reset-confirm"
+          />
 
           {formError ? (
-            <AuthErrorBanner message={formError} testID="reset-form-error" />
+            <AuthErrorBanner dark message={formError} testID="reset-form-error" />
           ) : null}
 
-          <AuthAnimatedSection index={3}>
-            <PrimaryButton
-              label={t('forgot.resetSubmit')}
-              loading={loading}
-              disabled={!canSubmit}
-              onPress={() => void handleSubmit()}
-              testID="reset-submit"
-            />
-          </AuthAnimatedSection>
-        </AuthFormCard>
-      </Animated.View>
+          <PrimaryButton
+            label={t('forgot.resetSubmit')}
+            loading={loading}
+            disabled={!canSubmit}
+            onPress={() => void handleSubmit()}
+            testID="reset-submit"
+            trailingIcon={ArrowRight}
+          />
+        </Animated.View>
+
+        <View style={styles.spacer} />
+      </View>
     </AuthScreen>
   );
 }
 
 function createStyles() {
   return StyleSheet.create({
-    footer: {
-      gap: 8,
+    column: {
+      flex: 1,
+      minHeight: 560,
+    },
+    form: {
+      marginTop: 30,
+      gap: 16,
+    },
+    codeLabel: {
+      fontFamily: AUTH_FONTS.medium,
+      fontSize: 11,
+      fontWeight: '600',
+      letterSpacing: 2.2,
+      textTransform: 'uppercase',
+      color: 'rgba(212,175,55,0.75)',
+      marginBottom: 10,
+      marginLeft: 4,
+    },
+    resendRow: {
+      flexDirection: 'row',
       alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
+    },
+    resendHint: {
+      fontFamily: AUTH_FONTS.regular,
+      fontSize: 13.5,
+      color: 'rgba(228,216,190,0.55)',
+      letterSpacing: 0.2,
+    },
+    resendLink: {
+      fontFamily: AUTH_FONTS.semibold,
+      fontSize: 13.5,
+      fontWeight: '600',
+      color: AUTH_UI.focus,
+      letterSpacing: 0.3,
+      textDecorationLine: 'underline',
+      textDecorationColor: 'rgba(233,200,104,0.4)',
     },
     countdown: {
-      fontSize: 13,
+      fontFamily: AUTH_FONTS.semibold,
+      fontSize: 13.5,
       fontWeight: '600',
-      color: AUTH_UI.muted,
-      textAlign: 'center',
-      minHeight: 44,
-      textAlignVertical: 'center',
-      paddingTop: 12,
+      color: 'rgba(233,200,104,0.85)',
+      letterSpacing: 0.3,
+      fontVariant: ['tabular-nums'],
+    },
+    linkPressed: {
+      opacity: 0.7,
+    },
+    spacer: {
+      flex: 1,
+      minHeight: 16,
     },
   });
 }

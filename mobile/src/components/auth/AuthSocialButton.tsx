@@ -11,6 +11,8 @@ type AuthSocialButtonProps = {
   variant?: 'google' | 'outline';
   style?: ViewStyle;
   testID?: string;
+  /** Dark glass button on the navy canvas — Sign-in Flow reference. */
+  dark?: boolean;
 };
 
 /** Full-color Google "G" mark — matches the multi-brand icon in the reference mockup. */
@@ -44,8 +46,9 @@ export function AuthSocialButton({
   variant = 'outline',
   style,
   testID,
+  dark = false,
 }: AuthSocialButtonProps) {
-  const styles = useMemo(() => createStyles(), []);
+  const styles = useMemo(() => createStyles(dark), [dark]);
 
   return (
     <Pressable
@@ -63,9 +66,13 @@ export function AuthSocialButton({
         style,
       ]}
     >
-      <View style={[styles.iconTile, variant === 'google' ? styles.iconTileGoogle : styles.iconTilePhone]}>
-        {variant === 'google' ? <GoogleMark /> : <Phone size={15} color={AUTH_UI.sageDeep} strokeWidth={2.2} />}
-      </View>
+      {dark ? (
+        <GoogleMark />
+      ) : (
+        <View style={[styles.iconTile, variant === 'google' ? styles.iconTileGoogle : styles.iconTilePhone]}>
+          {variant === 'google' ? <GoogleMark /> : <Phone size={15} color={AUTH_UI.sageDeep} strokeWidth={2.2} />}
+        </View>
+      )}
       <Text style={styles.label}>{label}</Text>
     </Pressable>
   );
@@ -88,7 +95,7 @@ export function AuthSocialPair({
   googleDisabled,
   otpDisabled,
 }: AuthSocialPairProps) {
-  const styles = useMemo(() => createStyles(), []);
+  const styles = useMemo(() => createStyles(false), []);
 
   return (
     <View style={styles.pair}>
@@ -109,7 +116,7 @@ export function AuthSocialPair({
   );
 }
 
-function createStyles() {
+function createStyles(dark: boolean) {
   return StyleSheet.create({
     pair: {
       flexDirection: 'row',
@@ -123,17 +130,22 @@ function createStyles() {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: 9,
+      gap: dark ? 12 : 9,
+      minHeight: dark ? 54 : undefined,
       paddingVertical: 14,
-      borderRadius: 15,
+      borderRadius: dark ? AUTH_UI.btnRadius : 15,
       borderWidth: 1,
-      borderColor: AUTH_UI.border,
-      backgroundColor: AUTH_UI.card,
-      shadowColor: AUTH_UI.shadowSm,
-      shadowOffset: { width: 0, height: 6 },
-      shadowOpacity: 0.05,
-      shadowRadius: 12,
-      elevation: 1,
+      borderColor: dark ? 'rgba(255,255,255,0.14)' : 'rgba(28,36,80,0.1)',
+      backgroundColor: dark ? 'rgba(255,255,255,0.05)' : AUTH_UI.cardElevated,
+      ...(dark
+        ? {}
+        : {
+            shadowColor: '#000000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.06,
+            shadowRadius: 10,
+            elevation: 1,
+          }),
     },
     btnGoogle: {},
     iconTile: {
@@ -150,16 +162,17 @@ function createStyles() {
       backgroundColor: AUTH_UI.sageSoft,
     },
     label: {
-      fontFamily: AUTH_FONTS.bold,
-      fontSize: 13,
-      color: AUTH_UI.label,
+      fontFamily: dark ? AUTH_FONTS.medium : AUTH_FONTS.bold,
+      fontSize: dark ? 15 : 13,
+      color: dark ? AUTH_UI.onCanvas : AUTH_UI.label,
+      letterSpacing: dark ? 0.3 : undefined,
     },
     disabled: {
       opacity: 0.55,
     },
     pressed: {
-      backgroundColor: AUTH_UI.bg,
-      borderColor: AUTH_UI.borderHover,
+      backgroundColor: dark ? 'rgba(255,255,255,0.09)' : '#F0EDE3',
+      borderColor: dark ? 'rgba(255,255,255,0.2)' : 'rgba(28,36,80,0.16)',
     },
   });
 }

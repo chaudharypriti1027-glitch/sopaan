@@ -82,11 +82,21 @@ jest.mock('../../payments/subscriptionFlow', () => ({
 }));
 
 jest.mock('../../api', () => ({
-  parseApiError: (err: unknown) => ({
-    message: err instanceof Error ? err.message : 'Request failed',
-    code: 'REQUEST_FAILED',
-    status: 400,
-  }),
+  parseApiError: (err: unknown) => {
+    if (err && typeof err === 'object' && 'code' in err) {
+      const apiErr = err as { message?: string; code?: string; status?: number };
+      return {
+        message: apiErr.message ?? 'Request failed',
+        code: apiErr.code ?? 'REQUEST_FAILED',
+        status: apiErr.status ?? 400,
+      };
+    }
+    return {
+      message: err instanceof Error ? err.message : 'Request failed',
+      code: 'REQUEST_FAILED',
+      status: 400,
+    };
+  },
 }));
 
 describe('PremiumScreen', () => {
@@ -185,11 +195,27 @@ describe('PremiumScreen', () => {
       configured: false,
     };
 
-    const { getByTestId, queryByTestId } = renderWithProviders(<PremiumScreen />);
+    const { getByTestId, queryByTestId, queryByText } = renderWithProviders(<PremiumScreen />);
 
     expect(getByTestId('premium-coming-soon')).toBeTruthy();
-    expect(getByTestId('premium-subscribe-unavailable')).toBeTruthy();
     expect(queryByTestId('premium-subscribe')).toBeNull();
+    expect(queryByTestId('premium-subscribe-unavailable')).toBeNull();
+    expect(queryByText('Choose a plan')).toBeNull();
+    expect(queryByText('Monthly')).toBeNull();
+  });
+
+  it('hides trial CTA after trial already used error', async () => {
+    const { ApiError } = require('../../api/errors');
+    mockStartTrial.mockRejectedValueOnce(
+      new ApiError('Free trial already used', 400, 'TRIAL_ALREADY_USED'),
+    );
+
+    const { getByTestId, queryByTestId, findByTestId } = renderWithProviders(<PremiumScreen />);
+
+    fireEvent.press(getByTestId('premium-start-trial'));
+
+    expect(await findByTestId('premium-trial-unavailable')).toBeTruthy();
+    expect(queryByTestId('premium-start-trial')).toBeNull();
   });
 
   it('navigates to Practice when exploring after purchase', async () => {

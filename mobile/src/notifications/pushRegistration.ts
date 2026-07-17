@@ -1,11 +1,16 @@
 import type { PermissionResponse } from 'expo-modules-core';
 import Constants from 'expo-constants';
-import { Platform } from 'react-native';
+import { AppState, Platform } from 'react-native';
 import { isRemotePushSupported, loadNotificationsModule } from './notificationsModule';
 
 export type PushRegistrationResult = {
   token: string;
   platform: 'ios' | 'android' | 'web';
+};
+
+export type PushRegistrationOptions = {
+  /** When false (default), never prompt — only register if already granted. */
+  requestPermission?: boolean;
 };
 
 let notificationHandlerConfigured = false;
@@ -21,18 +26,27 @@ async function ensureNotificationHandler() {
   }
 
   Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-      shouldShowAlert: true,
-      shouldPlaySound: true,
-      shouldSetBadge: true,
-      shouldShowBanner: true,
-      shouldShowList: true,
-    }),
+    handleNotification: async () => {
+      // Suppress banner/alert while the app is still launching or in background
+      // transition; Android otherwise flashes the first queued push on cold start.
+      const active = AppState.currentState === 'active';
+      return {
+        shouldShowAlert: active,
+        shouldPlaySound: active,
+        shouldSetBadge: true,
+        shouldShowBanner: active,
+        shouldShowList: active,
+      };
+    },
   });
   notificationHandlerConfigured = true;
 }
 
-export async function registerForPushNotificationsAsync(): Promise<PushRegistrationResult | null> {
+export async function registerForPushNotificationsAsync(
+  options: PushRegistrationOptions = {},
+): Promise<PushRegistrationResult | null> {
+  const { requestPermission = false } = options;
+
   if (!isRemotePushSupported()) {
     return null;
   }
@@ -46,7 +60,7 @@ export async function registerForPushNotificationsAsync(): Promise<PushRegistrat
   const permissions = (await Notifications.getPermissionsAsync()) as PermissionResponse;
   let granted = permissions.granted;
 
-  if (!granted) {
+  if (!granted && requestPermission) {
     const requested = (await Notifications.requestPermissionsAsync()) as PermissionResponse;
     granted = requested.granted;
   }
@@ -58,8 +72,8 @@ export async function registerForPushNotificationsAsync(): Promise<PushRegistrat
   if (Platform.OS === 'android') {
     await Notifications.setNotificationChannelAsync('default', {
       name: 'Sopaan',
-      importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: [0, 250, 250, 250],
+      importance: Notifications.AndroidImportance.DEFAULT,
+      vibrationPattern: [0, 180, 120, 180],
     });
   }
 

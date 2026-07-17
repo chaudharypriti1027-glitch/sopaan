@@ -30,6 +30,8 @@ type OtpInputProps = {
   disabled?: boolean;
   autoFocus?: boolean;
   testID?: string;
+  /** Dark glass cells with gold accents on the navy canvas. */
+  dark?: boolean;
 };
 
 function sanitizeDigits(raw: string, length: number) {
@@ -84,12 +86,13 @@ export function OtpInput({
   disabled = false,
   autoFocus = false,
   testID = 'otp-input',
+  dark = false,
 }: OtpInputProps) {
   const refs = useRef<(TextInput | null)[]>([]);
   const digits = useMemo(() => sanitizeDigits(value, length).split(''), [value, length]);
   const activeIndex = Math.min(digits.length, length - 1);
 
-  const styles = useMemo(() => createStyles(error, success), [error, success]);
+  const styles = useMemo(() => createStyles(error, success, dark), [error, success, dark]);
 
   const focusCell = useCallback((index: number) => {
     refs.current[index]?.focus();
@@ -201,7 +204,7 @@ export function OtpInput({
             />
             {!filled && isActive ? (
               <View style={styles.caretWrap}>
-                <CaretPulse active color={AUTH_UI.accent} />
+                <CaretPulse active color={dark ? AUTH_UI.focus : AUTH_UI.accent} />
               </View>
             ) : null}
           </Pressable>
@@ -211,24 +214,40 @@ export function OtpInput({
   );
 }
 
-function createStyles(error: boolean, success: boolean) {
-  const filledBorder = success ? '#10B981' : AUTH_UI.accent;
-  const filledBg = success ? '#ECFDF5' : 'rgba(35,42,77,0.06)';
+function createStyles(error: boolean, success: boolean, dark: boolean) {
+  const filledBorder = success
+    ? '#10B981'
+    : dark
+      ? 'rgba(240,212,136,0.4)'
+      : AUTH_UI.accent;
+  const filledBg = success
+    ? dark
+      ? 'rgba(16,185,129,0.12)'
+      : '#ECFDF5'
+    : dark
+      ? 'rgba(240,212,136,0.08)'
+      : 'rgba(35,42,77,0.06)';
 
   return StyleSheet.create({
     row: {
       flexDirection: 'row',
       justifyContent: 'space-between',
-      gap: 8,
+      gap: dark ? 10 : 8,
     },
     cell: {
       flex: 1,
       maxWidth: 52,
       aspectRatio: 0.82,
-      borderRadius: AUTH_UI.inputRadius,
-      borderWidth: 1.5,
-      borderColor: error ? '#F87171' : AUTH_UI.border,
-      backgroundColor: AUTH_UI.card,
+      borderRadius: dark ? 15 : AUTH_UI.inputRadius,
+      borderWidth: dark ? 1 : 1.5,
+      borderColor: error
+        ? dark
+          ? 'rgba(224,122,95,0.75)'
+          : '#F87171'
+        : dark
+          ? 'rgba(255,255,255,0.12)'
+          : AUTH_UI.border,
+      backgroundColor: dark ? 'rgba(255,255,255,0.03)' : AUTH_UI.card,
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -237,20 +256,22 @@ function createStyles(error: boolean, success: boolean) {
       backgroundColor: filledBg,
     },
     cellActive: {
-      borderColor: AUTH_UI.focus,
-      shadowColor: AUTH_UI.accent,
+      borderWidth: 1.5,
+      borderColor: dark ? 'rgba(233,200,104,0.9)' : AUTH_UI.focus,
+      backgroundColor: dark ? 'rgba(255,255,255,0.04)' : undefined,
+      shadowColor: dark ? AUTH_UI.gold : AUTH_UI.accent,
       shadowOffset: { width: 0, height: 0 },
-      shadowOpacity: 0.12,
-      shadowRadius: 3,
+      shadowOpacity: dark ? 0.2 : 0.12,
+      shadowRadius: dark ? 6 : 3,
     },
     cellError: {
-      borderColor: '#F87171',
+      borderColor: dark ? 'rgba(224,122,95,0.75)' : '#F87171',
     },
     input: {
       fontFamily: themeFonts.stat.bold,
-      fontSize: 24,
+      fontSize: dark ? 22 : 24,
       fontWeight: '700',
-      color: AUTH_UI.ink,
+      color: dark ? AUTH_UI.onCanvas : AUTH_UI.ink,
       textAlign: 'center',
       width: '100%',
       padding: 0,

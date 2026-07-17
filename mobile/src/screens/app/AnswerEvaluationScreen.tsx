@@ -3,15 +3,10 @@ import {
   Award,
   Camera,
   CheckCircle2,
-  FileText,
   Image as ImageIcon,
-  LayoutList,
   Lightbulb,
-  MessageSquareText,
   PenLine,
   Sparkles,
-  Target,
-  ThumbsUp,
 } from 'lucide-react-native';
 import { useMemo, useState, type ReactNode } from 'react';
 import {
@@ -33,7 +28,6 @@ import {
   PremiumFeatureCard,
   PremiumHeroCard,
   PremiumSectionLabel,
-  ProgressBar,
   TextField,
 } from '../../components';
 import { PREMIUM } from '../../components/premium/premiumStyles';
@@ -339,73 +333,9 @@ export function AnswerEvaluationScreen() {
             ) : null}
           </PremiumHeroCard>
 
-          <View style={styles.sectionHeader}>
-            <PremiumSectionLabel title={t('answerEvaluation.breakdown')} compact />
-            <LayoutList size={16} color={PREMIUM.sectionLabel} strokeWidth={1.8} />
-          </View>
-          <PremiumFeatureCard style={styles.breakdown}>
-            <View style={styles.rubricHintRow}>
-              <Text style={styles.rubricHint}>{t('answerEvaluation.rubricHint')}</Text>
-            </View>
-            <View style={styles.progressBlock}>
-              <View style={styles.progressLabelRow}>
-                <FileText size={14} color={theme.colors.brand.primary} strokeWidth={1.8} />
-                <Text style={styles.progressLabel}>{t('answerEvaluation.content')}</Text>
-                <Text style={styles.weightHint}>{t('answerEvaluation.weightContent')}</Text>
-                <Text style={styles.scoreHint}>
-                  {formatNumber(subScores.content)}/{formatNumber(maxMarks)}
-                </Text>
-              </View>
-              <ProgressBar
-                value={subScores.content}
-                max={maxMarks}
-                variant="primary"
-                showValue={false}
-                accessibilityLabel={t('answerEvaluation.content')}
-              />
-            </View>
-            <View style={styles.progressBlock}>
-              <View style={styles.progressLabelRow}>
-                <LayoutList size={14} color={theme.colors.accent.teal} strokeWidth={1.8} />
-                <Text style={styles.progressLabel}>{t('answerEvaluation.structure')}</Text>
-                <Text style={styles.weightHint}>{t('answerEvaluation.weightStructure')}</Text>
-                <Text style={styles.scoreHint}>
-                  {formatNumber(subScores.structure)}/{formatNumber(maxMarks)}
-                </Text>
-              </View>
-              <ProgressBar
-                value={subScores.structure}
-                max={maxMarks}
-                variant="teal"
-                showValue={false}
-                accessibilityLabel={t('answerEvaluation.structure')}
-              />
-            </View>
-            <View style={styles.progressBlock}>
-              <View style={styles.progressLabelRow}>
-                <MessageSquareText size={14} color={PREMIUM.goldDeep} strokeWidth={1.8} />
-                <Text style={styles.progressLabel}>{t('answerEvaluation.clarity')}</Text>
-                <Text style={styles.weightHint}>{t('answerEvaluation.weightClarity')}</Text>
-                <Text style={styles.scoreHint}>
-                  {formatNumber(subScores.clarity)}/{formatNumber(maxMarks)}
-                </Text>
-              </View>
-              <ProgressBar
-                value={subScores.clarity}
-                max={maxMarks}
-                variant="gold"
-                showValue={false}
-                accessibilityLabel={t('answerEvaluation.clarity')}
-              />
-            </View>
-          </PremiumFeatureCard>
-
           {strengths.length > 0 ? (
             <>
-              <View style={styles.sectionHeader}>
-                <PremiumSectionLabel title={t('answerEvaluation.strengths')} compact />
-                <ThumbsUp size={16} color={PREMIUM.sage} strokeWidth={1.8} />
-              </View>
+              <PremiumSectionLabel title={t('answerEvaluation.strengths')} compact />
               <PremiumFeatureCard style={styles.feedbackCard}>
                 {strengths.map((item) => (
                   <FeedbackRow
@@ -421,10 +351,7 @@ export function AnswerEvaluationScreen() {
 
           {improvements.length > 0 ? (
             <>
-              <View style={styles.sectionHeader}>
-                <PremiumSectionLabel title={t('answerEvaluation.whatToImprove')} compact />
-                <Target size={16} color={theme.colors.semantic.warning} strokeWidth={1.8} />
-              </View>
+              <PremiumSectionLabel title={t('answerEvaluation.whatToImprove')} compact />
               <PremiumFeatureCard style={styles.feedbackCard}>
                 {improvements.map((item, index) => (
                   <FeedbackRow
@@ -441,10 +368,7 @@ export function AnswerEvaluationScreen() {
 
           {nextSteps.length > 0 ? (
             <>
-              <View style={styles.sectionHeader}>
-                <PremiumSectionLabel title={t('answerEvaluation.nextSteps')} compact />
-                <ArrowRight size={16} color={PREMIUM.goldDeep} strokeWidth={1.8} />
-              </View>
+              <PremiumSectionLabel title={t('answerEvaluation.nextSteps')} compact />
               <AIGoldCard style={styles.nextStepsCard}>
                 {nextSteps.map((item, index) => (
                   <FeedbackRow
@@ -585,47 +509,6 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme']) {
       color: '#FFFFFF',
       fontWeight: '800',
       letterSpacing: 0.2,
-    },
-    sectionHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingRight: 6,
-    },
-    breakdown: {
-      gap: theme.spacing.md,
-    },
-    rubricHintRow: {
-      marginBottom: 2,
-    },
-    rubricHint: {
-      ...theme.typography.presets.caption,
-      color: PREMIUM.sectionLabel,
-      lineHeight: 17,
-    },
-    progressBlock: {
-      gap: theme.spacing.xs,
-    },
-    progressLabelRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-    },
-    progressLabel: {
-      ...theme.typography.presets.caption,
-      color: PREMIUM.ink,
-      fontWeight: '700',
-      flex: 1,
-    },
-    weightHint: {
-      ...theme.typography.presets.caption,
-      color: PREMIUM.sectionLabel,
-      fontWeight: '600',
-    },
-    scoreHint: {
-      ...theme.typography.presets.caption,
-      color: PREMIUM.ink,
-      fontWeight: '800',
     },
     feedbackCard: {
       gap: theme.spacing.md,

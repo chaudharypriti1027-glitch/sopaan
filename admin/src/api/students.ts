@@ -6,7 +6,7 @@ import { normalizeDoc, normalizeList } from './normalize';
 
 export type StudentAccountStatus = 'active' | 'suspended';
 export type StudentPremiumFilter = 'pro' | 'free' | 'trial';
-export type StudentPremiumSource = 'none' | 'trial' | 'paid' | 'unknown';
+export type StudentPremiumSource = 'none' | 'trial' | 'paid' | 'admin' | 'unknown';
 
 export interface AdminStudent {
   id: string;
@@ -209,6 +209,27 @@ export async function setStudentStatus(id: string, status: StudentAccountStatus)
     body: JSON.stringify({ status }),
   });
   return normalizeStudentRow(data);
+}
+
+export type GrantPremiumPlan = 'monthly' | 'yearly' | 'trial';
+
+export async function grantStudentPremium(
+  id: string,
+  body: { plan: GrantPremiumPlan; days?: number },
+) {
+  const data = await apiRequest<AdminStudentDetail>(`/api/admin/students/${id}/premium`, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+  return normalizeStudentDetail(data);
+}
+
+export async function revokeStudentPremium(id: string) {
+  const data = await apiRequest<AdminStudentDetail>(`/api/admin/students/${id}/premium`, {
+    method: 'DELETE',
+    body: JSON.stringify({}),
+  });
+  return normalizeStudentDetail(data);
 }
 
 export async function downloadStudentsCsv(params: StudentListParams = {}) {

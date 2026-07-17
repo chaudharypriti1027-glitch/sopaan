@@ -106,6 +106,9 @@ const ReviewAnswerCard = memo(function ReviewAnswerCard({
           wrongLabel={t('result.wrongStatus')}
           correctAnswerLabel={t('result.correctAnswer')}
           formulaLabel={t('askAi.formula')}
+          answerLabel={t('askAi.answerLabel')}
+          explanationLabel={t('askAi.explanationLabel')}
+          tipLabel={t('askAi.tipLabel')}
         />
       ) : null}
       {!item.correct && item.questionId ? (

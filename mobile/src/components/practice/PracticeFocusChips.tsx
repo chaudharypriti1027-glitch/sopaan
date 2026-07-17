@@ -52,7 +52,7 @@ function createStyles() {
       borderRadius: 18,
       padding: 14,
       borderWidth: 1,
-      borderColor: 'rgba(35,42,77,0.06)',
+      borderColor: 'rgba(201,162,75,0.18)',
       ...platformShadow({
         color: PRACTICE_UI.startEnd,
         offsetY: 3,
@@ -72,7 +72,7 @@ function createStyles() {
       borderRadius: 8,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: 'rgba(245,158,11,0.12)',
+      backgroundColor: 'rgba(201,162,75,0.14)',
     },
     title: {
       fontSize: 12,

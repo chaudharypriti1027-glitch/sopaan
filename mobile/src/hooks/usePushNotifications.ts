@@ -33,7 +33,11 @@ export function usePushNotifications() {
         return;
       }
 
-      const registration = await registerForPushNotificationsAsync();
+      // Never prompt on cold start — Android shows a system dialog that feels like
+      // a first notification. Request only from Settings via enablePushNotifications.
+      const registration = await registerForPushNotificationsAsync({
+        requestPermission: false,
+      });
       if (cancelled || !registration) {
         return;
       }
@@ -58,7 +62,9 @@ export function useUpdatePushSettings() {
 }
 
 export async function enablePushNotifications(): Promise<boolean> {
-  const registration = await registerForPushNotificationsAsync();
+  const registration = await registerForPushNotificationsAsync({
+    requestPermission: true,
+  });
   if (!registration) {
     return false;
   }

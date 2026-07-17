@@ -342,6 +342,29 @@ export async function setStudentStatus(req, res) {
   );
 }
 
+export async function grantStudentPremium(req, res) {
+  const student = await adminStudentService.grantStudentPremium(
+    req.params.id,
+    req.body,
+    req.user._id,
+  );
+  if (!student) {
+    throw new AppError('Student not found', 404, 'NOT_FOUND');
+  }
+  res.status(200).json(student);
+}
+
+export async function revokeStudentPremium(req, res) {
+  const student = await adminStudentService.revokeStudentPremiumAccess(
+    req.params.id,
+    req.user._id,
+  );
+  if (!student) {
+    throw new AppError('Student not found', 404, 'NOT_FOUND');
+  }
+  res.status(200).json(student);
+}
+
 export async function exportStudents(req, res) {
   const csv = await adminStudentService.exportStudentsCsv(getValidatedQuery(req));
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');

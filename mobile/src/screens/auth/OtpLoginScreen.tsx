@@ -1,18 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import Animated, { FadeInDown, ReduceMotion, useReducedMotion } from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import { ArrowRight } from 'lucide-react-native';
 import {
+  AuthAltLinks,
+  AuthBackButton,
   AuthDivider,
   AuthErrorBanner,
-  AuthAltLinks,
-  AuthFormCard,
-  AuthFormIntro,
+  AuthFlowHeader,
   AuthPremiumField,
-  AuthPremiumHero,
   AuthScreen,
   AuthSocialButton,
   AuthTermsBox,
@@ -32,6 +31,7 @@ type OtpLoginNav = NativeStackNavigationProp<AuthStackParamList, 'OtpLogin'>;
 export function OtpLoginScreen() {
   const navigation = useNavigation<OtpLoginNav>();
   const { t } = useTranslation('auth');
+  const reducedMotion = useReducedMotion();
   const styles = useMemo(() => createStyles(), []);
   const { signInWithGoogle, loading: googleLoading, isConfigured: googleConfigured } =
     useGoogleSignIn();
@@ -113,101 +113,114 @@ export function OtpLoginScreen() {
     );
   };
 
+  const enterForm = reducedMotion
+    ? undefined
+    : FadeInDown.duration(420).delay(140).reduceMotion(ReduceMotion.System);
+  const enterFooter = reducedMotion
+    ? undefined
+    : FadeInDown.duration(380).delay(240).reduceMotion(ReduceMotion.System);
+
   return (
-    <AuthScreen scrollProps={{ keyboardShouldPersistTaps: 'handled' }}>
-      <AuthPremiumHero variant="otp" compact />
+    <AuthScreen scrollProps={{ keyboardShouldPersistTaps: 'handled' }} fill>
+      <View style={styles.column}>
+        <AuthBackButton
+          disabled={busy}
+          onPress={() => navigation.navigate('Welcome')}
+          testID="otp-login-back"
+        />
 
-      <Animated.View entering={FadeInDown.duration(400).delay(80)} style={shakeStyle}>
-        <AuthFormCard overlap premium borderless>
-          <View style={styles.formStack}>
-            <AuthFormIntro
-              title={t('otp.entryTitle')}
-              subtitle={t('otp.entrySubtitle')}
-              accent
-              compactSpacing
-            />
+        <AuthFlowHeader
+          title={t('otp.entryTitle')}
+          subtitle={t('otp.entrySubtitle')}
+          testID="otp-login-header"
+        />
 
-            <AuthPremiumField
-              dense
-              variant="phone"
-              label={t('otp.phone')}
-              value={digits}
-              placeholder={t('otp.phonePlaceholder')}
-              onChangeText={(value) => {
-                setDigits(value);
-                if (error) setError(null);
-              }}
-              editable={!busy}
-              testID="otp-login-phone"
-              autoFocus
-            />
+        <Animated.View entering={enterForm} style={[styles.form, shakeStyle]}>
+          <AuthPremiumField
+            dark
+            variant="phone"
+            label={t('otp.phone')}
+            value={digits}
+            placeholder={t('otp.phonePlaceholder')}
+            onChangeText={(value) => {
+              setDigits(value);
+              if (error) setError(null);
+            }}
+            editable={!busy}
+            testID="otp-login-phone"
+            autoFocus
+          />
 
-            {error ? (
-              <AuthErrorBanner message={error} testID="otp-login-error" />
-            ) : null}
+          <AuthTermsBox
+            dark
+            testID="otp-login-consent"
+            checked={acceptedTerms}
+            onToggle={() => setAcceptedTerms((v) => !v)}
+            policyVersion={policyVersion}
+          />
 
-            <AuthTermsBox
-              testID="otp-login-consent"
-              checked={acceptedTerms}
-              onToggle={() => setAcceptedTerms((v) => !v)}
-              policyVersion={policyVersion}
-            />
+          {error ? (
+            <AuthErrorBanner dark message={error} testID="otp-login-error" />
+          ) : null}
 
-            <PrimaryButton
-              label={t('otp.continue')}
-              loading={loading}
-              disabled={!canSubmit}
-              onPress={() => void handleSendOtp()}
-              testID="otp-login-send"
-              trailingIcon={ArrowRight}
-            />
-          </View>
+          <PrimaryButton
+            label={t('otp.continue')}
+            loading={loading}
+            disabled={!canSubmit}
+            onPress={() => void handleSendOtp()}
+            testID="otp-login-send"
+            trailingIcon={ArrowRight}
+          />
 
-          <AuthDivider label={t('login.dividerOr')} />
+          <AuthDivider dark label={t('login.dividerOr')} />
 
-          <View style={styles.altMethods}>
-            <AuthSocialButton
-              label={t('login.continueGoogle')}
-              variant="google"
-              style={styles.socialButton}
-              disabled={busy || !acceptedTerms}
-              onPress={() => void handleGoogleSignIn()}
-              testID="otp-login-google"
-            />
-            <AuthAltLinks
-              links={[
-                {
-                  label: t('otp.useEmailInstead'),
-                  onPress: busy ? undefined : () => navigation.navigate('Login'),
-                  testID: 'otp-login-email-link',
-                },
-                {
-                  label: t('otp.cantSignIn'),
-                  onPress: busy ? undefined : () => navigation.navigate('ForgotPassword'),
-                  testID: 'otp-login-cant-sign-in',
-                },
-              ]}
-            />
-          </View>
-        </AuthFormCard>
-      </Animated.View>
+          <AuthSocialButton
+            dark
+            label={t('login.continueGoogle')}
+            variant="google"
+            disabled={busy || !acceptedTerms}
+            onPress={() => void handleGoogleSignIn()}
+            testID="otp-login-google"
+          />
+        </Animated.View>
+
+        <View style={styles.spacer} />
+
+        <Animated.View entering={enterFooter}>
+          <AuthAltLinks
+            dark
+            links={[
+              {
+                label: t('otp.useEmailInstead'),
+                onPress: busy ? undefined : () => navigation.navigate('Login'),
+                testID: 'otp-login-email-link',
+              },
+              {
+                label: t('otp.cantSignIn'),
+                onPress: busy ? undefined : () => navigation.navigate('ForgotPassword'),
+                testID: 'otp-login-cant-sign-in',
+              },
+            ]}
+          />
+        </Animated.View>
+      </View>
     </AuthScreen>
   );
 }
 
 function createStyles() {
   return StyleSheet.create({
-    formStack: {
-      gap: 14,
+    column: {
+      flex: 1,
+      minHeight: 560,
     },
-    altMethods: {
-      gap: 14,
+    form: {
+      marginTop: 34,
+      gap: 16,
     },
-    socialButton: {
-      borderWidth: 0,
-      backgroundColor: '#F7F4EC',
-      shadowOpacity: 0,
-      elevation: 0,
+    spacer: {
+      flex: 1,
+      minHeight: 20,
     },
   });
 }

@@ -11,7 +11,9 @@ import {
   expireEntitlement,
   formatEntitlementDto,
   getEntitlementByUserId,
+  grantAdminPremium,
   restoreEntitlementsForUser,
+  revokeStudentPremium,
 } from '../src/services/entitlementService.js';
 import { verifyPaymentSignature, verifyWebhookSignature } from '../src/services/razorpayService.js';
 import { clearTestDatabase, setupTestDatabase, teardownTestDatabase } from './helpers/db.js';
@@ -181,5 +183,39 @@ describe('payment signature verification', () => {
 
     expect(verifyWebhookSignature(rawBody, signature)).toBe(true);
     expect(verifyWebhookSignature(rawBody, 'invalid')).toBe(false);
+  });
+
+  it('grants complimentary admin Pro and revokes it', async () => {
+    const user = await createTestUser({
+      name: 'Admin Grant User',
+      email: 'admin-grant@test.com',
+      passwordHash: 'hash',
+      role: 'student',
+    });
+
+    await grantAdminPremium(user._id, { plan: 'monthly', days: 14, adminId: 'admin1' });
+    const entitlement = await getEntitlementByUserId(user._id);
+    const synced = await User.findById(user._id);
+
+    expect(entitlement?.provider).toBe('admin');
+    expect(entitlement?.plan).toBe('monthly');
+    expect(entitlement?.status).toBe('active');
+    expect(entitlementGrantsAccess(entitlement)).toBe(true);
+    expect(synced?.isPremium).toBe(true);
+    expect(formatEntitlementDto(entitlement)?.provider).toBe('admin');
+    expect(formatEntitlementDto(entitlement)?.isGift).toBe(true);
+    expect(formatEntitlementDto(entitlement)?.giftGrantedAt).toBeTruthy();
+
+    const end = new Date(entitlement.currentPeriodEnd).getTime();
+    const expectedMin = Date.now() + 13 * 24 * 60 * 60 * 1000;
+    expect(end).toBeGreaterThan(expectedMin);
+
+    await revokeStudentPremium(user._id, { adminId: 'admin1' });
+    const after = await getEntitlementByUserId(user._id);
+    const syncedAfter = await User.findById(user._id);
+
+    expect(after?.status).toBe('expired');
+    expect(entitlementGrantsAccess(after)).toBe(false);
+    expect(syncedAfter?.isPremium).toBe(false);
   });
 });

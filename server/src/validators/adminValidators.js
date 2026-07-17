@@ -230,6 +230,14 @@ export const studentStatusSchema = z.object({
   status: z.enum(['active', 'suspended']),
 });
 
+export const studentGrantPremiumSchema = z
+  .object({
+    plan: z.enum(['monthly', 'yearly', 'trial']),
+    /** Optional custom length in days (1–3650). When omitted, plan default period is used. */
+    days: z.coerce.number().int().min(1).max(3650).optional(),
+  })
+  .strict();
+
 export const adminBroadcastSchema = z.object({
   title: z.string().trim().min(1).max(120),
   body: z.string().trim().min(1).max(500),

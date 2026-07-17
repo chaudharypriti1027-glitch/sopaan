@@ -13,6 +13,7 @@ import { bootstrapWebDocument } from './src/layout/webBootstrap';
 import { AuthProvider } from './src/auth';
 import { ExperimentsProvider } from './src/experiments';
 import { OfflineBanner } from './src/components/OfflineBanner';
+import { GiftProHost } from './src/components/premium/GiftProHost';
 import { PremiumDialogProvider } from './src/components/premium/PremiumDialogProvider';
 import { usePushNotifications } from './src/hooks/usePushNotifications';
 import { useNotificationDeepLink } from './src/hooks/useNotificationDeepLink';
@@ -49,6 +50,7 @@ function NavigationShell() {
       <AuthNavigationGuard />
       <OfflineBanner />
       <RootNavigator />
+      <GiftProHost />
     </>
   );
 }
@@ -109,7 +111,7 @@ export default function App() {
   if (!criticalLoaded && !criticalError) {
     return (
       <View style={styles.boot}>
-        <ActivityIndicator size="large" color="#4F46E5" />
+        <ActivityIndicator size="large" color="#E3C97F" />
       </View>
     );
   }
@@ -134,6 +136,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#4F46E5',
+    backgroundColor: '#1A1F3B',
   },
 });

@@ -17,6 +17,7 @@ import {
   AUTH_UI,
   AuthAnimatedSection,
   AuthBrandHeader,
+  AuthFormCard,
   AuthPremiumField,
   AuthProgressDots,
   AuthScreen,
@@ -33,7 +34,7 @@ import {
   getTargetYearOptions,
   type CareerGoal,
 } from '../../auth/onboardingData';
-import { parseApiError } from '../../api';
+import { getUserFacingMessage } from '../../errors/getUserFacingMessage';
 import { isValidTargetExam } from '../../utils/examTarget';
 import type { AuthStackParamList } from '../../navigation/types';
 
@@ -142,7 +143,7 @@ export function GoalSetupScreen() {
       }
       navigation.navigate('ProfileSetup');
     } catch (error) {
-      Alert.alert(t('auth:goalSetup.saveFailed'), parseApiError(error).message);
+      Alert.alert(t('auth:goalSetup.saveFailed'), getUserFacingMessage(error));
     } finally {
       setLoading(false);
     }
@@ -162,7 +163,12 @@ export function GoalSetupScreen() {
       }
       footer={
         <View style={styles.footer}>
-          <GhostButton label={t('common:back', { defaultValue: 'Back' })} onPress={() => navigation.goBack()} disabled={loading} />
+          <GhostButton
+            tone="canvas"
+            label={t('common:back', { defaultValue: 'Back' })}
+            onPress={() => navigation.goBack()}
+            disabled={loading}
+          />
           <PrimaryButton
             label={t('common:continue')}
             testID="goal-setup-continue"
@@ -173,55 +179,57 @@ export function GoalSetupScreen() {
         </View>
       }
     >
-      <View style={styles.body}>
-        <AuthAnimatedSection index={0}>
-          <View style={styles.grid}>
-            {filteredGoals.map((item) => (
-              <GoalCard
-                key={item.id}
-                title={item.title}
-                subtitle={item.subtitle}
-                selected={selectedGoal?.id === item.id}
-                icon={
-                  <GoalIcon
-                    goalId={item.id}
-                    color={selectedGoal?.id === item.id ? AUTH_UI.accent : AUTH_UI.muted}
-                  />
-                }
-                onPress={() => setSelectedGoal(item)}
-                style={styles.goalCard}
-              />
-            ))}
-          </View>
-        </AuthAnimatedSection>
-
-        <AuthAnimatedSection index={1}>
-          <AuthStepLabel>{t('auth:goalSetup.targetYear')}</AuthStepLabel>
-          <View style={styles.yearRow}>
-            {yearOptions.map((year) => (
-              <ChipSelect
-                key={year}
-                label={String(year)}
-                selected={targetYear === year}
-                onPress={() => setTargetYear(year)}
-              />
-            ))}
-          </View>
-        </AuthAnimatedSection>
-
-        {isOtherGoal ? (
-          <AuthAnimatedSection index={2}>
-            <AuthPremiumField
-              label={t('auth:profileSetup.customExamLabel')}
-              value={customExamName}
-              onChangeText={setCustomExamName}
-              placeholder={t('auth:profileSetup.customExamPlaceholder')}
-              autoCapitalize="characters"
-              testID="goal-setup-custom-exam"
-            />
+      <AuthFormCard overlap premium>
+        <View style={styles.body}>
+          <AuthAnimatedSection index={0}>
+            <View style={styles.grid}>
+              {filteredGoals.map((item) => (
+                <GoalCard
+                  key={item.id}
+                  title={item.title}
+                  subtitle={item.subtitle}
+                  selected={selectedGoal?.id === item.id}
+                  icon={
+                    <GoalIcon
+                      goalId={item.id}
+                      color={selectedGoal?.id === item.id ? AUTH_UI.accent : AUTH_UI.muted}
+                    />
+                  }
+                  onPress={() => setSelectedGoal(item)}
+                  style={styles.goalCard}
+                />
+              ))}
+            </View>
           </AuthAnimatedSection>
-        ) : null}
-      </View>
+
+          <AuthAnimatedSection index={1}>
+            <AuthStepLabel>{t('auth:goalSetup.targetYear')}</AuthStepLabel>
+            <View style={styles.yearRow}>
+              {yearOptions.map((year) => (
+                <ChipSelect
+                  key={year}
+                  label={String(year)}
+                  selected={targetYear === year}
+                  onPress={() => setTargetYear(year)}
+                />
+              ))}
+            </View>
+          </AuthAnimatedSection>
+
+          {isOtherGoal ? (
+            <AuthAnimatedSection index={2}>
+              <AuthPremiumField
+                label={t('auth:profileSetup.customExamLabel')}
+                value={customExamName}
+                onChangeText={setCustomExamName}
+                placeholder={t('auth:profileSetup.customExamPlaceholder')}
+                autoCapitalize="characters"
+                testID="goal-setup-custom-exam"
+              />
+            </AuthAnimatedSection>
+          ) : null}
+        </View>
+      </AuthFormCard>
     </AuthScreen>
   );
 }

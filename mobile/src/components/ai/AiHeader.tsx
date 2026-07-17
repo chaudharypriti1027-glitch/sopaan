@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, Sparkles } from 'lucide-react-native';
+import { ArrowLeft, PenLine } from 'lucide-react-native';
 import { Text } from '../Text';
 import { useTheme } from '../../theme';
 import { AiAvatar } from './AiAvatar';
@@ -10,10 +10,9 @@ import { AI_UI, aiPressFeedback } from './aiTheme';
 
 type AiHeaderProps = {
   title: string;
-  subtitle: string;
-  eyebrow?: string;
+  subtitle?: string;
   backA11y: string;
-  evaluateLabel: string;
+  evaluateLabel?: string;
   onBack?: () => void;
   onEvaluatePress?: () => void;
 };
@@ -21,7 +20,6 @@ type AiHeaderProps = {
 export function AiHeader({
   title,
   subtitle,
-  eyebrow,
   backA11y,
   evaluateLabel,
   onBack,
@@ -38,8 +36,7 @@ export function AiHeader({
       end={{ x: 0.85, y: 1 }}
       style={styles.header}
     >
-      <View style={styles.decorA} />
-      <View style={styles.decorB} />
+      <View style={styles.decor} />
 
       <View style={styles.row}>
         {onBack ? (
@@ -47,34 +44,39 @@ export function AiHeader({
             accessibilityRole="button"
             accessibilityLabel={backA11y}
             onPress={onBack}
-            style={({ pressed }) => [styles.backBtn, pressed && aiPressFeedback]}
+            style={({ pressed }) => [styles.iconBtn, pressed && aiPressFeedback]}
           >
             <ArrowLeft size={18} color="#FFFFFF" strokeWidth={2.5} />
           </Pressable>
         ) : (
-          <View style={styles.backSpacer} />
+          <View style={styles.iconBtnSpacer} />
         )}
 
         <View style={styles.center}>
-          <AiAvatar size={40} variant="hero" />
+          <AiAvatar size={36} variant="hero" />
           <View style={styles.copy}>
-            {eyebrow ? <Text style={styles.eyebrow}>{eyebrow}</Text> : null}
-            <Text style={styles.title}>{title}</Text>
-            <Text style={styles.subtitle}>{subtitle}</Text>
+            <Text style={styles.title} numberOfLines={1}>
+              {title}
+            </Text>
+            {subtitle ? (
+              <Text style={styles.subtitle} numberOfLines={1}>
+                {subtitle}
+              </Text>
+            ) : null}
           </View>
         </View>
 
-        {onEvaluatePress ? (
+        {onEvaluatePress && evaluateLabel ? (
           <Pressable
             accessibilityRole="button"
+            accessibilityLabel={evaluateLabel}
             onPress={onEvaluatePress}
-            style={({ pressed }) => [styles.evaluateBtn, pressed && aiPressFeedback]}
+            style={({ pressed }) => [styles.iconBtn, styles.evalBtn, pressed && aiPressFeedback]}
           >
-            <Sparkles size={12} color={AI_UI.gold} strokeWidth={2.4} />
-            <Text style={styles.evaluateText}>{evaluateLabel}</Text>
+            <PenLine size={16} color={AI_UI.gold} strokeWidth={2.3} />
           </Pressable>
         ) : (
-          <View style={styles.backSpacer} />
+          <View style={styles.iconBtnSpacer} />
         )}
       </View>
     </LinearGradient>
@@ -84,76 +86,62 @@ export function AiHeader({
 function createStyles(theme: ReturnType<typeof useTheme>['theme'], topInset: number) {
   return StyleSheet.create({
     header: {
-      paddingTop: topInset + 10,
+      paddingTop: topInset + 8,
       paddingHorizontal: theme.spacing.lg,
-      paddingBottom: 34,
+      paddingBottom: 28,
       overflow: 'hidden',
     },
-    decorA: {
+    decor: {
       position: 'absolute',
-      top: -50,
-      right: -30,
-      width: 180,
-      height: 180,
-      borderRadius: 90,
-      backgroundColor: 'rgba(194,154,78,0.2)',
-    },
-    decorB: {
-      position: 'absolute',
-      bottom: -30,
-      left: -20,
-      width: 120,
-      height: 120,
-      borderRadius: 60,
-      backgroundColor: 'rgba(255,255,255,0.06)',
+      top: -40,
+      right: -24,
+      width: 140,
+      height: 140,
+      borderRadius: 70,
+      backgroundColor: 'rgba(194,154,78,0.16)',
     },
     row: {
       flexDirection: 'row',
-      alignItems: 'flex-start',
-      justifyContent: 'space-between',
+      alignItems: 'center',
       gap: theme.spacing.sm,
       zIndex: 2,
     },
-    backBtn: {
-      width: 38,
-      height: 38,
+    iconBtn: {
+      width: 40,
+      height: 40,
       borderRadius: 14,
       backgroundColor: 'rgba(255,255,255,0.12)',
       borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.18)',
+      borderColor: 'rgba(255,255,255,0.16)',
       alignItems: 'center',
       justifyContent: 'center',
-      marginTop: 4,
     },
-    backSpacer: {
-      width: 38,
-      height: 38,
+    evalBtn: {
+      borderColor: 'rgba(194,154,78,0.4)',
+      backgroundColor: 'rgba(194,154,78,0.14)',
+    },
+    iconBtnSpacer: {
+      width: 40,
+      height: 40,
     },
     center: {
       flex: 1,
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 12,
-      paddingHorizontal: 4,
+      gap: 10,
+      minWidth: 0,
     },
     copy: {
       flex: 1,
-      gap: 2,
-    },
-    eyebrow: {
-      fontSize: 10,
-      fontFamily: theme.typography.fonts.ui.bold,
-      fontWeight: '800',
-      letterSpacing: 0.6,
-      textTransform: 'uppercase',
-      color: 'rgba(255,255,255,0.68)',
+      gap: 1,
+      minWidth: 0,
     },
     title: {
-      fontSize: 18,
+      fontSize: 17,
       lineHeight: 22,
       fontFamily: theme.typography.fonts.ui.bold,
       fontWeight: '800',
-      letterSpacing: -0.3,
+      letterSpacing: -0.2,
       color: '#FFFFFF',
     },
     subtitle: {
@@ -161,28 +149,7 @@ function createStyles(theme: ReturnType<typeof useTheme>['theme'], topInset: num
       lineHeight: 16,
       fontFamily: theme.typography.fonts.ui.semibold,
       fontWeight: '600',
-      color: 'rgba(255,255,255,0.72)',
-    },
-    evaluateBtn: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 5,
-      paddingHorizontal: 10,
-      paddingVertical: 8,
-      borderRadius: 12,
-      backgroundColor: 'rgba(255,255,255,0.1)',
-      borderWidth: 1,
-      borderColor: 'rgba(194,154,78,0.35)',
-      marginTop: 4,
-      maxWidth: 108,
-    },
-    evaluateText: {
-      flexShrink: 1,
-      fontSize: 10.5,
-      lineHeight: 13,
-      fontFamily: theme.typography.fonts.ui.bold,
-      fontWeight: '700',
-      color: AI_UI.goldSoft,
+      color: 'rgba(255,255,255,0.7)',
     },
   });
 }

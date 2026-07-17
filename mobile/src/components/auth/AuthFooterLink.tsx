@@ -2,7 +2,6 @@ import { useMemo } from 'react';
 import { Pressable, StyleSheet } from 'react-native';
 import { Text } from '../Text';
 import { AUTH_FONTS, AUTH_UI } from './authTheme';
-import { platformShadow } from '../../utils/platformShadow';
 
 type AuthFooterLinkProps = {
   muted: string;
@@ -12,7 +11,7 @@ type AuthFooterLinkProps = {
   accessibilityLabel?: string;
 };
 
-/** Pill-shaped secondary CTA — "New here? Create account" / "Already have an account? Log in". */
+/** Secondary CTA on the navy canvas — "New here? Create account". */
 export function AuthFooterLink({
   muted,
   strong,
@@ -47,34 +46,28 @@ function createStyles() {
       justifyContent: 'center',
       alignSelf: 'center',
       alignItems: 'center',
-      marginTop: 4,
-      minHeight: 46,
+      marginTop: 8,
+      minHeight: 44,
       paddingVertical: 10,
       paddingHorizontal: 18,
-      borderRadius: 23,
-      backgroundColor: AUTH_UI.card,
-      borderWidth: 1.5,
-      borderColor: AUTH_UI.borderHover,
-      ...platformShadow({
-        color: AUTH_UI.shadowSm,
-        offsetY: 6,
-        opacity: 0.06,
-        radius: 14,
-        elevation: 2,
-      }),
+      borderRadius: 22,
+      backgroundColor: 'rgba(240,212,136,0.06)',
+      borderWidth: 1,
+      borderColor: 'rgba(240,212,136,0.22)',
     },
     pressed: {
-      opacity: 0.75,
-      backgroundColor: AUTH_UI.bg,
+      opacity: 0.8,
+      backgroundColor: 'rgba(240,212,136,0.12)',
     },
     muted: {
-      color: AUTH_UI.label,
-      fontFamily: AUTH_FONTS.semibold,
+      color: AUTH_UI.onCanvasFaint,
+      fontFamily: AUTH_FONTS.medium,
     },
     strong: {
-      color: AUTH_UI.accent,
+      color: AUTH_UI.goldLt,
       fontFamily: AUTH_FONTS.bold,
       textDecorationLine: 'underline',
+      textDecorationColor: 'rgba(233,200,104,0.4)',
     },
   });
 }

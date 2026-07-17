@@ -12,11 +12,13 @@ type AuthAltLink = {
 
 type AuthAltLinksProps = {
   links: AuthAltLink[];
+  /** Centered gold links on the navy canvas — Sign-in Flow footer. */
+  dark?: boolean;
 };
 
 /** Horizontal secondary actions — e.g. Forgot password · Email OTP. */
-export function AuthAltLinks({ links }: AuthAltLinksProps) {
-  const styles = useMemo(() => createStyles(), []);
+export function AuthAltLinks({ links, dark = false }: AuthAltLinksProps) {
+  const styles = useMemo(() => createStyles(dark), [dark]);
 
   return (
     <View style={styles.row}>
@@ -38,41 +40,41 @@ export function AuthAltLinks({ links }: AuthAltLinksProps) {
   );
 }
 
-function createStyles() {
+function createStyles(dark: boolean) {
   return StyleSheet.create({
     row: {
       flexDirection: 'row',
       flexWrap: 'wrap',
       alignItems: 'center',
-      justifyContent: 'flex-end',
-      gap: 4,
-      marginTop: -4,
-      marginBottom: 12,
+      justifyContent: dark ? 'center' : 'flex-end',
+      gap: dark ? 8 : 4,
+      marginTop: dark ? 0 : -4,
+      marginBottom: dark ? 0 : 12,
     },
     item: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 4,
+      gap: dark ? 8 : 4,
     },
     dot: {
       width: 3,
       height: 3,
       borderRadius: 99,
-      backgroundColor: AUTH_UI.faint,
+      backgroundColor: dark ? 'rgba(228,216,190,0.35)' : AUTH_UI.faint,
       marginHorizontal: 2,
     },
     pressable: {
-      minHeight: 32,
+      minHeight: dark ? 44 : 32,
       justifyContent: 'center',
-      paddingHorizontal: 2,
+      paddingHorizontal: dark ? 4 : 2,
     },
     pressed: {
       opacity: 0.7,
     },
     label: {
-      fontSize: 12,
-      fontWeight: '700',
-      color: AUTH_UI.accent,
+      fontSize: dark ? 14 : 12,
+      fontWeight: dark ? '600' : '700',
+      color: dark ? AUTH_UI.focus : AUTH_UI.goldDeep,
     },
   });
 }

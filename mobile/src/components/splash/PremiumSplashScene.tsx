@@ -18,7 +18,7 @@ import { SopaanLogo } from '../SopaanLogo';
 import { Text } from '../Text';
 import { PREMIUM } from '../premium/premiumStyles';
 
-const LOADER_WIDTH = 148;
+const LOADER_WIDTH = 132;
 
 type PremiumSplashSceneProps = {
   reducedMotion: boolean;
@@ -29,44 +29,46 @@ export function PremiumSplashScene({ reducedMotion }: PremiumSplashSceneProps) {
   const insets = useSafeAreaInsets();
 
   const markOpacity = useSharedValue(reducedMotion ? 1 : 0);
-  const markScale = useSharedValue(reducedMotion ? 1 : 0.88);
+  const markScale = useSharedValue(reducedMotion ? 1 : 0.86);
+  const glowOpacity = useSharedValue(reducedMotion ? 0.55 : 0);
   const copyOpacity = useSharedValue(reducedMotion ? 1 : 0);
-  const copyY = useSharedValue(reducedMotion ? 0 : 14);
+  const copyY = useSharedValue(reducedMotion ? 0 : 16);
   const footerOpacity = useSharedValue(reducedMotion ? 1 : 0);
-  const loaderX = useSharedValue(-0.35);
+  const loaderX = useSharedValue(-0.4);
   const breath = useSharedValue(1);
 
   useEffect(() => {
     if (reducedMotion) return;
 
     markOpacity.value = withTiming(1, {
-      duration: 640,
+      duration: 560,
       easing: Easing.out(Easing.cubic),
       reduceMotion: ReduceMotion.System,
     });
     markScale.value = withSpring(1, {
-      damping: 18,
-      stiffness: 140,
-      mass: 0.9,
+      damping: 16,
+      stiffness: 150,
+      mass: 0.85,
     });
+    glowOpacity.value = withDelay(
+      120,
+      withTiming(0.7, { duration: 700, easing: Easing.out(Easing.quad) }),
+    );
     copyOpacity.value = withDelay(
-      220,
-      withTiming(1, { duration: 520, easing: Easing.out(Easing.cubic) }),
+      180,
+      withTiming(1, { duration: 480, easing: Easing.out(Easing.cubic) }),
     );
-    copyY.value = withDelay(
-      220,
-      withSpring(0, { damping: 18, stiffness: 130 }),
-    );
+    copyY.value = withDelay(180, withSpring(0, { damping: 17, stiffness: 140 }));
     footerOpacity.value = withDelay(
-      420,
-      withTiming(1, { duration: 480, easing: Easing.out(Easing.quad) }),
+      360,
+      withTiming(1, { duration: 440, easing: Easing.out(Easing.quad) }),
     );
     breath.value = withDelay(
-      700,
+      640,
       withRepeat(
         withSequence(
-          withTiming(1.035, { duration: 2200, easing: Easing.inOut(Easing.sin) }),
-          withTiming(1, { duration: 2200, easing: Easing.inOut(Easing.sin) }),
+          withTiming(1.028, { duration: 2100, easing: Easing.inOut(Easing.sin) }),
+          withTiming(1, { duration: 2100, easing: Easing.inOut(Easing.sin) }),
         ),
         -1,
         true,
@@ -74,8 +76,8 @@ export function PremiumSplashScene({ reducedMotion }: PremiumSplashSceneProps) {
     );
     loaderX.value = withRepeat(
       withSequence(
-        withTiming(1, { duration: 1400, easing: Easing.inOut(Easing.cubic) }),
-        withTiming(-0.35, { duration: 0 }),
+        withTiming(1.05, { duration: 1280, easing: Easing.inOut(Easing.cubic) }),
+        withTiming(-0.4, { duration: 0 }),
       ),
       -1,
       false,
@@ -85,6 +87,7 @@ export function PremiumSplashScene({ reducedMotion }: PremiumSplashSceneProps) {
     copyOpacity,
     copyY,
     footerOpacity,
+    glowOpacity,
     loaderX,
     markOpacity,
     markScale,
@@ -94,6 +97,10 @@ export function PremiumSplashScene({ reducedMotion }: PremiumSplashSceneProps) {
   const markStyle = useAnimatedStyle(() => ({
     opacity: markOpacity.value,
     transform: [{ scale: markScale.value * breath.value }],
+  }));
+
+  const glowStyle = useAnimatedStyle(() => ({
+    opacity: glowOpacity.value,
   }));
 
   const copyStyle = useAnimatedStyle(() => ({
@@ -117,8 +124,8 @@ export function PremiumSplashScene({ reducedMotion }: PremiumSplashSceneProps) {
   return (
     <LinearGradient
       colors={[...PREMIUM.heroGradient]}
-      start={{ x: 0.2, y: 0 }}
-      end={{ x: 0.85, y: 1 }}
+      start={{ x: 0.18, y: 0 }}
+      end={{ x: 0.86, y: 1 }}
       style={styles.root}
       testID="splash-brand-scene"
     >
@@ -127,14 +134,22 @@ export function PremiumSplashScene({ reducedMotion }: PremiumSplashSceneProps) {
       <View style={styles.vignette} pointerEvents="none" />
 
       <View style={styles.stage}>
-        <Animated.View style={[styles.markWrap, markStyle]}>
-          <SopaanLogo size={88} />
-        </Animated.View>
+        <View style={styles.markStage}>
+          <Animated.View style={[styles.glow, glowStyle]} pointerEvents="none" />
+          <Animated.View style={[styles.markWrap, markStyle]}>
+            <SopaanLogo size={96} />
+          </Animated.View>
+        </View>
 
         <Animated.View style={[styles.copy, copyStyle]}>
           <Text style={styles.wordmark}>
             S<Text style={styles.wordmarkAccent}>O</Text>PAAN
           </Text>
+          <View style={styles.dividerRow}>
+            <View style={styles.dividerLine} />
+            <View style={styles.dividerDiamond} />
+            <View style={[styles.dividerLine, styles.dividerLineRight]} />
+          </View>
           <Text style={styles.tagline}>{t('splash.taglineShort')}</Text>
         </Animated.View>
       </View>
@@ -144,7 +159,7 @@ export function PremiumSplashScene({ reducedMotion }: PremiumSplashSceneProps) {
           {!reducedMotion ? (
             <Animated.View style={[styles.loaderFillWrap, loaderStyle]}>
               <LinearGradient
-                colors={['transparent', '#C29A4E', '#E3C97F', '#C29A4E', 'transparent']}
+                colors={['transparent', '#C29A4E', '#E9CF8D', '#C29A4E', 'transparent']}
                 start={{ x: 0, y: 0.5 }}
                 end={{ x: 1, y: 0.5 }}
                 style={styles.loaderFill}
@@ -155,7 +170,6 @@ export function PremiumSplashScene({ reducedMotion }: PremiumSplashSceneProps) {
           )}
         </View>
         <Text style={styles.status}>{t('splash.loading')}</Text>
-        <Text style={styles.byline}>{t('splash.byline')}</Text>
       </Animated.View>
     </LinearGradient>
   );
@@ -168,25 +182,25 @@ function createStyles(topInset: number, bottomInset: number) {
     },
     atmosphereTop: {
       position: 'absolute',
-      top: -120,
-      right: -80,
-      width: 280,
-      height: 280,
-      borderRadius: 140,
-      backgroundColor: 'rgba(194,154,78,0.09)',
+      top: -100,
+      right: -70,
+      width: 260,
+      height: 260,
+      borderRadius: 130,
+      backgroundColor: 'rgba(201,162,75,0.1)',
     },
     atmosphereBottom: {
       position: 'absolute',
-      bottom: -140,
-      left: -100,
-      width: 300,
-      height: 300,
-      borderRadius: 150,
-      backgroundColor: 'rgba(95,138,123,0.1)',
+      bottom: -120,
+      left: -90,
+      width: 280,
+      height: 280,
+      borderRadius: 140,
+      backgroundColor: 'rgba(94,156,124,0.08)',
     },
     vignette: {
       ...StyleSheet.absoluteFillObject,
-      backgroundColor: 'rgba(12,14,28,0.18)',
+      backgroundColor: 'rgba(10,12,24,0.22)',
     },
     stage: {
       flex: 1,
@@ -194,49 +208,87 @@ function createStyles(topInset: number, bottomInset: number) {
       justifyContent: 'center',
       paddingHorizontal: 36,
       paddingTop: topInset,
-      paddingBottom: 96,
+      paddingBottom: 108,
+      gap: 8,
+    },
+    markStage: {
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: 160,
+      height: 160,
+      marginBottom: 8,
+    },
+    glow: {
+      position: 'absolute',
+      width: 148,
+      height: 148,
+      borderRadius: 74,
+      backgroundColor: 'rgba(201,162,75,0.18)',
     },
     markWrap: {
       alignItems: 'center',
       justifyContent: 'center',
-      marginBottom: 28,
       width: 112,
       height: 112,
     },
     copy: {
       alignItems: 'center',
-      gap: 12,
+      gap: 14,
     },
     wordmark: {
       fontFamily: 'SpaceGrotesk_700Bold',
-      fontSize: 36,
-      lineHeight: 42,
-      letterSpacing: 4,
+      fontSize: 38,
+      lineHeight: 44,
+      letterSpacing: 5,
       color: '#FFFFFF',
       textAlign: 'center',
     },
     wordmarkAccent: {
       fontFamily: 'SpaceGrotesk_700Bold',
-      fontSize: 36,
-      lineHeight: 42,
-      letterSpacing: 4,
-      color: '#E3C97F',
+      fontSize: 38,
+      lineHeight: 44,
+      letterSpacing: 5,
+      color: '#E9CF8D',
+    },
+    dividerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+    },
+    dividerLine: {
+      width: 44,
+      height: StyleSheet.hairlineWidth + 0.5,
+      backgroundColor: '#D4AF37',
+      opacity: 0.7,
+    },
+    dividerLineRight: {},
+    dividerDiamond: {
+      width: 5,
+      height: 5,
+      backgroundColor: '#D4AF37',
+      transform: [{ rotate: '45deg' }],
+      shadowColor: '#D4AF37',
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 0.8,
+      shadowRadius: 6,
     },
     tagline: {
       fontFamily: 'PlusJakartaSans_500Medium',
-      fontSize: 14,
-      lineHeight: 20,
-      letterSpacing: 0.8,
-      color: 'rgba(255,255,255,0.62)',
+      fontSize: 16,
+      lineHeight: 23,
+      letterSpacing: 0.6,
+      fontStyle: 'italic',
+      color: 'rgba(233,222,196,0.8)',
       textAlign: 'center',
+      maxWidth: 260,
     },
     footer: {
       position: 'absolute',
       left: 0,
       right: 0,
-      bottom: Math.max(bottomInset, 16) + 28,
+      bottom: Math.max(bottomInset, 16) + 32,
       alignItems: 'center',
-      gap: 14,
+      gap: 16,
       paddingHorizontal: 32,
     },
     loaderTrack: {
@@ -248,32 +300,23 @@ function createStyles(topInset: number, bottomInset: number) {
     },
     loaderFillWrap: {
       height: '100%',
-      width: '42%',
+      width: '40%',
     },
     loaderFill: {
       flex: 1,
     },
     loaderFillStatic: {
       height: '100%',
-      width: '34%',
-      backgroundColor: '#C29A4E',
+      width: '36%',
+      backgroundColor: '#C9A24B',
       alignSelf: 'center',
     },
     status: {
       fontFamily: 'PlusJakartaSans_500Medium',
       fontSize: 12,
-      letterSpacing: 0.2,
-      color: 'rgba(255,255,255,0.5)',
+      letterSpacing: 0.3,
+      color: 'rgba(255,255,255,0.48)',
       textAlign: 'center',
-    },
-    byline: {
-      fontFamily: 'PlusJakartaSans_600SemiBold',
-      fontSize: 10,
-      letterSpacing: 1.2,
-      textTransform: 'uppercase',
-      color: 'rgba(255,255,255,0.28)',
-      textAlign: 'center',
-      marginTop: 4,
     },
   });
 }

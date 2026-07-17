@@ -1,31 +1,31 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
   FadeInDown,
+  ReduceMotion,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
-import { Check } from 'lucide-react-native';
+import { Check, ShieldCheck } from 'lucide-react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { CompositeNavigationProp, RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTranslation } from 'react-i18next';
 import {
   AUTH_UI,
-  AuthAnimatedSection,
-  AuthFormCard,
-  AuthFormIntro,
-  AuthPremiumHero,
+  AuthAltLinks,
+  AuthBackButton,
+  AuthErrorBanner,
+  AuthFlowHeader,
   AuthScreen,
-  GhostButton,
   OtpInput,
   useShakeOnError,
 } from '../components/auth';
-import { AUTH_SPACING } from '../components/auth/authTheme';
+import { AUTH_FONTS } from '../components/auth/authTheme';
 import { Text } from '../components/Text';
 import { authApi, parseApiError } from '../api';
 import { formatOtpError } from '../auth/otpErrors';
@@ -159,100 +159,212 @@ export function OtpScreen() {
     }
   };
 
+  const enterForm = reducedMotion
+    ? undefined
+    : FadeInDown.duration(420).delay(140).reduceMotion(ReduceMotion.System);
+  const enterFooter = reducedMotion
+    ? undefined
+    : FadeInDown.duration(380).delay(240).reduceMotion(ReduceMotion.System);
+
   return (
-    <AuthScreen
-      footer={
-        <View style={styles.footer}>
-          {canResend ? (
-            <GhostButton
-              label={t('otp.resendCode')}
-              loading={resendLoading}
-              disabled={verifying || success}
-              onPress={handleResend}
-            />
-          ) : (
-            <Text style={styles.countdown}>{t('otp.resendIn', { seconds: remaining })}</Text>
-          )}
-          <GhostButton
-            label={phone ? t('otp.changeNumber') : t('otp.changeEmail')}
-            disabled={verifying || success}
-            onPress={() => navigation.goBack()}
-          />
-        </View>
-      }
-    >
-      <AuthPremiumHero
-        variant="verify"
-        subtitle={t('otp.codeSentSubtitle', { phone: destinationLabel })}
-      />
+    <AuthScreen scrollProps={{ keyboardShouldPersistTaps: 'handled' }} fill>
+      <View style={styles.column}>
+        <AuthBackButton
+          disabled={verifying || success}
+          testID="otp-verify-back"
+        />
 
-      <Animated.View entering={FadeInDown.duration(440).delay(80)} style={shakeStyle}>
-        <AuthFormCard overlap>
-          <AuthFormIntro
-            eyebrow={t('otp.verifyEyebrow')}
-            title={t('otp.verifyFormTitle')}
-            subtitle={t('otp.verifyFormSubtitle')}
-          />
-
-          <View style={styles.form}>
-            <AuthAnimatedSection index={0}>
-              <OtpInput
-                value={code}
-                onChange={setCode}
-                error={Boolean(error)}
-                success={success}
+        <AuthFlowHeader
+          title={t('otp.verifyTitle')}
+          subtitle={t('otp.codeSentTo')}
+          testID="otp-verify-header"
+          accessory={
+            <>
+              <Text style={styles.phoneLabel}>{destinationLabel}</Text>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={phone ? t('otp.changeNumber') : t('otp.changeEmail')}
                 disabled={verifying || success}
-                autoFocus
-              />
-            </AuthAnimatedSection>
+                onPress={() => navigation.goBack()}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                style={({ pressed }) => pressed && styles.linkPressed}
+              >
+                <Text style={styles.changeLink}>{t('otp.change')}</Text>
+              </Pressable>
+            </>
+          }
+        />
 
-            {success ? <OtpSuccessBadge /> : null}
+        <Animated.View entering={enterForm} style={[styles.form, shakeStyle]}>
+          <Text style={styles.codeLabel}>{t('otp.oneTimeCode')}</Text>
+          <OtpInput
+            dark
+            value={code}
+            onChange={setCode}
+            error={Boolean(error)}
+            success={success}
+            disabled={verifying || success}
+            autoFocus
+          />
 
-            {error ? <Text style={styles.error}>{error}</Text> : null}
-
-            {verifying && !success ? (
-              <Text style={styles.verifying}>{t('otp.verifying')}</Text>
-            ) : null}
+          <View style={styles.resendRow}>
+            <Text style={styles.resendHint}>{t('otp.didntGet')}</Text>
+            {canResend ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t('otp.resendCode')}
+                disabled={resendLoading || verifying || success}
+                onPress={() => void handleResend()}
+                hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+                style={({ pressed }) => pressed && styles.linkPressed}
+              >
+                <Text style={styles.resendLink}>{t('otp.resendCode')}</Text>
+              </Pressable>
+            ) : (
+              <Text style={styles.countdown}>{t('otp.resendIn', { seconds: remaining })}</Text>
+            )}
           </View>
-        </AuthFormCard>
-      </Animated.View>
+
+          {success ? <OtpSuccessBadge /> : null}
+
+          {error ? <AuthErrorBanner dark message={error} testID="otp-verify-error" /> : null}
+
+          {verifying && !success ? (
+            <Text style={styles.verifying}>{t('otp.verifying')}</Text>
+          ) : null}
+
+          <View style={styles.trustRow}>
+            <ShieldCheck size={13} color="rgba(212,175,55,0.75)" strokeWidth={2.1} />
+            <Text style={styles.trustText}>{t('otp.numberPrivate')}</Text>
+          </View>
+        </Animated.View>
+
+        <View style={styles.spacer} />
+
+        <Animated.View entering={enterFooter}>
+          <AuthAltLinks
+            dark
+            links={[
+              {
+                label: phone ? t('otp.changeNumber') : t('otp.changeEmail'),
+                onPress: verifying || success ? undefined : () => navigation.goBack(),
+                testID: 'otp-verify-change',
+              },
+              {
+                label: t('otp.cantSignIn'),
+                onPress:
+                  verifying || success
+                    ? undefined
+                    : () => navigation.navigate('ForgotPassword'),
+                testID: 'otp-verify-help',
+              },
+            ]}
+          />
+        </Animated.View>
+      </View>
     </AuthScreen>
   );
 }
 
 const styles = StyleSheet.create({
+  column: {
+    flex: 1,
+    minHeight: 560,
+  },
   form: {
+    marginTop: 34,
     gap: 16,
     alignItems: 'stretch',
+  },
+  codeLabel: {
+    fontFamily: AUTH_FONTS.medium,
+    fontSize: 11,
+    fontWeight: '600',
+    letterSpacing: 2.2,
+    textTransform: 'uppercase',
+    color: 'rgba(212,175,55,0.75)',
+    marginBottom: -4,
+    marginLeft: 4,
+  },
+  phoneLabel: {
+    fontFamily: AUTH_FONTS.semibold,
+    fontSize: 15.5,
+    fontWeight: '600',
+    color: AUTH_UI.onCanvas,
+    letterSpacing: 0.5,
+  },
+  changeLink: {
+    fontFamily: AUTH_FONTS.medium,
+    fontSize: 13.5,
+    fontWeight: '500',
+    color: AUTH_UI.focus,
+    textDecorationLine: 'underline',
+    textDecorationColor: 'rgba(233,200,104,0.4)',
+  },
+  linkPressed: {
+    opacity: 0.7,
+  },
+  resendRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 4,
+  },
+  resendHint: {
+    fontFamily: AUTH_FONTS.regular,
+    fontSize: 13.5,
+    color: 'rgba(228,216,190,0.55)',
+    letterSpacing: 0.2,
+  },
+  resendLink: {
+    fontFamily: AUTH_FONTS.semibold,
+    fontSize: 13.5,
+    fontWeight: '600',
+    color: AUTH_UI.focus,
+    letterSpacing: 0.3,
+    textDecorationLine: 'underline',
+    textDecorationColor: 'rgba(233,200,104,0.4)',
+  },
+  countdown: {
+    fontFamily: AUTH_FONTS.semibold,
+    fontSize: 13.5,
+    fontWeight: '600',
+    color: 'rgba(233,200,104,0.85)',
+    letterSpacing: 0.3,
+    fontVariant: ['tabular-nums'],
   },
   successBadge: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#ECFDF5',
+    backgroundColor: 'rgba(16,185,129,0.12)',
     borderWidth: 2,
     borderColor: '#10B981',
     alignItems: 'center',
     justifyContent: 'center',
     alignSelf: 'center',
   },
-  error: {
-    fontSize: 12,
-    color: '#C4634F',
-    textAlign: 'center',
-  },
   verifying: {
     fontSize: 12,
-    color: AUTH_UI.muted,
+    color: 'rgba(228,216,190,0.55)',
     textAlign: 'center',
   },
-  countdown: {
-    fontSize: 13,
-    color: AUTH_UI.muted,
-    textAlign: 'center',
-    paddingVertical: 14,
+  trustRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 7,
+    marginTop: 4,
   },
-  footer: {
-    gap: AUTH_SPACING.footer,
+  trustText: {
+    fontFamily: AUTH_FONTS.regular,
+    fontSize: 12.5,
+    color: 'rgba(228,216,190,0.55)',
+    letterSpacing: 0.3,
+  },
+  spacer: {
+    flex: 1,
+    minHeight: 20,
   },
 });

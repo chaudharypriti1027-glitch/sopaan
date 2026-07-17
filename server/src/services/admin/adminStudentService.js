@@ -7,8 +7,11 @@ import { revokeAllSessions } from '../tokens.js';
 import {
   formatEntitlementDto,
   getEntitlementByUserId,
+  grantAdminPremium,
   listPaymentHistory,
+  revokeStudentPremium,
 } from '../entitlementService.js';
+import { SubscriptionEntitlement } from '../../models/SubscriptionEntitlement.js';
 
 const STUDENT_LIST_SELECT =
   'name email phone targetExam examDate streak isPremium premiumPlan premiumExpiresAt premiumTrialUsed leagueTier accountStatus createdAt';
@@ -72,9 +75,12 @@ function formatTier(user) {
   return user.leagueTier?.trim() || 'Free';
 }
 
-function premiumSource(user) {
+function premiumSource(user, entitlement = null) {
   if (!user.isPremium) {
     return 'none';
+  }
+  if (entitlement?.provider === 'admin' || entitlement?.metadata?.lastEvent === 'admin_grant') {
+    return 'admin';
   }
   if (user.premiumPlan === 'trial') {
     return 'trial';
@@ -96,7 +102,7 @@ function formatPremiumSummary(user, entitlement = null) {
     plan: user.premiumPlan ?? null,
     expiresAt: toIsoOrNull(user.premiumExpiresAt),
     trialUsed: Boolean(user.premiumTrialUsed),
-    source: premiumSource(user),
+    source: premiumSource(user, entitlement),
     cancelled,
     status: entitlement?.status ?? (user.isPremium ? 'active' : 'none'),
     cancelAtPeriodEnd: Boolean(entitlement?.cancelAtPeriodEnd),
@@ -165,7 +171,22 @@ export async function listStudents(query = {}) {
   ]);
 
   const statsByUser = await attemptStatsForUsers(users.map((user) => user._id));
-  const items = users.map((user) => formatStudentRow(user, statsByUser.get(user._id.toString())));
+  const entitlements = await SubscriptionEntitlement.find({
+    userId: { $in: users.map((user) => user._id) },
+  })
+    .select('userId plan status provider cancelAtPeriodEnd cancelledAt currentPeriodEnd metadata')
+    .lean();
+  const entitlementByUser = new Map(
+    entitlements.map((row) => [row.userId.toString(), formatEntitlementDto(row)]),
+  );
+
+  const items = users.map((user) =>
+    formatStudentRow(
+      user,
+      statsByUser.get(user._id.toString()),
+      entitlementByUser.get(user._id.toString()) ?? null,
+    ),
+  );
 
   return buildPaginatedResult({ items, total, limit, offset });
 }
@@ -274,6 +295,32 @@ export async function setStudentStatus(studentId, status) {
 
   const statsByUser = await attemptStatsForUsers([user._id]);
   return formatStudentRow(user.toObject(), statsByUser.get(user._id.toString()));
+}
+
+export async function grantStudentPremium(studentId, { plan, days }, adminId) {
+  const user = await User.findOne({ _id: studentId, role: 'student' });
+
+  if (!user) {
+    throw new AppError('Student not found', 404, 'NOT_FOUND');
+  }
+
+  if (user.accountStatus === 'deleted') {
+    throw new AppError('Student account has been deleted', 400, 'VALIDATION_ERROR');
+  }
+
+  await grantAdminPremium(user._id, { plan, days, adminId });
+  return getStudentById(studentId);
+}
+
+export async function revokeStudentPremiumAccess(studentId, adminId) {
+  const user = await User.findOne({ _id: studentId, role: 'student' });
+
+  if (!user) {
+    throw new AppError('Student not found', 404, 'NOT_FOUND');
+  }
+
+  await revokeStudentPremium(user._id, { adminId });
+  return getStudentById(studentId);
 }
 
 function csvEscape(value) {

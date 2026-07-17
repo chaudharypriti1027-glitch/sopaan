@@ -8,11 +8,13 @@ import { AUTH_UI } from './authTheme';
 
 type PasswordRequirementsProps = {
   password: string;
+  /** Glass checklist on the navy canvas. */
+  dark?: boolean;
 };
 
-export function PasswordRequirements({ password }: PasswordRequirementsProps) {
+export function PasswordRequirements({ password, dark = false }: PasswordRequirementsProps) {
   const { t } = useTranslation('auth');
-  const styles = useMemo(() => createStyles(), []);
+  const styles = useMemo(() => createStyles(dark), [dark]);
 
   if (!password) {
     return null;
@@ -51,16 +53,16 @@ export function PasswordRequirements({ password }: PasswordRequirementsProps) {
   );
 }
 
-function createStyles() {
+function createStyles(dark: boolean) {
   return StyleSheet.create({
     root: {
-      marginTop: 2,
+      marginTop: dark ? 10 : 2,
       marginBottom: 10,
       padding: 10,
       borderRadius: 12,
-      backgroundColor: AUTH_UI.bg,
+      backgroundColor: dark ? 'rgba(255,255,255,0.04)' : 'rgba(28,36,80,0.04)',
       borderWidth: 1,
-      borderColor: AUTH_UI.border,
+      borderColor: dark ? 'rgba(240,212,136,0.16)' : 'rgba(28,36,80,0.1)',
     },
     grid: {
       flexDirection: 'row',
@@ -84,10 +86,10 @@ function createStyles() {
       height: 16,
       borderRadius: 8,
       borderWidth: 1.5,
-      borderColor: AUTH_UI.border,
+      borderColor: dark ? 'rgba(240,212,136,0.3)' : AUTH_UI.border,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: '#FFFFFF',
+      backgroundColor: dark ? 'transparent' : '#FFFFFF',
       flexShrink: 0,
     },
     dotMet: {
@@ -96,12 +98,12 @@ function createStyles() {
     },
     label: {
       fontSize: 11,
-      color: AUTH_UI.muted,
+      color: dark ? 'rgba(228,216,190,0.55)' : AUTH_UI.muted,
       flexShrink: 1,
     },
     labelMet: {
       fontSize: 11,
-      color: AUTH_UI.sageDeep,
+      color: dark ? '#7FC29B' : AUTH_UI.sageDeep,
       fontWeight: '700',
     },
   });

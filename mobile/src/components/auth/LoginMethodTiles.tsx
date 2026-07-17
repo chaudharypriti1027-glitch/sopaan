@@ -97,20 +97,22 @@ export function LoginMethodTiles({
 type AuthErrorBannerProps = {
   message: string;
   testID?: string;
+  /** Brighter error treatment for the navy canvas. */
+  dark?: boolean;
 };
 
-export function AuthErrorBanner({ message, testID }: AuthErrorBannerProps) {
+export function AuthErrorBanner({ message, testID, dark = false }: AuthErrorBannerProps) {
   const styles = useMemo(() => createStyles(), []);
 
   return (
     <Animated.View
       entering={FadeIn.duration(280)}
       exiting={FadeOut.duration(180)}
-      style={styles.banner}
+      style={[styles.banner, dark && styles.bannerDark]}
       testID={testID}
     >
-      <View style={styles.dot} />
-      <Text style={styles.text}>{message}</Text>
+      <View style={[styles.dot, dark && styles.dotDark]} />
+      <Text style={[styles.text, dark && styles.textDark]}>{message}</Text>
     </Animated.View>
   );
 }
@@ -129,9 +131,9 @@ function createStyles() {
       borderRadius: 16,
       backgroundColor: '#FAFAF8',
       borderWidth: 1,
-      borderColor: AUTH_UI.border,
+      borderColor: 'rgba(28,36,80,0.1)',
       ...platformShadow({
-        color: AUTH_UI.shadowSm,
+        color: '#000000',
         offsetY: 4,
         opacity: 0.05,
         radius: 10,
@@ -139,8 +141,8 @@ function createStyles() {
       }),
     },
     tilePressed: {
-      backgroundColor: AUTH_UI.bg,
-      borderColor: AUTH_UI.borderHover,
+      backgroundColor: '#F0EDE3',
+      borderColor: 'rgba(28,36,80,0.16)',
     },
     tileDisabled: {
       opacity: 0.55,
@@ -185,6 +187,10 @@ function createStyles() {
       borderWidth: 1,
       borderColor: 'rgba(196,80,63,0.2)',
     },
+    bannerDark: {
+      backgroundColor: 'rgba(224,122,95,0.12)',
+      borderColor: 'rgba(224,122,95,0.35)',
+    },
     dot: {
       width: 8,
       height: 8,
@@ -192,12 +198,18 @@ function createStyles() {
       marginTop: 4,
       backgroundColor: '#C4634F',
     },
+    dotDark: {
+      backgroundColor: '#E07A5F',
+    },
     text: {
       flex: 1,
       fontSize: 12,
       fontWeight: '600',
       color: '#C4634F',
       lineHeight: 17,
+    },
+    textDark: {
+      color: '#F0B4A2',
     },
   });
 }

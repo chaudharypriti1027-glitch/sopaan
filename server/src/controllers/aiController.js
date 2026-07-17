@@ -66,6 +66,7 @@ export async function evaluateAnswerHandler(req, res) {
     ...req.body,
     language: req.body.language ?? req.language,
     userId: req.user._id,
+    targetExam: req.user.targetExam,
   });
 
   await recordFeatureUsage(req.user._id, 'ai_evaluate');

@@ -20,9 +20,9 @@ import { useAuthStore, type BootstrapResult } from '../store/auth';
 
 type SplashNav = NativeStackNavigationProp<RootStackParamList, 'Splash'>;
 
-const BRAND_HOLD_MS = 1280;
-const REDUCED_MOTION_DELAY_MS = 120;
-const EXIT_MS = 420;
+const BRAND_HOLD_MS = 1100;
+const REDUCED_MOTION_DELAY_MS = 80;
+const EXIT_MS = 360;
 
 function wait(ms: number) {
   return new Promise<void>((resolve) => {

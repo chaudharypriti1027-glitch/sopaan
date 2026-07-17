@@ -54,7 +54,7 @@ export function PrimaryButton({
 
   const handlePressIn = () => {
     if (isDisabled) return;
-    scale.value = withSpring(0.99, { damping: 18, stiffness: 420 });
+    scale.value = withSpring(0.98, { damping: 18, stiffness: 420 });
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
 
@@ -91,11 +91,12 @@ export function PrimaryButton({
         <LinearGradient
           colors={
             isDisabled
-              ? ['#E8E4DA', '#E8E4DA']
-              : ['#F0DFA8', '#E3C97F', '#C29A4E']
+              ? ['#3A3F5C', '#3A3F5C']
+              : [...AUTH_UI.goldButton]
           }
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
+          locations={isDisabled ? undefined : [0, 0.32, 0.55, 0.82, 1]}
+          start={{ x: 0, y: 0.5 }}
+          end={{ x: 1, y: 0.5 }}
           style={[styles.button, isDisabled && styles.disabled]}
         >
           {loading ? (
@@ -106,7 +107,7 @@ export function PrimaryButton({
                 {label}
               </Text>
               {TrailingIcon ? (
-                <TrailingIcon size={17} color="#2A2110" strokeWidth={2.3} />
+                <TrailingIcon size={17} color={AUTH_UI.accentDark} strokeWidth={2.3} />
               ) : null}
             </View>
           )}
@@ -122,17 +123,17 @@ function createStyles() {
       alignSelf: 'stretch',
     },
     button: {
-      minHeight: 52,
+      minHeight: 56,
       borderRadius: AUTH_UI.btnRadius,
       alignItems: 'center',
       justifyContent: 'center',
       paddingVertical: 16,
       paddingHorizontal: 18,
-      shadowColor: AUTH_UI.goldDeep,
-      shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 0.28,
-      shadowRadius: 16,
-      elevation: 5,
+      shadowColor: AUTH_UI.goldMid,
+      shadowOffset: { width: 0, height: 12 },
+      shadowOpacity: 0.34,
+      shadowRadius: 22,
+      elevation: 6,
     },
     content: {
       flexDirection: 'row',
@@ -141,20 +142,20 @@ function createStyles() {
       gap: 8,
     },
     disabled: {
-      backgroundColor: AUTH_UI.border,
+      backgroundColor: 'rgba(255,255,255,0.08)',
       shadowOpacity: 0,
       elevation: 0,
     },
     label: {
-      fontFamily: AUTH_FONTS.bold,
-      fontSize: 15,
-      letterSpacing: 0.2,
-      color: '#2A2110',
+      fontFamily: AUTH_FONTS.semibold,
+      fontSize: 16,
+      letterSpacing: 0.3,
+      color: AUTH_UI.accentDark,
     },
     disabledLabel: {
-      fontFamily: AUTH_FONTS.bold,
-      fontSize: 14,
-      color: AUTH_UI.muted,
+      fontFamily: AUTH_FONTS.semibold,
+      fontSize: 15,
+      color: AUTH_UI.faint,
     },
   });
 }

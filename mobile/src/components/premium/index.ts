@@ -30,6 +30,7 @@ export {
   type SubscriptionSuccessDetail,
   type SubscriptionSuccessDialogProps,
 } from './SubscriptionSuccessDialog';
+export { GiftSubscriptionDialog, type GiftSubscriptionDialogProps } from './GiftSubscriptionDialog';
 export type {
   PremiumDialogConfig,
   PremiumConfirmOptions,

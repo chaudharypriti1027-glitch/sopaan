@@ -1,6 +1,5 @@
 import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useTranslation } from 'react-i18next';
 import Animated, { FadeInDown, ReduceMotion, useReducedMotion } from 'react-native-reanimated';
 import {
@@ -11,24 +10,23 @@ import {
 import { AUTH_MOTIVATION_COUNT } from '../../content/authMotivationContent';
 import { SopaanLogo } from '../SopaanLogo';
 import { Text } from '../Text';
-import { AuthHeroAmbient } from './AuthHeroAmbient';
+import { AuthGoldDivider } from './AuthGoldDivider';
 import { AuthLogo } from './AuthLogo';
 import { AuthLogoGlow } from './AuthLogoGlow';
 import { AuthMotivationTicker } from './AuthMotivationTicker';
 import { AUTH_FONTS, AUTH_SPACING, AUTH_UI } from './authTheme';
-import { PREMIUM } from '../premium/premiumStyles';
 
 type AuthPremiumHeroProps = {
   variant: AuthHeroVariant;
   /** Overrides config subtitle — e.g. OTP verify with masked phone. */
   subtitle?: string;
-  /** Tighter, separated treatment for form-first auth screens. */
+  /** Tighter treatment for form-first auth screens. */
   compact?: boolean;
 };
 
 /**
- * Brand-first auth hero — logo / wordmark + one line of support copy.
- * Value chips, badges, and motivation tickers stay opt-in per variant.
+ * Brand-first auth hero on the navy canvas — logo / wordmark + tagline.
+ * Value chips and motivation tickers stay opt-in per variant.
  */
 export function AuthPremiumHero({ variant, subtitle, compact = false }: AuthPremiumHeroProps) {
   const { t } = useTranslation('auth');
@@ -58,19 +56,12 @@ export function AuthPremiumHero({ variant, subtitle, compact = false }: AuthPrem
       style={[styles.wrap, compact && styles.wrapCompact]}
       testID={config.testID}
     >
-      <LinearGradient
-        colors={[...PREMIUM.heroGradient]}
-        start={{ x: 0.12, y: 0 }}
-        end={{ x: 0.88, y: 1 }}
-        style={[styles.hero, compact && styles.heroCompact]}
-      >
-        <AuthHeroAmbient />
-
+      <View style={[styles.hero, compact && styles.heroCompact]}>
         <View style={styles.logoStack}>
-          <AuthLogoGlow size={compact ? 78 : config.showWordmark ? 96 : 88} />
+          <AuthLogoGlow size={compact ? 78 : config.showWordmark ? 104 : 88} />
           {config.showWordmark ? (
             <View style={styles.logoWrap}>
-              <SopaanLogo size={compact ? 58 : 72} />
+              <SopaanLogo size={compact ? 58 : 78} />
             </View>
           ) : (
             <AuthLogo />
@@ -80,7 +71,9 @@ export function AuthPremiumHero({ variant, subtitle, compact = false }: AuthPrem
         <Animated.View entering={enterLater} style={styles.copy}>
           {config.showWordmark ? (
             <Text style={[styles.wordmark, compact && styles.wordmarkCompact]}>
-              S<Text style={[styles.wordmarkO, compact && styles.wordmarkCompact]}>O</Text>PAAN
+              S
+              <Text style={[styles.wordmarkO, compact && styles.wordmarkOCompact]}>O</Text>
+              PAAN
             </Text>
           ) : null}
 
@@ -88,9 +81,11 @@ export function AuthPremiumHero({ variant, subtitle, compact = false }: AuthPrem
             <Text style={styles.title}>{t(config.titleKey)}</Text>
           ) : null}
 
-          <Text style={styles.subtitle}>{resolvedSubtitle}</Text>
+          <AuthGoldDivider compact={compact} />
 
-          <View style={styles.hairline} />
+          <Text style={[styles.subtitle, compact && styles.subtitleCompact]}>
+            {resolvedSubtitle}
+          </Text>
         </Animated.View>
 
         {config.showMotivation ? (
@@ -119,7 +114,7 @@ export function AuthPremiumHero({ variant, subtitle, compact = false }: AuthPrem
             })}
           </View>
         ) : null}
-      </LinearGradient>
+      </View>
     </Animated.View>
   );
 }
@@ -127,25 +122,23 @@ export function AuthPremiumHero({ variant, subtitle, compact = false }: AuthPrem
 function createStyles() {
   return StyleSheet.create({
     wrap: {
-      marginBottom: -18,
+      marginBottom: 4,
       zIndex: 2,
     },
     wrapCompact: {
-      marginBottom: -8,
+      marginBottom: 0,
     },
     hero: {
-      borderRadius: AUTH_UI.cardRadius,
-      paddingHorizontal: 22,
-      paddingTop: 28,
-      paddingBottom: 30,
+      paddingHorizontal: 8,
+      paddingTop: 12,
+      paddingBottom: 8,
       alignItems: 'center',
       gap: AUTH_SPACING.stack,
-      overflow: 'hidden',
     },
     heroCompact: {
-      paddingTop: 20,
-      paddingBottom: 22,
-      gap: 10,
+      paddingTop: 4,
+      paddingBottom: 4,
+      gap: 8,
     },
     logoStack: {
       alignItems: 'center',
@@ -153,63 +146,80 @@ function createStyles() {
     },
     logoWrap: {
       shadowColor: AUTH_UI.gold,
-      shadowOffset: { width: 0, height: 12 },
-      shadowOpacity: 0.35,
-      shadowRadius: 20,
-      elevation: 8,
+      shadowOffset: { width: 0, height: 14 },
+      shadowOpacity: 0.45,
+      shadowRadius: 28,
+      elevation: 10,
+      borderRadius: 26,
     },
     copy: {
       alignItems: 'center',
-      gap: 10,
+      gap: 0,
     },
     wordmark: {
-      fontFamily: 'SpaceGrotesk_700Bold',
-      fontSize: 28,
-      lineHeight: 34,
-      letterSpacing: 1.2,
-      color: '#FFFFFF',
+      fontFamily: AUTH_FONTS.display,
+      fontSize: 34,
+      lineHeight: 40,
+      letterSpacing: 8,
+      color: AUTH_UI.onCanvas,
       textAlign: 'center',
+      marginTop: 22,
+      textShadowColor: 'rgba(212,175,55,0.18)',
+      textShadowOffset: { width: 0, height: 2 },
+      textShadowRadius: 14,
     },
     wordmarkO: {
-      fontFamily: 'SpaceGrotesk_700Bold',
-      fontSize: 28,
-      lineHeight: 34,
-      letterSpacing: 1.2,
+      fontFamily: AUTH_FONTS.display,
+      fontSize: 34,
+      lineHeight: 40,
+      letterSpacing: 8,
       color: AUTH_UI.goldLt,
     },
     wordmarkCompact: {
-      fontSize: 24,
-      lineHeight: 29,
+      fontSize: 26,
+      lineHeight: 32,
+      letterSpacing: 5,
+      marginTop: 12,
+    },
+    wordmarkOCompact: {
+      fontSize: 26,
+      lineHeight: 32,
+      letterSpacing: 5,
     },
     title: {
       fontFamily: AUTH_FONTS.bold,
       fontSize: 24,
       fontWeight: '800',
-      color: '#FFFFFF',
+      color: AUTH_UI.onCanvas,
       textAlign: 'center',
-      letterSpacing: -0.4,
+      letterSpacing: -0.3,
       lineHeight: 30,
+      marginTop: 16,
     },
     subtitle: {
       fontFamily: AUTH_FONTS.medium,
-      fontSize: 15,
-      lineHeight: 21,
-      color: 'rgba(255,255,255,0.78)',
+      fontSize: 18,
+      fontStyle: 'italic',
+      lineHeight: 24,
+      color: AUTH_UI.onCanvasMuted,
       textAlign: 'center',
-      maxWidth: 280,
+      maxWidth: 300,
+      marginTop: 14,
+      letterSpacing: 0.6,
     },
-    hairline: {
-      width: 40,
-      height: 2,
-      borderRadius: 99,
-      backgroundColor: AUTH_UI.gold,
-      marginTop: 2,
+    subtitleCompact: {
+      fontSize: 14,
+      lineHeight: 20,
+      marginTop: 10,
+      fontStyle: 'normal',
+      letterSpacing: 0.2,
+      color: AUTH_UI.onCanvasFaint,
     },
     valueRow: {
       flexDirection: 'row',
       gap: 8,
       width: '100%',
-      marginTop: 4,
+      marginTop: 8,
     },
     valueChip: {
       flex: 1,
@@ -218,9 +228,9 @@ function createStyles() {
       paddingVertical: 10,
       paddingHorizontal: 6,
       borderRadius: 14,
-      backgroundColor: 'rgba(255,255,255,0.1)',
+      backgroundColor: 'rgba(255,255,255,0.06)',
       borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.12)',
+      borderColor: 'rgba(240,212,136,0.16)',
     },
     valueIcon: {
       width: 28,
@@ -228,14 +238,14 @@ function createStyles() {
       borderRadius: 10,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: 'rgba(255,255,255,0.12)',
+      backgroundColor: 'rgba(255,255,255,0.08)',
     },
     valueLabel: {
       fontFamily: AUTH_FONTS.semibold,
       fontSize: 10,
       lineHeight: 13,
       fontWeight: '700',
-      color: 'rgba(255,255,255,0.9)',
+      color: AUTH_UI.onCanvas,
       textAlign: 'center',
     },
   });

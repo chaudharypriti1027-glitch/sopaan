@@ -94,12 +94,14 @@ export function PracticeAiOptionList({
             <PracticeChip
               label={difficultyLabels[item.difficulty] ?? item.difficulty}
               variant="green"
+              onLight
             />
             <PracticeChip
               label={item.mode === 'adaptive' ? modeAdaptiveLabel : modeStandardLabel}
               variant="purple"
+              onLight
             />
-            <PracticeChip label={countLabel(item.count)} variant="white" />
+            <PracticeChip label={countLabel(item.count)} variant="amber" onLight />
           </View>
           <Text style={styles.reason} numberOfLines={2}>
             {item.reason}

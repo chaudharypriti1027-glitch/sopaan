@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { Eye, EyeOff, Lock, Mail, Phone, User, type LucideIcon } from 'lucide-react-native';
 import { scalableTextProps } from '../../a11y/textProps';
-import { AUTH_UI } from './authTheme';
+import { AUTH_FONTS, AUTH_UI } from './authTheme';
 
 export type AuthPremiumFieldVariant = 'text' | 'phone' | 'email' | 'password';
 
@@ -22,6 +22,8 @@ export type AuthPremiumFieldProps = Omit<TextInputProps, 'value' | 'onChangeText
   testID?: string;
   /** Compact icon-led pill row (no floating label) — matches the "Classic Premium" auth mockup. */
   dense?: boolean;
+  /** Dark glass input on the navy canvas — Sign-in Flow reference. */
+  dark?: boolean;
   /** Override the auto-resolved leading icon (dense mode only). */
   icon?: LucideIcon;
 };
@@ -74,6 +76,7 @@ export const AuthPremiumField = forwardRef<TextInput, AuthPremiumFieldProps>(
       autoCapitalize,
       secureTextEntry,
       dense = false,
+      dark = false,
       icon,
       ...rest
     },
@@ -86,8 +89,8 @@ export const AuthPremiumField = forwardRef<TextInput, AuthPremiumFieldProps>(
     const Icon = icon ?? resolveIcon(variant);
     const iconTint = resolveIconTint(variant);
     const styles = useMemo(
-      () => createStyles({ focused, hasError: Boolean(error), dense }),
-      [focused, error, dense],
+      () => createStyles({ focused, hasError: Boolean(error), dense, dark }),
+      [focused, error, dense, dark],
     );
 
     const resolvedKeyboard =
@@ -96,6 +99,59 @@ export const AuthPremiumField = forwardRef<TextInput, AuthPremiumFieldProps>(
 
     const resolvedCapitalize =
       autoCapitalize ?? (variant === 'email' || isPassword ? 'none' : 'words');
+
+    if (dark) {
+      const goldIcon = 'rgba(212,175,55,0.8)';
+      return (
+        <View style={styles.field}>
+          <Text style={styles.darkLabel}>{label}</Text>
+          <View style={styles.darkRow}>
+            <Icon size={17} color={goldIcon} strokeWidth={1.7} />
+            {isPhone ? (
+              <>
+                <Text style={styles.darkPrefix}>+91</Text>
+                <View style={styles.darkPrefixDivider} />
+              </>
+            ) : null}
+            <TextInput
+              ref={ref}
+              testID={testID}
+              accessibilityLabel={label}
+              value={value}
+              onChangeText={(text) => onChangeText(isPhone ? normalizePhone(text) : text)}
+              onFocus={() => setFocused(true)}
+              onBlur={() => setFocused(false)}
+              editable={editable}
+              placeholder={placeholder}
+              placeholderTextColor="rgba(228,216,190,0.35)"
+              keyboardType={resolvedKeyboard}
+              autoCapitalize={resolvedCapitalize}
+              autoCorrect={variant === 'email' || isPassword ? false : rest.autoCorrect}
+              secureTextEntry={isPassword ? !passwordVisible : secureTextEntry}
+              style={styles.darkInput}
+              {...scalableTextProps}
+              {...rest}
+            />
+            {isPassword ? (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={passwordVisible ? 'Hide password' : 'Show password'}
+                onPress={() => setPasswordVisible((v) => !v)}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                style={({ pressed }) => [styles.darkEyeBtn, pressed && styles.eyeBtnPressed]}
+              >
+                {passwordVisible ? (
+                  <EyeOff size={18} color="rgba(212,175,55,0.85)" strokeWidth={1.8} />
+                ) : (
+                  <Eye size={18} color="rgba(228,216,190,0.55)" strokeWidth={1.8} />
+                )}
+              </Pressable>
+            ) : null}
+          </View>
+          {error ? <Text style={styles.darkError}>{error}</Text> : null}
+        </View>
+      );
+    }
 
     return (
       <View style={styles.field}>
@@ -173,16 +229,90 @@ export const AuthPremiumField = forwardRef<TextInput, AuthPremiumFieldProps>(
   },
 );
 
-function createStyles(state: { focused: boolean; hasError: boolean; dense: boolean }) {
+function createStyles(state: {
+  focused: boolean;
+  hasError: boolean;
+  dense: boolean;
+  dark: boolean;
+}) {
   const borderColor = state.hasError
     ? '#C4634F'
     : state.focused
       ? AUTH_UI.focus
       : AUTH_UI.border;
 
+  const darkBorder = state.hasError
+    ? 'rgba(224,122,95,0.75)'
+    : state.focused
+      ? 'rgba(233,200,104,0.9)'
+      : 'rgba(240,212,136,0.24)';
+
   return StyleSheet.create({
     field: {
-      marginBottom: state.dense ? 0 : 14,
+      marginBottom: state.dense || state.dark ? 0 : 14,
+    },
+    darkLabel: {
+      fontFamily: AUTH_FONTS.medium,
+      fontSize: 11,
+      fontWeight: '600',
+      letterSpacing: 2.2,
+      textTransform: 'uppercase',
+      color: 'rgba(212,175,55,0.75)',
+      marginBottom: 10,
+      marginLeft: 4,
+    },
+    darkRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      minHeight: 58,
+      paddingHorizontal: 18,
+      borderRadius: 18,
+      backgroundColor: 'rgba(255,255,255,0.04)',
+      borderWidth: state.focused ? 1.5 : 1,
+      borderColor: darkBorder,
+      ...(state.focused
+        ? {
+            shadowColor: AUTH_UI.gold,
+            shadowOffset: { width: 0, height: 0 },
+            shadowOpacity: 0.16,
+            shadowRadius: 6,
+          }
+        : {}),
+    },
+    darkPrefix: {
+      fontFamily: AUTH_FONTS.semibold,
+      fontSize: 16,
+      fontWeight: '600',
+      color: AUTH_UI.onCanvas,
+      letterSpacing: 0.3,
+    },
+    darkPrefixDivider: {
+      width: 1,
+      height: 26,
+      backgroundColor: 'rgba(255,255,255,0.14)',
+    },
+    darkInput: {
+      flex: 1,
+      minWidth: 0,
+      paddingVertical: 14,
+      fontFamily: AUTH_FONTS.regular,
+      fontSize: 16,
+      fontWeight: '400',
+      color: AUTH_UI.onCanvas,
+      letterSpacing: 0.5,
+    },
+    darkEyeBtn: {
+      width: 34,
+      alignItems: 'center',
+      justifyContent: 'center',
+      alignSelf: 'stretch',
+    },
+    darkError: {
+      fontSize: 12,
+      color: '#E07A5F',
+      marginTop: 8,
+      marginLeft: 4,
     },
     label: {
       fontSize: 11,
@@ -264,10 +394,15 @@ function createStyles(state: { focused: boolean; hasError: boolean; dense: boole
       paddingLeft: 50,
       paddingVertical: 15,
       borderWidth: 1,
-      backgroundColor: '#FAFAF7',
-      shadowColor: AUTH_UI.shadowSm,
+      borderColor: state.hasError
+        ? '#C4634F'
+        : state.focused
+          ? AUTH_UI.goldMid
+          : 'rgba(28,36,80,0.1)',
+      backgroundColor: AUTH_UI.cardElevated,
+      shadowColor: '#000000',
       shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: state.focused ? 0.1 : 0.04,
+      shadowOpacity: state.focused ? 0.08 : 0.03,
       shadowRadius: 10,
       elevation: 1,
     },

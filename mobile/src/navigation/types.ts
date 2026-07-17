@@ -75,6 +75,7 @@ export type MainStackParamList = {
   GroupChat: { groupId: string; groupName: string };
   CommunityTests: undefined;
   CreateTest: undefined;
+  GenerateTest: { subject?: string; topic?: string } | undefined;
   StudyPlanner: { date?: string } | undefined;
   FocusTimer: undefined;
   Wellness: undefined;

@@ -43,6 +43,8 @@ const aiDoubtCacheSchema = new mongoose.Schema(
 aiDoubtCacheSchema.index({ queryText: 'text' });
 aiDoubtCacheSchema.index({ language: 1, createdAt: -1 });
 aiDoubtCacheSchema.index({ queryText: 1, language: 1 });
+// Account erasure removes a user's cached answers by author.
+aiDoubtCacheSchema.index({ userId: 1 }, { sparse: true });
 
 export const AiDoubtCache = mongoose.model('AiDoubtCache', aiDoubtCacheSchema);
 
