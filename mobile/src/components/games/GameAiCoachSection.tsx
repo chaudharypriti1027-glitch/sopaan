@@ -1,5 +1,6 @@
 import type { GameReviewItem } from '../../api/games';
-import { Card, Text } from '../';
+import { Card } from '../Card';
+import { Text } from '../Text';
 import { ResultCoachPanel } from '../result/ResultCoachPanel';
 import { ResultExplanationBlock } from '../result/ResultExplanationBlock';
 import { useMemo } from 'react';

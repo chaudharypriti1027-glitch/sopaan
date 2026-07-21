@@ -67,8 +67,57 @@ export const apiClient = create({
     Accept: 'application/json',
     'Content-Type': 'application/json',
   },
-  timeout: 60_000,
+  // Fail faster on unreachable hosts (was 60s × retries → multi-minute hangs).
+  timeout: 20_000,
 });
+
+/**
+ * TEMPORARY API debug logging (visible via `adb logcat` in release builds).
+ * Enabled in dev always; in production only when EXPO_PUBLIC_DEBUG_API=true.
+ * Remove the eas.json flag once the physical-device issue is confirmed fixed.
+ */
+const DEBUG_API = __DEV__ || process.env.EXPO_PUBLIC_DEBUG_API === 'true';
+
+function debugHeaders(headers: unknown): Record<string, unknown> {
+  const plain = { ...(headers as Record<string, unknown>) };
+  if (typeof plain.Authorization === 'string') {
+    plain.Authorization = `Bearer …${plain.Authorization.slice(-6)}`;
+  }
+  return plain;
+}
+
+function logApiRequest(requestConfig: InternalAxiosRequestConfig) {
+  if (!DEBUG_API) return;
+  // eslint-disable-next-line no-console
+  console.log(
+    '[api →]',
+    requestConfig.method?.toUpperCase(),
+    `${requestConfig.baseURL ?? ''}${requestConfig.url ?? ''}`,
+    JSON.stringify({
+      baseURL: requestConfig.baseURL,
+      headers: debugHeaders(requestConfig.headers),
+      body: requestConfig.data,
+      params: requestConfig.params,
+    }),
+  );
+}
+
+function logApiError(error: AxiosError) {
+  if (!DEBUG_API) return;
+  // eslint-disable-next-line no-console
+  console.log(
+    '[api ✗]',
+    error.config?.method?.toUpperCase(),
+    `${error.config?.baseURL ?? ''}${error.config?.url ?? ''}`,
+    JSON.stringify({
+      message: error.message,
+      code: error.code,
+      status: error.response?.status,
+      data: error.response?.data,
+    }),
+    error.stack,
+  );
+}
 
 const CONTENT_GET_PREFIXES = ['/courses', '/revision-capsules'];
 
@@ -96,12 +145,14 @@ apiClient.interceptors.request.use(async (requestConfig) => {
     };
   }
 
+  logApiRequest(requestConfig);
   return requestConfig;
 });
 
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
+    logApiError(error);
     const original = error.config as RetryConfig | undefined;
 
     if (

@@ -16,7 +16,12 @@ const OFFLINE_QUERY_ROOTS = new Set([
 
 function isRetryableQueryError(error: unknown): boolean {
   if (error instanceof ApiError) {
-    return error.status === 0 || error.status === 429 || error.status >= 502;
+    // Hard network failures (ATS / offline / wrong host) should not burn
+    // 3 × 60s timeouts — one retry is enough to recover from blips.
+    if (error.status === 0) {
+      return error.code === 'ECONNABORTED' || error.code === 'ERR_NETWORK';
+    }
+    return error.status === 429 || error.status >= 502;
   }
 
   if (!(error instanceof Error)) {
@@ -24,12 +29,13 @@ function isRetryableQueryError(error: unknown): boolean {
   }
 
   const message = error.message.toLowerCase();
-  if (message.includes('network') || message.includes('timeout')) {
+  if (message.includes('timeout')) {
     return true;
   }
 
   if ('status' in error && typeof error.status === 'number') {
-    return error.status === 0 || error.status === 429 || error.status >= 502;
+    const status = error.status;
+    return status === 429 || status >= 502;
   }
 
   return false;
@@ -72,7 +78,10 @@ export function createPersistedQueryClient(): QueryClient {
           if (!isRetryableQueryError(error)) {
             return false;
           }
-          return failureCount < 3;
+          // Network/timeout: 1 retry. Transient 429/5xx: up to 2 retries.
+          const max =
+            error instanceof ApiError && error.status === 0 ? 1 : 2;
+          return failureCount < max;
         },
         retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
         networkMode: 'offlineFirst',

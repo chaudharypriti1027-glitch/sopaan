@@ -238,8 +238,8 @@ cd mobile && eas init    # link Expo project; set EAS_PROJECT_ID in mobile/.env
 | Profile | Channel | API (`EXPO_PUBLIC_API_URL`) | Purpose |
 | ------- | ------- | ----------------------------- | ------- |
 | `development` | `development` | local / dev client | Internal dev builds |
-| `staging` | `staging` | `https://staging-api.sopaan.app` | QA |
-| `production` | `production` | `https://api.sopaan.app` | Store release |
+| `staging` | `staging` | `http://13.220.184.130:4000` | QA |
+| `production` | `production` | `http://13.220.184.130:4000` | Store release |
 | `e2e-android` / `e2e-ios` | `e2e` | CI stub API | Maestro CI |
 
 **EAS secrets** (dashboard or `eas secret:create`): `SENTRY_AUTH_TOKEN`, `EXPO_PUBLIC_SENTRY_DSN`, `EAS_PROJECT_ID`.

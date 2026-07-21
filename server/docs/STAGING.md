@@ -59,7 +59,7 @@ Production uses the same shape with `DEPLOY_ENV=production` and separate Atlas/R
 8. Confirm health:
 
    ```bash
-   curl -s https://staging-api.sopaan.app/api/health | jq
+   curl -s http://13.220.184.130:4000/api/health | jq
    # deployEnv should be "staging"
    ```
 
@@ -69,7 +69,7 @@ Production uses the same shape with `DEPLOY_ENV=production` and separate Atlas/R
 2. Set staging API origin:
 
    ```env
-   EXPO_PUBLIC_API_URL=https://staging-api.sopaan.app
+   EXPO_PUBLIC_API_URL=http://13.220.184.130:4000
    ```
 
 3. Run against staging:

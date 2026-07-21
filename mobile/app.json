@@ -3,8 +3,8 @@
     "name": "Sopaan",
     "slug": "sopaan",
     "owner": "priti1027",
-    "version": "0.1.0",
-    "runtimeVersion": "0.1.0",
+    "version": "0.1.1",
+    "runtimeVersion": "0.1.1",
     "orientation": "portrait",
     "scheme": "sopaan",
     "userInterfaceStyle": "automatic",
@@ -16,7 +16,10 @@
         "applinks:sopaan.app"
       ],
       "infoPlist": {
-        "UIBackgroundModes": ["audio"]
+        "UIBackgroundModes": ["audio"],
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true
+        }
       }
     },
     "icon": "./assets/icon.png",
@@ -25,6 +28,7 @@
         "foregroundImage": "./assets/adaptive-icon-foreground.png",
         "backgroundColor": "#060D1C"
       },
+      "usesCleartextTraffic": true,
       "package": "com.sopaan.app",
       "intentFilters": [
         {

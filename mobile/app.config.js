@@ -10,6 +10,11 @@ module.exports = ({ config }) => {
   const updatesEnabled = Boolean(projectId);
   const appVersion = config.version ?? '0.1.0';
 
+  const apiUrl = (
+    process.env.EXPO_PUBLIC_API_URL?.trim() ||
+    'http://13.220.184.130:4000'
+  ).replace(/\/+$/, '');
+
   return {
     ...config,
     // Bare workflow (android/ present) requires a fixed string, not a policy object.
@@ -26,6 +31,8 @@ module.exports = ({ config }) => {
         },
     extra: {
       ...(config.extra ?? {}),
+      /** Baked into the manifest so runtime config does not depend only on Metro env. */
+      apiUrl,
       eas: {
         ...(config.extra?.eas ?? {}),
         projectId: projectId || undefined,

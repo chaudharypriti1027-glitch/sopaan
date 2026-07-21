@@ -35,7 +35,8 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://sopaan.onrender.com",
+        "EXPO_PUBLIC_API_URL": "http://13.220.184.130:4000",
+        "EXPO_PUBLIC_DEBUG_API": "true",
         "EXPO_PUBLIC_SENTRY_ENVIRONMENT": "staging",
         "SENTRY_ORG": "sopaan",
         "SENTRY_PROJECT": "mobile",
@@ -49,7 +50,8 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://sopaan.onrender.com",
+        "EXPO_PUBLIC_API_URL": "http://13.220.184.130:4000",
+        "EXPO_PUBLIC_DEBUG_API": "true",
         "EXPO_PUBLIC_SENTRY_ENVIRONMENT": "production",
         "SENTRY_ORG": "sopaan",
         "SENTRY_PROJECT": "mobile",

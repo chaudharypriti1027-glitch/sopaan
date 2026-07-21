@@ -37,8 +37,8 @@ export function parseApiError(error: unknown): ApiError {
             ? 'NETWORK_ERROR'
             : (error.code ?? 'NETWORK_ERROR');
       const hint =
-        __DEV__ && code === 'NETWORK_ERROR'
-          ? ` Cannot reach the API at ${config.apiBaseUrl}. Start the server (cd server && npm run dev).`
+        __DEV__ && (code === 'NETWORK_ERROR' || code === 'ERR_NETWORK')
+          ? ` Cannot reach ${config.apiBaseUrl}. Check EXPO_PUBLIC_API_URL / device network (iOS Expo Go blocks plain HTTP to remote hosts — use a dev build or HTTPS).`
           : '';
       return new ApiError((error.message || 'Network error') + hint, 0, code);
     }
