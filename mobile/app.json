@@ -53,6 +53,14 @@
       ]
     },
     "plugins": [
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ],
       "expo-font",
       "expo-splash-screen",
       "expo-secure-store",
